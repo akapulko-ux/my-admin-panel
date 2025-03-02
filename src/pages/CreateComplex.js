@@ -1,3 +1,4 @@
+// src/pages/CreateComplex.js
 import React, { useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
@@ -5,6 +6,8 @@ import { uploadToCloudinary } from "../utils/cloudinary";
 import { Box, Card, CardContent, TextField, Typography, Button } from "@mui/material";
 
 function CreateComplex() {
+  // Добавляем состояние для номера комплекса (поле "number")
+  const [complexNumber, setComplexNumber] = useState("");
   const [name, setName] = useState("");
   const [developer, setDeveloper] = useState("");
   const [district, setDistrict] = useState("");
@@ -28,7 +31,9 @@ function CreateComplex() {
         const secureUrl = await uploadToCloudinary(file);
         uploadedUrls.push(secureUrl);
       }
+      // В документ добавляем и поле "number" с введённым значением complexNumber
       const newDoc = {
+        number: complexNumber,
         name,
         developer,
         district,
@@ -40,6 +45,7 @@ function CreateComplex() {
         createdAt: new Date()
       };
       await addDoc(collection(db, "complexes"), newDoc);
+      setComplexNumber("");
       setName("");
       setDeveloper("");
       setDistrict("");
@@ -62,13 +68,52 @@ function CreateComplex() {
             Создать Комплекс
           </Typography>
           <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField label="Название" value={name} onChange={(e) => setName(e.target.value)} required />
-            <TextField label="Застройщик" value={developer} onChange={(e) => setDeveloper(e.target.value)} />
-            <TextField label="Район" value={district} onChange={(e) => setDistrict(e.target.value)} />
-            <TextField label="Координаты (шир, долг)" value={coordinates} onChange={(e) => setCoordinates(e.target.value)} />
-            <TextField label="Цена от (USD)" type="number" value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} />
-            <TextField label="Диапазон площади" value={areaRange} onChange={(e) => setAreaRange(e.target.value)} />
-            <TextField label="Описание" multiline rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            {/* Поле для номера комплекса */}
+            <TextField
+              label="Номер комплекса"
+              value={complexNumber}
+              onChange={(e) => setComplexNumber(e.target.value)}
+              required
+            />
+            <TextField
+              label="Название"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <TextField
+              label="Застройщик"
+              value={developer}
+              onChange={(e) => setDeveloper(e.target.value)}
+            />
+            <TextField
+              label="Район"
+              value={district}
+              onChange={(e) => setDistrict(e.target.value)}
+            />
+            <TextField
+              label="Координаты (шир, долг)"
+              value={coordinates}
+              onChange={(e) => setCoordinates(e.target.value)}
+            />
+            <TextField
+              label="Цена от (USD)"
+              type="number"
+              value={priceFrom}
+              onChange={(e) => setPriceFrom(e.target.value)}
+            />
+            <TextField
+              label="Диапазон площади"
+              value={areaRange}
+              onChange={(e) => setAreaRange(e.target.value)}
+            />
+            <TextField
+              label="Описание"
+              multiline
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
             <Button variant="contained" component="label">
               Выбрать фото
               <input type="file" hidden multiple onChange={handleFileChange} />

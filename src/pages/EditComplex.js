@@ -11,6 +11,8 @@ function EditComplex() {
   const navigate = useNavigate();
   
   const [loading, setLoading] = useState(true);
+  // Состояние для поля "number" (номер комплекса), которое подтягивается из Firebase
+  const [complexNumber, setComplexNumber] = useState("");
   const [name, setName] = useState("");
   const [developer, setDeveloper] = useState("");
   const [district, setDistrict] = useState("");
@@ -28,6 +30,8 @@ function EditComplex() {
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data();
+          // Подтягиваем существующее значение поля "number"
+          setComplexNumber(data.number || "");
           setName(data.name || "");
           setDeveloper(data.developer || "");
           setDistrict(data.district || "");
@@ -61,7 +65,9 @@ function EditComplex() {
         newUrls.push(url);
       }
       const updatedImages = [...images, ...newUrls];
+      // Обновляем данные, включая поле "number" с номером комплекса
       const updatedData = {
+        number: complexNumber,
         name,
         developer,
         district,
@@ -115,6 +121,13 @@ function EditComplex() {
             Редактировать Комплекс (ID: {id})
           </Typography>
           <Box component="form" onSubmit={handleSave} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {/* Отображаем поле "Номер комплекса" */}
+            <TextField
+              label="Номер комплекса"
+              value={complexNumber}
+              onChange={(e) => setComplexNumber(e.target.value)}
+              required
+            />
             <TextField label="Название" value={name} onChange={(e) => setName(e.target.value)} />
             <TextField label="Застройщик" value={developer} onChange={(e) => setDeveloper(e.target.value)} />
             <TextField label="Район" value={district} onChange={(e) => setDistrict(e.target.value)} />
