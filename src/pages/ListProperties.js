@@ -28,16 +28,16 @@ function ListProperties() {
     fetchProperties();
   }, []);
 
-  // Фильтрация списка при изменении searchTerm или списка объектов
   useEffect(() => {
     if (searchTerm === "") {
       setFilteredProperties(properties);
     } else {
       const filtered = properties.filter(prop =>
-        // Можно фильтровать по нескольким полям, например: type, district, description
         (prop.type && prop.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (prop.district && prop.district.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (prop.description && prop.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        (prop.description && prop.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (prop.developer && prop.developer.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (prop.complex && prop.complex.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredProperties(filtered);
     }
@@ -77,6 +77,9 @@ function ListProperties() {
                 <Typography variant="h6">Цена: {property.price}</Typography>
                 <Typography variant="body2">Тип: {property.type}</Typography>
                 <Typography variant="body2">Район: {property.district}</Typography>
+                {/* Новые поля */}
+                <Typography variant="body2">Застройщик: {property.developer}</Typography>
+                <Typography variant="body2">Комплекс: {property.complex}</Typography>
                 <Button variant="contained" component={Link} to={`/property/edit/${property.id}`} sx={{ mt: 1 }}>
                   Редактировать
                 </Button>

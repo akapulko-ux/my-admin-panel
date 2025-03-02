@@ -9,8 +9,8 @@ import { Box, Card, CardContent, TextField, Typography, Button, Grid } from "@mu
 function EditProperty() {
   const { id } = useParams();
   const navigate = useNavigate();
+  
   const [loading, setLoading] = useState(true);
-
   const [price, setPrice] = useState("");
   const [type, setType] = useState("");
   const [coordinates, setCoordinates] = useState("");
@@ -44,7 +44,19 @@ function EditProperty() {
           const data = snap.data();
           setPrice(data.price || "");
           setType(data.type || "");
-          setCoordinates(data.coordinates || "");
+          // Если в документе есть отдельные поля latitude и longitude, объединяем их в строку:
+          if (data.latitude !== undefined && data.longitude !== undefined) {
+            setCoordinates(`${data.latitude}, ${data.longitude}`);
+          } else if (
+            data.coordinates &&
+            typeof data.coordinates === "object" &&
+            data.coordinates.latitude !== undefined &&
+            data.coordinates.longitude !== undefined
+          ) {
+            setCoordinates(`${data.coordinates.latitude}, ${data.coordinates.longitude}`);
+          } else {
+            setCoordinates(data.coordinates || "");
+          }
           setStatus(data.status || "");
           setDistrict(data.district || "");
           setDescription(data.description || "");
