@@ -1,13 +1,14 @@
 // src/pages/EditProperty.js
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { uploadToCloudinary } from "../utils/cloudinary";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Box, Card, CardContent, TextField, Typography, Button, Grid } from "@mui/material";
 
 function EditProperty() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
   const [price, setPrice] = useState("");
@@ -137,6 +138,18 @@ function EditProperty() {
     }
   };
 
+  const handleDelete = async () => {
+    if (window.confirm("Вы действительно хотите удалить этот объект?")) {
+      try {
+        await deleteDoc(doc(db, "properties", id));
+        alert("Объект удалён!");
+        navigate("/property/list");
+      } catch (error) {
+        console.error("Ошибка удаления объекта:", error);
+      }
+    }
+  };
+
   if (loading) return <Box sx={{ p: 2 }}>Загрузка...</Box>;
 
   return (
@@ -187,9 +200,14 @@ function EditProperty() {
               <input type="file" hidden multiple onChange={handleFileChange} />
             </Button>
 
-            <Button variant="contained" color="primary" type="submit">
-              Сохранить
-            </Button>
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+              <Button variant="contained" color="primary" type="submit">
+                Сохранить
+              </Button>
+              <Button variant="contained" color="error" onClick={handleDelete}>
+                Удалить объект
+              </Button>
+            </Box>
           </Box>
         </CardContent>
       </Card>

@@ -1,12 +1,15 @@
+// src/pages/EditComplex.js
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { uploadToCloudinary } from "../utils/cloudinary";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Box, Card, CardContent, TextField, Typography, Button, Grid } from "@mui/material";
 
 function EditComplex() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [developer, setDeveloper] = useState("");
@@ -90,6 +93,18 @@ function EditComplex() {
     }
   };
 
+  const handleDelete = async () => {
+    if (window.confirm("Вы действительно хотите удалить этот комплекс?")) {
+      try {
+        await deleteDoc(doc(db, "complexes", id));
+        alert("Комплекс удалён!");
+        navigate("/complex/list");
+      } catch (error) {
+        console.error("Ошибка удаления комплекса:", error);
+      }
+    }
+  };
+
   if (loading) return <Typography sx={{ p: 2 }}>Загрузка...</Typography>;
 
   return (
@@ -127,9 +142,14 @@ function EditComplex() {
               <input type="file" hidden multiple onChange={handleFileChange} />
             </Button>
 
-            <Button variant="contained" color="primary" type="submit">
-              Сохранить изменения
-            </Button>
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+              <Button variant="contained" color="primary" type="submit">
+                Сохранить изменения
+              </Button>
+              <Button variant="contained" color="error" onClick={handleDelete}>
+                Удалить комплекс
+              </Button>
+            </Box>
           </Box>
         </CardContent>
       </Card>
