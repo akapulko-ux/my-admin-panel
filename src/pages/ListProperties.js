@@ -2,7 +2,16 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
-import { Box, Card, CardContent, CardMedia, Typography, Button, Grid, TextField } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Button,
+  Grid,
+  TextField
+} from "@mui/material";
 import { Link } from "react-router-dom";
 
 function ListProperties() {
@@ -32,12 +41,13 @@ function ListProperties() {
     if (searchTerm === "") {
       setFilteredProperties(properties);
     } else {
+      const term = searchTerm.toLowerCase();
       const filtered = properties.filter(prop =>
-        (prop.type && prop.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (prop.district && prop.district.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (prop.description && prop.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (prop.developer && prop.developer.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (prop.complex && prop.complex.toLowerCase().includes(searchTerm.toLowerCase()))
+        (prop.type && prop.type.toLowerCase().includes(term)) ||
+        (prop.district && prop.district.toLowerCase().includes(term)) ||
+        (prop.description && prop.description.toLowerCase().includes(term)) ||
+        (prop.developer && prop.developer.toLowerCase().includes(term)) ||
+        (prop.complex && prop.complex.toLowerCase().includes(term))
       );
       setFilteredProperties(filtered);
     }
@@ -62,31 +72,44 @@ function ListProperties() {
         sx={{ mb: 2 }}
       />
       <Grid container spacing={2}>
-        {filteredProperties.map((property) => (
-          <Grid item xs={12} sm={6} md={4} key={property.id}>
-            <Card variant="outlined">
-              {property.images && property.images.length > 0 && (
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image={property.images[0]}
-                  alt="Property Photo"
-                />
-              )}
-              <CardContent>
-                <Typography variant="h6">Цена: {property.price}</Typography>
-                <Typography variant="body2">Тип: {property.type}</Typography>
-                <Typography variant="body2">Район: {property.district}</Typography>
-                {/* Новые поля */}
-                <Typography variant="body2">Застройщик: {property.developer}</Typography>
-                <Typography variant="body2">Комплекс: {property.complex}</Typography>
-                <Button variant="contained" component={Link} to={`/property/edit/${property.id}`} sx={{ mt: 1 }}>
-                  Редактировать
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+        {filteredProperties.map((property) => {
+          // Парсим price как число, затем форматируем с разделителями (ru-RU):
+          const priceValue = parseFloat(property.price) || 0;
+          const formattedPrice = priceValue.toLocaleString("ru-RU");
+
+          return (
+            <Grid item xs={12} sm={6} md={4} key={property.id}>
+              <Card variant="outlined">
+                {property.images && property.images.length > 0 && (
+                  <CardMedia
+                    component="img"
+                    height="140"
+                    image={property.images[0]}
+                    alt="Property Photo"
+                  />
+                )}
+                <CardContent>
+                  <Typography variant="h6">
+                    {/* Выводим число с разделителями + знак $ */}
+                    Цена: {formattedPrice} $
+                  </Typography>
+                  <Typography variant="body2">Тип: {property.type}</Typography>
+                  <Typography variant="body2">Район: {property.district}</Typography>
+                  <Typography variant="body2">Застройщик: {property.developer}</Typography>
+                  <Typography variant="body2">Комплекс: {property.complex}</Typography>
+                  <Button
+                    variant="contained"
+                    component={Link}
+                    to={`/property/edit/${property.id}`}
+                    sx={{ mt: 1 }}
+                  >
+                    Редактировать
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
     </Box>
   );

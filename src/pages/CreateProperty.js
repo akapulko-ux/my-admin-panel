@@ -27,6 +27,7 @@ function CreateProperty() {
   // Комплекс (Select)
   const [complexList, setComplexList] = useState([]);
   const [complex, setComplex] = useState("");
+
   // Поля, которые могут автозаполняться (заблокированы, если autoFill)
   const [developer, setDeveloper] = useState("");
   const [district, setDistrict] = useState("");
@@ -39,9 +40,18 @@ function CreateProperty() {
   const [buildingType, setBuildingType] = useState("Новый комплекс");
   const [bedrooms, setBedrooms] = useState("");
   const [area, setArea] = useState("");
-  const [province, setProvince] = useState("Bali");
+
+  // --- Пункт 1: провинция жёстко "Bali", без возможности изменить
+  // можем просто хранить в стейте, но сделаем disabled TextField:
+  // или вообще убрать стейт, но оставим для единообразия.
+  const province = "Bali";
+
+  // --- Пункт 2: "Город" - Select со списком
   const [city, setCity] = useState("Kab. Badung");
+
+  // --- Пункт 3: "RDTR" - Select со списком
   const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
+
   const [classRating, setClassRating] = useState("Комфорт (B)");
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
@@ -61,7 +71,7 @@ function CreateProperty() {
             name: data.name || "Без названия",
             developer: data.developer || "",
             district: data.district || "",
-            coordinates: data.coordinates || "",
+            coordinates: data.coordinates || "", // Может быть "lat, lon" или пусто
           };
         });
         setComplexList(loaded);
@@ -72,7 +82,7 @@ function CreateProperty() {
     loadComplexes();
   }, []);
 
-  // При выборе файлов (для загрузки фото)
+  // При выборе файлов (фото)
   const handleFileChange = (e) => {
     if (e.target.files) {
       setSelectedFiles([...e.target.files]);
@@ -85,7 +95,7 @@ function CreateProperty() {
     setComplex(chosenName);
 
     if (!chosenName) {
-      // Если "(не выбрано)"
+      // Сбрасываем автозаполнение
       setCoordinates("");
       setDeveloper("");
       setDistrict("");
@@ -106,29 +116,47 @@ function CreateProperty() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Сначала загружаем фото в Cloudinary
+      // Загрузка фото в Cloudinary
       const imageUrls = [];
       for (let file of selectedFiles) {
         const url = await uploadToCloudinary(file);
         imageUrls.push(url);
       }
 
+      // Разбираем строку "lat, lon" в два числа (или 0, если парсинг не удался)
+      let latitude = 0;
+      let longitude = 0;
+      if (coordinates.trim()) {
+        const [latStr, lonStr] = coordinates.split(",");
+        latitude = parseFloat(latStr?.trim()) || 0;
+        longitude = parseFloat(lonStr?.trim()) || 0;
+      }
+
       // Создаём объект для Firestore
       const newProp = {
-        price,
+        price: parseFloat(price) || 0,   // Число
         type,
         complex,
         developer,
         district,
-        coordinates,
+        // Вместо единого поля coordinates — два числовых поля:
+        latitude,
+        longitude,
         status,
         description,
         buildingType,
         bedrooms,
         area,
-        province,
+
+        // Пункт 1: province всегда "Bali"
+        province: "Bali",
+
+        // Пункт 2: city - берём выбранное из select
         city,
+
+        // Пункт 3: rdtr - берём выбранное из select
         rdtr,
+
         classRating,
         managementCompany,
         ownershipForm,
@@ -155,7 +183,8 @@ function CreateProperty() {
       setBuildingType("Новый комплекс");
       setBedrooms("");
       setArea("");
-      setProvince("Bali");
+
+      // province зафиксирован, сбрасывать не нужно
       setCity("Kab. Badung");
       setRdtr("RDTR Kecamatan Ubud");
       setClassRating("Комфорт (B)");
@@ -185,7 +214,7 @@ function CreateProperty() {
             onSubmit={handleSubmit}
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
-            {/* 1. Цена */}
+            {/* 1. Цена (число) */}
             <TextField
               label="Цена (USD)"
               type="number"
@@ -235,7 +264,7 @@ function CreateProperty() {
               disabled={isAutoFill}
             />
 
-            {/* 5. Район (Select, заблокирован если autoFill) */}
+            {/* 5. Район (Select, автозаполнение) */}
             <FormControl disabled={isAutoFill}>
               <InputLabel id="district-label">Район</InputLabel>
               <Select
@@ -263,7 +292,7 @@ function CreateProperty() {
               </Select>
             </FormControl>
 
-            {/* 6. Координаты (заблокированы, если autoFill) */}
+            {/* 6. Координаты (автозаполнение) */}
             <TextField
               label="Координаты (шир, долг)"
               value={coordinates}
@@ -340,21 +369,55 @@ function CreateProperty() {
               value={area}
               onChange={(e) => setArea(e.target.value)}
             />
+
+            {/* Пункт 1: провинция (Bali), disabled */}
             <TextField
               label="Провинция"
               value={province}
-              onChange={(e) => setProvince(e.target.value)}
+              disabled
             />
-            <TextField
-              label="Город"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
-            <TextField
-              label="RDTR"
-              value={rdtr}
-              onChange={(e) => setRdtr(e.target.value)}
-            />
+
+            {/* Пункт 2: город (Select) */}
+            <FormControl>
+              <InputLabel id="city-label">Город</InputLabel>
+              <Select
+                labelId="city-label"
+                label="Город"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              >
+                <MenuItem value="Kab. Jembrana">Kab. Jembrana</MenuItem>
+                <MenuItem value="Kab. Tabanan">Kab. Tabanan</MenuItem>
+                <MenuItem value="Kab. Badung">Kab. Badung</MenuItem>
+                <MenuItem value="Kab. Gianyar">Kab. Gianyar</MenuItem>
+                <MenuItem value="Kab. Bangli">Kab. Bangli</MenuItem>
+                <MenuItem value="Kab. Karangasem">Kab. Karangasem</MenuItem>
+                <MenuItem value="Kab. Buleleng">Kab. Buleleng</MenuItem>
+                <MenuItem value="Kota Denpasar">Kota Denpasar</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Пункт 3: RDTR (Select) */}
+            <FormControl>
+              <InputLabel id="rdtr-label">RDTR</InputLabel>
+              <Select
+                labelId="rdtr-label"
+                label="RDTR"
+                value={rdtr}
+                onChange={(e) => setRdtr(e.target.value)}
+              >
+                <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
+                <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
+                <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
+                <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
+                <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
+                <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
+                <MenuItem value="RDTR Wilayah Perencanaan Petang">RDTR Wilayah Perencanaan Petang</MenuItem>
+                <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
+                <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
+                <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
+              </Select>
+            </FormControl>
 
             {/* Класс (Select) */}
             <FormControl>
