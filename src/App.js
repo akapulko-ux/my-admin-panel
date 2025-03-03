@@ -38,7 +38,7 @@ function App() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            My Admin Panel
+            IT Agent Admin Panel
           </Typography>
           {currentUser ? (
             <Button color="inherit" onClick={handleLogout}>

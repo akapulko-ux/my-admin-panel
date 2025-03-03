@@ -1,4 +1,5 @@
 // src/pages/CreateProperty.js
+
 import React, { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc, getDocs } from "firebase/firestore";
@@ -15,6 +16,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Grid
 } from "@mui/material";
 
 function CreateProperty() {
@@ -24,7 +26,7 @@ function CreateProperty() {
   // Тип (Select)
   const [type, setType] = useState("Вилла");
 
-  // Комплекс (Select)
+  // Список комплексов и выбранный комплекс
   const [complexList, setComplexList] = useState([]);
   const [complex, setComplex] = useState("");
 
@@ -32,35 +34,37 @@ function CreateProperty() {
   const [developer, setDeveloper] = useState("");
   const [district, setDistrict] = useState("");
   const [coordinates, setCoordinates] = useState("");
+  const [city, setCity] = useState("Kab. Badung");
+  const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
+
   const [isAutoFill, setIsAutoFill] = useState(false);
 
   // Остальные поля
   const [status, setStatus] = useState("Строится");
-  const [description, setDescription] = useState("");
   const [buildingType, setBuildingType] = useState("Новый комплекс");
   const [bedrooms, setBedrooms] = useState("");
   const [area, setArea] = useState("");
 
-  // --- Пункт 1: провинция жёстко "Bali", без возможности изменить
-  // можем просто хранить в стейте, но сделаем disabled TextField:
-  // или вообще убрать стейт, но оставим для единообразия.
+  // Провинция зафиксирована (Bali)
   const province = "Bali";
 
-  // --- Пункт 2: "Город" - Select со списком
-  const [city, setCity] = useState("Kab. Badung");
-
-  // --- Пункт 3: "RDTR" - Select со списком
-  const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
-
+  // Класс, форма собственности и т.д.
   const [classRating, setClassRating] = useState("Комфорт (B)");
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
   const [completionDate, setCompletionDate] = useState("");
   const [pool, setPool] = useState("");
-  const [selectedFiles, setSelectedFiles] = useState([]);
 
-  // Загружаем список комплексов (для поля "Комплекс")
+  // Описание (перенесено в самый низ, на 6 строк)
+  const [description, setDescription] = useState("");
+
+  // Массив файлов для загрузки
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  // Превью-URL для каждого файла
+  const [previewUrls, setPreviewUrls] = useState([]);
+
+  // 1) Загружаем список комплексов
   useEffect(() => {
     async function loadComplexes() {
       try {
@@ -71,7 +75,9 @@ function CreateProperty() {
             name: data.name || "Без названия",
             developer: data.developer || "",
             district: data.district || "",
-            coordinates: data.coordinates || "", // Может быть "lat, lon" или пусто
+            coordinates: data.coordinates || "",
+            city: data.city || "",
+            rdtr: data.rdtr || ""
           };
         });
         setComplexList(loaded);
@@ -82,14 +88,24 @@ function CreateProperty() {
     loadComplexes();
   }, []);
 
-  // При выборе файлов (фото)
+  // 2) При выборе файлов (фото)
   const handleFileChange = (e) => {
     if (e.target.files) {
-      setSelectedFiles([...e.target.files]);
+      const newFiles = Array.from(e.target.files);
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
+
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+      setPreviewUrls((prev) => [...prev, ...newPreviews]);
     }
   };
 
-  // При выборе комплекса
+  // Удалить конкретное фото из выбранных (до отправки формы)
+  const handleRemovePreview = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // 3) При выборе комплекса
   const handleComplexChange = (e) => {
     const chosenName = e.target.value;
     setComplex(chosenName);
@@ -99,20 +115,28 @@ function CreateProperty() {
       setCoordinates("");
       setDeveloper("");
       setDistrict("");
+      setCity("Kab. Badung");
+      setRdtr("RDTR Kecamatan Ubud");
       setIsAutoFill(false);
     } else {
       // Ищем в списке
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
+        // Заполняем поля
         setCoordinates(found.coordinates);
         setDeveloper(found.developer);
         setDistrict(found.district);
+
+        // Новый функционал: город и RDTR
+        if (found.city) setCity(found.city);
+        if (found.rdtr) setRdtr(found.rdtr);
+
         setIsAutoFill(true);
       }
     }
   };
 
-  // Сабмит формы
+  // 4) Сабмит формы
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -123,7 +147,7 @@ function CreateProperty() {
         imageUrls.push(url);
       }
 
-      // Разбираем строку "lat, lon" в два числа (или 0, если парсинг не удался)
+      // Разбираем строку "lat, lon"
       let latitude = 0;
       let longitude = 0;
       if (coordinates.trim()) {
@@ -134,66 +158,59 @@ function CreateProperty() {
 
       // Создаём объект для Firestore
       const newProp = {
-        price: parseFloat(price) || 0,   // Число
+        price: parseFloat(price) || 0,
         type,
         complex,
         developer,
         district,
-        // Вместо единого поля coordinates — два числовых поля:
         latitude,
         longitude,
         status,
-        description,
         buildingType,
         bedrooms,
         area,
-
-        // Пункт 1: province всегда "Bali"
-        province: "Bali",
-
-        // Пункт 2: city - берём выбранное из select
+        province, // всегда "Bali"
         city,
-
-        // Пункт 3: rdtr - берём выбранное из select
         rdtr,
-
         classRating,
         managementCompany,
         ownershipForm,
         landStatus,
         completionDate,
         pool,
+        description,
         images: imageUrls,
         createdAt: new Date(),
       };
 
+      // Сохраняем документ
       await addDoc(collection(db, "properties"), newProp);
 
-      // Сброс полей
+      // Сбрасываем поля
       setPrice("");
       setType("Вилла");
       setComplex("");
       setDeveloper("");
       setDistrict("");
       setCoordinates("");
+      setCity("Kab. Badung");
+      setRdtr("RDTR Kecamatan Ubud");
       setIsAutoFill(false);
 
       setStatus("Строится");
-      setDescription("");
       setBuildingType("Новый комплекс");
       setBedrooms("");
       setArea("");
-
-      // province зафиксирован, сбрасывать не нужно
-      setCity("Kab. Badung");
-      setRdtr("RDTR Kecamatan Ubud");
       setClassRating("Комфорт (B)");
       setManagementCompany("");
       setOwnershipForm("Freehold");
       setLandStatus("Туристическая зона (W)");
       setCompletionDate("");
       setPool("");
+      setDescription("");
+
       setSelectedFiles([]);
+      setPreviewUrls([]);
 
       alert("Объект создан!");
     } catch (error) {
@@ -316,14 +333,6 @@ function CreateProperty() {
               </Select>
             </FormControl>
 
-            <TextField
-              label="Описание"
-              multiline
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-
             {/* Тип постройки (Select) */}
             <FormControl>
               <InputLabel id="buildingType-label">Тип постройки</InputLabel>
@@ -370,15 +379,15 @@ function CreateProperty() {
               onChange={(e) => setArea(e.target.value)}
             />
 
-            {/* Пункт 1: провинция (Bali), disabled */}
+            {/* Провинция (Bali), disabled */}
             <TextField
               label="Провинция"
               value={province}
               disabled
             />
 
-            {/* Пункт 2: город (Select) */}
-            <FormControl>
+            {/* Город (Select) - тоже блокируем, если autoFill */}
+            <FormControl disabled={isAutoFill}>
               <InputLabel id="city-label">Город</InputLabel>
               <Select
                 labelId="city-label"
@@ -397,8 +406,8 @@ function CreateProperty() {
               </Select>
             </FormControl>
 
-            {/* Пункт 3: RDTR (Select) */}
-            <FormControl>
+            {/* RDTR (Select) - блокируем, если autoFill */}
+            <FormControl disabled={isAutoFill}>
               <InputLabel id="rdtr-label">RDTR</InputLabel>
               <Select
                 labelId="rdtr-label"
@@ -496,6 +505,40 @@ function CreateProperty() {
                 <MenuItem value="Общий">Общий</MenuItem>
               </Select>
             </FormControl>
+
+            {/* Описание (в самом низу, на 6 строк) */}
+            <TextField
+              label="Описание"
+              multiline
+              rows={6}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+
+            {/* Превью выбранных фото */}
+            <Typography>Предпросмотр выбранных фото:</Typography>
+            <Grid container spacing={2}>
+              {previewUrls.map((url, idx) => (
+                <Grid item xs={6} sm={4} key={idx}>
+                  <Box position="relative">
+                    <img
+                      src={url}
+                      alt="preview"
+                      style={{ width: "100%", borderRadius: 4 }}
+                    />
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => handleRemovePreview(idx)}
+                      sx={{ position: "absolute", top: 8, right: 8 }}
+                    >
+                      Удалить
+                    </Button>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
 
             <Button variant="contained" component="label">
               Загрузить фото

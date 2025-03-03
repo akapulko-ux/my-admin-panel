@@ -42,16 +42,16 @@ function EditProperty() {
   const [pool, setPool] = useState("");
 
   // Остальные поля
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(""); // «Описание» будет перенесено вниз
   const [developer, setDeveloper] = useState("");
   const [complex, setComplex] = useState("");
   const [area, setArea] = useState("");
-  
+
   // «Провинция» теперь зафиксирована на Bali (disabled)
   // «Город» — Select
   const [province, setProvince] = useState("Bali");
   const [city, setCity] = useState("");
-  
+
   // «RDTR» — Select
   const [rdtr, setRdtr] = useState("");
 
@@ -91,7 +91,9 @@ function EditProperty() {
           // 5) district
           setDistrict(data.district || "");
 
+          // Поле «Описание» 
           setDescription(data.description || "");
+
           setDeveloper(data.developer || "");
           setComplex(data.complex || "");
 
@@ -99,13 +101,13 @@ function EditProperty() {
           setBedrooms(data.bedrooms || "");
           setArea(data.area || "");
 
-          // province — если в БД уже хранится что-то, но по условию
-          // у нас зафиксировано "Bali", можем принудительно выставлять:
+          // province — фиксируем на "Bali"
           setProvince("Bali");
 
+          // city
           setCity(data.city || "");
 
-          // RDTR
+          // rdtr
           setRdtr(data.rdtr || "");
 
           setClassRating(data.classRating || "");
@@ -181,7 +183,6 @@ function EditProperty() {
         buildingType,
         bedrooms,
         area,
-        // «province» всегда Bali, но сохраняем, если нужно
         province: "Bali",
         city,
         rdtr,
@@ -317,20 +318,14 @@ function EditProperty() {
               </Select>
             </FormControl>
 
-            <TextField
-              label="Описание"
-              multiline
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-
+            {/* Застройщик */}
             <TextField
               label="Застройщик"
               value={developer}
               onChange={(e) => setDeveloper(e.target.value)}
             />
 
+            {/* Комплекс */}
             <TextField
               label="Комплекс"
               value={complex}
@@ -510,6 +505,15 @@ function EditProperty() {
                 <MenuItem value="Общий">Общий</MenuItem>
               </Select>
             </FormControl>
+
+            {/* Описание (в самом низу, на 6 строк) */}
+            <TextField
+              label="Описание"
+              multiline
+              rows={6}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
 
             <Typography>Существующие фото:</Typography>
             <Grid container spacing={2}>
