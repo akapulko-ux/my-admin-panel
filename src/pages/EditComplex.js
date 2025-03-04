@@ -23,15 +23,16 @@ import {
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-// Импортируем компонент
+// Компонент для Drag & Drop фото
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
+// Тип для перетаскиваемых элементов (необязательно использовать, но пусть будет)
+// eslint-disable-next-line no-unused-vars
 const DRAG_TYPE = "EXISTING_IMAGE";
 
 function EditComplex() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(true);
 
   // Основные поля
@@ -49,10 +50,19 @@ function EditComplex() {
   const [city, setCity] = useState("");
   const [rdtr, setRdtr] = useState("");
 
-  // Вместо string[], массив объектов { id, url }
+  // Новые поля:
+  const [managementCompany, setManagementCompany] = useState("");
+  const [ownershipForm, setOwnershipForm] = useState("Freehold");
+  const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
+  // Дата завершения: только месяц/год (например, "2025-03")
+  const [completionDate, setCompletionDate] = useState("");
+
+  // Массив объектов для фото { id, url }
   const [images, setImages] = useState([]);
+  // Новые файлы, которые пользователь загружает
   const [newFiles, setNewFiles] = useState([]);
 
+  // Загружаем данные из Firestore
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -70,11 +80,18 @@ function EditComplex() {
           setAreaRange(data.areaRange || "");
           setDescription(data.description || "");
 
+          // province, city, rdtr
           setProvince(data.province || "Bali");
           setCity(data.city || "");
           setRdtr(data.rdtr || "");
 
-          // Преобразуем массив URL в объекты
+          // Новые поля (если в БД нет, используем значения по умолчанию)
+          setManagementCompany(data.managementCompany || "");
+          setOwnershipForm(data.ownershipForm || "Freehold");
+          setLandStatus(data.landStatus || "Туристическая зона (W)");
+          setCompletionDate(data.completionDate || "");
+
+          // Преобразуем массив строк (URL) в объекты { id, url }
           const existing = (data.images || []).map((url) => ({
             id: crypto.randomUUID(),
             url,
@@ -90,11 +107,11 @@ function EditComplex() {
     fetchData();
   }, [id]);
 
-  // Функция перестановки элементов
+  // Функция перестановки элементов (Drag & Drop)
   const moveExistingImage = (dragIndex, hoverIndex) => {
     setImages((prev) => {
       const arr = [...prev];
-      // Вырезаем draggedItem
+      // Извлекаем перетаскиваемый элемент
       const [draggedItem] = arr.splice(dragIndex, 1);
       // Вставляем на позицию hoverIndex
       arr.splice(hoverIndex, 0, draggedItem);
@@ -105,11 +122,12 @@ function EditComplex() {
   // Удаление одного фото (по индексу)
   const handleRemoveImage = async (idx) => {
     try {
+      // Удаляем из массива
       const updated = [...images];
       updated.splice(idx, 1);
       setImages(updated);
 
-      // Если нужно сразу обновлять в Firestore:
+      // Обновляем в Firestore (при желании можно делать это только при "Сохранить")
       const finalUrls = updated.map((item) => item.url);
       await updateDoc(doc(db, "complexes", id), { images: finalUrls });
     } catch (error) {
@@ -124,30 +142,27 @@ function EditComplex() {
     }
   };
 
-  // Сохранение
+  // Сохранение изменений
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      // Сначала загружаем новые фото
+      // Загружаем новые фото в Cloudinary
       const newUrls = [];
       for (let file of newFiles) {
         const url = await uploadToCloudinary(file);
         newUrls.push(url);
       }
-
-      // Превращаем их в объекты
+      // Превращаем новые URL в объекты
       const newObjects = newUrls.map((url) => ({
         id: crypto.randomUUID(),
         url,
       }));
-
-      // Соединяем
+      // Добавляем к текущим
       const updatedImages = [...images, ...newObjects];
-
-      // Собираем итоговые URL
+      // Извлекаем только URL для Firestore
       const finalUrls = updatedImages.map((obj) => obj.url);
 
-      // Обновляем документ
+      // Формируем объект для Firestore
       const updatedData = {
         number: complexNumber,
         name,
@@ -161,8 +176,14 @@ function EditComplex() {
         city,
         rdtr,
         images: finalUrls,
+        // Новые поля
+        managementCompany,
+        ownershipForm,
+        landStatus,
+        completionDate,
       };
 
+      // Обновляем документ
       await updateDoc(doc(db, "complexes", id), updatedData);
 
       // Обновляем стейт
@@ -200,13 +221,13 @@ function EditComplex() {
             Редактировать Комплекс (ID: {id})
           </Typography>
 
-          {/* Оборачиваем форму в DndProvider */}
           <DndProvider backend={HTML5Backend}>
             <Box
               component="form"
               onSubmit={handleSave}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
+              {/* Номер комплекса */}
               <TextField
                 label="Номер комплекса"
                 value={complexNumber}
@@ -245,6 +266,7 @@ function EditComplex() {
                 onChange={(e) => setAreaRange(e.target.value)}
               />
 
+              {/* Провинция (Bali), disabled */}
               <TextField
                 label="Провинция"
                 value={province}
@@ -296,6 +318,7 @@ function EditComplex() {
                 </Select>
               </FormControl>
 
+              {/* Описание */}
               <TextField
                 label="Описание"
                 multiline
@@ -303,6 +326,54 @@ function EditComplex() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
+
+              {/* ---- Новые поля ---- */}
+              <TextField
+                label="Управляющая компания"
+                value={managementCompany}
+                onChange={(e) => setManagementCompany(e.target.value)}
+              />
+
+              {/* Форма собственности (Select) */}
+              <FormControl>
+                <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
+                <Select
+                  labelId="ownershipForm-label"
+                  label="Форма собственности"
+                  value={ownershipForm}
+                  onChange={(e) => setOwnershipForm(e.target.value)}
+                >
+                  <MenuItem value="Leashold">Leashold</MenuItem>
+                  <MenuItem value="Freehold">Freehold</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Статус земли (Select) */}
+              <FormControl>
+                <InputLabel id="landStatus-label">Статус земли</InputLabel>
+                <Select
+                  labelId="landStatus-label"
+                  label="Статус земли"
+                  value={landStatus}
+                  onChange={(e) => setLandStatus(e.target.value)}
+                >
+                  <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
+                  <MenuItem value="Торговая зона (C)">Торговая зона (C)</MenuItem>
+                  <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
+                  <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
+                  <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Дата завершения (месяц/год) */}
+              <TextField
+                label="Дата завершения (месяц/год)"
+                type="month"
+                value={completionDate}
+                onChange={(e) => setCompletionDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+              {/* ---- Конец новых полей ---- */}
 
               <Typography>Существующие фото (Drag & Drop):</Typography>
               <Grid container spacing={2}>
@@ -312,7 +383,7 @@ function EditComplex() {
                       item={item}
                       index={idx}
                       moveItem={moveExistingImage}
-                      onRemove={handleRemoveImage}
+                      onRemove={(indexToRemove) => handleRemoveImage(indexToRemove)}
                     />
                   </Grid>
                 ))}
