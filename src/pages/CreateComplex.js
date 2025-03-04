@@ -4,9 +4,12 @@ import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 import { uploadToCloudinary } from "../utils/cloudinary";
 
-// --- Импорт из react-dnd ---
-import { DndProvider, useDrag, useDrop } from "react-dnd";
+// Импорт DnD Provider
+import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+
+// Импорт нашего вынесенного компонента
+import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
 import {
   Box,
@@ -22,102 +25,29 @@ import {
   MenuItem
 } from "@mui/material";
 
-/** 
- * Тип для DnD (произвольная строка, одинаковая в useDrag/useDrop)
- */
-const DRAG_TYPE = "PREVIEW_IMAGE";
-
-/**
- * Компонент одной «карточки» превью, которую можно перетаскивать
- */
-function DraggablePreviewItem({ item, index, movePreviewItem }) {
-  // useDrag: «источник» перетаскивания
-  const [{ isDragging }, dragRef] = useDrag({
-    type: DRAG_TYPE,
-    item: { index }, // что передаём при «захвате»
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  });
-
-  // useDrop: «приёмник» — реагирует, когда над ним «висят»
-  const [, dropRef] = useDrop({
-    accept: DRAG_TYPE,
-    hover: (dragged) => {
-      if (dragged.index !== index) {
-        // Перемещаем элемент в массиве
-        movePreviewItem(dragged.index, index);
-        // Чтобы не дёргалось при последующем hover
-        dragged.index = index;
-      }
-    },
-  });
-
-  // Чтобы элемент и «таскался», и «принимал» drop, объединим ref
-  const refFn = (node) => {
-    dragRef(node);
-    dropRef(node);
-  };
-
-  return (
-    <Box
-      ref={refFn}
-      sx={{
-        position: "relative",
-        width: "100%",
-        borderRadius: 1,
-        border: "1px solid #ccc",
-        overflow: "hidden",
-        opacity: isDragging ? 0.4 : 1,
-        cursor: "move",
-      }}
-    >
-      <img
-        src={item.url}
-        alt="preview"
-        style={{ width: "100%", display: "block" }}
-      />
-      {/* Можно добавить кнопку «Удалить» или что-то ещё */}
-    </Box>
-  );
-}
-
 function CreateComplex() {
-  // Основные поля
+  // ----- Все поля формы -----
   const [complexNumber, setComplexNumber] = useState("");
   const [name, setName] = useState("");
   const [developer, setDeveloper] = useState("");
-
-  // Район (Select), аналогично CreateProperty
   const [district, setDistrict] = useState("");
-
   const [coordinates, setCoordinates] = useState("");
   const [priceFrom, setPriceFrom] = useState("");
   const [areaRange, setAreaRange] = useState("");
   const [description, setDescription] = useState("");
 
-  // Провинция (фиксированная, Bali)
   const province = "Bali";
-
-  // Город (Select)
   const [city, setCity] = useState("Kab. Badung");
-
-  // RDTR (Select)
   const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
 
-  /**
-   * Вместо двух массивов (selectedFiles + previewUrls) —
-   * храним единый массив объектов: { id, file, url }
-   */
+  // Вместо selectedFiles + previewUrls
   const [previews, setPreviews] = useState([]);
 
-  /**
-   * Обработчик выбора файлов
-   */
+  // При выборе файлов
   const handleFileChange = (e) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map((file) => ({
-        id: crypto.randomUUID(), // или Date.now(), или любой другой уникальный ключ
+        id: crypto.randomUUID(),
         file,
         url: URL.createObjectURL(file),
       }));
@@ -125,41 +55,32 @@ function CreateComplex() {
     }
   };
 
-  /**
-   * Удаление конкретного фото из предпросмотра
-   */
+  // Удалить конкретное фото
   const handleRemovePreview = (id) => {
     setPreviews((prev) => prev.filter((item) => item.id !== id));
   };
 
-  /**
-   * Функция, которая вызывается при «hover» одного элемента над другим
-   * и меняет их местами в массиве
-   */
+  // Функция, которая меняет порядок при «hover»
   const movePreviewItem = (dragIndex, hoverIndex) => {
     setPreviews((prev) => {
       const updated = [...prev];
-      // меняем местами
       const [draggedItem] = updated.splice(dragIndex, 1);
       updated.splice(hoverIndex, 0, draggedItem);
       return updated;
     });
   };
 
-  /**
-   * Сабмит формы
-   */
+  // Сабмит формы
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Сначала загружаем фото в Cloudinary в порядке, который видит пользователь
+      // Загружаем фото в порядке массива previews
       const uploadedUrls = [];
       for (let item of previews) {
         const secureUrl = await uploadToCloudinary(item.file);
         uploadedUrls.push(secureUrl);
       }
 
-      // Формируем объект для Firestore
       const newDoc = {
         number: complexNumber,
         name,
@@ -169,17 +90,16 @@ function CreateComplex() {
         priceFrom,
         areaRange,
         description,
-        province: "Bali", // фиксированная строка
+        province,
         city,
         rdtr,
         images: uploadedUrls,
         createdAt: new Date(),
       };
 
-      // Сохраняем в коллекции "complexes"
       await addDoc(collection(db, "complexes"), newDoc);
 
-      // Сбрасываем поля
+      // Сброс полей
       setComplexNumber("");
       setName("");
       setDeveloper("");
@@ -200,14 +120,13 @@ function CreateComplex() {
 
   return (
     <Box sx={{ maxWidth: 700, margin: "auto", p: 2 }}>
-      {/* DndProvider должен оборачивать ту часть, где есть Drag/Drop */}
       <Card variant="outlined">
         <CardContent>
           <Typography variant="h5" gutterBottom>
             Создать Комплекс
           </Typography>
 
-          {/* Оборачиваем всё в DndProvider */}
+          {/* Оборачиваем всё в DndProvider, чтобы DraggablePreviewItem работал */}
           <DndProvider backend={HTML5Backend}>
             <Box
               component="form"
@@ -284,7 +203,7 @@ function CreateComplex() {
                 onChange={(e) => setDescription(e.target.value)}
               />
 
-              {/* Поле «Провинция» — зафиксировано "Bali", disabled */}
+              {/* Провинция (Bali) */}
               <TextField
                 label="Провинция"
                 value={province}
@@ -333,19 +252,16 @@ function CreateComplex() {
                 </Select>
               </FormControl>
 
-              {/* Превью выбранных фото (drag & drop) */}
               <Typography>Предпросмотр выбранных фото (Drag & Drop):</Typography>
               <Grid container spacing={2}>
                 {previews.map((item, idx) => (
                   <Grid item xs={6} sm={4} key={item.id}>
                     <Box position="relative">
-                      {/* Вставляем компонент, который умеет перетаскиваться */}
                       <DraggablePreviewItem
                         item={item}
                         index={idx}
                         movePreviewItem={movePreviewItem}
                       />
-
                       {/* Кнопка «Удалить» поверх */}
                       <Button
                         variant="contained"

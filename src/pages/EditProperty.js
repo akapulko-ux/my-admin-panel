@@ -20,6 +20,13 @@ import {
   MenuItem
 } from "@mui/material";
 
+// ========== Подключаем DnD ==========
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+
+// ========== Импорт компонента ==========
+import DraggablePreviewItem from "../components/DraggablePreviewItem";
+
 function EditProperty() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -27,9 +34,9 @@ function EditProperty() {
   const [loading, setLoading] = useState(true);
 
   // Основные поля
-  const [price, setPrice] = useState(""); // вводим/сохраняем как строку, чтобы потом parseFloat
-  const [type, setType] = useState("");  // будет Select
-  const [coordinates, setCoordinates] = useState(""); // строка вида "lat, lon"
+  const [price, setPrice] = useState("");
+  const [type, setType] = useState("");
+  const [coordinates, setCoordinates] = useState("");
 
   // Поля-Select
   const [status, setStatus] = useState("");
@@ -42,27 +49,35 @@ function EditProperty() {
   const [pool, setPool] = useState("");
 
   // Остальные поля
-  const [description, setDescription] = useState(""); // «Описание» будет перенесено вниз
+  const [description, setDescription] = useState("");
   const [developer, setDeveloper] = useState("");
   const [complex, setComplex] = useState("");
   const [area, setArea] = useState("");
 
-  // «Провинция» теперь зафиксирована на Bali (disabled)
-  // «Город» — Select
+  // «Провинция» зафиксирована на Bali
   const [province, setProvince] = useState("Bali");
+  // «Город»
   const [city, setCity] = useState("");
-
-  // «RDTR» — Select
+  // «RDTR»
   const [rdtr, setRdtr] = useState("");
 
   const [managementCompany, setManagementCompany] = useState("");
   const [completionDate, setCompletionDate] = useState("");
 
-  // Изображения
+  // Изображения (массив строк)
   const [images, setImages] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
 
-  // Загрузка данных из Firestore
+  // ====== Функция перестановки (Drag & Drop) ======
+  const moveImage = (dragIndex, hoverIndex) => {
+    setImages((prev) => {
+      const arr = [...prev];
+      const [dragged] = arr.splice(dragIndex, 1);
+      arr.splice(hoverIndex, 0, dragged);
+      return arr;
+    });
+  };
+
   useEffect(() => {
     const fetchProperty = async () => {
       try {
@@ -71,13 +86,10 @@ function EditProperty() {
         if (snap.exists()) {
           const data = snap.data();
 
-          // 1) price -> строка
           setPrice(data.price?.toString() || "");
-
-          // 2) type
           setType(data.type || "");
 
-          // 3) Координаты
+          // Координаты
           let coordsStr = "";
           if (typeof data.latitude === "number" && typeof data.longitude === "number") {
             coordsStr = `${data.latitude}, ${data.longitude}`;
@@ -86,30 +98,17 @@ function EditProperty() {
           }
           setCoordinates(coordsStr);
 
-          // 4) status
           setStatus(data.status || "");
-          // 5) district
           setDistrict(data.district || "");
-
-          // Поле «Описание» 
           setDescription(data.description || "");
-
           setDeveloper(data.developer || "");
           setComplex(data.complex || "");
-
           setBuildingType(data.buildingType || "");
           setBedrooms(data.bedrooms || "");
           setArea(data.area || "");
-
-          // province — фиксируем на "Bali"
           setProvince("Bali");
-
-          // city
           setCity(data.city || "");
-
-          // rdtr
           setRdtr(data.rdtr || "");
-
           setClassRating(data.classRating || "");
           setManagementCompany(data.managementCompany || "");
           setOwnershipForm(data.ownershipForm || "");
@@ -136,7 +135,7 @@ function EditProperty() {
   // Загрузка новых фото
   const handleFileChange = (e) => {
     if (e.target.files) {
-      setNewFiles([...e.target.files]);
+      setNewFiles((prev) => [...prev, ...e.target.files]);
     }
   };
 
@@ -144,18 +143,19 @@ function EditProperty() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      // Загрузка фото
+      // Загрузка новых фото
       const newUrls = [];
       for (let file of newFiles) {
         const url = await uploadToCloudinary(file);
         newUrls.push(url);
       }
+      // Добавляем в images (с учётом их текущего порядка)
       const updatedImages = [...images, ...newUrls];
 
-      // Парсим price как число
+      // Парсим price
       const parsedPrice = parseFloat(price) || 0;
 
-      // Координаты -> lat/lon
+      // Координаты
       let latitude = 0;
       let longitude = 0;
       if (coordinates.trim()) {
@@ -164,7 +164,7 @@ function EditProperty() {
         longitude = parseFloat(lonStr?.trim()) || 0;
       }
 
-      // Дата завершения -> Timestamp
+      // completionDate
       let compDateStamp = null;
       if (completionDate) {
         compDateStamp = Timestamp.fromDate(new Date(completionDate));
@@ -206,13 +206,13 @@ function EditProperty() {
     }
   };
 
-  // Удалить фото
+  // Удалить одно фото
   const handleRemoveImage = async (idx) => {
     try {
       const updated = [...images];
       updated.splice(idx, 1);
-      await updateDoc(doc(db, "properties", id), { images: updated });
       setImages(updated);
+      await updateDoc(doc(db, "properties", id), { images: updated });
     } catch (error) {
       console.error("Ошибка удаления ссылки на фото:", error);
     }
@@ -231,7 +231,9 @@ function EditProperty() {
     }
   };
 
-  if (loading) return <Box sx={{ p: 2 }}>Загрузка...</Box>;
+  if (loading) {
+    return <Box sx={{ p: 2 }}>Загрузка...</Box>;
+  }
 
   return (
     <Box sx={{ maxWidth: 800, margin: "auto", p: 2 }}>
@@ -515,10 +517,10 @@ function EditProperty() {
               onChange={(e) => setDescription(e.target.value)}
             />
 
-            <Typography>Существующие фото:</Typography>
+            <Typography>Существующие фото (старый вывод):</Typography>
             <Grid container spacing={2}>
               {images.map((url, idx) => (
-                <Grid item xs={6} sm={4} key={idx}>
+                <Grid item xs={6} sm={4} key={`old-${idx}`}>
                   <Box>
                     <img
                       src={url}
@@ -538,6 +540,23 @@ function EditProperty() {
                 </Grid>
               ))}
             </Grid>
+
+            {/* Новый Drag&Drop блок */}
+            <Typography sx={{ mt: 2 }}>Существующие фото (Drag & Drop):</Typography>
+            <DndProvider backend={HTML5Backend}>
+              <Grid container spacing={2}>
+                {images.map((url, idx) => (
+                  <Grid item xs={6} sm={4} key={`dnd-${idx}`}>
+                    <DraggablePreviewItem
+                      url={url}
+                      index={idx}
+                      moveItem={moveImage}
+                      onRemove={handleRemoveImage}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </DndProvider>
 
             <Button variant="contained" component="label">
               Загрузить новые фото

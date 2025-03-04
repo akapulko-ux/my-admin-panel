@@ -19,6 +19,11 @@ import {
   Grid
 } from "@mui/material";
 
+// ====== Для Drag & Drop ======
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import DraggablePreviewItem from "../components/DraggablePreviewItem"; // ваш компонент
+
 function CreateProperty() {
   // Цена
   const [price, setPrice] = useState("");
@@ -36,7 +41,6 @@ function CreateProperty() {
   const [coordinates, setCoordinates] = useState("");
   const [city, setCity] = useState("Kab. Badung");
   const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
-
   const [isAutoFill, setIsAutoFill] = useState(false);
 
   // Остальные поля
@@ -59,12 +63,10 @@ function CreateProperty() {
   // Описание (перенесено в самый низ, на 6 строк)
   const [description, setDescription] = useState("");
 
-  // Массив файлов для загрузки
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  // Превью-URL для каждого файла
-  const [previewUrls, setPreviewUrls] = useState([]);
+  // ====== НОВЫЙ способ (Drag & Drop): массив объектов { id, file, url } ======
+  const [dndItems, setDndItems] = useState([]);
 
-  // 1) Загружаем список комплексов
+  // --- Загрузка списка комплексов из Firestore ---
   useEffect(() => {
     async function loadComplexes() {
       try {
@@ -88,24 +90,34 @@ function CreateProperty() {
     loadComplexes();
   }, []);
 
-  // 2) При выборе файлов (фото)
-  const handleFileChange = (e) => {
+  // ====== НОВЫЙ обработчик выбора файлов (Drag & Drop) ======
+  const handleFileChangeDnd = (e) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
-
-      setSelectedFiles((prev) => [...prev, ...newFiles]);
-      setPreviewUrls((prev) => [...prev, ...newPreviews]);
+      const newFiles = Array.from(e.target.files).map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        url: URL.createObjectURL(file),
+      }));
+      setDndItems((prev) => [...prev, ...newFiles]);
     }
   };
 
-  // Удалить конкретное фото из выбранных (до отправки формы)
-  const handleRemovePreview = (index) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  // ====== Функция удаления из dndItems ======
+  const handleRemoveDndItem = (id) => {
+    setDndItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // 3) При выборе комплекса
+  // ====== Функция перестановки (Drag & Drop) ======
+  const moveDndItem = (dragIndex, hoverIndex) => {
+    setDndItems((prev) => {
+      const arr = [...prev];
+      const [dragged] = arr.splice(dragIndex, 1);
+      arr.splice(hoverIndex, 0, dragged);
+      return arr;
+    });
+  };
+
+  // --- При выборе комплекса ---
   const handleComplexChange = (e) => {
     const chosenName = e.target.value;
     setComplex(chosenName);
@@ -119,31 +131,28 @@ function CreateProperty() {
       setRdtr("RDTR Kecamatan Ubud");
       setIsAutoFill(false);
     } else {
-      // Ищем в списке
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
-        // Заполняем поля
         setCoordinates(found.coordinates);
         setDeveloper(found.developer);
         setDistrict(found.district);
-
-        // Новый функционал: город и RDTR
         if (found.city) setCity(found.city);
         if (found.rdtr) setRdtr(found.rdtr);
-
         setIsAutoFill(true);
       }
     }
   };
 
-  // 4) Сабмит формы
+  // --- Сабмит формы ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Загрузка фото в Cloudinary
+      // 1) Создаём массив для URL
       const imageUrls = [];
-      for (let file of selectedFiles) {
-        const url = await uploadToCloudinary(file);
+
+      // 2) Загружаем фото из «dndItems» (Drag & Drop)
+      for (let item of dndItems) {
+        const url = await uploadToCloudinary(item.file);
         imageUrls.push(url);
       }
 
@@ -156,7 +165,7 @@ function CreateProperty() {
         longitude = parseFloat(lonStr?.trim()) || 0;
       }
 
-      // Создаём объект для Firestore
+      // Формируем объект для Firestore
       const newProp = {
         price: parseFloat(price) || 0,
         type,
@@ -186,7 +195,7 @@ function CreateProperty() {
       // Сохраняем документ
       await addDoc(collection(db, "properties"), newProp);
 
-      // Сбрасываем поля
+      // Сброс полей
       setPrice("");
       setType("Вилла");
       setComplex("");
@@ -209,8 +218,8 @@ function CreateProperty() {
       setPool("");
       setDescription("");
 
-      setSelectedFiles([]);
-      setPreviewUrls([]);
+      // Очищаем Drag & Drop элементы
+      setDndItems([]);
 
       alert("Объект создан!");
     } catch (error) {
@@ -226,329 +235,327 @@ function CreateProperty() {
             Создать Объект
           </Typography>
 
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            {/* 1. Цена (число) */}
-            <TextField
-              label="Цена (USD)"
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
+          {/* Форма + DndProvider */}
+          <DndProvider backend={HTML5Backend}>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+            >
+              {/* Цена (число) */}
+              <TextField
+                label="Цена (USD)"
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
 
-            {/* 2. Тип (Select) */}
-            <FormControl>
-              <InputLabel id="type-label">Тип</InputLabel>
-              <Select
-                labelId="type-label"
-                label="Тип"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-              >
-                <MenuItem value="Вилла">Вилла</MenuItem>
-                <MenuItem value="Апартаменты">Апартаменты</MenuItem>
-                <MenuItem value="Дом">Дом</MenuItem>
-                <MenuItem value="Коммерческая недвижимость">Коммерческая недвижимость</MenuItem>
-              </Select>
-            </FormControl>
+              {/* Тип (Select) */}
+              <FormControl>
+                <InputLabel id="type-label">Тип</InputLabel>
+                <Select
+                  labelId="type-label"
+                  label="Тип"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                >
+                  <MenuItem value="Вилла">Вилла</MenuItem>
+                  <MenuItem value="Апартаменты">Апартаменты</MenuItem>
+                  <MenuItem value="Дом">Дом</MenuItem>
+                  <MenuItem value="Коммерческая недвижимость">Коммерческая недвижимость</MenuItem>
+                </Select>
+              </FormControl>
 
-            {/* 3. Комплекс (Select) */}
-            <FormControl>
-              <InputLabel id="complex-label">Комплекс</InputLabel>
-              <Select
-                labelId="complex-label"
-                label="Комплекс"
-                value={complex}
-                onChange={handleComplexChange}
-              >
-                <MenuItem value="">(не выбрано)</MenuItem>
-                {complexList.map((c, idx) => (
-                  <MenuItem key={idx} value={c.name}>
-                    {c.name}
-                  </MenuItem>
+              {/* Комплекс */}
+              <FormControl>
+                <InputLabel id="complex-label">Комплекс</InputLabel>
+                <Select
+                  labelId="complex-label"
+                  label="Комплекс"
+                  value={complex}
+                  onChange={handleComplexChange}
+                >
+                  <MenuItem value="">(не выбрано)</MenuItem>
+                  {complexList.map((c, idx) => (
+                    <MenuItem key={idx} value={c.name}>
+                      {c.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {/* Застройщик (заблокирован, если autoFill) */}
+              <TextField
+                label="Застройщик"
+                value={developer}
+                onChange={(e) => setDeveloper(e.target.value)}
+                disabled={isAutoFill}
+              />
+
+              {/* Район (Select, автозаполнение) */}
+              <FormControl disabled={isAutoFill}>
+                <InputLabel id="district-label">Район</InputLabel>
+                <Select
+                  labelId="district-label"
+                  label="Район"
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                >
+                  <MenuItem value="">(не выбрано)</MenuItem>
+                  <MenuItem value="Чангу">Чангу</MenuItem>
+                  <MenuItem value="Семиньяк">Семиньяк</MenuItem>
+                  <MenuItem value="Кута">Кута</MenuItem>
+                  <MenuItem value="Джимбаран">Джимбаран</MenuItem>
+                  <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
+                  <MenuItem value="Улувату">Улувату</MenuItem>
+                  <MenuItem value="Убуд">Убуд</MenuItem>
+                  <MenuItem value="Санур">Санур</MenuItem>
+                  <MenuItem value="Амед">Амед</MenuItem>
+                  <MenuItem value="Ловина">Ловина</MenuItem>
+                  <MenuItem value="Берава">Берава</MenuItem>
+                  <MenuItem value="Умалас">Умалас</MenuItem>
+                  <MenuItem value="Переренан">Переренан</MenuItem>
+                  <MenuItem value="Чемаги">Чемаги</MenuItem>
+                  <MenuItem value="Нуану">Нуану</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Координаты (автозаполнение) */}
+              <TextField
+                label="Координаты (шир, долг)"
+                value={coordinates}
+                onChange={(e) => setCoordinates(e.target.value)}
+                disabled={isAutoFill}
+              />
+
+              {/* Статус */}
+              <FormControl>
+                <InputLabel id="status-label">Статус</InputLabel>
+                <Select
+                  labelId="status-label"
+                  label="Статус"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                >
+                  <MenuItem value="Проект">Проект</MenuItem>
+                  <MenuItem value="Строится">Строится</MenuItem>
+                  <MenuItem value="Готовый">Готовый</MenuItem>
+                  <MenuItem value="От собственника">От собственника</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Тип постройки */}
+              <FormControl>
+                <InputLabel id="buildingType-label">Тип постройки</InputLabel>
+                <Select
+                  labelId="buildingType-label"
+                  label="Тип постройки"
+                  value={buildingType}
+                  onChange={(e) => setBuildingType(e.target.value)}
+                >
+                  <MenuItem value="Новый комплекс">Новый комплекс</MenuItem>
+                  <MenuItem value="Реновация">Реновация</MenuItem>
+                  <MenuItem value="ИЖС">ИЖС</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Спальни */}
+              <FormControl>
+                <InputLabel id="bedrooms-label">Спальни</InputLabel>
+                <Select
+                  labelId="bedrooms-label"
+                  label="Спальни"
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                >
+                  <MenuItem value="">(не выбрано)</MenuItem>
+                  <MenuItem value="Студия">Студия</MenuItem>
+                  <MenuItem value="1">1</MenuItem>
+                  <MenuItem value="2">2</MenuItem>
+                  <MenuItem value="3">3</MenuItem>
+                  <MenuItem value="4">4</MenuItem>
+                  <MenuItem value="5">5</MenuItem>
+                  <MenuItem value="6">6</MenuItem>
+                  <MenuItem value="7">7</MenuItem>
+                  <MenuItem value="8">8</MenuItem>
+                  <MenuItem value="9">9</MenuItem>
+                  <MenuItem value="10">10</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Площадь (м²)"
+                type="number"
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+              />
+
+              {/* Провинция (Bali), disabled */}
+              <TextField
+                label="Провинция"
+                value={province}
+                disabled
+              />
+
+              {/* Город (Select), блокируем если autoFill */}
+              <FormControl disabled={isAutoFill}>
+                <InputLabel id="city-label">Город</InputLabel>
+                <Select
+                  labelId="city-label"
+                  label="Город"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                >
+                  <MenuItem value="Kab. Jembrana">Kab. Jembrana</MenuItem>
+                  <MenuItem value="Kab. Tabanan">Kab. Tabanan</MenuItem>
+                  <MenuItem value="Kab. Badung">Kab. Badung</MenuItem>
+                  <MenuItem value="Kab. Gianyar">Kab. Gianyar</MenuItem>
+                  <MenuItem value="Kab. Bangli">Kab. Bangli</MenuItem>
+                  <MenuItem value="Kab. Karangasem">Kab. Karangasem</MenuItem>
+                  <MenuItem value="Kab. Buleleng">Kab. Buleleng</MenuItem>
+                  <MenuItem value="Kota Denpasar">Kota Denpasar</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* RDTR (Select), блокируем если autoFill */}
+              <FormControl disabled={isAutoFill}>
+                <InputLabel id="rdtr-label">RDTR</InputLabel>
+                <Select
+                  labelId="rdtr-label"
+                  label="RDTR"
+                  value={rdtr}
+                  onChange={(e) => setRdtr(e.target.value)}
+                >
+                  <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
+                  <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
+                  <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
+                  <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
+                  <MenuItem value="RDTR Wilayah Perencanaan Petang">RDTR Wilayah Perencания Petang</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Класс (Select) */}
+              <FormControl>
+                <InputLabel id="classRating-label">Класс</InputLabel>
+                <Select
+                  labelId="classRating-label"
+                  label="Класс"
+                  value={classRating}
+                  onChange={(e) => setClassRating(e.target.value)}
+                >
+                  <MenuItem value="Эконом (C)">Эконом (C)</MenuItem>
+                  <MenuItem value="Комфорт (B)">Комфорт (B)</MenuItem>
+                  <MenuItem value="Комфорт плюс (B+)">Комфорт плюс (B+)</MenuItem>
+                  <MenuItem value="Премиум (A)">Премиум (A)</MenuItem>
+                  <MenuItem value="Лакшери (A++)">Лакшери (A++)</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Управляющая компания"
+                value={managementCompany}
+                onChange={(e) => setManagementCompany(e.target.value)}
+              />
+
+              {/* Форма собственности (Select) */}
+              <FormControl>
+                <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
+                <Select
+                  labelId="ownershipForm-label"
+                  label="Форма собственности"
+                  value={ownershipForm}
+                  onChange={(e) => setOwnershipForm(e.target.value)}
+                >
+                  <MenuItem value="Leashold">Leashold</MenuItem>
+                  <MenuItem value="Freehold">Freehold</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Статус земли (Select) */}
+              <FormControl>
+                <InputLabel id="landStatus-label">Статус земли</InputLabel>
+                <Select
+                  labelId="landStatus-label"
+                  label="Статус земли"
+                  value={landStatus}
+                  onChange={(e) => setLandStatus(e.target.value)}
+                >
+                  <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
+                  <MenuItem value="Торговая зона (C)">Торговая зона (C)</MenuItem>
+                  <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
+                  <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
+                  <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Дата завершения"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={completionDate}
+                onChange={(e) => setCompletionDate(e.target.value)}
+              />
+
+              {/* Бассейн (Select) */}
+              <FormControl>
+                <InputLabel id="pool-label">Бассейн</InputLabel>
+                <Select
+                  labelId="pool-label"
+                  label="Бассейн"
+                  value={pool}
+                  onChange={(e) => setPool(e.target.value)}
+                >
+                  <MenuItem value="">(не выбрано)</MenuItem>
+                  <MenuItem value="Нет">Нет</MenuItem>
+                  <MenuItem value="Частный">Частный</MenuItem>
+                  <MenuItem value="Общий">Общий</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Описание (в самом низу, на 6 строк) */}
+              <TextField
+                label="Описание"
+                multiline
+                rows={6}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+
+              {/* --- НОВЫЙ блок Drag & Drop --- */}
+              <Typography sx={{ mt: 2 }}>Новый Drag & Drop предпросмотр:</Typography>
+              <Grid container spacing={2}>
+                {dndItems.map((item, idx) => (
+                  <Grid item xs={6} sm={4} key={item.id}>
+                    <Box position="relative">
+                      {/* Важно: передаём props item={item}, т.к. внутри DraggablePreviewItem используется item.url */}
+                      <DraggablePreviewItem
+                        item={item} 
+                        url={item.url} 
+                        index={idx}
+                        moveItem={moveDndItem}
+                        onRemove={() => handleRemoveDndItem(item.id)}
+                      />
+                    </Box>
+                  </Grid>
                 ))}
-              </Select>
-            </FormControl>
+              </Grid>
 
-            {/* 4. Застройщик (заблокирован, если autoFill) */}
-            <TextField
-              label="Застройщик"
-              value={developer}
-              onChange={(e) => setDeveloper(e.target.value)}
-              disabled={isAutoFill}
-            />
+              <Button variant="contained" component="label">
+                Загрузить фото (Drag & Drop)
+                <input type="file" hidden multiple onChange={handleFileChangeDnd} />
+              </Button>
 
-            {/* 5. Район (Select, автозаполнение) */}
-            <FormControl disabled={isAutoFill}>
-              <InputLabel id="district-label">Район</InputLabel>
-              <Select
-                labelId="district-label"
-                label="Район"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-              >
-                <MenuItem value="">(не выбрано)</MenuItem>
-                <MenuItem value="Чангу">Чангу</MenuItem>
-                <MenuItem value="Семиньяк">Семиньяк</MenuItem>
-                <MenuItem value="Кута">Кута</MenuItem>
-                <MenuItem value="Джимбаран">Джимбаран</MenuItem>
-                <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
-                <MenuItem value="Улувату">Улувату</MenuItem>
-                <MenuItem value="Убуд">Убуд</MenuItem>
-                <MenuItem value="Санур">Санур</MenuItem>
-                <MenuItem value="Амед">Амед</MenuItem>
-                <MenuItem value="Ловина">Ловина</MenuItem>
-                <MenuItem value="Берава">Берава</MenuItem>
-                <MenuItem value="Умалас">Умалас</MenuItem>
-                <MenuItem value="Переренан">Переренан</MenuItem>
-                <MenuItem value="Чемаги">Чемаги</MenuItem>
-                <MenuItem value="Нуану">Нуану</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* 6. Координаты (автозаполнение) */}
-            <TextField
-              label="Координаты (шир, долг)"
-              value={coordinates}
-              onChange={(e) => setCoordinates(e.target.value)}
-              disabled={isAutoFill}
-            />
-
-            {/* Статус (Select) */}
-            <FormControl>
-              <InputLabel id="status-label">Статус</InputLabel>
-              <Select
-                labelId="status-label"
-                label="Статус"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <MenuItem value="Проект">Проект</MenuItem>
-                <MenuItem value="Строится">Строится</MenuItem>
-                <MenuItem value="Готовый">Готовый</MenuItem>
-                <MenuItem value="От собственника">От собственника</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Тип постройки (Select) */}
-            <FormControl>
-              <InputLabel id="buildingType-label">Тип постройки</InputLabel>
-              <Select
-                labelId="buildingType-label"
-                label="Тип постройки"
-                value={buildingType}
-                onChange={(e) => setBuildingType(e.target.value)}
-              >
-                <MenuItem value="Новый комплекс">Новый комплекс</MenuItem>
-                <MenuItem value="Реновация">Реновация</MenuItem>
-                <MenuItem value="ИЖС">ИЖС</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Спальни (Select) */}
-            <FormControl>
-              <InputLabel id="bedrooms-label">Спальни</InputLabel>
-              <Select
-                labelId="bedrooms-label"
-                label="Спальни"
-                value={bedrooms}
-                onChange={(e) => setBedrooms(e.target.value)}
-              >
-                <MenuItem value="">(не выбрано)</MenuItem>
-                <MenuItem value="Студия">Студия</MenuItem>
-                <MenuItem value="1">1</MenuItem>
-                <MenuItem value="2">2</MenuItem>
-                <MenuItem value="3">3</MenuItem>
-                <MenuItem value="4">4</MenuItem>
-                <MenuItem value="5">5</MenuItem>
-                <MenuItem value="6">6</MenuItem>
-                <MenuItem value="7">7</MenuItem>
-                <MenuItem value="8">8</MenuItem>
-                <MenuItem value="9">9</MenuItem>
-                <MenuItem value="10">10</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Площадь (м²)"
-              type="number"
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-            />
-
-            {/* Провинция (Bali), disabled */}
-            <TextField
-              label="Провинция"
-              value={province}
-              disabled
-            />
-
-            {/* Город (Select) - тоже блокируем, если autoFill */}
-            <FormControl disabled={isAutoFill}>
-              <InputLabel id="city-label">Город</InputLabel>
-              <Select
-                labelId="city-label"
-                label="Город"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              >
-                <MenuItem value="Kab. Jembrana">Kab. Jembrana</MenuItem>
-                <MenuItem value="Kab. Tabanan">Kab. Tabanan</MenuItem>
-                <MenuItem value="Kab. Badung">Kab. Badung</MenuItem>
-                <MenuItem value="Kab. Gianyar">Kab. Gianyar</MenuItem>
-                <MenuItem value="Kab. Bangli">Kab. Bangli</MenuItem>
-                <MenuItem value="Kab. Karangasem">Kab. Karangasem</MenuItem>
-                <MenuItem value="Kab. Buleleng">Kab. Buleleng</MenuItem>
-                <MenuItem value="Kota Denpasar">Kota Denpasar</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* RDTR (Select) - блокируем, если autoFill */}
-            <FormControl disabled={isAutoFill}>
-              <InputLabel id="rdtr-label">RDTR</InputLabel>
-              <Select
-                labelId="rdtr-label"
-                label="RDTR"
-                value={rdtr}
-                onChange={(e) => setRdtr(e.target.value)}
-              >
-                <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
-                <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
-                <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
-                <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
-                <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                <MenuItem value="RDTR Wilayah Perencanaan Petang">RDTR Wilayah Perencanaan Petang</MenuItem>
-                <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
-                <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Класс (Select) */}
-            <FormControl>
-              <InputLabel id="classRating-label">Класс</InputLabel>
-              <Select
-                labelId="classRating-label"
-                label="Класс"
-                value={classRating}
-                onChange={(e) => setClassRating(e.target.value)}
-              >
-                <MenuItem value="Эконом (C)">Эконом (C)</MenuItem>
-                <MenuItem value="Комфорт (B)">Комфорт (B)</MenuItem>
-                <MenuItem value="Комфорт плюс (B+)">Комфорт плюс (B+)</MenuItem>
-                <MenuItem value="Премиум (A)">Премиум (A)</MenuItem>
-                <MenuItem value="Лакшери (A++)">Лакшери (A++)</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Управляющая компания"
-              value={managementCompany}
-              onChange={(e) => setManagementCompany(e.target.value)}
-            />
-
-            {/* Форма собственности (Select) */}
-            <FormControl>
-              <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
-              <Select
-                labelId="ownershipForm-label"
-                label="Форма собственности"
-                value={ownershipForm}
-                onChange={(e) => setOwnershipForm(e.target.value)}
-              >
-                <MenuItem value="Leashold">Leashold</MenuItem>
-                <MenuItem value="Freehold">Freehold</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Статус земли (Select) */}
-            <FormControl>
-              <InputLabel id="landStatus-label">Статус земли</InputLabel>
-              <Select
-                labelId="landStatus-label"
-                label="Статус земли"
-                value={landStatus}
-                onChange={(e) => setLandStatus(e.target.value)}
-              >
-                <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
-                <MenuItem value="Торговая зона (C)">Торговая зона (C)</MenuItem>
-                <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
-                <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
-                <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Дата завершения"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={completionDate}
-              onChange={(e) => setCompletionDate(e.target.value)}
-            />
-
-            {/* Бассейн (Select) */}
-            <FormControl>
-              <InputLabel id="pool-label">Бассейн</InputLabel>
-              <Select
-                labelId="pool-label"
-                label="Бассейн"
-                value={pool}
-                onChange={(e) => setPool(e.target.value)}
-              >
-                <MenuItem value="">(не выбрано)</MenuItem>
-                <MenuItem value="Нет">Нет</MenuItem>
-                <MenuItem value="Частный">Частный</MenuItem>
-                <MenuItem value="Общий">Общий</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Описание (в самом низу, на 6 строк) */}
-            <TextField
-              label="Описание"
-              multiline
-              rows={6}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-
-            {/* Превью выбранных фото */}
-            <Typography>Предпросмотр выбранных фото:</Typography>
-            <Grid container spacing={2}>
-              {previewUrls.map((url, idx) => (
-                <Grid item xs={6} sm={4} key={idx}>
-                  <Box position="relative">
-                    <img
-                      src={url}
-                      alt="preview"
-                      style={{ width: "100%", borderRadius: 4 }}
-                    />
-                    <Button
-                      variant="contained"
-                      color="error"
-                      size="small"
-                      onClick={() => handleRemovePreview(idx)}
-                      sx={{ position: "absolute", top: 8, right: 8 }}
-                    >
-                      Удалить
-                    </Button>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-
-            <Button variant="contained" component="label">
-              Загрузить фото
-              <input type="file" hidden multiple onChange={handleFileChange} />
-            </Button>
-
-            <Button variant="contained" color="primary" type="submit">
-              Создать
-            </Button>
-          </Box>
+              {/* Кнопка Создать */}
+              <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
+                Создать
+              </Button>
+            </Box>
+          </DndProvider>
         </CardContent>
       </Card>
     </Box>
