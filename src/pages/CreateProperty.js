@@ -57,16 +57,17 @@ function CreateProperty() {
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
-  const [completionDate, setCompletionDate] = useState("");
-  const [pool, setPool] = useState("");
 
-  // Описание (перенесено в самый низ, на 6 строк)
+  // Важно: теперь поле «Дата завершения» только месяц/год
+  const [completionDate, setCompletionDate] = useState("");
+
+  const [pool, setPool] = useState("");
   const [description, setDescription] = useState("");
 
-  // ====== НОВЫЙ способ (Drag & Drop): массив объектов { id, file, url } ======
+  // Массив для Drag & Drop
   const [dndItems, setDndItems] = useState([]);
 
-  // --- Загрузка списка комплексов из Firestore ---
+  // Загрузка списка комплексов
   useEffect(() => {
     async function loadComplexes() {
       try {
@@ -79,7 +80,11 @@ function CreateProperty() {
             district: data.district || "",
             coordinates: data.coordinates || "",
             city: data.city || "",
-            rdtr: data.rdtr || ""
+            rdtr: data.rdtr || "",
+            managementCompany: data.managementCompany || "",
+            ownershipForm: data.ownershipForm || "Freehold",
+            landStatus: data.landStatus || "Туристическая зона (W)",
+            completionDate: data.completionDate || ""
           };
         });
         setComplexList(loaded);
@@ -90,7 +95,7 @@ function CreateProperty() {
     loadComplexes();
   }, []);
 
-  // ====== НОВЫЙ обработчик выбора файлов (Drag & Drop) ======
+  // Обработчик выбора файлов (Drag & Drop)
   const handleFileChangeDnd = (e) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map((file) => ({
@@ -102,12 +107,12 @@ function CreateProperty() {
     }
   };
 
-  // ====== Функция удаления из dndItems ======
+  // Удалить из dndItems
   const handleRemoveDndItem = (id) => {
     setDndItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // ====== Функция перестановки (Drag & Drop) ======
+  // Перестановка элементов (Drag & Drop)
   const moveDndItem = (dragIndex, hoverIndex) => {
     setDndItems((prev) => {
       const arr = [...prev];
@@ -117,20 +122,25 @@ function CreateProperty() {
     });
   };
 
-  // --- При выборе комплекса ---
+  // При выборе комплекса
   const handleComplexChange = (e) => {
     const chosenName = e.target.value;
     setComplex(chosenName);
 
     if (!chosenName) {
-      // Сбрасываем автозаполнение
+      // Сброс автозаполнения
       setCoordinates("");
       setDeveloper("");
       setDistrict("");
       setCity("Kab. Badung");
       setRdtr("RDTR Kecamatan Ubud");
+      setManagementCompany("");
+      setOwnershipForm("Freehold");
+      setLandStatus("Туристическая зона (W)");
+      setCompletionDate("");
       setIsAutoFill(false);
     } else {
+      // Ищем
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
         setCoordinates(found.coordinates);
@@ -138,25 +148,28 @@ function CreateProperty() {
         setDistrict(found.district);
         if (found.city) setCity(found.city);
         if (found.rdtr) setRdtr(found.rdtr);
+        if (found.managementCompany) setManagementCompany(found.managementCompany);
+        if (found.ownershipForm) setOwnershipForm(found.ownershipForm);
+        if (found.landStatus) setLandStatus(found.landStatus);
+        if (found.completionDate) setCompletionDate(found.completionDate);
+
         setIsAutoFill(true);
       }
     }
   };
 
-  // --- Сабмит формы ---
+  // Сабмит формы
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // 1) Создаём массив для URL
+      // Загружаем фото
       const imageUrls = [];
-
-      // 2) Загружаем фото из «dndItems» (Drag & Drop)
       for (let item of dndItems) {
         const url = await uploadToCloudinary(item.file);
         imageUrls.push(url);
       }
 
-      // Разбираем строку "lat, lon"
+      // Парсим координаты
       let latitude = 0;
       let longitude = 0;
       if (coordinates.trim()) {
@@ -165,7 +178,7 @@ function CreateProperty() {
         longitude = parseFloat(lonStr?.trim()) || 0;
       }
 
-      // Формируем объект для Firestore
+      // Объект для Firestore
       const newProp = {
         price: parseFloat(price) || 0,
         type,
@@ -178,24 +191,27 @@ function CreateProperty() {
         buildingType,
         bedrooms,
         area,
-        province, // всегда "Bali"
+        province, // "Bali"
         city,
         rdtr,
         classRating,
         managementCompany,
         ownershipForm,
         landStatus,
+
+        // Важно: теперь completionDate — "YYYY-MM"
         completionDate,
+
         pool,
         description,
         images: imageUrls,
         createdAt: new Date(),
       };
 
-      // Сохраняем документ
+      // Сохраняем
       await addDoc(collection(db, "properties"), newProp);
 
-      // Сброс полей
+      // Сбрасываем
       setPrice("");
       setType("Вилла");
       setComplex("");
@@ -217,8 +233,6 @@ function CreateProperty() {
       setCompletionDate("");
       setPool("");
       setDescription("");
-
-      // Очищаем Drag & Drop элементы
       setDndItems([]);
 
       alert("Объект создан!");
@@ -235,14 +249,12 @@ function CreateProperty() {
             Создать Объект
           </Typography>
 
-          {/* Форма + DndProvider */}
           <DndProvider backend={HTML5Backend}>
             <Box
               component="form"
               onSubmit={handleSubmit}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
-              {/* Цена (число) */}
               <TextField
                 label="Цена (USD)"
                 type="number"
@@ -250,7 +262,6 @@ function CreateProperty() {
                 onChange={(e) => setPrice(e.target.value)}
               />
 
-              {/* Тип (Select) */}
               <FormControl>
                 <InputLabel id="type-label">Тип</InputLabel>
                 <Select
@@ -266,7 +277,6 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Комплекс */}
               <FormControl>
                 <InputLabel id="complex-label">Комплекс</InputLabel>
                 <Select
@@ -284,7 +294,6 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Застройщик (заблокирован, если autoFill) */}
               <TextField
                 label="Застройщик"
                 value={developer}
@@ -292,7 +301,6 @@ function CreateProperty() {
                 disabled={isAutoFill}
               />
 
-              {/* Район (Select, автозаполнение) */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="district-label">Район</InputLabel>
                 <Select
@@ -320,7 +328,6 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Координаты (автозаполнение) */}
               <TextField
                 label="Координаты (шир, долг)"
                 value={coordinates}
@@ -328,7 +335,6 @@ function CreateProperty() {
                 disabled={isAutoFill}
               />
 
-              {/* Статус */}
               <FormControl>
                 <InputLabel id="status-label">Статус</InputLabel>
                 <Select
@@ -344,7 +350,6 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Тип постройки */}
               <FormControl>
                 <InputLabel id="buildingType-label">Тип постройки</InputLabel>
                 <Select
@@ -359,7 +364,6 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Спальни */}
               <FormControl>
                 <InputLabel id="bedrooms-label">Спальни</InputLabel>
                 <Select
@@ -390,14 +394,12 @@ function CreateProperty() {
                 onChange={(e) => setArea(e.target.value)}
               />
 
-              {/* Провинция (Bali), disabled */}
               <TextField
                 label="Провинция"
                 value={province}
                 disabled
               />
 
-              {/* Город (Select), блокируем если autoFill */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="city-label">Город</InputLabel>
                 <Select
@@ -417,7 +419,6 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* RDTR (Select), блокируем если autoFill */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="rdtr-label">RDTR</InputLabel>
                 <Select
@@ -432,14 +433,13 @@ function CreateProperty() {
                   <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
                   <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                  <MenuItem value="RDTR Wilayah Perencanaan Petang">RDTR Wilayah Perencания Petang</MenuItem>
+                  <MenuItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
                   <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
                 </Select>
               </FormControl>
 
-              {/* Класс (Select) */}
               <FormControl>
                 <InputLabel id="classRating-label">Класс</InputLabel>
                 <Select
@@ -460,10 +460,10 @@ function CreateProperty() {
                 label="Управляющая компания"
                 value={managementCompany}
                 onChange={(e) => setManagementCompany(e.target.value)}
+                disabled={isAutoFill}
               />
 
-              {/* Форма собственности (Select) */}
-              <FormControl>
+              <FormControl disabled={isAutoFill}>
                 <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
                 <Select
                   labelId="ownershipForm-label"
@@ -476,8 +476,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Статус земли (Select) */}
-              <FormControl>
+              <FormControl disabled={isAutoFill}>
                 <InputLabel id="landStatus-label">Статус земли</InputLabel>
                 <Select
                   labelId="landStatus-label"
@@ -493,15 +492,16 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Поле выбора только месяца и года */}
               <TextField
-                label="Дата завершения"
-                type="date"
+                label="Дата завершения (месяц/год)"
+                type="month"
                 InputLabelProps={{ shrink: true }}
                 value={completionDate}
                 onChange={(e) => setCompletionDate(e.target.value)}
+                disabled={isAutoFill}
               />
 
-              {/* Бассейн (Select) */}
               <FormControl>
                 <InputLabel id="pool-label">Бассейн</InputLabel>
                 <Select
@@ -517,7 +517,6 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Описание (в самом низу, на 6 строк) */}
               <TextField
                 label="Описание"
                 multiline
@@ -526,16 +525,14 @@ function CreateProperty() {
                 onChange={(e) => setDescription(e.target.value)}
               />
 
-              {/* --- НОВЫЙ блок Drag & Drop --- */}
               <Typography sx={{ mt: 2 }}>Новый Drag & Drop предпросмотр:</Typography>
               <Grid container spacing={2}>
                 {dndItems.map((item, idx) => (
                   <Grid item xs={6} sm={4} key={item.id}>
                     <Box position="relative">
-                      {/* Важно: передаём props item={item}, т.к. внутри DraggablePreviewItem используется item.url */}
                       <DraggablePreviewItem
-                        item={item} 
-                        url={item.url} 
+                        item={item}
+                        url={item.url}
                         index={idx}
                         moveItem={moveDndItem}
                         onRemove={() => handleRemoveDndItem(item.id)}
@@ -550,7 +547,6 @@ function CreateProperty() {
                 <input type="file" hidden multiple onChange={handleFileChangeDnd} />
               </Button>
 
-              {/* Кнопка Создать */}
               <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
                 Создать
               </Button>
