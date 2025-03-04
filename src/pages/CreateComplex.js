@@ -1,14 +1,15 @@
 // src/pages/CreateComplex.js
+
 import React, { useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 import { uploadToCloudinary } from "../utils/cloudinary";
 
-// Импорт DnD Provider
+// DnD Provider и back-end
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-// Импорт нашего вынесенного компонента
+// Наш компонент для Drag & Drop превью
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
 import {
@@ -26,7 +27,7 @@ import {
 } from "@mui/material";
 
 function CreateComplex() {
-  // ----- Все поля формы -----
+  // ----- Поля формы -----
   const [complexNumber, setComplexNumber] = useState("");
   const [name, setName] = useState("");
   const [developer, setDeveloper] = useState("");
@@ -36,14 +37,24 @@ function CreateComplex() {
   const [areaRange, setAreaRange] = useState("");
   const [description, setDescription] = useState("");
 
+  // Зафиксированная провинция
   const province = "Bali";
+
+  // Поля Select для города и RDTR
   const [city, setCity] = useState("Kab. Badung");
   const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
 
-  // Вместо selectedFiles + previewUrls
+  // Новые поля
+  const [managementCompany, setManagementCompany] = useState("");
+  const [ownershipForm, setOwnershipForm] = useState("Freehold");
+  const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
+  // Для выбора только месяца/года используем <TextField type="month" />
+  const [completionDate, setCompletionDate] = useState("");
+
+  // Массив для превью (Drag & Drop)
   const [previews, setPreviews] = useState([]);
 
-  // При выборе файлов
+  // Обработчик выбора файлов
   const handleFileChange = (e) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map((file) => ({
@@ -55,13 +66,13 @@ function CreateComplex() {
     }
   };
 
-  // Удалить конкретное фото
+  // Удалить одно фото из превью
   const handleRemovePreview = (id) => {
     setPreviews((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Функция, которая меняет порядок при «hover»
-  const movePreviewItem = (dragIndex, hoverIndex) => {
+  // Перемещение фото (Drag & Drop)
+  const moveItem = (dragIndex, hoverIndex) => {
     setPreviews((prev) => {
       const updated = [...prev];
       const [draggedItem] = updated.splice(dragIndex, 1);
@@ -74,13 +85,14 @@ function CreateComplex() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Загружаем фото в порядке массива previews
+      // Сначала загружаем все фото в том порядке, который в массиве previews
       const uploadedUrls = [];
       for (let item of previews) {
         const secureUrl = await uploadToCloudinary(item.file);
         uploadedUrls.push(secureUrl);
       }
 
+      // Собираем объект для Firestore
       const newDoc = {
         number: complexNumber,
         name,
@@ -90,16 +102,21 @@ function CreateComplex() {
         priceFrom,
         areaRange,
         description,
-        province,
+        province, // "Bali"
         city,
         rdtr,
         images: uploadedUrls,
         createdAt: new Date(),
+        managementCompany,
+        ownershipForm,
+        landStatus,
+        completionDate, // строка вида "2025-03"
       };
 
+      // Добавляем в "complexes"
       await addDoc(collection(db, "complexes"), newDoc);
 
-      // Сброс полей
+      // Сбрасываем поля
       setComplexNumber("");
       setName("");
       setDeveloper("");
@@ -111,6 +128,12 @@ function CreateComplex() {
       setCity("Kab. Badung");
       setRdtr("RDTR Kecamatan Ubud");
       setPreviews([]);
+
+      // Сбрасываем новые поля
+      setManagementCompany("");
+      setOwnershipForm("Freehold");
+      setLandStatus("Туристическая зона (W)");
+      setCompletionDate("");
 
       alert("Комплекс создан!");
     } catch (error) {
@@ -126,13 +149,14 @@ function CreateComplex() {
             Создать Комплекс
           </Typography>
 
-          {/* Оборачиваем всё в DndProvider, чтобы DraggablePreviewItem работал */}
+          {/* Оборачиваем всё в DndProvider */}
           <DndProvider backend={HTML5Backend}>
             <Box
               component="form"
               onSubmit={handleSubmit}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
+              {/* Поля формы */}
               <TextField
                 label="Номер комплекса"
                 value={complexNumber}
@@ -245,12 +269,56 @@ function CreateComplex() {
                   <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
                   <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                  <MenuItem value="RDTR Wilayah Perencanaan Petang">RDTR Wilayah Perencanaan Petang</MenuItem>
+                  <MenuItem value="RDTR Wilayah Перencanaan Petang">RDTR Wilayah Перencanaan Petang</MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
                   <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
                 </Select>
               </FormControl>
+
+              {/* Новые поля */}
+              <TextField
+                label="Управляющая компания"
+                value={managementCompany}
+                onChange={(e) => setManagementCompany(e.target.value)}
+              />
+              <FormControl>
+                <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
+                <Select
+                  labelId="ownershipForm-label"
+                  label="Форма собственности"
+                  value={ownershipForm}
+                  onChange={(e) => setOwnershipForm(e.target.value)}
+                >
+                  <MenuItem value="Leashold">Leashold</MenuItem>
+                  <MenuItem value="Freehold">Freehold</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl>
+                <InputLabel id="landStatus-label">Статус земли</InputLabel>
+                <Select
+                  labelId="landStatus-label"
+                  label="Статус земли"
+                  value={landStatus}
+                  onChange={(e) => setLandStatus(e.target.value)}
+                >
+                  <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
+                  <MenuItem value="Торговая зона (C)">Торговая зона (C)</MenuItem>
+                  <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
+                  <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
+                  <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Дата завершения: только месяц/год */}
+              <TextField
+                label="Дата завершения (месяц/год)"
+                type="month"
+                value={completionDate}
+                onChange={(e) => setCompletionDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
 
               <Typography>Предпросмотр выбранных фото (Drag & Drop):</Typography>
               <Grid container spacing={2}>
@@ -260,9 +328,8 @@ function CreateComplex() {
                       <DraggablePreviewItem
                         item={item}
                         index={idx}
-                        movePreviewItem={movePreviewItem}
+                        moveItem={moveItem}
                       />
-                      {/* Кнопка «Удалить» поверх */}
                       <Button
                         variant="contained"
                         color="error"
