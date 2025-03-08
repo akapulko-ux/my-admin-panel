@@ -1,4 +1,5 @@
 // src/pages/EditComplex.js
+
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -16,24 +17,22 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  CircularProgress
 } from "@mui/material";
 
-// DnD
+// Для Drag & Drop
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-
-// Компонент для Drag & Drop фото
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
-
-// Тип для перетаскиваемых элементов (необязательно использовать, но пусть будет)
-// eslint-disable-next-line no-unused-vars
-const DRAG_TYPE = "EXISTING_IMAGE";
 
 function EditComplex() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Состояния для загрузки/сохранения
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Основные поля
   const [complexNumber, setComplexNumber] = useState("");
@@ -50,19 +49,27 @@ function EditComplex() {
   const [city, setCity] = useState("");
   const [rdtr, setRdtr] = useState("");
 
-  // Новые поля:
+  // Новые поля
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
-  // Дата завершения: только месяц/год (например, "2025-03")
-  const [completionDate, setCompletionDate] = useState("");
+  const [completionDate, setCompletionDate] = useState(""); // "YYYY-MM"
+  const [videoLink, setVideoLink] = useState("");
+  const [leaseYears, setLeaseYears] = useState("");
+  const [docsLink, setDocsLink] = useState("");
 
-  // Массив объектов для фото { id, url }
+  // Три новых поля: SHGB, PBG, SLF
+  const [shgb, setShgb] = useState("");
+  const [pbg, setPbg] = useState("");
+  const [slf, setSlf] = useState("");
+
+  // Массив объектов для фото (старые + новые).
+  // Формат: { id, url, file }
+  // - Старое фото: file = null
+  // - Новое фото: file = File
   const [images, setImages] = useState([]);
-  // Новые файлы, которые пользователь загружает
-  const [newFiles, setNewFiles] = useState([]);
 
-  // Загружаем данные из Firestore
+  // Загрузка данных из Firestore
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -71,6 +78,7 @@ function EditComplex() {
         if (snap.exists()) {
           const data = snap.data();
 
+          // Заполняем поля
           setComplexNumber(data.number || "");
           setName(data.name || "");
           setDeveloper(data.developer || "");
@@ -80,23 +88,30 @@ function EditComplex() {
           setAreaRange(data.areaRange || "");
           setDescription(data.description || "");
 
-          // province, city, rdtr
           setProvince(data.province || "Bali");
           setCity(data.city || "");
           setRdtr(data.rdtr || "");
 
-          // Новые поля (если в БД нет, используем значения по умолчанию)
           setManagementCompany(data.managementCompany || "");
           setOwnershipForm(data.ownershipForm || "Freehold");
           setLandStatus(data.landStatus || "Туристическая зона (W)");
           setCompletionDate(data.completionDate || "");
+          setVideoLink(data.videoLink || "");
+          setLeaseYears(data.leaseYears || "");
+          setDocsLink(data.docsLink || "");
 
-          // Преобразуем массив строк (URL) в объекты { id, url }
-          const existing = (data.images || []).map((url) => ({
+          // Три новых поля
+          setShgb(data.shgb || "");
+          setPbg(data.pbg || "");
+          setSlf(data.slf || "");
+
+          // Преобразуем старые URL в формат { id, url, file: null }
+          const oldImages = (data.images || []).map((url) => ({
             id: crypto.randomUUID(),
             url,
+            file: null
           }));
-          setImages(existing);
+          setImages(oldImages);
         }
       } catch (error) {
         console.error("Ошибка загрузки комплекса:", error);
@@ -107,62 +122,65 @@ function EditComplex() {
     fetchData();
   }, [id]);
 
-  // Функция перестановки элементов (Drag & Drop)
+  // Обработчик выбора новых фото
+  const handleFileChange = (e) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      // Превращаем их в объекты
+      const newImages = selectedFiles.map((file) => ({
+        id: crypto.randomUUID(),
+        url: URL.createObjectURL(file), // локальный preview
+        file
+      }));
+      // Добавляем к массиву images
+      setImages((prev) => [...prev, ...newImages]);
+    }
+  };
+
+  // Перестановка фото (Drag & Drop)
   const moveExistingImage = (dragIndex, hoverIndex) => {
     setImages((prev) => {
       const arr = [...prev];
-      // Извлекаем перетаскиваемый элемент
       const [draggedItem] = arr.splice(dragIndex, 1);
-      // Вставляем на позицию hoverIndex
       arr.splice(hoverIndex, 0, draggedItem);
       return arr;
     });
   };
 
-  // Удаление одного фото (по индексу)
+  // Удаление одного фото (локально)
   const handleRemoveImage = async (idx) => {
-    try {
-      // Удаляем из массива
-      const updated = [...images];
-      updated.splice(idx, 1);
-      setImages(updated);
+    // Просто убираем из массива images
+    const updated = [...images];
+    updated.splice(idx, 1);
+    setImages(updated);
 
-      // Обновляем в Firestore (при желании можно делать это только при "Сохранить")
-      const finalUrls = updated.map((item) => item.url);
-      await updateDoc(doc(db, "complexes", id), { images: finalUrls });
-    } catch (error) {
-      console.error("Ошибка удаления фото:", error);
-    }
-  };
-
-  // Добавление новых фото
-  const handleFileChange = (e) => {
-    if (e.target.files) {
-      setNewFiles((prev) => [...prev, ...e.target.files]);
-    }
+    // Если хотите сразу удалять из Firestore — можно делать здесь,
+    // но обычно проще сделать это при «Сохранить».
   };
 
   // Сохранение изменений
   const handleSave = async (e) => {
     e.preventDefault();
-    try {
-      // Загружаем новые фото в Cloudinary
-      const newUrls = [];
-      for (let file of newFiles) {
-        const url = await uploadToCloudinary(file);
-        newUrls.push(url);
-      }
-      // Превращаем новые URL в объекты
-      const newObjects = newUrls.map((url) => ({
-        id: crypto.randomUUID(),
-        url,
-      }));
-      // Добавляем к текущим
-      const updatedImages = [...images, ...newObjects];
-      // Извлекаем только URL для Firestore
-      const finalUrls = updatedImages.map((obj) => obj.url);
+    setIsLoading(true);
 
-      // Формируем объект для Firestore
+    try {
+      // Собираем итоговый массив URL (старые + новые)
+      const finalUrls = [];
+      for (let item of images) {
+        if (item.file) {
+          // Это новое фото, загружаем в Cloudinary
+          const url = await uploadToCloudinary(item.file);
+          finalUrls.push(url);
+        } else {
+          // Старое фото, берём URL как есть
+          finalUrls.push(item.url);
+        }
+      }
+
+      // Если ownershipForm = "Leashold", leaseYears, иначе ""
+      const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
+
+      // Собираем объект для Firestore
       const updatedData = {
         number: complexNumber,
         name,
@@ -176,23 +194,40 @@ function EditComplex() {
         city,
         rdtr,
         images: finalUrls,
-        // Новые поля
+
         managementCompany,
         ownershipForm,
         landStatus,
         completionDate,
+        videoLink,
+        docsLink,
+        leaseYears: finalLeaseYears,
+
+        // Три новых поля
+        shgb,
+        pbg,
+        slf
       };
 
       // Обновляем документ
       await updateDoc(doc(db, "complexes", id), updatedData);
 
-      // Обновляем стейт
+      // (Опционально) локально обновляем images,
+      // чтобы у всех фото file = null и url = Cloudinary
+      // Но для этого нужно уже иметь finalUrls. Если хотите — делайте так:
+      const updatedImages = finalUrls.map((url) => ({
+        id: crypto.randomUUID(),
+        url,
+        file: null
+      }));
       setImages(updatedImages);
-      setNewFiles([]);
 
+      // Сбрасываем новые файлы (не храним отдельно, т.к. у нас общий массив images)
       alert("Комплекс обновлён!");
     } catch (error) {
       console.error("Ошибка обновления комплекса:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -274,7 +309,7 @@ function EditComplex() {
                 disabled
               />
 
-              {/* Город (Select) */}
+              {/* Город */}
               <FormControl>
                 <InputLabel id="city-label">Город</InputLabel>
                 <Select
@@ -295,7 +330,7 @@ function EditComplex() {
                 </Select>
               </FormControl>
 
-              {/* RDTR (Select) */}
+              {/* RDTR */}
               <FormControl>
                 <InputLabel id="rdtr-label">RDTR</InputLabel>
                 <Select
@@ -310,15 +345,20 @@ function EditComplex() {
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
                   <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                  <MenuItem value="RDTR Wilayah Perencanaan Petang">RDTR Wilayah Perencanaan Petang</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Abiansemal">
+                    RDTR Kecamatan Abiansemal
+                  </MenuItem>
+                  <MenuItem value="RDTR Wilayah Perencanaan Petang">
+                    RDTR Wilayah Perencanaan Petang
+                  </MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Tegallalang">
+                    RDTR Kecamatan Tegallalang
+                  </MenuItem>
                 </Select>
               </FormControl>
 
-              {/* Описание */}
               <TextField
                 label="Описание"
                 multiline
@@ -327,14 +367,12 @@ function EditComplex() {
                 onChange={(e) => setDescription(e.target.value)}
               />
 
-              {/* ---- Новые поля ---- */}
+              {/* Новые поля */}
               <TextField
                 label="Управляющая компания"
                 value={managementCompany}
                 onChange={(e) => setManagementCompany(e.target.value)}
               />
-
-              {/* Форма собственности (Select) */}
               <FormControl>
                 <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
                 <Select
@@ -348,7 +386,15 @@ function EditComplex() {
                 </Select>
               </FormControl>
 
-              {/* Статус земли (Select) */}
+              {ownershipForm === "Leashold" && (
+                <TextField
+                  label="Лет"
+                  type="number"
+                  value={leaseYears}
+                  onChange={(e) => setLeaseYears(e.target.value)}
+                />
+              )}
+
               <FormControl>
                 <InputLabel id="landStatus-label">Статус земли</InputLabel>
                 <Select
@@ -365,7 +411,6 @@ function EditComplex() {
                 </Select>
               </FormControl>
 
-              {/* Дата завершения (месяц/год) */}
               <TextField
                 label="Дата завершения (месяц/год)"
                 type="month"
@@ -373,21 +418,53 @@ function EditComplex() {
                 onChange={(e) => setCompletionDate(e.target.value)}
                 InputLabelProps={{ shrink: true }}
               />
-              {/* ---- Конец новых полей ---- */}
 
-              <Typography>Существующие фото (Drag & Drop):</Typography>
-              <Grid container spacing={2}>
-                {images.map((item, idx) => (
-                  <Grid item xs={6} sm={4} key={item.id}>
-                    <DraggablePreviewItem
-                      item={item}
-                      index={idx}
-                      moveItem={moveExistingImage}
-                      onRemove={(indexToRemove) => handleRemoveImage(indexToRemove)}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+              <TextField
+                label="Ссылка на видео"
+                value={videoLink}
+                onChange={(e) => setVideoLink(e.target.value)}
+              />
+
+              <TextField
+                label="Доступно"
+                value={docsLink}
+                onChange={(e) => setDocsLink(e.target.value)}
+              />
+
+              {/* Три новых поля: SHGB, PBG, SLF */}
+              <TextField
+                label="Сертификат права на землю (SHGB)"
+                value={shgb}
+                onChange={(e) => setShgb(e.target.value)}
+              />
+              <TextField
+                label="Разрешение на строительство (PBG)"
+                value={pbg}
+                onChange={(e) => setPbg(e.target.value)}
+              />
+              <TextField
+                label="Сертификат готовности здания (SLF)"
+                value={slf}
+                onChange={(e) => setSlf(e.target.value)}
+              />
+
+              <Typography sx={{ mt: 2 }}>
+                Существующие (и новые) фото (Drag & Drop):
+              </Typography>
+              <DndProvider backend={HTML5Backend}>
+                <Grid container spacing={2}>
+                  {images.map((item, idx) => (
+                    <Grid item xs={6} sm={4} key={item.id}>
+                      <DraggablePreviewItem
+                        item={item}
+                        index={idx}
+                        moveItem={moveExistingImage}
+                        onRemove={() => handleRemoveImage(idx)}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </DndProvider>
 
               <Button variant="contained" component="label">
                 Добавить фото
@@ -395,9 +472,17 @@ function EditComplex() {
               </Button>
 
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                <Button variant="contained" color="primary" type="submit">
-                  Сохранить изменения
-                </Button>
+                {isLoading ? (
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <CircularProgress size={24} />
+                    <Typography>Сохраняем...</Typography>
+                  </Box>
+                ) : (
+                  <Button variant="contained" color="primary" type="submit">
+                    Сохранить изменения
+                  </Button>
+                )}
+
                 <Button variant="contained" color="error" onClick={handleDelete}>
                   Удалить комплекс
                 </Button>

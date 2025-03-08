@@ -23,7 +23,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  CircularProgress
 } from "@mui/material";
 
 function CreateComplex() {
@@ -37,22 +38,32 @@ function CreateComplex() {
   const [areaRange, setAreaRange] = useState("");
   const [description, setDescription] = useState("");
 
-  // Зафиксированная провинция
+  // Провинция зафиксирована (Bali)
   const province = "Bali";
 
   // Поля Select для города и RDTR
   const [city, setCity] = useState("Kab. Badung");
   const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
 
-  // Новые поля
+  // Поля о форме собственности, статусе земли и т.д.
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
-  // Для выбора только месяца/года используем <TextField type="month" />
-  const [completionDate, setCompletionDate] = useState("");
+  const [completionDate, setCompletionDate] = useState(""); // строка "2025-03" и т.п.
+  const [videoLink, setVideoLink] = useState("");
+  const [leaseYears, setLeaseYears] = useState("");
+  const [docsLink, setDocsLink] = useState("");
+
+  // *** Новые поля: SHGB, PBG, SLF ***
+  const [shgb, setShgb] = useState("");
+  const [pbg, setPbg] = useState("");
+  const [slf, setSlf] = useState("");
 
   // Массив для превью (Drag & Drop)
   const [previews, setPreviews] = useState([]);
+
+  // Состояние загрузки
+  const [isLoading, setIsLoading] = useState(false);
 
   // Обработчик выбора файлов
   const handleFileChange = (e) => {
@@ -84,15 +95,17 @@ function CreateComplex() {
   // Сабмит формы
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // включаем «загрузка»
+
     try {
-      // Сначала загружаем все фото в том порядке, который в массиве previews
+      // 1) Загружаем фото
       const uploadedUrls = [];
       for (let item of previews) {
         const secureUrl = await uploadToCloudinary(item.file);
         uploadedUrls.push(secureUrl);
       }
 
-      // Собираем объект для Firestore
+      // 2) Собираем объект для Firestore
       const newDoc = {
         number: complexNumber,
         name,
@@ -107,16 +120,27 @@ function CreateComplex() {
         rdtr,
         images: uploadedUrls,
         createdAt: new Date(),
+
         managementCompany,
         ownershipForm,
         landStatus,
-        completionDate, // строка вида "2025-03"
+        completionDate,
+        videoLink,
+        docsLink,
+
+        // Leasehold (лет)
+        leaseYears: ownershipForm === "Leashold" ? leaseYears : "",
+
+        // Новые поля (SHGB, PBG, SLF)
+        shgb,
+        pbg,
+        slf
       };
 
-      // Добавляем в "complexes"
+      // 3) Добавляем документ в "complexes"
       await addDoc(collection(db, "complexes"), newDoc);
 
-      // Сбрасываем поля
+      // 4) Сбрасываем поля
       setComplexNumber("");
       setName("");
       setDeveloper("");
@@ -129,15 +153,24 @@ function CreateComplex() {
       setRdtr("RDTR Kecamatan Ubud");
       setPreviews([]);
 
-      // Сбрасываем новые поля
       setManagementCompany("");
       setOwnershipForm("Freehold");
       setLandStatus("Туристическая зона (W)");
       setCompletionDate("");
+      setVideoLink("");
+      setDocsLink("");
+      setLeaseYears("");
+
+      // Сбрасываем новые поля
+      setShgb("");
+      setPbg("");
+      setSlf("");
 
       alert("Комплекс создан!");
     } catch (error) {
       console.error("Ошибка создания комплекса:", error);
+    } finally {
+      setIsLoading(false); // выключаем «загрузка»
     }
   };
 
@@ -149,14 +182,12 @@ function CreateComplex() {
             Создать Комплекс
           </Typography>
 
-          {/* Оборачиваем всё в DndProvider */}
           <DndProvider backend={HTML5Backend}>
             <Box
               component="form"
               onSubmit={handleSubmit}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
-              {/* Поля формы */}
               <TextField
                 label="Номер комплекса"
                 value={complexNumber}
@@ -266,7 +297,7 @@ function CreateComplex() {
                   <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
                   <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
-                  <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
+                  <MenuItem value="RDTR Kuta Selatan">RDTR Кuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
                   <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
                   <MenuItem value="RDTR Wilayah Перencanaan Petang">RDTR Wilayah Перencanaan Petang</MenuItem>
@@ -276,7 +307,7 @@ function CreateComplex() {
                 </Select>
               </FormControl>
 
-              {/* Новые поля */}
+              {/* Поля для сертификатов, даты и прочего */}
               <TextField
                 label="Управляющая компания"
                 value={managementCompany}
@@ -295,6 +326,16 @@ function CreateComplex() {
                 </Select>
               </FormControl>
 
+              {/* Если выбрано "Leashold" — показываем поле "Лет" */}
+              {ownershipForm === "Leashold" && (
+                <TextField
+                  label="Лет"
+                  type="number"
+                  value={leaseYears}
+                  onChange={(e) => setLeaseYears(e.target.value)}
+                />
+              )}
+
               <FormControl>
                 <InputLabel id="landStatus-label">Статус земли</InputLabel>
                 <Select
@@ -311,7 +352,7 @@ function CreateComplex() {
                 </Select>
               </FormControl>
 
-              {/* Дата завершения: только месяц/год */}
+              {/* Дата завершения (только месяц/год) */}
               <TextField
                 label="Дата завершения (месяц/год)"
                 type="month"
@@ -320,6 +361,38 @@ function CreateComplex() {
                 InputLabelProps={{ shrink: true }}
               />
 
+              {/* Ссылка на видео */}
+              <TextField
+                label="Ссылка на видео"
+                value={videoLink}
+                onChange={(e) => setVideoLink(e.target.value)}
+              />
+
+              {/* Ссылка на документы (доступно) */}
+              <TextField
+                label="Доступно"
+                value={docsLink}
+                onChange={(e) => setDocsLink(e.target.value)}
+              />
+
+              {/* *** Новые поля: SHGB, PBG, SLF *** */}
+              <TextField
+                label="Сертификат права на землю (SHGB)"
+                value={shgb}
+                onChange={(e) => setShgb(e.target.value)}
+              />
+              <TextField
+                label="Разрешение на строительство (PBG)"
+                value={pbg}
+                onChange={(e) => setPbg(e.target.value)}
+              />
+              <TextField
+                label="Сертификат готовности здания (SLF)"
+                value={slf}
+                onChange={(e) => setSlf(e.target.value)}
+              />
+
+              {/* Drag & Drop предпросмотр */}
               <Typography>Предпросмотр выбранных фото (Drag & Drop):</Typography>
               <Grid container spacing={2}>
                 {previews.map((item, idx) => (
@@ -349,9 +422,17 @@ function CreateComplex() {
                 <input type="file" hidden multiple onChange={handleFileChange} />
               </Button>
 
-              <Button variant="contained" color="primary" type="submit">
-                Создать
-              </Button>
+              {/* Кнопка «Создать» или спиннер */}
+              {isLoading ? (
+                <Box display="flex" alignItems="center" gap={1}>
+                  <CircularProgress size={24} />
+                  <Typography>Сохраняем...</Typography>
+                </Box>
+              ) : (
+                <Button variant="contained" color="primary" type="submit">
+                  Создать
+                </Button>
+              )}
             </Box>
           </DndProvider>
         </CardContent>

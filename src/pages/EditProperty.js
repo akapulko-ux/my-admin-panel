@@ -17,28 +17,27 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  CircularProgress
 } from "@mui/material";
 
-// ========== Подключаем DnD ==========
+// Для Drag & Drop
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-
-// ========== Импорт компонента ==========
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
 function EditProperty() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Состояния для загрузки/сохранения
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Основные поля
   const [price, setPrice] = useState("");
   const [type, setType] = useState("");
   const [coordinates, setCoordinates] = useState("");
-
-  // Поля-Select
   const [status, setStatus] = useState("");
   const [district, setDistrict] = useState("");
   const [buildingType, setBuildingType] = useState("");
@@ -47,37 +46,37 @@ function EditProperty() {
   const [ownershipForm, setOwnershipForm] = useState("");
   const [landStatus, setLandStatus] = useState("");
   const [pool, setPool] = useState("");
-
-  // Остальные поля
   const [description, setDescription] = useState("");
   const [developer, setDeveloper] = useState("");
   const [complex, setComplex] = useState("");
   const [area, setArea] = useState("");
 
-  // «Провинция» зафиксирована на Bali
+  // «Провинция» (Bali), «Город», «RDTR»
   const [province, setProvince] = useState("Bali");
-  // «Город»
   const [city, setCity] = useState("");
-  // «RDTR»
   const [rdtr, setRdtr] = useState("");
 
+  // Дополнительные поля
   const [managementCompany, setManagementCompany] = useState("");
+
+  // Поле «Дата завершения» (только месяц/год)
   const [completionDate, setCompletionDate] = useState("");
 
-  // Изображения (массив строк)
+  // Поле «Лет» (для Leashold)
+  const [leaseYears, setLeaseYears] = useState("");
+
+  // Три новых поля: SHGB, PBG, SLF
+  const [shgb, setShgb] = useState("");
+  const [pbg, setPbg] = useState("");
+  const [slf, setSlf] = useState("");
+
+  // Массив объектов для фото (старые + новые).
+  // Каждый элемент: { id, url, file }
+  // - url: либо Cloudinary-ссылка (старое фото), либо local preview (новое фото)
+  // - file: либо null (старое фото), либо File (новое фото)
   const [images, setImages] = useState([]);
-  const [newFiles, setNewFiles] = useState([]);
 
-  // ====== Функция перестановки (Drag & Drop) ======
-  const moveImage = (dragIndex, hoverIndex) => {
-    setImages((prev) => {
-      const arr = [...prev];
-      const [dragged] = arr.splice(dragIndex, 1);
-      arr.splice(hoverIndex, 0, dragged);
-      return arr;
-    });
-  };
-
+  // Загрузка данных при монтировании
   useEffect(() => {
     const fetchProperty = async () => {
       try {
@@ -86,17 +85,16 @@ function EditProperty() {
         if (snap.exists()) {
           const data = snap.data();
 
+          // Цена (число) -> строка
           setPrice(data.price?.toString() || "");
           setType(data.type || "");
 
           // Координаты
-          let coordsStr = "";
           if (typeof data.latitude === "number" && typeof data.longitude === "number") {
-            coordsStr = `${data.latitude}, ${data.longitude}`;
+            setCoordinates(`${data.latitude}, ${data.longitude}`);
           } else {
-            coordsStr = data.coordinates || "";
+            setCoordinates(data.coordinates || "");
           }
-          setCoordinates(coordsStr);
 
           setStatus(data.status || "");
           setDistrict(data.district || "");
@@ -106,6 +104,8 @@ function EditProperty() {
           setBuildingType(data.buildingType || "");
           setBedrooms(data.bedrooms || "");
           setArea(data.area || "");
+
+          // Province, city, rdtr
           setProvince("Bali");
           setCity(data.city || "");
           setRdtr(data.rdtr || "");
@@ -113,15 +113,33 @@ function EditProperty() {
           setManagementCompany(data.managementCompany || "");
           setOwnershipForm(data.ownershipForm || "");
           setLandStatus(data.landStatus || "");
+          setPool(data.pool || "");
 
+          // Дата завершения (Timestamp -> "YYYY-MM")
           if (data.completionDate instanceof Timestamp) {
-            setCompletionDate(data.completionDate.toDate().toISOString().slice(0, 10));
+            const dateObj = data.completionDate.toDate();
+            const yyyy = dateObj.getFullYear();
+            const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+            setCompletionDate(`${yyyy}-${mm}`);
           } else {
             setCompletionDate(data.completionDate || "");
           }
 
-          setPool(data.pool || "");
-          setImages(data.images || []);
+          // Лет (для Leashold)
+          setLeaseYears(data.leaseYears || "");
+
+          // Три новых поля: SHGB, PBG, SLF
+          setShgb(data.shgb || "");
+          setPbg(data.pbg || "");
+          setSlf(data.slf || "");
+
+          // Преобразуем массив строк (URL) в объекты { id, url, file: null }
+          const oldImages = (data.images || []).map((url) => ({
+            id: crypto.randomUUID(),
+            url,
+            file: null
+          }));
+          setImages(oldImages);
         }
       } catch (error) {
         console.error("Ошибка загрузки объекта:", error);
@@ -132,44 +150,74 @@ function EditProperty() {
     fetchProperty();
   }, [id]);
 
-  // Загрузка новых фото
+  // Обработчик выбора новых фото
   const handleFileChange = (e) => {
     if (e.target.files) {
-      setNewFiles((prev) => [...prev, ...e.target.files]);
+      const selectedFiles = Array.from(e.target.files);
+      const newImages = selectedFiles.map((file) => ({
+        id: crypto.randomUUID(),
+        url: URL.createObjectURL(file), // локальный preview
+        file
+      }));
+      setImages((prev) => [...prev, ...newImages]);
     }
   };
 
-  // Сохранение
+  // Функция перестановки (Drag & Drop)
+  const moveImage = (dragIndex, hoverIndex) => {
+    setImages((prev) => {
+      const arr = [...prev];
+      const [dragged] = arr.splice(dragIndex, 1);
+      arr.splice(hoverIndex, 0, dragged);
+      return arr;
+    });
+  };
+
+  // Сохранение изменений
   const handleSave = async (e) => {
     e.preventDefault();
-    try {
-      // Загрузка новых фото
-      const newUrls = [];
-      for (let file of newFiles) {
-        const url = await uploadToCloudinary(file);
-        newUrls.push(url);
-      }
-      // Добавляем в images (с учётом их текущего порядка)
-      const updatedImages = [...images, ...newUrls];
+    setIsSaving(true);
 
-      // Парсим price
+    try {
+      // Собираем итоговый массив URL (старые + новые)
+      const finalUrls = [];
+      for (let item of images) {
+        if (item.file) {
+          // Это новое фото, загружаем
+          const url = await uploadToCloudinary(item.file);
+          finalUrls.push(url);
+        } else {
+          // Старое фото, берём url как есть
+          finalUrls.push(item.url);
+        }
+      }
+
+      // Парсим цену
       const parsedPrice = parseFloat(price) || 0;
 
-      // Координаты
+      // Координаты -> latitude, longitude
       let latitude = 0;
       let longitude = 0;
       if (coordinates.trim()) {
         const [latStr, lonStr] = coordinates.split(",");
-        latitude = parseFloat(latStr?.trim()) || 0;
-        longitude = parseFloat(lonStr?.trim()) || 0;
+        latitude = parseFloat(latStr.trim()) || 0;
+        longitude = parseFloat(lonStr.trim()) || 0;
       }
 
-      // completionDate
+      // Дата завершения "YYYY-MM" -> Timestamp
       let compDateStamp = null;
       if (completionDate) {
-        compDateStamp = Timestamp.fromDate(new Date(completionDate));
+        const [yyyy, mm] = completionDate.split("-");
+        const parsedYear = parseInt(yyyy, 10);
+        const parsedMonth = parseInt(mm, 10) - 1; // JS месяцы с 0
+        const dateObj = new Date(parsedYear, parsedMonth, 1);
+        compDateStamp = Timestamp.fromDate(dateObj);
       }
 
+      // Если Leashold, сохраняем leaseYears, иначе ""
+      const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
+
+      // Собираем данные
       const updatedData = {
         price: parsedPrice,
         type,
@@ -192,33 +240,43 @@ function EditProperty() {
         landStatus,
         completionDate: compDateStamp,
         pool,
-        images: updatedImages
+        images: finalUrls,
+        leaseYears: finalLeaseYears,
+
+        // Три новых поля
+        shgb,
+        pbg,
+        slf
       };
 
+      // Обновляем документ
       await updateDoc(doc(db, "properties", id), updatedData);
 
-      setImages(updatedImages);
-      setNewFiles([]);
+      // Чтобы сразу увидеть новые ссылки (без file), можно локально обновить:
+      const updatedImagesState = finalUrls.map((url) => ({
+        id: crypto.randomUUID(),
+        url,
+        file: null
+      }));
+      setImages(updatedImagesState);
 
       alert("Объект обновлён!");
     } catch (error) {
       console.error("Ошибка обновления объекта:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Удалить одно фото
-  const handleRemoveImage = async (idx) => {
-    try {
-      const updated = [...images];
-      updated.splice(idx, 1);
-      setImages(updated);
-      await updateDoc(doc(db, "properties", id), { images: updated });
-    } catch (error) {
-      console.error("Ошибка удаления ссылки на фото:", error);
-    }
+  // Удаление одного фото из массива images
+  const handleRemoveImage = (idx) => {
+    const updated = [...images];
+    updated.splice(idx, 1);
+    setImages(updated);
+    // Можно сразу удалить из Firestore, но обычно делаем это при «Сохранить»
   };
 
-  // Удалить объект
+  // Удаление всего объекта
   const handleDelete = async () => {
     if (window.confirm("Вы действительно хотите удалить этот объект?")) {
       try {
@@ -244,7 +302,6 @@ function EditProperty() {
           </Typography>
 
           <Box component="form" onSubmit={handleSave} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-
             {/* Цена (USD) */}
             <TextField
               label="Цена (USD)"
@@ -276,7 +333,7 @@ function EditProperty() {
               onChange={(e) => setCoordinates(e.target.value)}
             />
 
-            {/* Статус (Select) */}
+            {/* Статус */}
             <FormControl>
               <InputLabel id="status-label">Статус</InputLabel>
               <Select
@@ -292,7 +349,7 @@ function EditProperty() {
               </Select>
             </FormControl>
 
-            {/* Район (Select) */}
+            {/* Район */}
             <FormControl>
               <InputLabel id="district-label">Район</InputLabel>
               <Select
@@ -334,7 +391,7 @@ function EditProperty() {
               onChange={(e) => setComplex(e.target.value)}
             />
 
-            {/* Тип постройки (Select) */}
+            {/* Тип постройки */}
             <FormControl>
               <InputLabel id="buildingType-label">Тип постройки</InputLabel>
               <Select
@@ -349,7 +406,7 @@ function EditProperty() {
               </Select>
             </FormControl>
 
-            {/* Спальни (Select) */}
+            {/* Спальни */}
             <FormControl>
               <InputLabel id="bedrooms-label">Спальни</InputLabel>
               <Select
@@ -373,6 +430,7 @@ function EditProperty() {
               </Select>
             </FormControl>
 
+            {/* Площадь */}
             <TextField
               label="Площадь (м²)"
               type="number"
@@ -380,14 +438,14 @@ function EditProperty() {
               onChange={(e) => setArea(e.target.value)}
             />
 
-            {/* Провинция (заблокированное поле, всегда "Bali") */}
+            {/* Провинция (Bali) */}
             <TextField
               label="Провинция"
               value={province}
               disabled
             />
 
-            {/* Город (Select) */}
+            {/* Город */}
             <FormControl>
               <InputLabel id="city-label">Город</InputLabel>
               <Select
@@ -408,7 +466,7 @@ function EditProperty() {
               </Select>
             </FormControl>
 
-            {/* RDTR (Select) */}
+            {/* RDTR */}
             <FormControl>
               <InputLabel id="rdtr-label">RDTR</InputLabel>
               <Select
@@ -422,15 +480,21 @@ function EditProperty() {
                 <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
                 <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                 <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                <MenuItem value="RDTR Wilayah Perencanaan Petang">RDTR Wilayah Perencanaan Petang</MenuItem>
+                <MenuItem value="RDTR Kecamatan Abiansemal">
+                  RDTR Kecamatan Abiansemal
+                </MenuItem>
+                <MenuItem value="RDTR Wilayah Perencanaan Petang">
+                  RDTR Wilayah Перencanaan Petang
+                </MenuItem>
                 <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                 <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
+                <MenuItem value="RDTR Kecamatan Tegallalang">
+                  RDTR Kecamatan Tegallalang
+                </MenuItem>
               </Select>
             </FormControl>
 
-            {/* Класс (Select) */}
+            {/* Класс */}
             <FormControl>
               <InputLabel id="classRating-label">Класс</InputLabel>
               <Select
@@ -447,13 +511,14 @@ function EditProperty() {
               </Select>
             </FormControl>
 
+            {/* Управляющая компания */}
             <TextField
               label="Управляющая компания"
               value={managementCompany}
               onChange={(e) => setManagementCompany(e.target.value)}
             />
 
-            {/* Форма собственности (Select) */}
+            {/* Форма собственности */}
             <FormControl>
               <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
               <Select
@@ -467,7 +532,17 @@ function EditProperty() {
               </Select>
             </FormControl>
 
-            {/* Статус земли (Select) */}
+            {/* Если Leashold -> поле "Лет" */}
+            {ownershipForm === "Leashold" && (
+              <TextField
+                label="Лет"
+                type="number"
+                value={leaseYears}
+                onChange={(e) => setLeaseYears(e.target.value)}
+              />
+            )}
+
+            {/* Статус земли */}
             <FormControl>
               <InputLabel id="landStatus-label">Статус земли</InputLabel>
               <Select
@@ -484,15 +559,16 @@ function EditProperty() {
               </Select>
             </FormControl>
 
+            {/* Дата завершения (месяц/год) */}
             <TextField
-              label="Дата завершения"
-              type="date"
+              label="Дата завершения (месяц/год)"
+              type="month"
               InputLabelProps={{ shrink: true }}
               value={completionDate}
               onChange={(e) => setCompletionDate(e.target.value)}
             />
 
-            {/* Бассейн (Select) */}
+            {/* Бассейн */}
             <FormControl>
               <InputLabel id="pool-label">Бассейн</InputLabel>
               <Select
@@ -508,7 +584,7 @@ function EditProperty() {
               </Select>
             </FormControl>
 
-            {/* Описание (в самом низу, на 6 строк) */}
+            {/* Описание */}
             <TextField
               label="Описание"
               multiline
@@ -517,41 +593,35 @@ function EditProperty() {
               onChange={(e) => setDescription(e.target.value)}
             />
 
-            <Typography>Существующие фото (старый вывод):</Typography>
-            <Grid container spacing={2}>
-              {images.map((url, idx) => (
-                <Grid item xs={6} sm={4} key={`old-${idx}`}>
-                  <Box>
-                    <img
-                      src={url}
-                      alt="property"
-                      style={{ width: "100%", borderRadius: 4 }}
-                    />
-                    <Button
-                      variant="contained"
-                      color="error"
-                      size="small"
-                      onClick={() => handleRemoveImage(idx)}
-                      sx={{ mt: 1 }}
-                    >
-                      Удалить
-                    </Button>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
+            {/* Три новых поля: SHGB, PBG, SLF */}
+            <TextField
+              label="Сертификат права на землю (SHGB)"
+              value={shgb}
+              onChange={(e) => setShgb(e.target.value)}
+            />
+            <TextField
+              label="Разрешение на строительство (PBG)"
+              value={pbg}
+              onChange={(e) => setPbg(e.target.value)}
+            />
+            <TextField
+              label="Сертификат готовности здания (SLF)"
+              value={slf}
+              onChange={(e) => setSlf(e.target.value)}
+            />
 
-            {/* Новый Drag&Drop блок */}
-            <Typography sx={{ mt: 2 }}>Существующие фото (Drag & Drop):</Typography>
+            <Typography sx={{ mt: 2 }}>
+              Существующие (и новые) фото (Drag & Drop):
+            </Typography>
             <DndProvider backend={HTML5Backend}>
               <Grid container spacing={2}>
-                {images.map((url, idx) => (
-                  <Grid item xs={6} sm={4} key={`dnd-${idx}`}>
+                {images.map((item, idx) => (
+                  <Grid item xs={6} sm={4} key={item.id}>
                     <DraggablePreviewItem
-                      url={url}
+                      item={item}
                       index={idx}
-                      moveItem={moveImage}
-                      onRemove={handleRemoveImage}
+                      moveItem={moveImage} 
+                      onRemove={() => handleRemoveImage(idx)}
                     />
                   </Grid>
                 ))}
@@ -564,9 +634,17 @@ function EditProperty() {
             </Button>
 
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <Button variant="contained" color="primary" type="submit">
-                Сохранить
-              </Button>
+              {isSaving ? (
+                <Box display="flex" alignItems="center" gap={1}>
+                  <CircularProgress size={24} />
+                  <Typography>Сохраняем...</Typography>
+                </Box>
+              ) : (
+                <Button variant="contained" color="primary" type="submit">
+                  Сохранить
+                </Button>
+              )}
+
               <Button variant="contained" color="error" onClick={handleDelete}>
                 Удалить объект
               </Button>

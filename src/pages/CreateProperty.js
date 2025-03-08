@@ -16,16 +16,17 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Grid
+  Grid,
+  CircularProgress
 } from "@mui/material";
 
 // ====== Для Drag & Drop ======
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import DraggablePreviewItem from "../components/DraggablePreviewItem"; // ваш компонент
+import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
 function CreateProperty() {
-  // Цена
+  // Цена (USD)
   const [price, setPrice] = useState("");
 
   // Тип (Select)
@@ -49,7 +50,7 @@ function CreateProperty() {
   const [bedrooms, setBedrooms] = useState("");
   const [area, setArea] = useState("");
 
-  // Провинция зафиксирована (Bali)
+  // Провинция (Bali)
   const province = "Bali";
 
   // Класс, форма собственности и т.д.
@@ -57,15 +58,23 @@ function CreateProperty() {
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
-
-  // Важно: теперь поле «Дата завершения» только месяц/год
-  const [completionDate, setCompletionDate] = useState("");
-
+  const [completionDate, setCompletionDate] = useState(""); // "YYYY-MM"
   const [pool, setPool] = useState("");
   const [description, setDescription] = useState("");
 
+  // Новое поле «Лет» (для Leashold)
+  const [leaseYears, setLeaseYears] = useState("");
+
+  // *** Три новых поля: SHGB, PBG, SLF ***
+  const [shgb, setShgb] = useState("");
+  const [pbg, setPbg] = useState("");
+  const [slf, setSlf] = useState("");
+
   // Массив для Drag & Drop
   const [dndItems, setDndItems] = useState([]);
+
+  // Состояние для спиннера
+  const [isSaving, setIsSaving] = useState(false);
 
   // Загрузка списка комплексов
   useEffect(() => {
@@ -84,7 +93,8 @@ function CreateProperty() {
             managementCompany: data.managementCompany || "",
             ownershipForm: data.ownershipForm || "Freehold",
             landStatus: data.landStatus || "Туристическая зона (W)",
-            completionDate: data.completionDate || ""
+            completionDate: data.completionDate || "",
+            leaseYears: data.leaseYears || ""
           };
         });
         setComplexList(loaded);
@@ -112,7 +122,7 @@ function CreateProperty() {
     setDndItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Перестановка элементов (Drag & Drop)
+  // Перестановка (Drag & Drop)
   const moveDndItem = (dragIndex, hoverIndex) => {
     setDndItems((prev) => {
       const arr = [...prev];
@@ -138,9 +148,10 @@ function CreateProperty() {
       setOwnershipForm("Freehold");
       setLandStatus("Туристическая зона (W)");
       setCompletionDate("");
+      setLeaseYears("");
       setIsAutoFill(false);
     } else {
-      // Ищем
+      // Ищем в complexList
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
         setCoordinates(found.coordinates);
@@ -152,6 +163,7 @@ function CreateProperty() {
         if (found.ownershipForm) setOwnershipForm(found.ownershipForm);
         if (found.landStatus) setLandStatus(found.landStatus);
         if (found.completionDate) setCompletionDate(found.completionDate);
+        if (found.leaseYears) setLeaseYears(found.leaseYears);
 
         setIsAutoFill(true);
       }
@@ -161,6 +173,8 @@ function CreateProperty() {
   // Сабмит формы
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
+
     try {
       // Загружаем фото
       const imageUrls = [];
@@ -169,7 +183,7 @@ function CreateProperty() {
         imageUrls.push(url);
       }
 
-      // Парсим координаты
+      // Координаты
       let latitude = 0;
       let longitude = 0;
       if (coordinates.trim()) {
@@ -178,7 +192,10 @@ function CreateProperty() {
         longitude = parseFloat(lonStr?.trim()) || 0;
       }
 
-      // Объект для Firestore
+      // Если ownershipForm = "Leashold", leaseYears, иначе ""
+      const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
+
+      // Формируем объект для Firestore
       const newProp = {
         price: parseFloat(price) || 0,
         type,
@@ -191,27 +208,30 @@ function CreateProperty() {
         buildingType,
         bedrooms,
         area,
-        province, // "Bali"
+        province,
         city,
         rdtr,
         classRating,
         managementCompany,
         ownershipForm,
         landStatus,
-
-        // Важно: теперь completionDate — "YYYY-MM"
-        completionDate,
-
+        completionDate, // "YYYY-MM"
         pool,
         description,
         images: imageUrls,
         createdAt: new Date(),
+        leaseYears: finalLeaseYears,
+
+        // Три новых поля (SHGB, PBG, SLF)
+        shgb,
+        pbg,
+        slf
       };
 
       // Сохраняем
       await addDoc(collection(db, "properties"), newProp);
 
-      // Сбрасываем
+      // Сбрасываем поля
       setPrice("");
       setType("Вилла");
       setComplex("");
@@ -233,11 +253,20 @@ function CreateProperty() {
       setCompletionDate("");
       setPool("");
       setDescription("");
+      setLeaseYears("");
+
+      // Очищаем новые поля
+      setShgb("");
+      setPbg("");
+      setSlf("");
+
       setDndItems([]);
 
       alert("Объект создан!");
     } catch (error) {
       console.error("Ошибка создания объекта:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -255,6 +284,7 @@ function CreateProperty() {
               onSubmit={handleSubmit}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
+              {/* Цена (USD) */}
               <TextField
                 label="Цена (USD)"
                 type="number"
@@ -262,6 +292,7 @@ function CreateProperty() {
                 onChange={(e) => setPrice(e.target.value)}
               />
 
+              {/* Тип (Select) */}
               <FormControl>
                 <InputLabel id="type-label">Тип</InputLabel>
                 <Select
@@ -273,10 +304,13 @@ function CreateProperty() {
                   <MenuItem value="Вилла">Вилла</MenuItem>
                   <MenuItem value="Апартаменты">Апартаменты</MenuItem>
                   <MenuItem value="Дом">Дом</MenuItem>
-                  <MenuItem value="Коммерческая недвижимость">Коммерческая недвижимость</MenuItem>
+                  <MenuItem value="Коммерческая недвижимость">
+                    Коммерческая недвижимость
+                  </MenuItem>
                 </Select>
               </FormControl>
 
+              {/* Комплекс */}
               <FormControl>
                 <InputLabel id="complex-label">Комплекс</InputLabel>
                 <Select
@@ -294,6 +328,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Застройщик */}
               <TextField
                 label="Застройщик"
                 value={developer}
@@ -301,6 +336,7 @@ function CreateProperty() {
                 disabled={isAutoFill}
               />
 
+              {/* Район (Select) */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="district-label">Район</InputLabel>
                 <Select
@@ -328,6 +364,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Координаты */}
               <TextField
                 label="Координаты (шир, долг)"
                 value={coordinates}
@@ -335,6 +372,7 @@ function CreateProperty() {
                 disabled={isAutoFill}
               />
 
+              {/* Статус */}
               <FormControl>
                 <InputLabel id="status-label">Статус</InputLabel>
                 <Select
@@ -350,6 +388,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Тип постройки */}
               <FormControl>
                 <InputLabel id="buildingType-label">Тип постройки</InputLabel>
                 <Select
@@ -364,6 +403,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Спальни */}
               <FormControl>
                 <InputLabel id="bedrooms-label">Спальни</InputLabel>
                 <Select
@@ -387,6 +427,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Площадь */}
               <TextField
                 label="Площадь (м²)"
                 type="number"
@@ -394,12 +435,14 @@ function CreateProperty() {
                 onChange={(e) => setArea(e.target.value)}
               />
 
+              {/* Провинция (Bali), disabled */}
               <TextField
                 label="Провинция"
                 value={province}
                 disabled
               />
 
+              {/* Город (Select) */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="city-label">Город</InputLabel>
                 <Select
@@ -419,6 +462,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* RDTR (Select) */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="rdtr-label">RDTR</InputLabel>
                 <Select
@@ -432,14 +476,21 @@ function CreateProperty() {
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
                   <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                  <MenuItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Abiansemal">
+                    RDTR Kecamatan Abiansemal
+                  </MenuItem>
+                  <MenuItem value="RDTR Wilayah Перencания Petang">
+                    RDTR Wilayah Перencания Petang
+                  </MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Tegallalang">
+                    RDTR Kecamatan Tegallalang
+                  </MenuItem>
                 </Select>
               </FormControl>
 
+              {/* Класс (Select) */}
               <FormControl>
                 <InputLabel id="classRating-label">Класс</InputLabel>
                 <Select
@@ -456,6 +507,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Управляющая компания */}
               <TextField
                 label="Управляющая компания"
                 value={managementCompany}
@@ -463,6 +515,7 @@ function CreateProperty() {
                 disabled={isAutoFill}
               />
 
+              {/* Форма собственности */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
                 <Select
@@ -476,6 +529,18 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Если Leashold — показываем «Лет» */}
+              {ownershipForm === "Leashold" && (
+                <TextField
+                  label="Лет"
+                  type="number"
+                  value={leaseYears}
+                  onChange={(e) => setLeaseYears(e.target.value)}
+                  disabled={isAutoFill}
+                />
+              )}
+
+              {/* Статус земли */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="landStatus-label">Статус земли</InputLabel>
                 <Select
@@ -488,11 +553,13 @@ function CreateProperty() {
                   <MenuItem value="Торговая зона (C)">Торговая зона (C)</MenuItem>
                   <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
                   <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
-                  <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
+                  <MenuItem value="Заповедная зона (RTH)">
+                    Заповедная зона (RTH)
+                  </MenuItem>
                 </Select>
               </FormControl>
 
-              {/* Поле выбора только месяца и года */}
+              {/* Дата завершения (месяц/год) */}
               <TextField
                 label="Дата завершения (месяц/год)"
                 type="month"
@@ -502,6 +569,7 @@ function CreateProperty() {
                 disabled={isAutoFill}
               />
 
+              {/* Бассейн (Select) */}
               <FormControl>
                 <InputLabel id="pool-label">Бассейн</InputLabel>
                 <Select
@@ -517,6 +585,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
+              {/* Описание */}
               <TextField
                 label="Описание"
                 multiline
@@ -525,6 +594,24 @@ function CreateProperty() {
                 onChange={(e) => setDescription(e.target.value)}
               />
 
+              {/* Три новых поля: SHGB, PBG, SLF */}
+              <TextField
+                label="Сертификат права на землю (SHGB)"
+                value={shgb}
+                onChange={(e) => setShgb(e.target.value)}
+              />
+              <TextField
+                label="Разрешение на строительство (PBG)"
+                value={pbg}
+                onChange={(e) => setPbg(e.target.value)}
+              />
+              <TextField
+                label="Сертификат готовности здания (SLF)"
+                value={slf}
+                onChange={(e) => setSlf(e.target.value)}
+              />
+
+              {/* Drag & Drop превью */}
               <Typography sx={{ mt: 2 }}>Новый Drag & Drop предпросмотр:</Typography>
               <Grid container spacing={2}>
                 {dndItems.map((item, idx) => (
@@ -547,9 +634,17 @@ function CreateProperty() {
                 <input type="file" hidden multiple onChange={handleFileChangeDnd} />
               </Button>
 
-              <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
-                Создать
-              </Button>
+              {/* Кнопка «Создать» или спиннер */}
+              {isSaving ? (
+                <Box display="flex" alignItems="center" gap={1} sx={{ mt: 2 }}>
+                  <CircularProgress size={24} />
+                  <Typography>Сохраняем...</Typography>
+                </Box>
+              ) : (
+                <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
+                  Создать
+                </Button>
+              )}
             </Box>
           </DndProvider>
         </CardContent>
