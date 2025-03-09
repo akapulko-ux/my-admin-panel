@@ -70,10 +70,11 @@ function EditProperty() {
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
 
-  // Массив объектов для фото (старые + новые).
+  // *** Новое поле «Юридическое название компании» ***
+  const [legalCompanyName, setLegalCompanyName] = useState("");
+
+  // Массив объектов для фото (старые + новые)
   // Каждый элемент: { id, url, file }
-  // - url: либо Cloudinary-ссылка (старое фото), либо local preview (новое фото)
-  // - file: либо null (старое фото), либо File (новое фото)
   const [images, setImages] = useState([]);
 
   // Загрузка данных при монтировании
@@ -133,6 +134,9 @@ function EditProperty() {
           setPbg(data.pbg || "");
           setSlf(data.slf || "");
 
+          // Юридическое название компании
+          setLegalCompanyName(data.legalCompanyName || "");
+
           // Преобразуем массив строк (URL) в объекты { id, url, file: null }
           const oldImages = (data.images || []).map((url) => ({
             id: crypto.randomUUID(),
@@ -156,7 +160,7 @@ function EditProperty() {
       const selectedFiles = Array.from(e.target.files);
       const newImages = selectedFiles.map((file) => ({
         id: crypto.randomUUID(),
-        url: URL.createObjectURL(file), // локальный preview
+        url: URL.createObjectURL(file),
         file
       }));
       setImages((prev) => [...prev, ...newImages]);
@@ -183,11 +187,11 @@ function EditProperty() {
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
-          // Это новое фото, загружаем
+          // Новое фото
           const url = await uploadToCloudinary(item.file);
           finalUrls.push(url);
         } else {
-          // Старое фото, берём url как есть
+          // Старое фото
           finalUrls.push(item.url);
         }
       }
@@ -209,7 +213,7 @@ function EditProperty() {
       if (completionDate) {
         const [yyyy, mm] = completionDate.split("-");
         const parsedYear = parseInt(yyyy, 10);
-        const parsedMonth = parseInt(mm, 10) - 1; // JS месяцы с 0
+        const parsedMonth = parseInt(mm, 10) - 1;
         const dateObj = new Date(parsedYear, parsedMonth, 1);
         compDateStamp = Timestamp.fromDate(dateObj);
       }
@@ -246,13 +250,16 @@ function EditProperty() {
         // Три новых поля
         shgb,
         pbg,
-        slf
+        slf,
+
+        // Новое поле «Юридическое название компании»
+        legalCompanyName
       };
 
       // Обновляем документ
       await updateDoc(doc(db, "properties", id), updatedData);
 
-      // Чтобы сразу увидеть новые ссылки (без file), можно локально обновить:
+      // (Опционально) обновляем локальный стейт
       const updatedImagesState = finalUrls.map((url) => ({
         id: crypto.randomUUID(),
         url,
@@ -273,7 +280,6 @@ function EditProperty() {
     const updated = [...images];
     updated.splice(idx, 1);
     setImages(updated);
-    // Можно сразу удалить из Firestore, но обычно делаем это при «Сохранить»
   };
 
   // Удаление всего объекта
@@ -301,7 +307,11 @@ function EditProperty() {
             Редактировать Объект (ID: {id})
           </Typography>
 
-          <Box component="form" onSubmit={handleSave} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box
+            component="form"
+            onSubmit={handleSave}
+            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+          >
             {/* Цена (USD) */}
             <TextField
               label="Цена (USD)"
@@ -483,8 +493,8 @@ function EditProperty() {
                 <MenuItem value="RDTR Kecamatan Abiansemal">
                   RDTR Kecamatan Abiansemal
                 </MenuItem>
-                <MenuItem value="RDTR Wilayah Perencanaan Petang">
-                  RDTR Wilayah Перencanaan Petang
+                <MenuItem value="RDTR Wilayah Перencanaan Petang">
+                  RDTR Wilayah Перencания Petang
                 </MenuItem>
                 <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                 <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
@@ -532,7 +542,6 @@ function EditProperty() {
               </Select>
             </FormControl>
 
-            {/* Если Leashold -> поле "Лет" */}
             {ownershipForm === "Leashold" && (
               <TextField
                 label="Лет"
@@ -610,6 +619,13 @@ function EditProperty() {
               onChange={(e) => setSlf(e.target.value)}
             />
 
+            {/* Новое поле: «Юридическое название компании» */}
+            <TextField
+              label="Юридическое название компании"
+              value={legalCompanyName}
+              onChange={(e) => setLegalCompanyName(e.target.value)}
+            />
+
             <Typography sx={{ mt: 2 }}>
               Существующие (и новые) фото (Drag & Drop):
             </Typography>
@@ -620,7 +636,7 @@ function EditProperty() {
                     <DraggablePreviewItem
                       item={item}
                       index={idx}
-                      moveItem={moveImage} 
+                      moveItem={moveImage}
                       onRemove={() => handleRemoveImage(idx)}
                     />
                   </Grid>

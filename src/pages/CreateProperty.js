@@ -65,10 +65,13 @@ function CreateProperty() {
   // Новое поле «Лет» (для Leashold)
   const [leaseYears, setLeaseYears] = useState("");
 
-  // *** Три новых поля: SHGB, PBG, SLF ***
+  // *** Три новых поля: SHGB, PBG, SLF
   const [shgb, setShgb] = useState("");
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
+
+  // *** Новое поле «Юридическое название компании»
+  const [legalCompanyName, setLegalCompanyName] = useState("");
 
   // Массив для Drag & Drop
   const [dndItems, setDndItems] = useState([]);
@@ -225,7 +228,10 @@ function CreateProperty() {
         // Три новых поля (SHGB, PBG, SLF)
         shgb,
         pbg,
-        slf
+        slf,
+
+        // Новое поле: «Юридическое название компании»
+        legalCompanyName
       };
 
       // Сохраняем
@@ -259,6 +265,7 @@ function CreateProperty() {
       setShgb("");
       setPbg("");
       setSlf("");
+      setLegalCompanyName("");
 
       setDndItems([]);
 
@@ -609,6 +616,13 @@ function CreateProperty() {
                 label="Сертификат готовности здания (SLF)"
                 value={slf}
                 onChange={(e) => setSlf(e.target.value)}
+              />
+
+              {/* Новое поле «Юридическое название компании» */}
+              <TextField
+                label="Юридическое название компании"
+                value={legalCompanyName}
+                onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
               {/* Drag & Drop превью */}

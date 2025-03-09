@@ -59,6 +59,9 @@ function CreateComplex() {
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
 
+  // *** Поле «Юридическое название компании» (будет последним) ***
+  const [legalCompanyName, setLegalCompanyName] = useState("");
+
   // Массив для превью (Drag & Drop)
   const [previews, setPreviews] = useState([]);
 
@@ -134,7 +137,10 @@ function CreateComplex() {
         // Новые поля (SHGB, PBG, SLF)
         shgb,
         pbg,
-        slf
+        slf,
+
+        // Новое поле (последнее): «Юридическое название компании»
+        legalCompanyName
       };
 
       // 3) Добавляем документ в "complexes"
@@ -165,6 +171,7 @@ function CreateComplex() {
       setShgb("");
       setPbg("");
       setSlf("");
+      setLegalCompanyName("");
 
       alert("Комплекс создан!");
     } catch (error) {
@@ -300,10 +307,14 @@ function CreateComplex() {
                   <MenuItem value="RDTR Kuta Selatan">RDTR Кuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
                   <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                  <MenuItem value="RDTR Wilayah Перencanaan Petang">RDTR Wilayah Перencanaan Petang</MenuItem>
+                  <MenuItem value="RDTR Wilayah Перencanaan Petang">
+                    RDTR Wilayah Перencания Petang
+                  </MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Tegallalang">
+                    RDTR Kecamatan Tegallalang
+                  </MenuItem>
                 </Select>
               </FormControl>
 
@@ -390,6 +401,13 @@ function CreateComplex() {
                 label="Сертификат готовности здания (SLF)"
                 value={slf}
                 onChange={(e) => setSlf(e.target.value)}
+              />
+
+              {/* Новое поле: «Юридическое название компании» (в самом конце) */}
+              <TextField
+                label="Юридическое название компании"
+                value={legalCompanyName}
+                onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
               {/* Drag & Drop предпросмотр */}

@@ -63,13 +63,16 @@ function EditComplex() {
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
 
-  // Массив объектов для фото (старые + новые).
+  // *** Новое поле «Юридическое название компании» ***
+  const [legalCompanyName, setLegalCompanyName] = useState("");
+
+  // Массив объектов для фото (старые + новые)
   // Формат: { id, url, file }
   // - Старое фото: file = null
   // - Новое фото: file = File
   const [images, setImages] = useState([]);
 
-  // Загрузка данных из Firestore
+  // Загрузка данных из Firestore при монтировании
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -100,10 +103,12 @@ function EditComplex() {
           setLeaseYears(data.leaseYears || "");
           setDocsLink(data.docsLink || "");
 
-          // Три новых поля
           setShgb(data.shgb || "");
           setPbg(data.pbg || "");
           setSlf(data.slf || "");
+
+          // Юридическое название компании
+          setLegalCompanyName(data.legalCompanyName || "");
 
           // Преобразуем старые URL в формат { id, url, file: null }
           const oldImages = (data.images || []).map((url) => ({
@@ -126,13 +131,11 @@ function EditComplex() {
   const handleFileChange = (e) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
-      // Превращаем их в объекты
       const newImages = selectedFiles.map((file) => ({
         id: crypto.randomUUID(),
         url: URL.createObjectURL(file), // локальный preview
         file
       }));
-      // Добавляем к массиву images
       setImages((prev) => [...prev, ...newImages]);
     }
   };
@@ -149,13 +152,10 @@ function EditComplex() {
 
   // Удаление одного фото (локально)
   const handleRemoveImage = async (idx) => {
-    // Просто убираем из массива images
     const updated = [...images];
     updated.splice(idx, 1);
     setImages(updated);
-
-    // Если хотите сразу удалять из Firestore — можно делать здесь,
-    // но обычно проще сделать это при «Сохранить».
+    // (Опционально) сразу удалять из Firestore — обычно делается при «Сохранить»
   };
 
   // Сохранение изменений
@@ -168,11 +168,11 @@ function EditComplex() {
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
-          // Это новое фото, загружаем в Cloudinary
+          // Новое фото
           const url = await uploadToCloudinary(item.file);
           finalUrls.push(url);
         } else {
-          // Старое фото, берём URL как есть
+          // Старое фото
           finalUrls.push(item.url);
         }
       }
@@ -206,23 +206,17 @@ function EditComplex() {
         // Три новых поля
         shgb,
         pbg,
-        slf
+        slf,
+
+        // Новое поле «Юридическое название компании»
+        legalCompanyName
       };
 
       // Обновляем документ
       await updateDoc(doc(db, "complexes", id), updatedData);
 
-      // (Опционально) локально обновляем images,
-      // чтобы у всех фото file = null и url = Cloudinary
-      // Но для этого нужно уже иметь finalUrls. Если хотите — делайте так:
-      const updatedImages = finalUrls.map((url) => ({
-        id: crypto.randomUUID(),
-        url,
-        file: null
-      }));
-      setImages(updatedImages);
-
-      // Сбрасываем новые файлы (не храним отдельно, т.к. у нас общий массив images)
+      // (Опционально) локально обновляем images, чтобы у всех фото file = null
+      // ...
       alert("Комплекс обновлён!");
     } catch (error) {
       console.error("Ошибка обновления комплекса:", error);
@@ -348,8 +342,8 @@ function EditComplex() {
                   <MenuItem value="RDTR Kecamatan Abiansemal">
                     RDTR Kecamatan Abiansemal
                   </MenuItem>
-                  <MenuItem value="RDTR Wilayah Perencanaan Petang">
-                    RDTR Wilayah Perencanaan Petang
+                  <MenuItem value="RDTR Wilayah Перencanaan Petang">
+                    RDTR Wilayah Перencanaan Petang
                   </MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
@@ -446,6 +440,13 @@ function EditComplex() {
                 label="Сертификат готовности здания (SLF)"
                 value={slf}
                 onChange={(e) => setSlf(e.target.value)}
+              />
+
+              {/* Новое поле: «Юридическое название компании» */}
+              <TextField
+                label="Юридическое название компании"
+                value={legalCompanyName}
+                onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
               <Typography sx={{ mt: 2 }}>

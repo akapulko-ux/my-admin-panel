@@ -32,10 +32,18 @@ function ListComplexes() {
     try {
       const colRef = collection(db, "complexes");
       const snapshot = await getDocs(colRef);
-      const data = snapshot.docs.map((docSnap) => ({
+      let data = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data(),
       }));
+
+      // Сортируем по номеру (parseInt)
+      data.sort((a, b) => {
+        const numA = parseInt(a.number, 10) || 0; 
+        const numB = parseInt(b.number, 10) || 0;
+        return numA - numB;
+      });
+
       setComplexes(data);
       setFilteredComplexes(data);
     } catch (error) {
@@ -83,7 +91,7 @@ function ListComplexes() {
       const { /* createdAt, */ ...rest } = data;
       const newData = {
         ...rest,
-        // например, можно добавить новое время создания
+        // можно добавить новое время создания, если нужно
         // createdAt: new Date(),
       };
 
@@ -133,15 +141,9 @@ function ListComplexes() {
               )}
               <CardContent>
                 <Typography variant="h6">{complex.name}</Typography>
-                <Typography variant="body2">
-                  Номер: {complex.number}
-                </Typography>
-                <Typography variant="body2">
-                  Застройщик: {complex.developer}
-                </Typography>
-                <Typography variant="body2">
-                  Район: {complex.district}
-                </Typography>
+                <Typography variant="body2">Номер: {complex.number}</Typography>
+                <Typography variant="body2">Застройщик: {complex.developer}</Typography>
+                <Typography variant="body2">Район: {complex.district}</Typography>
 
                 {/* Кнопка «Редактировать» */}
                 <Button
