@@ -55,6 +55,7 @@ function App() {
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
         <Box sx={{ width: 240 }} onClick={toggleDrawer(false)}>
           <List>
+            {/* Пункты меню */}
             <ListItem button component={Link} to="/complex/new">
               <ListItemText primary="Создать Комплекс" />
             </ListItem>
@@ -75,14 +76,23 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
+          {/* 
+            ==============
+            1) Создать Комплекс:
+               раньше было ["admin", "moderator"]
+               теперь добавляем "agent"
+            ==============
+          */}
           <Route
             path="/complex/new"
             element={
-              <ProtectedRoute requiredRoles={["admin", "moderator"]}>
+              <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
                 <CreateComplex />
               </ProtectedRoute>
             }
           />
+
+          {/* Остальные пути без изменений */}
           <Route
             path="/complex/edit/:id"
             element={
@@ -100,14 +110,22 @@ function App() {
             }
           />
 
+          {/*
+            ==============
+            2) Создать Объект:
+               тоже добавляем "agent"
+            ==============
+          */}
           <Route
             path="/property/new"
             element={
-              <ProtectedRoute requiredRoles={["admin", "moderator"]}>
+              <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
                 <CreateProperty />
               </ProtectedRoute>
             }
           />
+
+          {/* Остальные пути без изменений */}
           <Route
             path="/property/edit/:id"
             element={

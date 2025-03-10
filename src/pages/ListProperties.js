@@ -1,4 +1,5 @@
 // src/pages/ListProperties.js
+
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 import {
@@ -19,6 +20,7 @@ import {
   TextField
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import { Timestamp } from "firebase/firestore";
 
 function ListProperties() {
   const [properties, setProperties] = useState([]);
@@ -31,10 +33,19 @@ function ListProperties() {
     try {
       const colRef = collection(db, "properties");
       const snapshot = await getDocs(colRef);
-      const data = snapshot.docs.map((docSnap) => ({
+      let data = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data(),
       }));
+
+      // Сортируем по дате создания (createdAt) от новых к старым
+      // Предполагаем, что createdAt — это Timestamp Firestore
+      data.sort((a, b) => {
+        const timeA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0;
+        return timeB - timeA; // от новых к старым
+      });
+
       setProperties(data);
       setFilteredProperties(data);
     } catch (error) {
@@ -79,12 +90,11 @@ function ListProperties() {
       const data = snap.data();
 
       // 2) Исключаем/меняем поля, которые не нужно копировать «как есть»
-      //    Ниже — лишь пример, вы можете убрать/изменить любые поля
-      //    или добавить новую дату создания и т.д.
-      const { /*createdAt,*/ ...rest } = data;
+      // (например, можно убрать createdAt или поменять на новое время)
+      const { /* createdAt, */ ...rest } = data;
       const newData = {
         ...rest,
-        // Например, можно выставить новую дату или что-то ещё
+        // например, проставить новое createdAt
         // createdAt: new Date(),
       };
 
@@ -152,6 +162,14 @@ function ListProperties() {
                   </Typography>
                   <Typography variant="body2">
                     Комплекс: {property.complex}
+                  </Typography>
+
+                  {/* Новые поля в карточке: Спальни и Площадь */}
+                  <Typography variant="body2">
+                    Спальни: {property.bedrooms}
+                  </Typography>
+                  <Typography variant="body2">
+                    Площадь: {property.area}
                   </Typography>
 
                   {/* Кнопка «Редактировать» */}
