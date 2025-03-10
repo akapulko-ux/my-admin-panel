@@ -557,7 +557,8 @@ function CreateProperty() {
                   onChange={(e) => setLandStatus(e.target.value)}
                 >
                   <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
-                  <MenuItem value="Торговая зона (C)">Торговая зона (C)</MenuItem>
+                  <MenuItem value="Торговая зона (K)">Торговая зона (K)</MenuItem>
+                  <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem> 
                   <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
                   <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
                   <MenuItem value="Заповедная зона (RTH)">
