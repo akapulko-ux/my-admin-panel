@@ -361,31 +361,31 @@ function EditProperty() {
 
             {/* Район */}
             <FormControl>
-              <InputLabel id="district-label">Район</InputLabel>
-              <Select
-                labelId="district-label"
-                label="Район"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-              >
-                <MenuItem value="">(не выбрано)</MenuItem>
-                <MenuItem value="Чангу">Чангу</MenuItem>
-                <MenuItem value="Семиньяк">Семиньяк</MenuItem>
-                <MenuItem value="Кута">Кута</MenuItem>
-                <MenuItem value="Джимбаран">Джимбаран</MenuItem>
-                <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
-                <MenuItem value="Улувату">Улувату</MenuItem>
-                <MenuItem value="Убуд">Убуд</MenuItem>
-                <MenuItem value="Санур">Санур</MenuItem>
-                <MenuItem value="Амед">Амед</MenuItem>
-                <MenuItem value="Ловина">Ловина</MenuItem>
-                <MenuItem value="Берава">Берава</MenuItem>
-                <MenuItem value="Умалас">Умалас</MenuItem>
-                <MenuItem value="Переренан">Переренан</MenuItem>
-                <MenuItem value="Чемаги">Чемаги</MenuItem>
-                <MenuItem value="Нуану">Нуану</MenuItem>
-              </Select>
-            </FormControl>
+  <InputLabel id="district-label">Район</InputLabel>
+  <Select
+    labelId="district-label"
+    label="Район"
+    value={district}
+    onChange={(e) => setDistrict(e.target.value)}
+  >
+    <MenuItem value="">(не выбрано)</MenuItem>
+    <MenuItem value="Амед">Амед</MenuItem>
+    <MenuItem value="Берава">Берава</MenuItem>
+    <MenuItem value="Джимбаран">Джимбаран</MenuItem>
+    <MenuItem value="Кута">Кута</MenuItem>
+    <MenuItem value="Ловина">Ловина</MenuItem>
+    <MenuItem value="Нуану">Нуану</MenuItem>
+    <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
+    <MenuItem value="Переренан">Переренан</MenuItem>
+    <MenuItem value="Санур">Санур</MenuItem>
+    <MenuItem value="Семиньяк">Семиньяк</MenuItem>
+    <MenuItem value="Убуд">Убуд</MenuItem>
+    <MenuItem value="Улувату">Улувату</MenuItem>
+    <MenuItem value="Умалас">Умалас</MenuItem>
+    <MenuItem value="Чангу">Чангу</MenuItem>
+    <MenuItem value="Чемаги">Чемаги</MenuItem>
+  </Select>
+</FormControl>
 
             {/* Застройщик */}
             <TextField

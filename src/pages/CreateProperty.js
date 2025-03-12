@@ -97,7 +97,13 @@ function CreateProperty() {
             ownershipForm: data.ownershipForm || "Freehold",
             landStatus: data.landStatus || "Туристическая зона (W)",
             completionDate: data.completionDate || "",
-            leaseYears: data.leaseYears || ""
+            leaseYears: data.leaseYears || "",
+  
+            // >>> Добавляем новые поля <<<
+            shgb: data.shgb || "",
+            pbg: data.pbg || "",
+            slf: data.slf || "",
+            legalCompanyName: data.legalCompanyName || ""
           };
         });
         setComplexList(loaded);
@@ -139,7 +145,7 @@ function CreateProperty() {
   const handleComplexChange = (e) => {
     const chosenName = e.target.value;
     setComplex(chosenName);
-
+  
     if (!chosenName) {
       // Сброс автозаполнения
       setCoordinates("");
@@ -152,14 +158,20 @@ function CreateProperty() {
       setLandStatus("Туристическая зона (W)");
       setCompletionDate("");
       setLeaseYears("");
+      // Сбрасываем новые поля
+      setShgb("");
+      setPbg("");
+      setSlf("");
+      setLegalCompanyName("");
       setIsAutoFill(false);
     } else {
-      // Ищем в complexList
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
+        // Автозаполнение
         setCoordinates(found.coordinates);
         setDeveloper(found.developer);
         setDistrict(found.district);
+  
         if (found.city) setCity(found.city);
         if (found.rdtr) setRdtr(found.rdtr);
         if (found.managementCompany) setManagementCompany(found.managementCompany);
@@ -167,7 +179,13 @@ function CreateProperty() {
         if (found.landStatus) setLandStatus(found.landStatus);
         if (found.completionDate) setCompletionDate(found.completionDate);
         if (found.leaseYears) setLeaseYears(found.leaseYears);
-
+  
+        // >>> Новые поля <<<
+        if (found.shgb) setShgb(found.shgb);
+        if (found.pbg) setPbg(found.pbg);
+        if (found.slf) setSlf(found.slf);
+        if (found.legalCompanyName) setLegalCompanyName(found.legalCompanyName);
+  
         setIsAutoFill(true);
       }
     }
@@ -345,31 +363,31 @@ function CreateProperty() {
 
               {/* Район (Select) */}
               <FormControl disabled={isAutoFill}>
-                <InputLabel id="district-label">Район</InputLabel>
-                <Select
-                  labelId="district-label"
-                  label="Район"
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                >
-                  <MenuItem value="">(не выбрано)</MenuItem>
-                  <MenuItem value="Чангу">Чангу</MenuItem>
-                  <MenuItem value="Семиньяк">Семиньяк</MenuItem>
-                  <MenuItem value="Кута">Кута</MenuItem>
-                  <MenuItem value="Джимбаран">Джимбаран</MenuItem>
-                  <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
-                  <MenuItem value="Улувату">Улувату</MenuItem>
-                  <MenuItem value="Убуд">Убуд</MenuItem>
-                  <MenuItem value="Санур">Санур</MenuItem>
-                  <MenuItem value="Амед">Амед</MenuItem>
-                  <MenuItem value="Ловина">Ловина</MenuItem>
-                  <MenuItem value="Берава">Берава</MenuItem>
-                  <MenuItem value="Умалас">Умалас</MenuItem>
-                  <MenuItem value="Переренан">Переренан</MenuItem>
-                  <MenuItem value="Чемаги">Чемаги</MenuItem>
-                  <MenuItem value="Нуану">Нуану</MenuItem>
-                </Select>
-              </FormControl>
+  <InputLabel id="district-label">Район</InputLabel>
+  <Select
+    labelId="district-label"
+    label="Район"
+    value={district}
+    onChange={(e) => setDistrict(e.target.value)}
+  >
+    <MenuItem value="">(не выбрано)</MenuItem>
+    <MenuItem value="Амед">Амед</MenuItem>
+    <MenuItem value="Берава">Берава</MenuItem>
+    <MenuItem value="Джимбаран">Джимбаран</MenuItem>
+    <MenuItem value="Кута">Кута</MenuItem>
+    <MenuItem value="Ловина">Ловина</MenuItem>
+    <MenuItem value="Нуану">Нуану</MenuItem>
+    <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
+    <MenuItem value="Переренан">Переренан</MenuItem>
+    <MenuItem value="Санур">Санур</MenuItem>
+    <MenuItem value="Семиньяк">Семиньяк</MenuItem>
+    <MenuItem value="Убуд">Убуд</MenuItem>
+    <MenuItem value="Улувату">Улувату</MenuItem>
+    <MenuItem value="Умалас">Умалас</MenuItem>
+    <MenuItem value="Чангу">Чангу</MenuItem>
+    <MenuItem value="Чемаги">Чемаги</MenuItem>
+  </Select>
+</FormControl>
 
               {/* Координаты */}
               <TextField

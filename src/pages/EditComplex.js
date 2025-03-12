@@ -421,7 +421,7 @@ function EditComplex() {
               />
 
               <TextField
-                label="Доступно"
+                label="Доступные юниты (сслыка)"
                 value={docsLink}
                 onChange={(e) => setDocsLink(e.target.value)}
               />
