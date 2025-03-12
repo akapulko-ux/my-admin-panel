@@ -154,17 +154,36 @@ function EditProperty() {
     fetchProperty();
   }, [id]);
 
-  // Обработчик выбора новых фото
-  const handleFileChange = (e) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      const newImages = selectedFiles.map((file) => ({
-        id: crypto.randomUUID(),
-        url: URL.createObjectURL(file),
-        file
-      }));
-      setImages((prev) => [...prev, ...newImages]);
+  // Обработчик выбора новых фото (с учётом сжатия)
+  const handleFileChange = async (e) => {
+    if (!e.target.files) return;
+
+    // Импортируем настройки для сжатия
+    const imageCompression = (await import("browser-image-compression")).default;
+    const compressionOptions = {
+      maxSizeMB: 10,
+      useWebWorker: true
+    };
+
+    const selectedFiles = Array.from(e.target.files);
+    const newImages = [];
+
+    for (let file of selectedFiles) {
+      try {
+        // Сжимаем файл (до 10 МБ)
+        const compressedFile = await imageCompression(file, compressionOptions);
+
+        newImages.push({
+          id: crypto.randomUUID(),
+          url: URL.createObjectURL(compressedFile),
+          file: compressedFile
+        });
+      } catch (err) {
+        console.error("Ошибка сжатия файла:", err);
+      }
     }
+
+    setImages((prev) => [...prev, ...newImages]);
   };
 
   // Функция перестановки (Drag & Drop)
@@ -332,7 +351,9 @@ function EditProperty() {
                 <MenuItem value="Вилла">Вилла</MenuItem>
                 <MenuItem value="Апартаменты">Апартаменты</MenuItem>
                 <MenuItem value="Дом">Дом</MenuItem>
-                <MenuItem value="Коммерческая недвижимость">Коммерческая недвижимость</MenuItem>
+                <MenuItem value="Коммерческая недвижимость">
+                  Коммерческая недвижимость
+                </MenuItem>
               </Select>
             </FormControl>
 
@@ -361,31 +382,31 @@ function EditProperty() {
 
             {/* Район */}
             <FormControl>
-  <InputLabel id="district-label">Район</InputLabel>
-  <Select
-    labelId="district-label"
-    label="Район"
-    value={district}
-    onChange={(e) => setDistrict(e.target.value)}
-  >
-    <MenuItem value="">(не выбрано)</MenuItem>
-    <MenuItem value="Амед">Амед</MenuItem>
-    <MenuItem value="Берава">Берава</MenuItem>
-    <MenuItem value="Джимбаран">Джимбаран</MenuItem>
-    <MenuItem value="Кута">Кута</MenuItem>
-    <MenuItem value="Ловина">Ловина</MenuItem>
-    <MenuItem value="Нуану">Нуану</MenuItem>
-    <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
-    <MenuItem value="Переренан">Переренан</MenuItem>
-    <MenuItem value="Санур">Санур</MenuItem>
-    <MenuItem value="Семиньяк">Семиньяк</MenuItem>
-    <MenuItem value="Убуд">Убуд</MenuItem>
-    <MenuItem value="Улувату">Улувату</MenuItem>
-    <MenuItem value="Умалас">Умалас</MenuItem>
-    <MenuItem value="Чангу">Чангу</MenuItem>
-    <MenuItem value="Чемаги">Чемаги</MenuItem>
-  </Select>
-</FormControl>
+              <InputLabel id="district-label">Район</InputLabel>
+              <Select
+                labelId="district-label"
+                label="Район"
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+              >
+                <MenuItem value="">(не выбрано)</MenuItem>
+                <MenuItem value="Амед">Амед</MenuItem>
+                <MenuItem value="Берава">Берава</MenuItem>
+                <MenuItem value="Джимбаран">Джимбаран</MenuItem>
+                <MenuItem value="Кута">Кута</MenuItem>
+                <MenuItem value="Ловина">Ловина</MenuItem>
+                <MenuItem value="Нуану">Нуану</MenuItem>
+                <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
+                <MenuItem value="Переренан">Переренан</MenuItem>
+                <MenuItem value="Санур">Санур</MenuItem>
+                <MenuItem value="Семиньяк">Семиньяк</MenuItem>
+                <MenuItem value="Убуд">Убуд</MenuItem>
+                <MenuItem value="Улувату">Улувату</MenuItem>
+                <MenuItem value="Умалас">Умалас</MenuItem>
+                <MenuItem value="Чангу">Чангу</MenuItem>
+                <MenuItem value="Чемаги">Чемаги</MenuItem>
+              </Select>
+            </FormControl>
 
             {/* Застройщик */}
             <TextField

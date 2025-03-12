@@ -26,6 +26,9 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
+// Импортируем библиотеку для сжатия изображений
+import imageCompression from "browser-image-compression";
+
 function EditComplex() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -63,11 +66,11 @@ function EditComplex() {
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
 
-  // *** Новое поле «Юридическое название компании» ***
+  // Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
   // Массив объектов для фото (старые + новые)
-  // Формат: { id, url, file }
+  // Каждый элемент: { id, url, file }
   // - Старое фото: file = null
   // - Новое фото: file = File
   const [images, setImages] = useState([]);
@@ -127,17 +130,35 @@ function EditComplex() {
     fetchData();
   }, [id]);
 
-  // Обработчик выбора новых фото
-  const handleFileChange = (e) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      const newImages = selectedFiles.map((file) => ({
-        id: crypto.randomUUID(),
-        url: URL.createObjectURL(file), // локальный preview
-        file
-      }));
-      setImages((prev) => [...prev, ...newImages]);
+  // Обработчик выбора новых фото (с учётом сжатия)
+  const handleFileChange = async (e) => {
+    if (!e.target.files) return;
+
+    // Настройки для сжатия
+    const compressionOptions = {
+      maxSizeMB: 10,    // до 10 МБ
+      useWebWorker: true
+    };
+
+    const selectedFiles = Array.from(e.target.files);
+    const newImages = [];
+
+    for (let file of selectedFiles) {
+      try {
+        // Сжимаем файл (до 10 МБ)
+        const compressedFile = await imageCompression(file, compressionOptions);
+
+        newImages.push({
+          id: crypto.randomUUID(),
+          url: URL.createObjectURL(compressedFile),
+          file: compressedFile
+        });
+      } catch (err) {
+        console.error("Ошибка сжатия файла:", err);
+      }
     }
+
+    setImages((prev) => [...prev, ...newImages]);
   };
 
   // Перестановка фото (Drag & Drop)
@@ -215,8 +236,6 @@ function EditComplex() {
       // Обновляем документ
       await updateDoc(doc(db, "complexes", id), updatedData);
 
-      // (Опционально) локально обновляем images, чтобы у всех фото file = null
-      // ...
       alert("Комплекс обновлён!");
     } catch (error) {
       console.error("Ошибка обновления комплекса:", error);

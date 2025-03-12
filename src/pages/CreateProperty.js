@@ -25,6 +25,9 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
+// ====== Импортируем библиотеку для сжатия ======
+import imageCompression from "browser-image-compression";
+
 function CreateProperty() {
   // Цена (USD)
   const [price, setPrice] = useState("");
@@ -73,19 +76,19 @@ function CreateProperty() {
   // *** Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
-  // Массив для Drag & Drop
+  // Массив для Drag & Drop (фото)
   const [dndItems, setDndItems] = useState([]);
 
   // Состояние для спиннера
   const [isSaving, setIsSaving] = useState(false);
 
-  // Загрузка списка комплексов
+  // Загрузка списка комплексов из Firestore
   useEffect(() => {
     async function loadComplexes() {
       try {
         const snapshot = await getDocs(collection(db, "complexes"));
-        const loaded = snapshot.docs.map((doc) => {
-          const data = doc.data();
+        const loaded = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
           return {
             name: data.name || "Без названия",
             developer: data.developer || "",
@@ -98,8 +101,7 @@ function CreateProperty() {
             landStatus: data.landStatus || "Туристическая зона (W)",
             completionDate: data.completionDate || "",
             leaseYears: data.leaseYears || "",
-  
-            // >>> Добавляем новые поля <<<
+            // Новые поля:
             shgb: data.shgb || "",
             pbg: data.pbg || "",
             slf: data.slf || "",
@@ -114,19 +116,38 @@ function CreateProperty() {
     loadComplexes();
   }, []);
 
-  // Обработчик выбора файлов (Drag & Drop)
-  const handleFileChangeDnd = (e) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files).map((file) => ({
-        id: crypto.randomUUID(),
-        file,
-        url: URL.createObjectURL(file),
-      }));
-      setDndItems((prev) => [...prev, ...newFiles]);
+  // Обработчик выбора файлов (Drag & Drop) + сжатие
+  const handleFileChangeDnd = async (e) => {
+    if (!e.target.files) return;
+
+    const selectedFiles = Array.from(e.target.files);
+
+    // Настройки сжатия (макс. 10 MB)
+    const compressionOptions = {
+      maxSizeMB: 10,
+      useWebWorker: true
+    };
+
+    const newItems = [];
+    for (let file of selectedFiles) {
+      try {
+        // Сжимаем файл, если он больше 10MB
+        const compressedFile = await imageCompression(file, compressionOptions);
+
+        newItems.push({
+          id: crypto.randomUUID(),
+          file: compressedFile,
+          url: URL.createObjectURL(compressedFile)
+        });
+      } catch (err) {
+        console.error("Ошибка сжатия файла:", err);
+      }
     }
+
+    setDndItems((prev) => [...prev, ...newItems]);
   };
 
-  // Удалить из dndItems
+  // Удалить одно фото
   const handleRemoveDndItem = (id) => {
     setDndItems((prev) => prev.filter((item) => item.id !== id));
   };
@@ -141,13 +162,13 @@ function CreateProperty() {
     });
   };
 
-  // При выборе комплекса
+  // При выборе комплекса (автозаполнение)
   const handleComplexChange = (e) => {
     const chosenName = e.target.value;
     setComplex(chosenName);
-  
+
     if (!chosenName) {
-      // Сброс автозаполнения
+      // Сброс
       setCoordinates("");
       setDeveloper("");
       setDistrict("");
@@ -158,7 +179,6 @@ function CreateProperty() {
       setLandStatus("Туристическая зона (W)");
       setCompletionDate("");
       setLeaseYears("");
-      // Сбрасываем новые поля
       setShgb("");
       setPbg("");
       setSlf("");
@@ -171,7 +191,7 @@ function CreateProperty() {
         setCoordinates(found.coordinates);
         setDeveloper(found.developer);
         setDistrict(found.district);
-  
+
         if (found.city) setCity(found.city);
         if (found.rdtr) setRdtr(found.rdtr);
         if (found.managementCompany) setManagementCompany(found.managementCompany);
@@ -179,13 +199,13 @@ function CreateProperty() {
         if (found.landStatus) setLandStatus(found.landStatus);
         if (found.completionDate) setCompletionDate(found.completionDate);
         if (found.leaseYears) setLeaseYears(found.leaseYears);
-  
-        // >>> Новые поля <<<
+
+        // Новые поля
         if (found.shgb) setShgb(found.shgb);
         if (found.pbg) setPbg(found.pbg);
         if (found.slf) setSlf(found.slf);
         if (found.legalCompanyName) setLegalCompanyName(found.legalCompanyName);
-  
+
         setIsAutoFill(true);
       }
     }
@@ -197,14 +217,14 @@ function CreateProperty() {
     setIsSaving(true);
 
     try {
-      // Загружаем фото
+      // Загружаем фото в Cloudinary
       const imageUrls = [];
       for (let item of dndItems) {
         const url = await uploadToCloudinary(item.file);
         imageUrls.push(url);
       }
 
-      // Координаты
+      // Парсим координаты
       let latitude = 0;
       let longitude = 0;
       if (coordinates.trim()) {
@@ -213,10 +233,10 @@ function CreateProperty() {
         longitude = parseFloat(lonStr?.trim()) || 0;
       }
 
-      // Если ownershipForm = "Leashold", leaseYears, иначе ""
+      // Leasehold
       const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
 
-      // Формируем объект для Firestore
+      // Собираем объект
       const newProp = {
         price: parseFloat(price) || 0,
         type,
@@ -242,17 +262,14 @@ function CreateProperty() {
         images: imageUrls,
         createdAt: new Date(),
         leaseYears: finalLeaseYears,
-
-        // Три новых поля (SHGB, PBG, SLF)
+        // Новые поля
         shgb,
         pbg,
         slf,
-
-        // Новое поле: «Юридическое название компании»
         legalCompanyName
       };
 
-      // Сохраняем
+      // Сохраняем в Firestore
       await addDoc(collection(db, "properties"), newProp);
 
       // Сбрасываем поля
@@ -278,13 +295,10 @@ function CreateProperty() {
       setPool("");
       setDescription("");
       setLeaseYears("");
-
-      // Очищаем новые поля
       setShgb("");
       setPbg("");
       setSlf("");
       setLegalCompanyName("");
-
       setDndItems([]);
 
       alert("Объект создан!");
@@ -363,31 +377,31 @@ function CreateProperty() {
 
               {/* Район (Select) */}
               <FormControl disabled={isAutoFill}>
-  <InputLabel id="district-label">Район</InputLabel>
-  <Select
-    labelId="district-label"
-    label="Район"
-    value={district}
-    onChange={(e) => setDistrict(e.target.value)}
-  >
-    <MenuItem value="">(не выбрано)</MenuItem>
-    <MenuItem value="Амед">Амед</MenuItem>
-    <MenuItem value="Берава">Берава</MenuItem>
-    <MenuItem value="Джимбаран">Джимбаран</MenuItem>
-    <MenuItem value="Кута">Кута</MenuItem>
-    <MenuItem value="Ловина">Ловина</MenuItem>
-    <MenuItem value="Нуану">Нуану</MenuItem>
-    <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
-    <MenuItem value="Переренан">Переренан</MenuItem>
-    <MenuItem value="Санур">Санур</MenuItem>
-    <MenuItem value="Семиньяк">Семиньяк</MenuItem>
-    <MenuItem value="Убуд">Убуд</MenuItem>
-    <MenuItem value="Улувату">Улувату</MenuItem>
-    <MenuItem value="Умалас">Умалас</MenuItem>
-    <MenuItem value="Чангу">Чангу</MenuItem>
-    <MenuItem value="Чемаги">Чемаги</MenuItem>
-  </Select>
-</FormControl>
+                <InputLabel id="district-label">Район</InputLabel>
+                <Select
+                  labelId="district-label"
+                  label="Район"
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                >
+                  <MenuItem value="">(не выбрано)</MenuItem>
+                  <MenuItem value="Амед">Амед</MenuItem>
+                  <MenuItem value="Берава">Берава</MenuItem>
+                  <MenuItem value="Джимбаран">Джимбаран</MenuItem>
+                  <MenuItem value="Кута">Кута</MenuItem>
+                  <MenuItem value="Ловина">Ловина</MenuItem>
+                  <MenuItem value="Нуану">Нуану</MenuItem>
+                  <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
+                  <MenuItem value="Переренан">Переренан</MenuItem>
+                  <MenuItem value="Санур">Санур</MenuItem>
+                  <MenuItem value="Семиньяк">Семиньяк</MenuItem>
+                  <MenuItem value="Убуд">Убуд</MenuItem>
+                  <MenuItem value="Улувату">Улувату</MenuItem>
+                  <MenuItem value="Умалас">Умалас</MenuItem>
+                  <MenuItem value="Чангу">Чангу</MenuItem>
+                  <MenuItem value="Чемаги">Чемаги</MenuItem>
+                </Select>
+              </FormControl>
 
               {/* Координаты */}
               <TextField
@@ -460,7 +474,7 @@ function CreateProperty() {
                 onChange={(e) => setArea(e.target.value)}
               />
 
-              {/* Провинция (Bali), disabled */}
+              {/* Провинция (Bali) */}
               <TextField
                 label="Провинция"
                 value={province}
@@ -554,7 +568,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Если Leashold — показываем «Лет» */}
+              {/* Если Leashold -> поле «Лет» */}
               {ownershipForm === "Leashold" && (
                 <TextField
                   label="Лет"
@@ -646,21 +660,23 @@ function CreateProperty() {
 
               {/* Drag & Drop превью */}
               <Typography sx={{ mt: 2 }}>Новый Drag & Drop предпросмотр:</Typography>
-              <Grid container spacing={2}>
-                {dndItems.map((item, idx) => (
-                  <Grid item xs={6} sm={4} key={item.id}>
-                    <Box position="relative">
-                      <DraggablePreviewItem
-                        item={item}
-                        url={item.url}
-                        index={idx}
-                        moveItem={moveDndItem}
-                        onRemove={() => handleRemoveDndItem(item.id)}
-                      />
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
+              <DndProvider backend={HTML5Backend}>
+                <Grid container spacing={2}>
+                  {dndItems.map((item, idx) => (
+                    <Grid item xs={6} sm={4} key={item.id}>
+                      <Box position="relative">
+                        <DraggablePreviewItem
+                          item={item}
+                          url={item.url}
+                          index={idx}
+                          moveItem={moveDndItem}
+                          onRemove={() => handleRemoveDndItem(item.id)}
+                        />
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </DndProvider>
 
               <Button variant="contained" component="label">
                 Загрузить фото (Drag & Drop)

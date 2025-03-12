@@ -12,6 +12,9 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 // Наш компонент для Drag & Drop превью
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
+// Импорт библиотеки для сжатия
+import imageCompression from "browser-image-compression";
+
 import {
   Box,
   Card,
@@ -49,38 +52,57 @@ function CreateComplex() {
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
-  const [completionDate, setCompletionDate] = useState(""); // строка "2025-03" и т.п.
+  const [completionDate, setCompletionDate] = useState(""); // "2025-03" и т.п.
   const [videoLink, setVideoLink] = useState("");
   const [leaseYears, setLeaseYears] = useState("");
   const [docsLink, setDocsLink] = useState("");
 
-  // *** Новые поля: SHGB, PBG, SLF ***
+  // Новые поля: SHGB, PBG, SLF
   const [shgb, setShgb] = useState("");
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
 
-  // *** Поле «Юридическое название компании» (будет последним) ***
+  // Поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
-  // Массив для превью (Drag & Drop)
+  // Массив для предпросмотра (Drag & Drop)
   const [previews, setPreviews] = useState([]);
 
-  // Состояние загрузки
+  // Состояние загрузки (для спиннера)
   const [isLoading, setIsLoading] = useState(false);
 
-  // Обработчик выбора файлов
-  const handleFileChange = (e) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files).map((file) => ({
-        id: crypto.randomUUID(),
-        file,
-        url: URL.createObjectURL(file),
-      }));
-      setPreviews((prev) => [...prev, ...newFiles]);
+  // Обработчик выбора файлов + сжатие
+  const handleFileChange = async (e) => {
+    if (!e.target.files) return;
+
+    const selectedFiles = Array.from(e.target.files);
+
+    // Настройки сжатия: макс. 10 MB
+    const compressionOptions = {
+      maxSizeMB: 10,
+      useWebWorker: true
+    };
+
+    const newPreviews = [];
+    for (let file of selectedFiles) {
+      try {
+        // Сжимаем файл (если он больше 10MB — будет уменьшен, если меньше, library не увеличит)
+        const compressedFile = await imageCompression(file, compressionOptions);
+
+        newPreviews.push({
+          id: crypto.randomUUID(),
+          file: compressedFile,
+          url: URL.createObjectURL(compressedFile)
+        });
+      } catch (err) {
+        console.error("Ошибка сжатия файла:", err);
+      }
     }
+
+    setPreviews((prev) => [...prev, ...newPreviews]);
   };
 
-  // Удалить одно фото из превью
+  // Удалить одно фото из предпросмотра
   const handleRemovePreview = (id) => {
     setPreviews((prev) => prev.filter((item) => item.id !== id));
   };
@@ -101,7 +123,7 @@ function CreateComplex() {
     setIsLoading(true); // включаем «загрузка»
 
     try {
-      // 1) Загружаем фото
+      // 1) Загружаем фото в Cloudinary
       const uploadedUrls = [];
       for (let item of previews) {
         const secureUrl = await uploadToCloudinary(item.file);
@@ -139,7 +161,7 @@ function CreateComplex() {
         pbg,
         slf,
 
-        // Новое поле (последнее): «Юридическое название компании»
+        // Поле «Юридическое название компании»
         legalCompanyName
       };
 
@@ -166,8 +188,6 @@ function CreateComplex() {
       setVideoLink("");
       setDocsLink("");
       setLeaseYears("");
-
-      // Сбрасываем новые поля
       setShgb("");
       setPbg("");
       setSlf("");
@@ -215,31 +235,31 @@ function CreateComplex() {
 
               {/* Район (Select) */}
               <FormControl>
-  <InputLabel id="district-label">Район</InputLabel>
-  <Select
-    labelId="district-label"
-    label="Район"
-    value={district}
-    onChange={(e) => setDistrict(e.target.value)}
-  >
-    <MenuItem value="">(не выбрано)</MenuItem>
-    <MenuItem value="Амед">Амед</MenuItem>
-    <MenuItem value="Берава">Берава</MenuItem>
-    <MenuItem value="Джимбаран">Джимбаран</MenuItem>
-    <MenuItem value="Кута">Кута</MenuItem>
-    <MenuItem value="Ловина">Ловина</MenuItem>
-    <MenuItem value="Нуану">Нуану</MenuItem>
-    <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
-    <MenuItem value="Переренан">Переренан</MenuItem>
-    <MenuItem value="Санур">Санур</MenuItem>
-    <MenuItem value="Семиньяк">Семиньяк</MenuItem>
-    <MenuItem value="Убуд">Убуд</MenuItem>
-    <MenuItem value="Улувату">Улувату</MenuItem>
-    <MenuItem value="Умалас">Умалас</MenuItem>
-    <MenuItem value="Чангу">Чангу</MenuItem>
-    <MenuItem value="Чемаги">Чемаги</MenuItem>
-  </Select>
-</FormControl>
+                <InputLabel id="district-label">Район</InputLabel>
+                <Select
+                  labelId="district-label"
+                  label="Район"
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                >
+                  <MenuItem value="">(не выбрано)</MenuItem>
+                  <MenuItem value="Амед">Амед</MenuItem>
+                  <MenuItem value="Берава">Берава</MenuItem>
+                  <MenuItem value="Джимбаран">Джимбаран</MenuItem>
+                  <MenuItem value="Кута">Кута</MenuItem>
+                  <MenuItem value="Ловина">Ловина</MenuItem>
+                  <MenuItem value="Нуану">Нуану</MenuItem>
+                  <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
+                  <MenuItem value="Переренан">Переренан</MenuItem>
+                  <MenuItem value="Санур">Санур</MenuItem>
+                  <MenuItem value="Семиньяк">Семиньяк</MenuItem>
+                  <MenuItem value="Убуд">Убуд</MenuItem>
+                  <MenuItem value="Улувату">Улувату</MenuItem>
+                  <MenuItem value="Умалас">Умалас</MenuItem>
+                  <MenuItem value="Чангу">Чангу</MenuItem>
+                  <MenuItem value="Чемаги">Чемаги</MenuItem>
+                </Select>
+              </FormControl>
 
               <TextField
                 label="Координаты (шир, долг)"
@@ -318,7 +338,6 @@ function CreateComplex() {
                 </Select>
               </FormControl>
 
-              {/* Поля для сертификатов, даты и прочего */}
               <TextField
                 label="Управляющая компания"
                 value={managementCompany}
@@ -337,7 +356,6 @@ function CreateComplex() {
                 </Select>
               </FormControl>
 
-              {/* Если выбрано "Leashold" — показываем поле "Лет" */}
               {ownershipForm === "Leashold" && (
                 <TextField
                   label="Лет"
@@ -364,7 +382,6 @@ function CreateComplex() {
                 </Select>
               </FormControl>
 
-              {/* Дата завершения (только месяц/год) */}
               <TextField
                 label="Дата завершения (месяц/год)"
                 type="month"
@@ -373,21 +390,19 @@ function CreateComplex() {
                 InputLabelProps={{ shrink: true }}
               />
 
-              {/* Ссылка на видео */}
               <TextField
                 label="Ссылка на видео"
                 value={videoLink}
                 onChange={(e) => setVideoLink(e.target.value)}
               />
 
-              {/* Ссылка на документы (доступно) */}
               <TextField
                 label="Доступные юниты (ссылка)"
                 value={docsLink}
                 onChange={(e) => setDocsLink(e.target.value)}
               />
 
-              {/* *** Новые поля: SHGB, PBG, SLF *** */}
+              {/* Новые поля: SHGB, PBG, SLF */}
               <TextField
                 label="Сертификат права на землю (SHGB)"
                 value={shgb}
@@ -404,14 +419,13 @@ function CreateComplex() {
                 onChange={(e) => setSlf(e.target.value)}
               />
 
-              {/* Новое поле: «Юридическое название компании» (в самом конце) */}
+              {/* Новое поле: «Юридическое название компании» */}
               <TextField
                 label="Юридическое название компании"
                 value={legalCompanyName}
                 onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
-              {/* Drag & Drop предпросмотр */}
               <Typography>Предпросмотр выбранных фото (Drag & Drop):</Typography>
               <Grid container spacing={2}>
                 {previews.map((item, idx) => (
@@ -441,7 +455,6 @@ function CreateComplex() {
                 <input type="file" hidden multiple onChange={handleFileChange} />
               </Button>
 
-              {/* Кнопка «Создать» или спиннер */}
               {isLoading ? (
                 <Box display="flex" alignItems="center" gap={1}>
                   <CircularProgress size={24} />
