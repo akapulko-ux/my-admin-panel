@@ -28,6 +28,9 @@ import DraggablePreviewItem from "../components/DraggablePreviewItem";
 // ====== Импортируем библиотеку для сжатия ======
 import imageCompression from "browser-image-compression";
 
+// ====== Импортируем функцию конвертации PDF (пример) ======
+import { convertPdfToImages } from "../utils/pdfUtils";
+
 function CreateProperty() {
   // Цена (USD)
   const [price, setPrice] = useState("");
@@ -79,8 +82,9 @@ function CreateProperty() {
   // Массив для Drag & Drop (фото)
   const [dndItems, setDndItems] = useState([]);
 
-  // Состояние для спиннера
-  const [isSaving, setIsSaving] = useState(false);
+  // Состояния для спиннеров
+  const [isSaving, setIsSaving] = useState(false);     // спиннер при сохранении формы
+  const [isUploading, setIsUploading] = useState(false); // спиннер при загрузке/обработке файлов
 
   // Загрузка списка комплексов из Firestore
   useEffect(() => {
@@ -116,10 +120,11 @@ function CreateProperty() {
     loadComplexes();
   }, []);
 
-  // Обработчик выбора файлов (Drag & Drop) + сжатие
+  // Обработчик выбора файлов (Drag & Drop) + сжатие + PDF
   const handleFileChangeDnd = async (e) => {
     if (!e.target.files) return;
 
+    setIsUploading(true); // включаем спиннер и блокируем кнопку
     const selectedFiles = Array.from(e.target.files);
 
     // Настройки сжатия (макс. 10 MB)
@@ -129,22 +134,36 @@ function CreateProperty() {
     };
 
     const newItems = [];
-    for (let file of selectedFiles) {
-      try {
-        // Сжимаем файл, если он больше 10MB
-        const compressedFile = await imageCompression(file, compressionOptions);
-
-        newItems.push({
-          id: crypto.randomUUID(),
-          file: compressedFile,
-          url: URL.createObjectURL(compressedFile)
-        });
-      } catch (err) {
-        console.error("Ошибка сжатия файла:", err);
+    try {
+      for (let file of selectedFiles) {
+        // Если это PDF — конвертируем в картинки
+        if (file.type === "application/pdf") {
+          const pageBlobs = await convertPdfToImages(file);
+          for (let blob of pageBlobs) {
+            const compressed = await imageCompression(blob, compressionOptions);
+            newItems.push({
+              id: crypto.randomUUID(),
+              file: compressed,
+              url: URL.createObjectURL(compressed),
+            });
+          }
+        } else {
+          // Обычный файл (jpg/png и т.д.)
+          const compressedFile = await imageCompression(file, compressionOptions);
+          newItems.push({
+            id: crypto.randomUUID(),
+            file: compressedFile,
+            url: URL.createObjectURL(compressedFile)
+          });
+        }
       }
+    } catch (err) {
+      console.error("Ошибка обработки файла:", err);
     }
 
+    // Обновляем dndItems
     setDndItems((prev) => [...prev, ...newItems]);
+    setIsUploading(false); // выключаем спиннер, разблокируем кнопку
   };
 
   // Удалить одно фото
@@ -590,7 +609,7 @@ function CreateProperty() {
                 >
                   <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
                   <MenuItem value="Торговая зона (K)">Торговая зона (K)</MenuItem>
-                  <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem> 
+                  <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem>
                   <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
                   <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
                   <MenuItem value="Заповедная зона (RTH)">
@@ -659,7 +678,10 @@ function CreateProperty() {
               />
 
               {/* Drag & Drop превью */}
-              <Typography sx={{ mt: 2 }}>Новый Drag & Drop предпросмотр:</Typography>
+              <Typography sx={{ mt: 2 }}>
+                Загрузите JPG/PNG или PDF (будет разбит на страницы):
+              </Typography>
+
               <DndProvider backend={HTML5Backend}>
                 <Grid container spacing={2}>
                   {dndItems.map((item, idx) => (
@@ -678,10 +700,17 @@ function CreateProperty() {
                 </Grid>
               </DndProvider>
 
-              <Button variant="contained" component="label">
-                Загрузить фото (Drag & Drop)
-                <input type="file" hidden multiple onChange={handleFileChangeDnd} />
-              </Button>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Button
+                  variant="contained"
+                  component="label"
+                  disabled={isUploading} // блокируем, пока идёт обработка
+                >
+                  Загрузить фото / PDF
+                  <input type="file" hidden multiple onChange={handleFileChangeDnd} />
+                </Button>
+                {isUploading && <CircularProgress size={24} />}
+              </Box>
 
               {/* Кнопка «Создать» или спиннер */}
               {isSaving ? (
@@ -690,7 +719,12 @@ function CreateProperty() {
                   <Typography>Сохраняем...</Typography>
                 </Box>
               ) : (
-                <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  sx={{ mt: 2 }}
+                >
                   Создать
                 </Button>
               )}
