@@ -8,12 +8,13 @@ import { uploadToCloudinary } from "../utils/cloudinary";
 // DnD Provider и back-end
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-
-// Наш компонент для Drag & Drop превью
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
 // Импорт библиотеки для сжатия
 import imageCompression from "browser-image-compression";
+
+// [NEW] Импортируем функцию конвертации PDF
+import { convertPdfToImages } from "../utils/pdfUtils";
 
 import {
   Box,
@@ -52,7 +53,7 @@ function CreateComplex() {
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
-  const [completionDate, setCompletionDate] = useState(""); // "2025-03" и т.п.
+  const [completionDate, setCompletionDate] = useState("");
   const [videoLink, setVideoLink] = useState("");
   const [leaseYears, setLeaseYears] = useState("");
   const [docsLink, setDocsLink] = useState("");
@@ -68,13 +69,17 @@ function CreateComplex() {
   // Массив для предпросмотра (Drag & Drop)
   const [previews, setPreviews] = useState([]);
 
-  // Состояние загрузки (для спиннера)
+  // Состояние загрузки (для спиннера сохранения)
   const [isLoading, setIsLoading] = useState(false);
 
-  // Обработчик выбора файлов + сжатие
+  // [NEW] Состояние для спиннера на кнопке «Выбрать фото / PDF»
+  const [isUploading, setIsUploading] = useState(false);
+
+  // [NEW] Обработчик выбора файлов + сжатие + PDF
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
+    setIsUploading(true); // включаем спиннер и блокируем кнопку
     const selectedFiles = Array.from(e.target.files);
 
     // Настройки сжатия: макс. 10 MB
@@ -84,22 +89,35 @@ function CreateComplex() {
     };
 
     const newPreviews = [];
-    for (let file of selectedFiles) {
-      try {
-        // Сжимаем файл (если он больше 10MB — будет уменьшен, если меньше, library не увеличит)
-        const compressedFile = await imageCompression(file, compressionOptions);
-
-        newPreviews.push({
-          id: crypto.randomUUID(),
-          file: compressedFile,
-          url: URL.createObjectURL(compressedFile)
-        });
-      } catch (err) {
-        console.error("Ошибка сжатия файла:", err);
+    try {
+      for (let file of selectedFiles) {
+        // Если это PDF — конвертируем в картинки
+        if (file.type === "application/pdf") {
+          const pageBlobs = await convertPdfToImages(file);
+          for (let blob of pageBlobs) {
+            const compressedFile = await imageCompression(blob, compressionOptions);
+            newPreviews.push({
+              id: crypto.randomUUID(),
+              file: compressedFile,
+              url: URL.createObjectURL(compressedFile)
+            });
+          }
+        } else {
+          // Обычный файл (jpg/png и т.д.)
+          const compressedFile = await imageCompression(file, compressionOptions);
+          newPreviews.push({
+            id: crypto.randomUUID(),
+            file: compressedFile,
+            url: URL.createObjectURL(compressedFile)
+          });
+        }
       }
+    } catch (err) {
+      console.error("Ошибка сжатия или обработки файла:", err);
     }
 
     setPreviews((prev) => [...prev, ...newPreviews]);
+    setIsUploading(false); // выключаем спиннер
   };
 
   // Удалить одно фото из предпросмотра
@@ -120,7 +138,7 @@ function CreateComplex() {
   // Сабмит формы
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // включаем «загрузка»
+    setIsLoading(true); // включаем «загрузка» при сохранении
 
     try {
       // 1) Загружаем фото в Cloudinary
@@ -450,10 +468,26 @@ function CreateComplex() {
                 ))}
               </Grid>
 
-              <Button variant="contained" component="label">
-                Выбрать фото
-                <input type="file" hidden multiple onChange={handleFileChange} />
-              </Button>
+              {/* [NEW] Кнопка «Выбрать фото / PDF» со спиннером */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Button
+                  variant="contained"
+                  component="label"
+                  // Если идёт обработка, блокируем кнопку
+                  disabled={isUploading}
+                  sx={{ width: "820px", mt: 2 }}
+                >
+                  {isUploading ? (
+                    <>
+                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                      Загрузка...
+                    </>
+                  ) : (
+                    "Выбрать фото / PDF"
+                  )}
+                  <input type="file" hidden multiple onChange={handleFileChange} />
+                </Button>
+              </Box>
 
               {isLoading ? (
                 <Box display="flex" alignItems="center" gap={1}>

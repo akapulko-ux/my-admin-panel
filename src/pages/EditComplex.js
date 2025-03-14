@@ -26,8 +26,9 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
-// Импортируем библиотеку для сжатия изображений
+// [NEW] Импортируем библиотеку для сжатия изображений (уже было) и PDF-конвертации
 import imageCompression from "browser-image-compression";
+import { convertPdfToImages } from "../utils/pdfUtils";
 
 function EditComplex() {
   const { id } = useParams();
@@ -36,6 +37,9 @@ function EditComplex() {
   // Состояния для загрузки/сохранения
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  // [NEW] Состояние для спиннера на кнопке «Добавить фото»
+  const [isUploading, setIsUploading] = useState(false);
 
   // Основные поля
   const [complexNumber, setComplexNumber] = useState("");
@@ -130,35 +134,48 @@ function EditComplex() {
     fetchData();
   }, [id]);
 
-  // Обработчик выбора новых фото (с учётом сжатия)
+  // [NEW] Обработчик выбора новых фото (с учётом сжатия и PDF)
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
-    // Настройки для сжатия
+    setIsUploading(true); // Включаем спиннер и блокируем кнопку
     const compressionOptions = {
-      maxSizeMB: 10,    // до 10 МБ
+      maxSizeMB: 10, // до 10 МБ
       useWebWorker: true
     };
 
     const selectedFiles = Array.from(e.target.files);
     const newImages = [];
 
-    for (let file of selectedFiles) {
-      try {
-        // Сжимаем файл (до 10 МБ)
-        const compressedFile = await imageCompression(file, compressionOptions);
-
-        newImages.push({
-          id: crypto.randomUUID(),
-          url: URL.createObjectURL(compressedFile),
-          file: compressedFile
-        });
-      } catch (err) {
-        console.error("Ошибка сжатия файла:", err);
+    try {
+      for (let file of selectedFiles) {
+        if (file.type === "application/pdf") {
+          // Если это PDF, конвертируем каждую страницу в Blob
+          const pageBlobs = await convertPdfToImages(file);
+          for (let blob of pageBlobs) {
+            const compressedFile = await imageCompression(blob, compressionOptions);
+            newImages.push({
+              id: crypto.randomUUID(),
+              url: URL.createObjectURL(compressedFile),
+              file: compressedFile
+            });
+          }
+        } else {
+          // Обычный файл (jpg/png и т.д.)
+          const compressedFile = await imageCompression(file, compressionOptions);
+          newImages.push({
+            id: crypto.randomUUID(),
+            url: URL.createObjectURL(compressedFile),
+            file: compressedFile
+          });
+        }
       }
+    } catch (err) {
+      console.error("Ошибка обработки файла:", err);
     }
 
     setImages((prev) => [...prev, ...newImages]);
+    setIsUploading(false); // Выключаем спиннер
   };
 
   // Перестановка фото (Drag & Drop)
@@ -487,10 +504,26 @@ function EditComplex() {
                 </Grid>
               </DndProvider>
 
-              <Button variant="contained" component="label">
-                Добавить фото
-                <input type="file" hidden multiple onChange={handleFileChange} />
-              </Button>
+              {/* [NEW] Кнопка «Добавить фото» со спиннером */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Button
+                  variant="contained"
+                  component="label"
+                  // Если идёт обработка, блокируем кнопку
+                  disabled={isUploading}
+                  sx={{ display: "flex", alignItems: "center" }}
+                >
+                  {isUploading ? (
+                    <>
+                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                      Загрузка...
+                    </>
+                  ) : (
+                    "Добавить фото / PDF"
+                  )}
+                  <input type="file" hidden multiple onChange={handleFileChange} />
+                </Button>
+              </Box>
 
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                 {isLoading ? (

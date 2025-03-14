@@ -105,7 +105,6 @@ function CreateProperty() {
             landStatus: data.landStatus || "Туристическая зона (W)",
             completionDate: data.completionDate || "",
             leaseYears: data.leaseYears || "",
-            // Новые поля:
             shgb: data.shgb || "",
             pbg: data.pbg || "",
             slf: data.slf || "",
@@ -187,7 +186,7 @@ function CreateProperty() {
     setComplex(chosenName);
 
     if (!chosenName) {
-      // Сброс
+      // Сброс автозаполнения
       setCoordinates("");
       setDeveloper("");
       setDistrict("");
@@ -206,11 +205,9 @@ function CreateProperty() {
     } else {
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
-        // Автозаполнение
         setCoordinates(found.coordinates);
         setDeveloper(found.developer);
         setDistrict(found.district);
-
         if (found.city) setCity(found.city);
         if (found.rdtr) setRdtr(found.rdtr);
         if (found.managementCompany) setManagementCompany(found.managementCompany);
@@ -218,8 +215,6 @@ function CreateProperty() {
         if (found.landStatus) setLandStatus(found.landStatus);
         if (found.completionDate) setCompletionDate(found.completionDate);
         if (found.leaseYears) setLeaseYears(found.leaseYears);
-
-        // Новые поля
         if (found.shgb) setShgb(found.shgb);
         if (found.pbg) setPbg(found.pbg);
         if (found.slf) setSlf(found.slf);
@@ -252,10 +247,10 @@ function CreateProperty() {
         longitude = parseFloat(lonStr?.trim()) || 0;
       }
 
-      // Leasehold
+      // Если Leashold, учитываем leaseYears
       const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
 
-      // Собираем объект
+      // Формируем объект для Firestore
       const newProp = {
         price: parseFloat(price) || 0,
         type,
@@ -275,13 +270,12 @@ function CreateProperty() {
         managementCompany,
         ownershipForm,
         landStatus,
-        completionDate, // "YYYY-MM"
+        completionDate,
         pool,
         description,
         images: imageUrls,
         createdAt: new Date(),
         leaseYears: finalLeaseYears,
-        // Новые поля
         shgb,
         pbg,
         slf,
@@ -291,7 +285,7 @@ function CreateProperty() {
       // Сохраняем в Firestore
       await addDoc(collection(db, "properties"), newProp);
 
-      // Сбрасываем поля
+      // Сбрасываем все поля
       setPrice("");
       setType("Вилла");
       setComplex("");
@@ -700,16 +694,19 @@ function CreateProperty() {
                 </Grid>
               </DndProvider>
 
+              {/* Кнопка «Загрузить фото / PDF» (теперь такого же размера и стиля) */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button
                   variant="contained"
+                  color="primary"    // добавили color="primary"
                   component="label"
-                  disabled={isUploading} // блокируем, пока идёт обработка
+                  disabled={isUploading}
+                  sx={{ width: "820px", mt: 2 }}     // такой же отступ сверху
                 >
                   Загрузить фото / PDF
                   <input type="file" hidden multiple onChange={handleFileChangeDnd} />
                 </Button>
-                {isUploading && <CircularProgress size={24} />}
+                {isUploading && <CircularProgress size={24} sx={{ mt: 2 }} />}
               </Box>
 
               {/* Кнопка «Создать» или спиннер */}
@@ -723,7 +720,7 @@ function CreateProperty() {
                   variant="contained"
                   color="primary"
                   type="submit"
-                  sx={{ mt: 2 }}
+                  sx={{ width: "770px", mt: 2 }}
                 >
                   Создать
                 </Button>

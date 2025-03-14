@@ -26,6 +26,9 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
+// === Импортируем функцию конвертации PDF ===
+//import { convertPdfToImages } from "../utils/pdfUtils";
+
 function EditProperty() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -33,6 +36,9 @@ function EditProperty() {
   // Состояния для загрузки/сохранения
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // === Добавляем состояние для спиннера загрузки (PDF/изображений) ===
+  const [isUploading, setIsUploading] = useState(false);
 
   // Основные поля
   const [price, setPrice] = useState("");
@@ -154,12 +160,14 @@ function EditProperty() {
     fetchProperty();
   }, [id]);
 
-  // Обработчик выбора новых фото (с учётом сжатия)
+  // Обработчик выбора новых файлов (с учётом сжатия и PDF-конвертации)
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
-    // Импортируем настройки для сжатия
+    setIsUploading(true); // Показываем спиннер и блокируем кнопку
+    // Динамический импорт imageCompression
     const imageCompression = (await import("browser-image-compression")).default;
+
     const compressionOptions = {
       maxSizeMB: 10,
       useWebWorker: true
@@ -170,23 +178,38 @@ function EditProperty() {
 
     for (let file of selectedFiles) {
       try {
-        // Сжимаем файл (до 10 МБ)
-        const compressedFile = await imageCompression(file, compressionOptions);
+        if (file.type === "application/pdf") {
+          // Если это PDF — конвертируем
+          const { convertPdfToImages } = await import("../utils/pdfUtils");
+          const pageBlobs = await convertPdfToImages(file);
 
-        newImages.push({
-          id: crypto.randomUUID(),
-          url: URL.createObjectURL(compressedFile),
-          file: compressedFile
-        });
+          for (let blob of pageBlobs) {
+            const compressed = await imageCompression(blob, compressionOptions);
+            newImages.push({
+              id: crypto.randomUUID(),
+              url: URL.createObjectURL(compressed),
+              file: compressed
+            });
+          }
+        } else {
+          // Обычное изображение
+          const compressedFile = await imageCompression(file, compressionOptions);
+          newImages.push({
+            id: crypto.randomUUID(),
+            url: URL.createObjectURL(compressedFile),
+            file: compressedFile
+          });
+        }
       } catch (err) {
-        console.error("Ошибка сжатия файла:", err);
+        console.error("Ошибка обработки файла:", err);
       }
     }
 
     setImages((prev) => [...prev, ...newImages]);
+    setIsUploading(false); // Выключаем спиннер
   };
 
-  // Функция перестановки (Drag & Drop)
+  // Перестановка (Drag & Drop)
   const moveImage = (dragIndex, hoverIndex) => {
     setImages((prev) => {
       const arr = [...prev];
@@ -294,7 +317,7 @@ function EditProperty() {
     }
   };
 
-  // Удаление одного фото из массива images
+  // Удаление одного фото
   const handleRemoveImage = (idx) => {
     const updated = [...images];
     updated.splice(idx, 1);
@@ -666,10 +689,13 @@ function EditProperty() {
               </Grid>
             </DndProvider>
 
-            <Button variant="contained" component="label">
-              Загрузить новые фото
-              <input type="file" hidden multiple onChange={handleFileChange} />
-            </Button>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Button variant="contained" component="label" disabled={isUploading}>
+                Загрузить новые фото / PDF
+                <input type="file" hidden multiple onChange={handleFileChange} />
+              </Button>
+              {isUploading && <CircularProgress size={24} />}
+            </Box>
 
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
               {isSaving ? (
