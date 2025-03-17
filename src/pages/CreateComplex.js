@@ -13,8 +13,12 @@ import DraggablePreviewItem from "../components/DraggablePreviewItem";
 // Импорт библиотеки для сжатия
 import imageCompression from "browser-image-compression";
 
-// [NEW] Импортируем функцию конвертации PDF
+// Импортируем функцию конвертации PDF
 import { convertPdfToImages } from "../utils/pdfUtils";
+
+// [Исправлено] Импортируем функцию расчёта дистанции до пляжа,
+// которая в файле ../utils/beachDistance экспортируется как getDistanceToNearestBeach
+import { getDistanceToNearestBeach } from "../utils/beachDistance";
 
 import {
   Box,
@@ -72,14 +76,14 @@ function CreateComplex() {
   // Состояние загрузки (для спиннера сохранения)
   const [isLoading, setIsLoading] = useState(false);
 
-  // [NEW] Состояние для спиннера на кнопке «Выбрать фото / PDF»
+  // Состояние для спиннера на кнопке «Выбрать фото / PDF»
   const [isUploading, setIsUploading] = useState(false);
 
-  // [NEW] Обработчик выбора файлов + сжатие + PDF
+  // Обработчик выбора файлов + сжатие + PDF
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
-    setIsUploading(true); // включаем спиннер и блокируем кнопку
+    setIsUploading(true); 
     const selectedFiles = Array.from(e.target.files);
 
     // Настройки сжатия: макс. 10 MB
@@ -91,8 +95,8 @@ function CreateComplex() {
     const newPreviews = [];
     try {
       for (let file of selectedFiles) {
-        // Если это PDF — конвертируем в картинки
         if (file.type === "application/pdf") {
+          // Если PDF — конвертируем в картинки
           const pageBlobs = await convertPdfToImages(file);
           for (let blob of pageBlobs) {
             const compressedFile = await imageCompression(blob, compressionOptions);
@@ -117,7 +121,7 @@ function CreateComplex() {
     }
 
     setPreviews((prev) => [...prev, ...newPreviews]);
-    setIsUploading(false); // выключаем спиннер
+    setIsUploading(false);
   };
 
   // Удалить одно фото из предпросмотра
@@ -135,10 +139,10 @@ function CreateComplex() {
     });
   };
 
-  // Сабмит формы
+  // Сабмит формы (создание комплекса)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // включаем «загрузка» при сохранении
+    setIsLoading(true);
 
     try {
       // 1) Загружаем фото в Cloudinary
@@ -148,7 +152,33 @@ function CreateComplex() {
         uploadedUrls.push(secureUrl);
       }
 
-      // 2) Собираем объект для Firestore
+      // 2) Вычисляем дистанцию и время до ближайшего пляжа
+      // Если coordinates хранит "шир, долг" в одной строке,
+// нужно сначала распарсить её на два числа:
+let beachDistanceKm = 0;
+let beachTravelTimeMin = 0;
+let nearestBeachName = "";
+
+// Если coordinates имеет вид "широта, долгота"
+if (coordinates.trim()) {
+  try {
+    const [latStr, lngStr] = coordinates.split(",");
+    const latNum = parseFloat(latStr.trim()) || 0;
+    const lngNum = parseFloat(lngStr.trim()) || 0;
+
+    // Вызываем функцию
+    const { distanceKm, timeMinutes, beachName } =
+      await getDistanceToNearestBeach(latNum, lngNum);
+
+    beachDistanceKm = distanceKm;
+    beachTravelTimeMin = timeMinutes;
+    nearestBeachName = beachName;
+  } catch (calcErr) {
+    console.error("Ошибка при вычислении дистанции до пляжа:", calcErr);
+  }
+}
+
+      // 3) Собираем объект для Firestore
       const newDoc = {
         number: complexNumber,
         name,
@@ -180,13 +210,18 @@ function CreateComplex() {
         slf,
 
         // Поле «Юридическое название компании»
-        legalCompanyName
+        legalCompanyName,
+
+        // [NEW] Результат вычисления расстояния и времени до пляжа
+        beachDistanceKm,
+  beachTravelTimeMin,
+  nearestBeachName
       };
 
-      // 3) Добавляем документ в "complexes"
+      // 4) Добавляем документ в "complexes"
       await addDoc(collection(db, "complexes"), newDoc);
 
-      // 4) Сбрасываем поля
+      // 5) Сбрасываем поля
       setComplexNumber("");
       setName("");
       setDeveloper("");
@@ -215,7 +250,7 @@ function CreateComplex() {
     } catch (error) {
       console.error("Ошибка создания комплекса:", error);
     } finally {
-      setIsLoading(false); // выключаем «загрузка»
+      setIsLoading(false);
     }
   };
 
@@ -274,6 +309,7 @@ function CreateComplex() {
                   <MenuItem value="Убуд">Убуд</MenuItem>
                   <MenuItem value="Улувату">Улувату</MenuItem>
                   <MenuItem value="Умалас">Умалас</MenuItem>
+                  <MenuItem value="Унгасан">Унгасан</MenuItem>
                   <MenuItem value="Чангу">Чангу</MenuItem>
                   <MenuItem value="Чемаги">Чемаги</MenuItem>
                 </Select>
@@ -344,7 +380,9 @@ function CreateComplex() {
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
                   <MenuItem value="RDTR Kuta Selatan">RDTR Кuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
+                  <MenuItem value="RDTR Kecamatan Abiansemal">
+                    RDTR Kecamatan Abiansemal
+                  </MenuItem>
                   <MenuItem value="RDTR Wilayah Перencanaan Petang">
                     RDTR Wilayah Перencания Petang
                   </MenuItem>
@@ -468,12 +506,11 @@ function CreateComplex() {
                 ))}
               </Grid>
 
-              {/* [NEW] Кнопка «Выбрать фото / PDF» со спиннером */}
+              {/* Кнопка «Выбрать фото / PDF» со спиннером */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button
                   variant="contained"
                   component="label"
-                  // Если идёт обработка, блокируем кнопку
                   disabled={isUploading}
                   sx={{ width: "820px", mt: 2 }}
                 >

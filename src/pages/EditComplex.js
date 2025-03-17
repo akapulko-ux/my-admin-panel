@@ -26,7 +26,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
-// [NEW] Импортируем библиотеку для сжатия изображений (уже было) и PDF-конвертации
+// Импортируем библиотеку для сжатия изображений и PDF-конвертации
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
 
@@ -38,7 +38,7 @@ function EditComplex() {
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  // [NEW] Состояние для спиннера на кнопке «Добавить фото»
+  // Состояние для спиннера на кнопке «Добавить фото»
   const [isUploading, setIsUploading] = useState(false);
 
   // Основные поля
@@ -73,10 +73,12 @@ function EditComplex() {
   // Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
+  // Три новых поля для данных о пляже
+  const [nearestBeachName, setNearestBeachName] = useState("");
+  const [beachDistanceKm, setBeachDistanceKm] = useState(0);
+  const [beachTravelTimeMin, setBeachTravelTimeMin] = useState(0);
+
   // Массив объектов для фото (старые + новые)
-  // Каждый элемент: { id, url, file }
-  // - Старое фото: file = null
-  // - Новое фото: file = File
   const [images, setImages] = useState([]);
 
   // Загрузка данных из Firestore при монтировании
@@ -114,8 +116,12 @@ function EditComplex() {
           setPbg(data.pbg || "");
           setSlf(data.slf || "");
 
-          // Юридическое название компании
           setLegalCompanyName(data.legalCompanyName || "");
+
+          // Поля о пляже (читаем из Firestore)
+          setNearestBeachName(data.nearestBeachName || "");
+          setBeachDistanceKm(data.beachDistanceKm || 0);
+          setBeachTravelTimeMin(data.beachTravelTimeMin || 0);
 
           // Преобразуем старые URL в формат { id, url, file: null }
           const oldImages = (data.images || []).map((url) => ({
@@ -134,13 +140,13 @@ function EditComplex() {
     fetchData();
   }, [id]);
 
-  // [NEW] Обработчик выбора новых фото (с учётом сжатия и PDF)
+  // Обработчик выбора новых фото (с учётом сжатия и PDF)
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
-    setIsUploading(true); // Включаем спиннер и блокируем кнопку
+    setIsUploading(true);
     const compressionOptions = {
-      maxSizeMB: 10, // до 10 МБ
+      maxSizeMB: 10,
       useWebWorker: true
     };
 
@@ -150,7 +156,7 @@ function EditComplex() {
     try {
       for (let file of selectedFiles) {
         if (file.type === "application/pdf") {
-          // Если это PDF, конвертируем каждую страницу в Blob
+          // PDF -> конвертация в картинки
           const pageBlobs = await convertPdfToImages(file);
           for (let blob of pageBlobs) {
             const compressedFile = await imageCompression(blob, compressionOptions);
@@ -161,7 +167,7 @@ function EditComplex() {
             });
           }
         } else {
-          // Обычный файл (jpg/png и т.д.)
+          // Обычный файл (jpg/png)
           const compressedFile = await imageCompression(file, compressionOptions);
           newImages.push({
             id: crypto.randomUUID(),
@@ -175,7 +181,7 @@ function EditComplex() {
     }
 
     setImages((prev) => [...prev, ...newImages]);
-    setIsUploading(false); // Выключаем спиннер
+    setIsUploading(false);
   };
 
   // Перестановка фото (Drag & Drop)
@@ -193,7 +199,6 @@ function EditComplex() {
     const updated = [...images];
     updated.splice(idx, 1);
     setImages(updated);
-    // (Опционально) сразу удалять из Firestore — обычно делается при «Сохранить»
   };
 
   // Сохранение изменений
@@ -246,11 +251,12 @@ function EditComplex() {
         pbg,
         slf,
 
-        // Новое поле «Юридическое название компании»
-        legalCompanyName
+        // Юридическое название компании
+        legalCompanyName,
+
+        // Не меняем поля о пляже, если хотим их оставить как есть
       };
 
-      // Обновляем документ
       await updateDoc(doc(db, "complexes", id), updatedData);
 
       alert("Комплекс обновлён!");
@@ -379,7 +385,7 @@ function EditComplex() {
                     RDTR Kecamatan Abiansemal
                   </MenuItem>
                   <MenuItem value="RDTR Wilayah Перencanaan Petang">
-                    RDTR Wilayah Перencanaan Petang
+                    RDTR Wilayah Перencания Petang
                   </MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
@@ -435,7 +441,7 @@ function EditComplex() {
                 >
                   <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
                   <MenuItem value="Торговая зона (K)">Торговая зона (K)</MenuItem>
-                  <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem> 
+                  <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem>
                   <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
                   <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
                   <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
@@ -479,11 +485,32 @@ function EditComplex() {
                 onChange={(e) => setSlf(e.target.value)}
               />
 
-              {/* Новое поле: «Юридическое название компании» */}
+              {/* Юридическое название компании */}
               <TextField
                 label="Юридическое название компании"
                 value={legalCompanyName}
                 onChange={(e) => setLegalCompanyName(e.target.value)}
+              />
+
+              {/* Ближайший пляж: только чтение */}
+              <TextField
+                label="Ближайший пляж"
+                value={nearestBeachName}
+                InputProps={{ readOnly: true }}
+              />
+
+              {/* Дистанция до пляжа (км), целое число */}
+              <TextField
+                label="Дистанция до пляжа (км)"
+                value={Math.round(beachDistanceKm)}   // округляем
+                InputProps={{ readOnly: true }}
+              />
+
+              {/* Время поездки (мин), целое число */}
+              <TextField
+                label="Время поездки (мин)"
+                value={Math.round(beachTravelTimeMin)} // округляем
+                InputProps={{ readOnly: true }}
               />
 
               <Typography sx={{ mt: 2 }}>
@@ -504,12 +531,11 @@ function EditComplex() {
                 </Grid>
               </DndProvider>
 
-              {/* [NEW] Кнопка «Добавить фото» со спиннером */}
+              {/* Кнопка «Добавить фото» со спиннером */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button
                   variant="contained"
                   component="label"
-                  // Если идёт обработка, блокируем кнопку
                   disabled={isUploading}
                   sx={{ display: "flex", alignItems: "center" }}
                 >
