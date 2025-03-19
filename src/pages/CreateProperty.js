@@ -414,6 +414,8 @@ function CreateProperty() {
                   <MenuItem value="Унгасан">Унгасан</MenuItem>
                   <MenuItem value="Чангу">Чангу</MenuItem>
                   <MenuItem value="Чемаги">Чемаги</MenuItem>
+                  <MenuItem value="Гили Траванган">Гили Траванган</MenuItem>
+                  <MenuItem value="Ломбок">Ломбок</MenuItem>
                 </Select>
               </FormControl>
 
