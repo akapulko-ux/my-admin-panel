@@ -1,7 +1,19 @@
 // src/App.js
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
-import { AppBar, Toolbar, Typography, IconButton, Drawer, Box, List, ListItem, ListItemText, Button } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Drawer,
+  Box,
+  List,
+  ListItem,
+  ListItemText,
+  Button
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
 import LoginPage from "./pages/LoginPage";
@@ -12,6 +24,16 @@ import ListComplexes from "./pages/ListComplexes";
 import CreateProperty from "./pages/CreateProperty";
 import EditProperty from "./pages/EditProperty";
 import ListProperties from "./pages/ListProperties";
+
+// [NEW] Импортируем новый компонент для создания достопримечательности
+import CreateLandmark from "./pages/CreateLandmark";
+
+// [NEW] Импортируем компонент для списка достопримечательностей
+import ListLandmarks from "./pages/ListLandmarks";
+
+// [NEW] Импортируем компонент для редактирования достопримечательности
+import EditLandmark from "./pages/EditLandmark";
+
 import { useAuth } from "./AuthContext";
 
 function App() {
@@ -34,7 +56,12 @@ function App() {
     <Router>
       <AppBar position="static">
         <Toolbar>
-          <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)} sx={{ mr: 2 }}>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={toggleDrawer(true)}
+            sx={{ mr: 2 }}
+          >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -68,6 +95,16 @@ function App() {
             <ListItem button component={Link} to="/property/list">
               <ListItemText primary="Список Объектов" />
             </ListItem>
+
+            {/* Создать достопримечательность */}
+            <ListItem button component={Link} to="/landmark/new">
+              <ListItemText primary="Создать Достопримечательность" />
+            </ListItem>
+
+            {/* Список достопримечательностей */}
+            <ListItem button component={Link} to="/landmark/list">
+              <ListItemText primary="Список Достопримечательностей" />
+            </ListItem>
           </List>
         </Box>
       </Drawer>
@@ -76,13 +113,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
-          {/* 
-            ==============
-            1) Создать Комплекс:
-               раньше было ["admin", "moderator"]
-               теперь добавляем "agent"
-            ==============
-          */}
+          {/* Создать Комплекс (admin, moderator, agent) */}
           <Route
             path="/complex/new"
             element={
@@ -91,8 +122,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          {/* Остальные пути без изменений */}
+          {/* Редактировать Комплекс (admin, moderator) */}
           <Route
             path="/complex/edit/:id"
             element={
@@ -101,6 +131,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Список Комплексов (admin, moderator) */}
           <Route
             path="/complex/list"
             element={
@@ -110,12 +141,7 @@ function App() {
             }
           />
 
-          {/*
-            ==============
-            2) Создать Объект:
-               тоже добавляем "agent"
-            ==============
-          */}
+          {/* Создать Объект (admin, moderator, agent) */}
           <Route
             path="/property/new"
             element={
@@ -124,8 +150,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          {/* Остальные пути без изменений */}
+          {/* Редактировать Объект (admin, moderator) */}
           <Route
             path="/property/edit/:id"
             element={
@@ -134,6 +159,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Список Объектов (admin, moderator) */}
           <Route
             path="/property/list"
             element={
@@ -143,6 +169,36 @@ function App() {
             }
           />
 
+          {/* Создать достопримечательность (admin, moderator, agent) */}
+          <Route
+            path="/landmark/new"
+            element={
+              <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
+                <CreateLandmark />
+              </ProtectedRoute>
+            }
+          />
+          {/* Список достопримечательностей (admin, moderator, agent) */}
+          <Route
+            path="/landmark/list"
+            element={
+              <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
+                <ListLandmarks />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* [NEW] Редактировать достопримечательность (admin, moderator, agent) */}
+          <Route
+            path="/landmark/edit/:id"
+            element={
+              <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
+                <EditLandmark />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Если путь не найден, переходим к списку комплексов */}
           <Route path="*" element={<Navigate to="/complex/list" />} />
         </Routes>
       </Box>
