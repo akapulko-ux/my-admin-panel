@@ -5,7 +5,6 @@ import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 import { uploadToCloudinary } from "../utils/cloudinary";
 
-// Импортируем для UI
 import {
   Box,
   Card,
@@ -17,20 +16,15 @@ import {
   CircularProgress
 } from "@mui/material";
 
-// Импортируем библиотеку для сжатия изображений
 import imageCompression from "browser-image-compression";
 
-/**
- * Компонент для создания «достопримечательности» (landmark).
- * Создаёт документ в новой коллекции Firestore (например, "landmarks").
- */
 function CreateLandmark() {
   // Поля формы
   const [name, setName] = useState("");
   const [coordinates, setCoordinates] = useState("");
   const [description, setDescription] = useState("");
 
-  // Список выбранных (и сжатых) изображений для предпросмотра
+  // Массив для предпросмотра фото
   const [images, setImages] = useState([]);
 
   // Состояния для спиннеров
@@ -38,16 +32,25 @@ function CreateLandmark() {
   const [isSaving, setIsSaving] = useState(false);
 
   /**
-   * Обработчик выбора файлов (из input type="file").
-   * Выполняет сжатие и сохраняет в массив для предпросмотра.
+   * Обработчик изменения поля "Название".
+   * Позволяет только заглавные английские буквы (A-Z) и пробелы.
+   */
+  const handleNameChange = (e) => {
+    const input = e.target.value
+      .toUpperCase()          // всё приводим к верхнему регистру
+      .replace(/[^A-Z ]/g, ""); // удаляем все символы, кроме A-Z и пробела
+    setName(input);
+  };
+
+  /**
+   * Обработчик выбора файлов (сжатие).
    */
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
-    setIsUploading(true); // Включаем спиннер
+    setIsUploading(true);
     const selectedFiles = Array.from(e.target.files);
 
-    // Настройки сжатия (макс. 10 MB)
     const compressionOptions = {
       maxSizeMB: 10,
       useWebWorker: true
@@ -69,33 +72,32 @@ function CreateLandmark() {
     }
 
     setImages((prev) => [...prev, ...newImages]);
-    setIsUploading(false); // Выключаем спиннер
+    setIsUploading(false);
   };
 
   /**
-   * Удаление одного фото из массива (при предпросмотре).
+   * Удаление одного фото (предпросмотр).
    */
   const handleRemoveImage = (id) => {
     setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
   /**
-   * Сохранение достопримечательности в Firestore (коллекция "landmarks").
-   * Фото загружаются в Cloudinary, а их URL сохраняются в Firestore.
+   * Сохранение достопримечательности (Firestore + Cloudinary).
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
 
     try {
-      // 1) Загружаем каждое фото в Cloudinary
+      // 1) Загрузить фото в Cloudinary
       const uploadedUrls = [];
       for (let item of images) {
         const secureUrl = await uploadToCloudinary(item.file);
         uploadedUrls.push(secureUrl);
       }
 
-      // 2) Формируем объект достопримечательности
+      // 2) Сформировать объект
       const newLandmark = {
         name: name.trim(),
         coordinates: coordinates.trim(),
@@ -104,10 +106,10 @@ function CreateLandmark() {
         createdAt: new Date()
       };
 
-      // 3) Сохраняем в Firestore (коллекция "landmarks")
+      // 3) Добавить в коллекцию "landmarks"
       await addDoc(collection(db, "landmarks"), newLandmark);
 
-      // 4) Сбрасываем поля
+      // 4) Сброс полей
       setName("");
       setCoordinates("");
       setDescription("");
@@ -134,11 +136,11 @@ function CreateLandmark() {
             onSubmit={handleSubmit}
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
-            {/* Поле «Название» */}
+            {/* Поле «Название» — только A-Z и пробел */}
             <TextField
               label="Название"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
               required
             />
 
@@ -160,9 +162,7 @@ function CreateLandmark() {
             />
 
             {/* Предпросмотр выбранных фото */}
-            <Typography sx={{ mt: 2 }}>
-              Предпросмотр фото:
-            </Typography>
+            <Typography sx={{ mt: 2 }}>Предпросмотр фото:</Typography>
             <Grid container spacing={2}>
               {images.map((img) => (
                 <Grid item xs={6} sm={4} key={img.id}>

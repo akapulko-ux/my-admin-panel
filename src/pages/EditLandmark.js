@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
-
-// Импорт для загрузки в Cloudinary
 import { uploadToCloudinary } from "../utils/cloudinary";
 
-// Импорт для Drag & Drop
+// Для Drag & Drop
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
@@ -35,17 +33,15 @@ function EditLandmark() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Поля достопримечательности (с "name" вместо "title")
+  // Поля достопримечательности
   const [name, setName] = useState("");
   const [coordinates, setCoordinates] = useState("");
   const [description, setDescription] = useState("");
 
-  // Массив изображений (старые + новые). Каждый элемент: { id, url, file }
-  // - Старое фото: file = null, url = "https://..."
-  // - Новое фото: file = File|Blob, url = URL.createObjectURL(...)
+  // Массив изображений (старые + новые)
   const [images, setImages] = useState([]);
 
-  // Загружаем данные из Firestore при монтировании
+  // При монтировании загружаем данные из Firestore
   useEffect(() => {
     const fetchLandmark = async () => {
       try {
@@ -76,14 +72,25 @@ function EditLandmark() {
     fetchLandmark();
   }, [id]);
 
-  // Обработчик выбора новых файлов (JPG/PNG/PDF) с Drag & Drop предпросмотром
+  /**
+   * Обработчик изменения поля "Название".
+   * Разрешаем только заглавные латинские буквы и пробелы.
+   */
+  const handleNameChange = (e) => {
+    const input = e.target.value
+      .toUpperCase()            // всё к верхнему регистру
+      .replace(/[^A-Z ]/g, ""); // удаляем всё, кроме A-Z и пробела
+    setName(input);
+  };
+
+  // Обработчик выбора новых файлов (jpg/png/pdf)
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
     setIsUploading(true);
     const selectedFiles = Array.from(e.target.files);
 
-    // Настройки сжатия
+    // Настройки для сжатия
     const compressionOptions = {
       maxSizeMB: 10,
       useWebWorker: true
@@ -93,7 +100,7 @@ function EditLandmark() {
     try {
       for (let file of selectedFiles) {
         if (file.type === "application/pdf") {
-          // Если PDF, конвертируем каждую страницу
+          // Если PDF -> конвертируем в картинки
           const pageBlobs = await convertPdfToImages(file);
           for (let blob of pageBlobs) {
             const compressed = await imageCompression(blob, compressionOptions);
@@ -131,7 +138,7 @@ function EditLandmark() {
     });
   };
 
-  // Удалить одно изображение из массива (локально, до сохранения)
+  // Удалить одно изображение из массива
   const handleRemoveImage = (index) => {
     setImages((prev) => {
       const updated = [...prev];
@@ -154,24 +161,22 @@ function EditLandmark() {
           const url = await uploadToCloudinary(item.file);
           finalUrls.push(url);
         } else {
-          // Старое изображение (url уже есть)
+          // Старое изображение
           finalUrls.push(item.url);
         }
       }
 
-      // Собираем данные для обновления
+      // Обновляем документ в Firestore
       const updatedData = {
         name,
         coordinates,
         description,
         images: finalUrls
       };
-
-      // Обновляем документ в Firestore
       await updateDoc(doc(db, "landmarks", id), updatedData);
 
       alert("Достопримечательность обновлена!");
-      // При желании можно сделать navigate("/landmark/list") или что-то ещё
+      // navigate("/landmark/list"); // или другой маршрут
     } catch (error) {
       console.error("Ошибка обновления достопримечательности:", error);
     } finally {
@@ -185,7 +190,7 @@ function EditLandmark() {
       try {
         await deleteDoc(doc(db, "landmarks", id));
         alert("Достопримечательность удалена!");
-        navigate("/landmark/list"); // Перенаправляем на список достопримечательностей
+        navigate("/landmark/list");
       } catch (error) {
         console.error("Ошибка удаления достопримечательности:", error);
       }
@@ -210,11 +215,11 @@ function EditLandmark() {
               onSubmit={handleSave}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
-              {/* Название */}
+              {/* Название (только заглавные латинские буквы и пробел) */}
               <TextField
                 label="Название"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
                 required
               />
 
@@ -268,7 +273,7 @@ function EditLandmark() {
                 </Button>
               </Box>
 
-              {/* Кнопки "Сохранить" / "Удалить" / (спиннер при сохранении) */}
+              {/* Кнопки "Сохранить" / "Удалить" */}
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                 {isSaving ? (
                   <Box display="flex" alignItems="center" gap={1}>

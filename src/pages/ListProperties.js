@@ -58,6 +58,8 @@ function ListProperties() {
   const [filterPbg, setFilterPbg] = useState("");
   const [filterSlf, setFilterSlf] = useState("");
   const [filterLegalCompanyName, setFilterLegalCompanyName] = useState("");
+  // [NEW] Фильтр по «Вознаграждению»
+  const [filterCommission, setFilterCommission] = useState("");
 
   // --- Поля для МАССОВОГО РЕДАКТИРОВАНИЯ (те же) ---
   const [massEditPrice, setMassEditPrice] = useState("");
@@ -85,6 +87,8 @@ function ListProperties() {
   const [massEditPbg, setMassEditPbg] = useState("");
   const [massEditSlf, setMassEditSlf] = useState("");
   const [massEditLegalCompanyName, setMassEditLegalCompanyName] = useState("");
+  // [NEW] Массовое редактирование «Вознаграждение»
+  const [massEditCommission, setMassEditCommission] = useState("");
 
   // --- Загрузка данных из Firestore ---
   const fetchProperties = async () => {
@@ -130,11 +134,11 @@ function ListProperties() {
       }
       const data = snap.data();
 
-      const { /* createdAt, */ ...rest } = data;
+      // Убираем createdAt, чтобы создать новое
+      const { createdAt, ...rest } = data;
       const newData = {
         ...rest,
-        // Например, можно проставить новое createdAt
-        // createdAt: new Date(),
+        createdAt: new Date(), // или можно не ставить
       };
 
       await addDoc(collection(db, "properties"), newData);
@@ -182,7 +186,7 @@ function ListProperties() {
     }
     if (filterBedrooms.trim() !== "") {
       result = result.filter((p) =>
-        String(p.bedrooms ?? "").includes(filterBedrooms)
+        String(p.bedrooms ?? "").includes(filterBedrooms.trim())
       );
     }
     if (filterClassRating.trim() !== "") {
@@ -256,7 +260,7 @@ function ListProperties() {
     }
     if (filterLeaseYears.trim() !== "") {
       result = result.filter((p) =>
-        String(p.leaseYears ?? "").includes(filterLeaseYears)
+        String(p.leaseYears ?? "").includes(filterLeaseYears.trim())
       );
     }
     if (filterShgb.trim() !== "") {
@@ -279,6 +283,12 @@ function ListProperties() {
         p.legalCompanyName
           ?.toLowerCase()
           .includes(filterLegalCompanyName.toLowerCase())
+      );
+    }
+    // [NEW] Фильтр по commission
+    if (filterCommission.trim() !== "") {
+      result = result.filter((p) =>
+        String(p.commission ?? "").includes(filterCommission.trim())
       );
     }
 
@@ -359,7 +369,6 @@ function ListProperties() {
           newData.managementCompany = massEditManagementCompany;
         }
         if (massEditCompletionDate.trim() !== "") {
-          // не переводим в Timestamp, просто строка
           newData.completionDate = massEditCompletionDate;
         }
         if (massEditLeaseYears.trim() !== "") {
@@ -377,12 +386,13 @@ function ListProperties() {
         if (massEditLegalCompanyName.trim() !== "") {
           newData.legalCompanyName = massEditLegalCompanyName;
         }
+        // [NEW] Массовое редактирование commission
+        if (massEditCommission.trim() !== "") {
+          newData.commission = parseFloat(massEditCommission) || 0;
+        }
 
         // Если есть что обновлять
         if (Object.keys(newData).length > 0) {
-          await addDoc; // Actually we want to updateDoc. Let's fix that.
-          await import("firebase/firestore");
-          // Correction:
           await updateDoc(ref, newData);
         }
       }
@@ -566,6 +576,13 @@ function ListProperties() {
                 size="small"
                 value={filterLegalCompanyName}
                 onChange={(e) => setFilterLegalCompanyName(e.target.value)}
+              />
+              {/* [NEW] Фильтр по commission */}
+              <TextField
+                label="Вознаграждение (commission)"
+                size="small"
+                value={filterCommission}
+                onChange={(e) => setFilterCommission(e.target.value)}
               />
             </Box>
             <Button
@@ -767,6 +784,14 @@ function ListProperties() {
                 value={massEditLegalCompanyName}
                 onChange={(e) => setMassEditLegalCompanyName(e.target.value)}
               />
+              {/* [NEW] Массовое редактирование commission */}
+              <TextField
+                label="Вознаграждение (commission)"
+                variant="outlined"
+                size="small"
+                value={massEditCommission}
+                onChange={(e) => setMassEditCommission(e.target.value)}
+              />
             </Box>
             <Button variant="contained" color="warning" onClick={handleMassEdit}>
               Массово изменить
@@ -812,7 +837,16 @@ function ListProperties() {
                   <Typography variant="body2">
                     Спальни: {property.bedrooms}
                   </Typography>
-                  <Typography variant="body2">Площадь: {property.area}</Typography>
+                  <Typography variant="body2">
+                    Площадь: {property.area}
+                  </Typography>
+
+                  {/* Можно добавить вывод commission */}
+                  {property.commission !== undefined && (
+                    <Typography variant="body2">
+                      Вознаграждение: {property.commission}
+                    </Typography>
+                  )}
 
                   {/* Кнопка «Редактировать» */}
                   <Button

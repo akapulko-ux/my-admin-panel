@@ -16,8 +16,7 @@ import imageCompression from "browser-image-compression";
 // Импортируем функцию конвертации PDF
 import { convertPdfToImages } from "../utils/pdfUtils";
 
-// [Исправлено] Импортируем функцию расчёта дистанции до пляжа,
-// которая в файле ../utils/beachDistance экспортируется как getDistanceToNearestBeach
+// Импортируем функцию расчёта дистанции до пляжа
 import { getDistanceToNearestBeach } from "../utils/beachDistance";
 
 import {
@@ -38,13 +37,31 @@ import {
 function CreateComplex() {
   // ----- Поля формы -----
   const [complexNumber, setComplexNumber] = useState("");
+
+  // 1) "Название" (только заглавные английские буквы + пробелы)
   const [name, setName] = useState("");
+  const handleNameChange = (e) => {
+    // Преобразуем ввод в uppercase и удаляем всё, кроме A-Z и пробела
+    const input = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
+    setName(input);
+  };
+
+  // 2) "Застройщик" (только заглавные английские буквы + пробелы, обязательно)
   const [developer, setDeveloper] = useState("");
+  const handleDeveloperChange = (e) => {
+    const input = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
+    setDeveloper(input);
+  };
+
+  // 3) Обязательные поля: район, координаты, цена от, диапазон площади
   const [district, setDistrict] = useState("");
   const [coordinates, setCoordinates] = useState("");
   const [priceFrom, setPriceFrom] = useState("");
   const [areaRange, setAreaRange] = useState("");
   const [description, setDescription] = useState("");
+
+  // Поле «Вознаграждение» (от 1 до 10, шаг 0.5)
+  const [commission, setCommission] = useState("1");
 
   // Провинция зафиксирована (Bali)
   const province = "Bali";
@@ -83,7 +100,7 @@ function CreateComplex() {
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
-    setIsUploading(true); 
+    setIsUploading(true);
     const selectedFiles = Array.from(e.target.files);
 
     // Настройки сжатия: макс. 10 MB
@@ -152,31 +169,26 @@ function CreateComplex() {
         uploadedUrls.push(secureUrl);
       }
 
-      // 2) Вычисляем дистанцию и время до ближайшего пляжа
-      // Если coordinates хранит "шир, долг" в одной строке,
-// нужно сначала распарсить её на два числа:
-let beachDistanceKm = 0;
-let beachTravelTimeMin = 0;
-let nearestBeachName = "";
+      // 2) Вычисляем дистанцию и время до ближайшего пляжа (если координаты не пусты)
+      let beachDistanceKm = 0;
+      let beachTravelTimeMin = 0;
+      let nearestBeachName = "";
+      if (coordinates.trim()) {
+        try {
+          const [latStr, lngStr] = coordinates.split(",");
+          const latNum = parseFloat(latStr.trim()) || 0;
+          const lngNum = parseFloat(lngStr.trim()) || 0;
 
-// Если coordinates имеет вид "широта, долгота"
-if (coordinates.trim()) {
-  try {
-    const [latStr, lngStr] = coordinates.split(",");
-    const latNum = parseFloat(latStr.trim()) || 0;
-    const lngNum = parseFloat(lngStr.trim()) || 0;
+          const { distanceKm, timeMinutes, beachName } =
+            await getDistanceToNearestBeach(latNum, lngNum);
 
-    // Вызываем функцию
-    const { distanceKm, timeMinutes, beachName } =
-      await getDistanceToNearestBeach(latNum, lngNum);
-
-    beachDistanceKm = distanceKm;
-    beachTravelTimeMin = timeMinutes;
-    nearestBeachName = beachName;
-  } catch (calcErr) {
-    console.error("Ошибка при вычислении дистанции до пляжа:", calcErr);
-  }
-}
+          beachDistanceKm = distanceKm;
+          beachTravelTimeMin = timeMinutes;
+          nearestBeachName = beachName;
+        } catch (calcErr) {
+          console.error("Ошибка при вычислении дистанции до пляжа:", calcErr);
+        }
+      }
 
       // 3) Собираем объект для Firestore
       const newDoc = {
@@ -212,10 +224,13 @@ if (coordinates.trim()) {
         // Поле «Юридическое название компании»
         legalCompanyName,
 
-        // [NEW] Результат вычисления расстояния и времени до пляжа
+        // Вознаграждение
+        commission: parseFloat(commission),
+
+        // Результат вычисления расстояния и времени до пляжа
         beachDistanceKm,
-  beachTravelTimeMin,
-  nearestBeachName
+        beachTravelTimeMin,
+        nearestBeachName
       };
 
       // 4) Добавляем документ в "complexes"
@@ -245,6 +260,7 @@ if (coordinates.trim()) {
       setPbg("");
       setSlf("");
       setLegalCompanyName("");
+      setCommission("1");
 
       alert("Комплекс создан!");
     } catch (error) {
@@ -253,6 +269,12 @@ if (coordinates.trim()) {
       setIsLoading(false);
     }
   };
+
+  // Генерируем список значений (1, 1.5, 2, ..., 10) для поля "Вознаграждение"
+  const commissionOptions = [];
+  for (let val = 1; val <= 10; val += 0.5) {
+    commissionOptions.push(val.toFixed(1)); // "1.0", "1.5", ...
+  }
 
   return (
     <Box sx={{ maxWidth: 700, margin: "auto", p: 2 }}>
@@ -274,20 +296,25 @@ if (coordinates.trim()) {
                 onChange={(e) => setComplexNumber(e.target.value)}
                 required
               />
+
+              {/* Название (только заглавные английские буквы + пробелы) */}
               <TextField
                 label="Название"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
                 required
               />
+
+              {/* Застройщик (только заглавные английские буквы + пробелы, обязательно) */}
               <TextField
                 label="Застройщик"
                 value={developer}
-                onChange={(e) => setDeveloper(e.target.value)}
+                onChange={handleDeveloperChange}
+                required
               />
 
-              {/* Район (Select) */}
-              <FormControl>
+              {/* Район (Select) - обязателен */}
+              <FormControl required>
                 <InputLabel id="district-label">Район</InputLabel>
                 <Select
                   labelId="district-label"
@@ -316,23 +343,32 @@ if (coordinates.trim()) {
                   <MenuItem value="Ломбок">Ломбок</MenuItem>
                 </Select>
               </FormControl>
-              
+
+              {/* Координаты - обязательны */}
               <TextField
                 label="Координаты (шир, долг)"
                 value={coordinates}
                 onChange={(e) => setCoordinates(e.target.value)}
+                required
               />
+
+              {/* Цена от (USD) - обязательна */}
               <TextField
                 label="Цена от (USD)"
                 type="number"
                 value={priceFrom}
                 onChange={(e) => setPriceFrom(e.target.value)}
+                required
               />
+
+              {/* Диапазон площади - обязательно */}
               <TextField
                 label="Диапазон площади"
                 value={areaRange}
                 onChange={(e) => setAreaRange(e.target.value)}
+                required
               />
+
               <TextField
                 label="Описание"
                 multiline
@@ -340,6 +376,24 @@ if (coordinates.trim()) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
+
+              {/* Новое поле: Вознаграждение (от 1 до 10, шаг 0.5) */}
+              <FormControl>
+                <InputLabel id="commission-label">Вознаграждение</InputLabel>
+                <Select
+                  labelId="commission-label"
+                  label="Вознаграждение"
+                  value={commission}
+                  onChange={(e) => setCommission(e.target.value)}
+                  required
+                >
+                  {commissionOptions.map((val) => (
+                    <MenuItem key={val} value={val}>
+                      {val}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
               {/* Провинция (Bali) */}
               <TextField
@@ -484,7 +538,7 @@ if (coordinates.trim()) {
                 onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
-              <Typography>Предпросмотр выбранных фото (Drag & Drop):</Typography>
+              <Typography sx={{ mt: 2 }}>Предпросмотр выбранных фото (Drag & Drop):</Typography>
               <Grid container spacing={2}>
                 {previews.map((item, idx) => (
                   <Grid item xs={6} sm={4} key={item.id}>
@@ -508,7 +562,6 @@ if (coordinates.trim()) {
                 ))}
               </Grid>
 
-              {/* Кнопка «Выбрать фото / PDF» со спиннером */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button
                   variant="contained"
@@ -529,12 +582,12 @@ if (coordinates.trim()) {
               </Box>
 
               {isLoading ? (
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box display="flex" alignItems="center" gap={1} sx={{ mt: 2 }}>
                   <CircularProgress size={24} />
                   <Typography>Сохраняем...</Typography>
                 </Box>
               ) : (
-                <Button variant="contained" color="primary" type="submit">
+                <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
                   Создать
                 </Button>
               )}

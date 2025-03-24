@@ -20,19 +20,17 @@ import {
   CircularProgress
 } from "@mui/material";
 
-// ====== Для Drag & Drop ======
+// Для Drag & Drop
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
-// ====== Импортируем библиотеку для сжатия ======
+// Для сжатия и PDF
 import imageCompression from "browser-image-compression";
-
-// ====== Импортируем функцию конвертации PDF (пример) ======
 import { convertPdfToImages } from "../utils/pdfUtils";
 
 function CreateProperty() {
-  // Цена (USD)
+  // Цена (USD) — обязательное поле
   const [price, setPrice] = useState("");
 
   // Тип (Select)
@@ -42,49 +40,71 @@ function CreateProperty() {
   const [complexList, setComplexList] = useState([]);
   const [complex, setComplex] = useState("");
 
-  // Поля, которые могут автозаполняться (заблокированы, если autoFill)
+  // Застройщик (только заглавные английские буквы и пробелы, обязательно)
   const [developer, setDeveloper] = useState("");
+  const handleDeveloperChange = (e) => {
+    // Преобразуем ввод в заглавные и убираем всё, кроме A-Z и пробела
+    const input = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
+    setDeveloper(input);
+  };
+
+  // Район (обязательное)
   const [district, setDistrict] = useState("");
+  // Координаты (обязательное)
   const [coordinates, setCoordinates] = useState("");
+  // Город, RDTR
   const [city, setCity] = useState("Kab. Badung");
   const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
+
+  // Нужно ли блокировать поля при автозаполнении
   const [isAutoFill, setIsAutoFill] = useState(false);
 
   // Остальные поля
   const [status, setStatus] = useState("Строится");
   const [buildingType, setBuildingType] = useState("Новый комплекс");
+
+  // Спальни (обязательное)
   const [bedrooms, setBedrooms] = useState("");
+  // Площадь (обязательное)
   const [area, setArea] = useState("");
 
   // Провинция (Bali)
   const province = "Bali";
 
-  // Класс, форма собственности и т.д.
+  // Класс, форма собственности, ...
   const [classRating, setClassRating] = useState("Комфорт (B)");
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
-  const [completionDate, setCompletionDate] = useState(""); // "YYYY-MM"
+  const [completionDate, setCompletionDate] = useState("");
   const [pool, setPool] = useState("");
   const [description, setDescription] = useState("");
 
-  // Новое поле «Лет» (для Leashold)
+  // Поле «Лет» (для Leashold)
   const [leaseYears, setLeaseYears] = useState("");
 
-  // *** Три новых поля: SHGB, PBG, SLF
+  // Три новых поля: SHGB, PBG, SLF
   const [shgb, setShgb] = useState("");
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
 
-  // *** Новое поле «Юридическое название компании»
+  // Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
+
+  // [NEW] Поле «Вознаграждение» (от 1 до 10, шаг 0.5)
+  const [commission, setCommission] = useState("1.0");
+  // Генерируем варианты "1.0", "1.5", ... "10.0"
+  const commissionOptions = [];
+  for (let val = 1; val <= 10; val += 0.5) {
+    commissionOptions.push(val.toFixed(1));
+  }
 
   // Массив для Drag & Drop (фото)
   const [dndItems, setDndItems] = useState([]);
 
   // Состояния для спиннеров
-  const [isSaving, setIsSaving] = useState(false);     // спиннер при сохранении формы
-  const [isUploading, setIsUploading] = useState(false); // спиннер при загрузке/обработке файлов
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Загрузка списка комплексов из Firestore
   useEffect(() => {
@@ -108,7 +128,8 @@ function CreateProperty() {
             shgb: data.shgb || "",
             pbg: data.pbg || "",
             slf: data.slf || "",
-            legalCompanyName: data.legalCompanyName || ""
+            legalCompanyName: data.legalCompanyName || "",
+            commission: data.commission ?? "1.0"
           };
         });
         setComplexList(loaded);
@@ -123,10 +144,10 @@ function CreateProperty() {
   const handleFileChangeDnd = async (e) => {
     if (!e.target.files) return;
 
-    setIsUploading(true); // включаем спиннер и блокируем кнопку
+    setIsUploading(true);
     const selectedFiles = Array.from(e.target.files);
 
-    // Настройки сжатия (макс. 10 MB)
+    // Настройки сжатия
     const compressionOptions = {
       maxSizeMB: 10,
       useWebWorker: true
@@ -135,8 +156,8 @@ function CreateProperty() {
     const newItems = [];
     try {
       for (let file of selectedFiles) {
-        // Если это PDF — конвертируем в картинки
         if (file.type === "application/pdf") {
+          // PDF -> конвертация
           const pageBlobs = await convertPdfToImages(file);
           for (let blob of pageBlobs) {
             const compressed = await imageCompression(blob, compressionOptions);
@@ -147,7 +168,7 @@ function CreateProperty() {
             });
           }
         } else {
-          // Обычный файл (jpg/png и т.д.)
+          // Обычный файл
           const compressedFile = await imageCompression(file, compressionOptions);
           newItems.push({
             id: crypto.randomUUID(),
@@ -160,9 +181,8 @@ function CreateProperty() {
       console.error("Ошибка обработки файла:", err);
     }
 
-    // Обновляем dndItems
     setDndItems((prev) => [...prev, ...newItems]);
-    setIsUploading(false); // выключаем спиннер, разблокируем кнопку
+    setIsUploading(false);
   };
 
   // Удалить одно фото
@@ -186,7 +206,7 @@ function CreateProperty() {
     setComplex(chosenName);
 
     if (!chosenName) {
-      // Сброс автозаполнения
+      // Сброс
       setCoordinates("");
       setDeveloper("");
       setDistrict("");
@@ -201,13 +221,17 @@ function CreateProperty() {
       setPbg("");
       setSlf("");
       setLegalCompanyName("");
+      setCommission("1.0");
       setIsAutoFill(false);
     } else {
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
-        setCoordinates(found.coordinates);
-        setDeveloper(found.developer);
-        setDistrict(found.district);
+        setCoordinates(found.coordinates || "");
+        // Застройщик: приводим к заглавным + пробелам
+        setDeveloper(
+          found.developer.toUpperCase().replace(/[^A-Z ]/g, "")
+        );
+        setDistrict(found.district || "");
         if (found.city) setCity(found.city);
         if (found.rdtr) setRdtr(found.rdtr);
         if (found.managementCompany) setManagementCompany(found.managementCompany);
@@ -220,6 +244,14 @@ function CreateProperty() {
         if (found.slf) setSlf(found.slf);
         if (found.legalCompanyName) setLegalCompanyName(found.legalCompanyName);
 
+        // Commission
+        if (found.commission !== undefined) {
+          const c = parseFloat(found.commission);
+          setCommission(c.toFixed(1));
+        } else {
+          setCommission("1.0");
+        }
+
         setIsAutoFill(true);
       }
     }
@@ -231,14 +263,14 @@ function CreateProperty() {
     setIsSaving(true);
 
     try {
-      // Загружаем фото в Cloudinary
+      // Загружаем фото
       const imageUrls = [];
       for (let item of dndItems) {
         const url = await uploadToCloudinary(item.file);
         imageUrls.push(url);
       }
 
-      // Парсим координаты
+      // Координаты
       let latitude = 0;
       let longitude = 0;
       if (coordinates.trim()) {
@@ -247,10 +279,13 @@ function CreateProperty() {
         longitude = parseFloat(lonStr?.trim()) || 0;
       }
 
-      // Если Leashold, учитываем leaseYears
+      // Если Leashold => leaseYears, иначе ""
       const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
 
-      // Формируем объект для Firestore
+      // Парсим commission
+      const finalCommission = parseFloat(commission) || 1.0;
+
+      // Собираем объект
       const newProp = {
         price: parseFloat(price) || 0,
         type,
@@ -279,13 +314,14 @@ function CreateProperty() {
         shgb,
         pbg,
         slf,
-        legalCompanyName
+        legalCompanyName,
+        commission: finalCommission
       };
 
-      // Сохраняем в Firestore
+      // Сохраняем
       await addDoc(collection(db, "properties"), newProp);
 
-      // Сбрасываем все поля
+      // Сбрасываем
       setPrice("");
       setType("Вилла");
       setComplex("");
@@ -312,6 +348,7 @@ function CreateProperty() {
       setPbg("");
       setSlf("");
       setLegalCompanyName("");
+      setCommission("1.0");
       setDndItems([]);
 
       alert("Объект создан!");
@@ -342,6 +379,7 @@ function CreateProperty() {
                 type="number"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
+                required
               />
 
               {/* Тип (Select) */}
@@ -380,16 +418,17 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Застройщик */}
+              {/* Застройщик (required, uppercase + spaces) */}
               <TextField
                 label="Застройщик"
                 value={developer}
-                onChange={(e) => setDeveloper(e.target.value)}
+                onChange={handleDeveloperChange}
+                required
                 disabled={isAutoFill}
               />
 
-              {/* Район (Select) */}
-              <FormControl disabled={isAutoFill}>
+              {/* Район (required) */}
+              <FormControl required disabled={isAutoFill}>
                 <InputLabel id="district-label">Район</InputLabel>
                 <Select
                   labelId="district-label"
@@ -419,11 +458,12 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Координаты */}
+              {/* Координаты (required) */}
               <TextField
                 label="Координаты (шир, долг)"
                 value={coordinates}
                 onChange={(e) => setCoordinates(e.target.value)}
+                required
                 disabled={isAutoFill}
               />
 
@@ -458,8 +498,8 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Спальни */}
-              <FormControl>
+              {/* Спальни (required) */}
+              <FormControl required>
                 <InputLabel id="bedrooms-label">Спальни</InputLabel>
                 <Select
                   labelId="bedrooms-label"
@@ -482,12 +522,13 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Площадь */}
+              {/* Площадь (required) */}
               <TextField
                 label="Площадь (м²)"
                 type="number"
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
+                required
               />
 
               {/* Провинция (Bali) */}
@@ -497,7 +538,7 @@ function CreateProperty() {
                 disabled
               />
 
-              {/* Город (Select) */}
+              {/* Город */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="city-label">Город</InputLabel>
                 <Select
@@ -517,7 +558,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* RDTR (Select) */}
+              {/* RDTR */}
               <FormControl disabled={isAutoFill}>
                 <InputLabel id="rdtr-label">RDTR</InputLabel>
                 <Select
@@ -529,7 +570,7 @@ function CreateProperty() {
                   <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
                   <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
-                  <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
+                  <MenuItem value="RDTR Kuta Selatan">RDTR Кuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
                   <MenuItem value="RDTR Kecamatan Abiansemal">
                     RDTR Kecamatan Abiansemal
@@ -584,7 +625,6 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Если Leashold -> поле «Лет» */}
               {ownershipForm === "Leashold" && (
                 <TextField
                   label="Лет"
@@ -674,11 +714,27 @@ function CreateProperty() {
                 onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
+              {/* [NEW] Поле «Вознаграждение» (от 1 до 10, шаг 0.5) */}
+              <FormControl>
+                <InputLabel id="commission-label">Вознаграждение</InputLabel>
+                <Select
+                  labelId="commission-label"
+                  label="Вознаграждение"
+                  value={commission}
+                  onChange={(e) => setCommission(e.target.value)}
+                >
+                  {commissionOptions.map((val) => (
+                    <MenuItem key={val} value={val}>
+                      {val}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               {/* Drag & Drop превью */}
               <Typography sx={{ mt: 2 }}>
                 Загрузите JPG/PNG или PDF (будет разбит на страницы):
               </Typography>
-
               <DndProvider backend={HTML5Backend}>
                 <Grid container spacing={2}>
                   {dndItems.map((item, idx) => (
@@ -697,14 +753,14 @@ function CreateProperty() {
                 </Grid>
               </DndProvider>
 
-              {/* Кнопка «Загрузить фото / PDF» (теперь такого же размера и стиля) */}
+              {/* Кнопка «Загрузить фото / PDF» */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button
                   variant="contained"
-                  color="primary"    // добавили color="primary"
+                  color="primary"
                   component="label"
                   disabled={isUploading}
-                  sx={{ width: "820px", mt: 2 }}     // такой же отступ сверху
+                  sx={{ width: "820px", mt: 2 }}
                 >
                   Загрузить фото / PDF
                   <input type="file" hidden multiple onChange={handleFileChangeDnd} />
