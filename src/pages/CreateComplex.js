@@ -38,22 +38,21 @@ function CreateComplex() {
   // ----- Поля формы -----
   const [complexNumber, setComplexNumber] = useState("");
 
-  // 1) "Название" (только заглавные английские буквы + пробелы)
+  // "Название" (только заглавные английские буквы + пробелы)
   const [name, setName] = useState("");
   const handleNameChange = (e) => {
-    // Преобразуем ввод в uppercase и удаляем всё, кроме A-Z и пробела
     const input = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
     setName(input);
   };
 
-  // 2) "Застройщик" (только заглавные английские буквы + пробелы, обязательно)
+  // "Застройщик" (только заглавные английские буквы + пробелы, обязательно)
   const [developer, setDeveloper] = useState("");
   const handleDeveloperChange = (e) => {
     const input = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
     setDeveloper(input);
   };
 
-  // 3) Обязательные поля: район, координаты, цена от, диапазон площади
+  // Обязательные поля: район, координаты, цена от, диапазон площади
   const [district, setDistrict] = useState("");
   const [coordinates, setCoordinates] = useState("");
   const [priceFrom, setPriceFrom] = useState("");
@@ -62,6 +61,12 @@ function CreateComplex() {
 
   // Поле «Вознаграждение» (от 1 до 10, шаг 0.5)
   const [commission, setCommission] = useState("1");
+
+  // Поле "ROI" (ссылка на гугл-таблицу)
+  const [roi, setRoi] = useState("");
+
+  // [NEW] Поле "3D Тур" (ссылка на страницу с 3D туром)
+  const [threeDTour, setThreeDTour] = useState("");
 
   // Провинция зафиксирована (Bali)
   const province = "Bali";
@@ -103,7 +108,6 @@ function CreateComplex() {
     setIsUploading(true);
     const selectedFiles = Array.from(e.target.files);
 
-    // Настройки сжатия: макс. 10 MB
     const compressionOptions = {
       maxSizeMB: 10,
       useWebWorker: true
@@ -227,6 +231,12 @@ function CreateComplex() {
         // Вознаграждение
         commission: parseFloat(commission),
 
+        // Ссылка на ROI (Google Spreadsheet)
+        roi,
+
+        // [NEW] Ссылка на 3D Тур
+        threeDTour,
+
         // Результат вычисления расстояния и времени до пляжа
         beachDistanceKm,
         beachTravelTimeMin,
@@ -261,6 +271,8 @@ function CreateComplex() {
       setSlf("");
       setLegalCompanyName("");
       setCommission("1");
+      setRoi("");
+      setThreeDTour("");
 
       alert("Комплекс создан!");
     } catch (error) {
@@ -274,6 +286,7 @@ function CreateComplex() {
   const commissionOptions = [];
   for (let val = 1; val <= 10; val += 0.5) {
     commissionOptions.push(val.toFixed(1)); // "1.0", "1.5", ...
+
   }
 
   return (
@@ -344,7 +357,7 @@ function CreateComplex() {
                 </Select>
               </FormControl>
 
-              {/* Координаты - обязательны */}
+              {/* Координаты (шир, долг) - обязательны */}
               <TextField
                 label="Координаты (шир, долг)"
                 value={coordinates}
@@ -377,7 +390,7 @@ function CreateComplex() {
                 onChange={(e) => setDescription(e.target.value)}
               />
 
-              {/* Новое поле: Вознаграждение (от 1 до 10, шаг 0.5) */}
+              {/* Поле «Вознаграждение» (от 1 до 10, шаг 0.5) */}
               <FormControl>
                 <InputLabel id="commission-label">Вознаграждение</InputLabel>
                 <Select
@@ -394,6 +407,20 @@ function CreateComplex() {
                   ))}
                 </Select>
               </FormControl>
+
+              {/* Поле "ROI" (ссылка на Google Spreadsheet) */}
+              <TextField
+                label="ROI (ссылка)"
+                value={roi}
+                onChange={(e) => setRoi(e.target.value)}
+              />
+
+              {/* [NEW] Поле "3D Тур" (ссылка) */}
+              <TextField
+                label="3D Тур (ссылка)"
+                value={threeDTour}
+                onChange={(e) => setThreeDTour(e.target.value)}
+              />
 
               {/* Провинция (Bali) */}
               <TextField
@@ -538,7 +565,9 @@ function CreateComplex() {
                 onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
-              <Typography sx={{ mt: 2 }}>Предпросмотр выбранных фото (Drag & Drop):</Typography>
+              <Typography sx={{ mt: 2 }}>
+                Предпросмотр выбранных фото (Drag & Drop):
+              </Typography>
               <Grid container spacing={2}>
                 {previews.map((item, idx) => (
                   <Grid item xs={6} sm={4} key={item.id}>

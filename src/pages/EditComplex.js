@@ -1,10 +1,19 @@
 // src/pages/EditComplex.js
 
 import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { uploadToCloudinary } from "../utils/cloudinary";
-import { useParams, useNavigate } from "react-router-dom";
+
+// Для Drag & Drop
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import DraggablePreviewItem from "../components/DraggablePreviewItem";
+
+// Импорт для сжатия и PDF-конвертации
+import imageCompression from "browser-image-compression";
+import { convertPdfToImages } from "../utils/pdfUtils";
 
 import {
   Box,
@@ -21,24 +30,13 @@ import {
   CircularProgress
 } from "@mui/material";
 
-// Для Drag & Drop
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import DraggablePreviewItem from "../components/DraggablePreviewItem";
-
-// Импортируем библиотеку для сжатия изображений и PDF-конвертации
-import imageCompression from "browser-image-compression";
-import { convertPdfToImages } from "../utils/pdfUtils";
-
 function EditComplex() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Состояния для загрузки/сохранения
+  // Состояния для загрузки
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Состояние для спиннера на кнопке «Добавить фото»
   const [isUploading, setIsUploading] = useState(false);
 
   // Основные поля
@@ -56,11 +54,11 @@ function EditComplex() {
   const [city, setCity] = useState("");
   const [rdtr, setRdtr] = useState("");
 
-  // Новые поля
+  // Поля о форме собственности, статусе и т.д.
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
-  const [completionDate, setCompletionDate] = useState(""); // "YYYY-MM"
+  const [completionDate, setCompletionDate] = useState("");
   const [videoLink, setVideoLink] = useState("");
   const [leaseYears, setLeaseYears] = useState("");
   const [docsLink, setDocsLink] = useState("");
@@ -73,17 +71,22 @@ function EditComplex() {
   // Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
-  // Три новых поля для данных о пляже
+  // Поля о пляже
   const [nearestBeachName, setNearestBeachName] = useState("");
   const [beachDistanceKm, setBeachDistanceKm] = useState(0);
   const [beachTravelTimeMin, setBeachTravelTimeMin] = useState(0);
 
+  // [NEW] Поля «ROI» и «3D Тур»
+  const [roi, setRoi] = useState("");
+  const [threeDTour, setThreeDTour] = useState("");
+
   // Массив объектов для фото (старые + новые)
+  // Каждый элемент: { id, url, file }
   const [images, setImages] = useState([]);
 
-  // Загрузка данных из Firestore при монтировании
+  // Загрузка данных из Firestore
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchComplex() {
       try {
         const ref = doc(db, "complexes", id);
         const snap = await getDoc(ref);
@@ -118,12 +121,16 @@ function EditComplex() {
 
           setLegalCompanyName(data.legalCompanyName || "");
 
-          // Поля о пляже (читаем из Firestore)
+          // Пляж
           setNearestBeachName(data.nearestBeachName || "");
           setBeachDistanceKm(data.beachDistanceKm || 0);
           setBeachTravelTimeMin(data.beachTravelTimeMin || 0);
 
-          // Преобразуем старые URL в формат { id, url, file: null }
+          // [NEW] ROI и 3D Тур
+          setRoi(data.roi || "");
+          setThreeDTour(data.threeDTour || "");
+
+          // Преобразуем массив URL в [{ id, url, file: null }]
           const oldImages = (data.images || []).map((url) => ({
             id: crypto.randomUUID(),
             url,
@@ -136,8 +143,9 @@ function EditComplex() {
       } finally {
         setLoading(false);
       }
-    };
-    fetchData();
+    }
+
+    fetchComplex();
   }, [id]);
 
   // Обработчик выбора новых фото (с учётом сжатия и PDF)
@@ -151,25 +159,25 @@ function EditComplex() {
     };
 
     const selectedFiles = Array.from(e.target.files);
-    const newImages = [];
+    const newImagesArr = [];
 
     try {
       for (let file of selectedFiles) {
         if (file.type === "application/pdf") {
-          // PDF -> конвертация в картинки
+          // PDF -> конвертация
           const pageBlobs = await convertPdfToImages(file);
           for (let blob of pageBlobs) {
             const compressedFile = await imageCompression(blob, compressionOptions);
-            newImages.push({
+            newImagesArr.push({
               id: crypto.randomUUID(),
               url: URL.createObjectURL(compressedFile),
               file: compressedFile
             });
           }
         } else {
-          // Обычный файл (jpg/png)
+          // Обычное изображение
           const compressedFile = await imageCompression(file, compressionOptions);
-          newImages.push({
+          newImagesArr.push({
             id: crypto.randomUUID(),
             url: URL.createObjectURL(compressedFile),
             file: compressedFile
@@ -180,12 +188,12 @@ function EditComplex() {
       console.error("Ошибка обработки файла:", err);
     }
 
-    setImages((prev) => [...prev, ...newImages]);
+    setImages((prev) => [...prev, ...newImagesArr]);
     setIsUploading(false);
   };
 
-  // Перестановка фото (Drag & Drop)
-  const moveExistingImage = (dragIndex, hoverIndex) => {
+  // Перестановка (Drag & Drop)
+  const moveImage = (dragIndex, hoverIndex) => {
     setImages((prev) => {
       const arr = [...prev];
       const [draggedItem] = arr.splice(dragIndex, 1);
@@ -194,11 +202,13 @@ function EditComplex() {
     });
   };
 
-  // Удаление одного фото (локально)
-  const handleRemoveImage = async (idx) => {
-    const updated = [...images];
-    updated.splice(idx, 1);
-    setImages(updated);
+  // Удалить одно фото
+  const handleRemoveImage = (index) => {
+    setImages((prev) => {
+      const updated = [...prev];
+      updated.splice(index, 1);
+      return updated;
+    });
   };
 
   // Сохранение изменений
@@ -207,7 +217,7 @@ function EditComplex() {
     setIsLoading(true);
 
     try {
-      // Собираем итоговый массив URL (старые + новые)
+      // Собираем итоговый массив URL
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
@@ -215,7 +225,7 @@ function EditComplex() {
           const url = await uploadToCloudinary(item.file);
           finalUrls.push(url);
         } else {
-          // Старое фото
+          // Старое
           finalUrls.push(item.url);
         }
       }
@@ -223,7 +233,7 @@ function EditComplex() {
       // Если ownershipForm = "Leashold", leaseYears, иначе ""
       const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
 
-      // Собираем объект для Firestore
+      // Собираем объект
       const updatedData = {
         number: complexNumber,
         name,
@@ -254,9 +264,12 @@ function EditComplex() {
         // Юридическое название компании
         legalCompanyName,
 
-        // Не меняем поля о пляже, если хотим их оставить как есть
+        // [NEW] ROI и 3D Тур
+        roi,
+        threeDTour
       };
 
+      // Обновляем документ
       await updateDoc(doc(db, "complexes", id), updatedData);
 
       alert("Комплекс обновлён!");
@@ -298,7 +311,6 @@ function EditComplex() {
               onSubmit={handleSave}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
-              {/* Номер комплекса */}
               <TextField
                 label="Номер комплекса"
                 value={complexNumber}
@@ -403,7 +415,7 @@ function EditComplex() {
                 onChange={(e) => setDescription(e.target.value)}
               />
 
-              {/* Новые поля */}
+              {/* Управляющая компания */}
               <TextField
                 label="Управляющая компания"
                 value={managementCompany}
@@ -463,12 +475,12 @@ function EditComplex() {
               />
 
               <TextField
-                label="Доступные юниты (сслыка)"
+                label="Доступные юниты (ссылка)"
                 value={docsLink}
                 onChange={(e) => setDocsLink(e.target.value)}
               />
 
-              {/* Три новых поля: SHGB, PBG, SLF */}
+              {/* SHGB, PBG, SLF */}
               <TextField
                 label="Сертификат права на землю (SHGB)"
                 value={shgb}
@@ -492,25 +504,33 @@ function EditComplex() {
                 onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
-              {/* Ближайший пляж: только чтение */}
+              {/* Ближайший пляж, дистанция, время поездки - только чтение */}
               <TextField
                 label="Ближайший пляж"
                 value={nearestBeachName}
                 InputProps={{ readOnly: true }}
               />
-
-              {/* Дистанция до пляжа (км), целое число */}
               <TextField
                 label="Дистанция до пляжа (км)"
-                value={Math.round(beachDistanceKm)}   // округляем
+                value={Math.round(beachDistanceKm)}
+                InputProps={{ readOnly: true }}
+              />
+              <TextField
+                label="Время поездки (мин)"
+                value={Math.round(beachTravelTimeMin)}
                 InputProps={{ readOnly: true }}
               />
 
-              {/* Время поездки (мин), целое число */}
+              {/* [NEW] ROI и 3D Тур */}
               <TextField
-                label="Время поездки (мин)"
-                value={Math.round(beachTravelTimeMin)} // округляем
-                InputProps={{ readOnly: true }}
+                label="ROI (ссылка)"
+                value={roi}
+                onChange={(e) => setRoi(e.target.value)}
+              />
+              <TextField
+                label="3D Тур (ссылка)"
+                value={threeDTour}
+                onChange={(e) => setThreeDTour(e.target.value)}
               />
 
               <Typography sx={{ mt: 2 }}>
@@ -523,7 +543,7 @@ function EditComplex() {
                       <DraggablePreviewItem
                         item={item}
                         index={idx}
-                        moveItem={moveExistingImage}
+                        moveItem={moveImage}
                         onRemove={() => handleRemoveImage(idx)}
                       />
                     </Grid>
@@ -531,7 +551,6 @@ function EditComplex() {
                 </Grid>
               </DndProvider>
 
-              {/* Кнопка «Добавить фото» со спиннером */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button
                   variant="contained"
