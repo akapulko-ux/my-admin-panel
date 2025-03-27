@@ -1,5 +1,3 @@
-// src/pages/ListDevelopers.js
-
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
@@ -9,6 +7,7 @@ import {
   Typography,
   List,
   ListItem,
+  ListItemAvatar,
   ListItemText,
   Button
 } from "@mui/material";
@@ -17,8 +16,7 @@ import { useNavigate } from "react-router-dom";
 function ListDevelopers() {
   const navigate = useNavigate();
 
-  const [developers, setDevelopers] = useState([]); 
-  // Будем хранить массив объектов { id, name }
+  const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,8 +33,9 @@ function ListDevelopers() {
           // Документ может содержать поля: { name, description, logo, ... }
           if (data.name && data.name.trim() !== "") {
             devs.push({
-              id: docSnap.id,   // чтобы знать, какой документ редактировать
-              name: data.name
+              id: docSnap.id, // чтобы знать, какой документ редактировать
+              name: data.name,
+              logo: data.logo || null
             });
           }
         });
@@ -95,7 +94,39 @@ function ListDevelopers() {
                 </Button>
               }
             >
-              <ListItemText primary={dev.name} />
+              <ListItemAvatar>
+                {dev.logo ? (
+                  <Box
+                    component="img"
+                    src={dev.logo}
+                    alt={dev.name}
+                    sx={{
+                      width: 60,   // фиксированная ширина
+                      height: "auto", // высота автоматически сохраняет пропорции
+                      objectFit: "contain",
+                    }}
+                  />
+                ) : (
+                  // Если логотипа нет, используем стандартный Avatar с первой буквой
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      backgroundColor: "primary.main",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    {dev.name.charAt(0).toUpperCase()}
+                  </Box>
+                )}
+              </ListItemAvatar>
+              {/* Добавлен отступ слева, равный примерно 3 пробелам */}
+              <ListItemText primary={dev.name} sx={{ ml: 2 }} />
             </ListItem>
           ))}
         </List>

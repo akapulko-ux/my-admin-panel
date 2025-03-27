@@ -18,26 +18,18 @@ import MenuIcon from "@mui/icons-material/Menu";
 
 import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./pages/ProtectedRoute";
-
-// --- Комплексы ---
 import CreateComplex from "./pages/CreateComplex";
 import EditComplex from "./pages/EditComplex";
 import ListComplexes from "./pages/ListComplexes";
-
-// --- Объекты ---
 import CreateProperty from "./pages/CreateProperty";
 import EditProperty from "./pages/EditProperty";
 import ListProperties from "./pages/ListProperties";
-
-// --- Достопримечательности ---
 import CreateLandmark from "./pages/CreateLandmark";
 import ListLandmarks from "./pages/ListLandmarks";
 import EditLandmark from "./pages/EditLandmark";
-
-// --- Застройщики ---
 import ListDevelopers from "./pages/ListDevelopers";
-// [NEW] Импортируем EditDeveloper
 import EditDeveloper from "./pages/EditDeveloper";
+import SupportChats from "./pages/SupportChats"; // ✅ Импорт нового компонента
 
 import { useAuth } from "./AuthContext";
 
@@ -87,23 +79,18 @@ function App() {
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
         <Box sx={{ width: 240 }} onClick={toggleDrawer(false)}>
           <List>
-            {/* Меню Комплексов */}
             <ListItem button component={Link} to="/complex/new">
               <ListItemText primary="Создать Комплекс" />
             </ListItem>
             <ListItem button component={Link} to="/complex/list">
               <ListItemText primary="Список Комплексов" />
             </ListItem>
-
-            {/* Меню Объектов */}
             <ListItem button component={Link} to="/property/new">
               <ListItemText primary="Создать Объект" />
             </ListItem>
             <ListItem button component={Link} to="/property/list">
               <ListItemText primary="Список Объектов" />
             </ListItem>
-
-            {/* Меню Достопримечательностей */}
             <ListItem button component={Link} to="/landmark/new">
               <ListItemText primary="Создать Достопримечательность" />
             </ListItem>
@@ -111,9 +98,14 @@ function App() {
               <ListItemText primary="Список Достопримечательностей" />
             </ListItem>
 
-            {/* [NEW] Кнопка «Застройщики» -> /developers/list */}
-            <ListItem button component={Link} to="/developers/list">
+            {/* ✅ Новая кнопка "Застройщики" */}
+            <ListItem button component={Link} to="/developers">
               <ListItemText primary="Застройщики" />
+            </ListItem>
+
+            {/* ✅ Новая кнопка "Чаты техподдержки" */}
+            <ListItem button component={Link} to="/support/chats">
+              <ListItemText primary="Чаты техподдержки" />
             </ListItem>
           </List>
         </Box>
@@ -121,10 +113,8 @@ function App() {
 
       <Box sx={{ p: 2 }}>
         <Routes>
-          {/* Авторизация */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* --- Комплексы --- */}
           <Route
             path="/complex/new"
             element={
@@ -150,7 +140,6 @@ function App() {
             }
           />
 
-          {/* --- Объекты --- */}
           <Route
             path="/property/new"
             element={
@@ -176,7 +165,6 @@ function App() {
             }
           />
 
-          {/* --- Достопримечательности --- */}
           <Route
             path="/landmark/new"
             element={
@@ -202,30 +190,34 @@ function App() {
             }
           />
 
-          {/* --- Застройщики --- */}
-          {/* (Старый маршрут "/developers" уже есть — оставим или уберём, по желанию) */}
-
-          {/* [NEW] /developers/list -> список застройщиков */}
           <Route
-            path="/developers/list"
+            path="/developers"
             element={
-              <ProtectedRoute requiredRoles={["admin", "moderator"]}>
+              <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
                 <ListDevelopers />
               </ProtectedRoute>
             }
           />
 
-          {/* [NEW] /developer/edit/:id -> редактирование застройщика */}
           <Route
-            path="/developer/edit/:id"
+            path="/developers/edit/:id"
             element={
-              <ProtectedRoute requiredRoles={["admin", "moderator"]}>
+              <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
                 <EditDeveloper />
               </ProtectedRoute>
             }
           />
 
-          {/* Если путь не найден, переходим к списку комплексов */}
+          {/* ✅ Новый маршрут для страницы SupportChats */}
+          <Route
+            path="/support/chats"
+            element={
+              <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
+                <SupportChats />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/complex/list" />} />
         </Routes>
       </Box>
