@@ -12,7 +12,12 @@ const firebaseConfig = {
   appId: "1:794245545645:ios:d9abd3ac5e8a0452bbd024"
 };
 
+// 🔥 Инициализация Firebase App
 const app = initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// 🔥 Firestore & Auth
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ✅ Экспорт
+export { app, db, auth };
