@@ -2,14 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
-import { uploadToCloudinary } from "../utils/cloudinary";
+// Используем функцию загрузки и удаления из Firebase Storage
+import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 
-// Для Drag & Drop
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
-// Импорт для сжатия и PDF-конвертации
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
 
@@ -49,12 +48,9 @@ function EditLandmark() {
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data();
-
-          // Заполняем поля
           setName(data.name || "");
           setCoordinates(data.coordinates || "");
           setDescription(data.description || "");
-
           // Преобразуем массив строк (URL) в объекты { id, url, file: null }
           const oldImages = (data.images || []).map((imgUrl) => ({
             id: crypto.randomUUID(),
@@ -86,16 +82,12 @@ function EditLandmark() {
   // Обработчик выбора новых файлов (jpg/png/pdf)
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
-
     setIsUploading(true);
     const selectedFiles = Array.from(e.target.files);
-
-    // Настройки для сжатия
     const compressionOptions = {
       maxSizeMB: 10,
       useWebWorker: true
     };
-
     const newImagesArr = [];
     try {
       for (let file of selectedFiles) {
@@ -111,7 +103,7 @@ function EditLandmark() {
             });
           }
         } else {
-          // Обычный файл (jpg/png)
+          // Обычное изображение
           const compressedFile = await imageCompression(file, compressionOptions);
           newImagesArr.push({
             id: crypto.randomUUID(),
@@ -123,7 +115,6 @@ function EditLandmark() {
     } catch (err) {
       console.error("Ошибка обработки файла:", err);
     }
-
     setImages((prev) => [...prev, ...newImagesArr]);
     setIsUploading(false);
   };
@@ -138,35 +129,42 @@ function EditLandmark() {
     });
   };
 
-  // Удалить одно изображение из массива
-  const handleRemoveImage = (index) => {
+  // Удаление изображения: если это старое фото (file === null) и URL не является локальным blob, удаляем его физически из Storage
+  const handleRemoveImage = async (index) => {
+    const removed = images[index];
+    console.log("Удаляем изображение с URL:", removed.url);
     setImages((prev) => {
       const updated = [...prev];
       updated.splice(index, 1);
       return updated;
     });
+    if (!removed.file && !removed.url.startsWith("blob:")) {
+      try {
+        await deleteFileFromFirebaseStorage(removed.url);
+        console.log("Файл удалён физически из Storage");
+      } catch (error) {
+        console.error("Ошибка удаления файла из Firebase Storage:", error);
+      }
+    } else {
+      console.log("Локальный blob URL — физическое удаление не требуется");
+    }
   };
 
   // Сохранить изменения
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-
     try {
-      // Собираем итоговый массив URL (старые + новые)
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
-          // Новое изображение — загружаем в Cloudinary
-          const url = await uploadToCloudinary(item.file);
+          // Новое изображение — загружаем в Firebase Storage в папку "landmarks"
+          const url = await uploadToFirebaseStorageInFolder(item.file, "landmarks");
           finalUrls.push(url);
         } else {
-          // Старое изображение
           finalUrls.push(item.url);
         }
       }
-
-      // Обновляем документ в Firestore
       const updatedData = {
         name,
         coordinates,
@@ -174,9 +172,9 @@ function EditLandmark() {
         images: finalUrls
       };
       await updateDoc(doc(db, "landmarks", id), updatedData);
-
       alert("Достопримечательность обновлена!");
-      // navigate("/landmark/list"); // или другой маршрут
+      // Обновляем состояние images, чтобы для всех файлов file было null
+      setImages(finalUrls.map(url => ({ id: crypto.randomUUID(), url, file: null })));
     } catch (error) {
       console.error("Ошибка обновления достопримечательности:", error);
     } finally {
@@ -184,12 +182,26 @@ function EditLandmark() {
     }
   };
 
-  // Удаление достопримечательности
+  // Удаление достопримечательности и всех связанных фотографий из Firebase Storage
   const handleDelete = async () => {
     if (window.confirm("Вы действительно хотите удалить эту достопримечательность?")) {
       try {
+        // Удаляем физически все файлы из Storage
+        const deletionPromises = images.map((img) => {
+          // Если файл уже загружен (нет локального blob URL)
+          if (!img.file && !img.url.startsWith("blob:")) {
+            return deleteFileFromFirebaseStorage(img.url).catch((error) => {
+              console.error("Ошибка удаления файла из Storage:", error);
+              // Продолжаем, даже если удаление не удалось
+            });
+          } else {
+            return Promise.resolve();
+          }
+        });
+        await Promise.all(deletionPromises);
+        // Затем удаляем документ из Firestore
         await deleteDoc(doc(db, "landmarks", id));
-        alert("Достопримечательность удалена!");
+        alert("Достопримечательность и все фотографии удалены!");
         navigate("/landmark/list");
       } catch (error) {
         console.error("Ошибка удаления достопримечательности:", error);
@@ -208,29 +220,23 @@ function EditLandmark() {
           <Typography variant="h5" gutterBottom>
             Редактировать Достопримечательность (ID: {id})
           </Typography>
-
           <DndProvider backend={HTML5Backend}>
             <Box
               component="form"
               onSubmit={handleSave}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
-              {/* Название (только заглавные латинские буквы и пробел) */}
               <TextField
                 label="Название"
                 value={name}
                 onChange={handleNameChange}
                 required
               />
-
-              {/* Координаты */}
               <TextField
                 label="Координаты (шир, долг)"
                 value={coordinates}
                 onChange={(e) => setCoordinates(e.target.value)}
               />
-
-              {/* Описание */}
               <TextField
                 label="Описание"
                 multiline
@@ -238,8 +244,6 @@ function EditLandmark() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
-
-              {/* Существующие/новые фото (Drag & Drop) */}
               <Typography>Фото (Drag & Drop):</Typography>
               <Grid container spacing={2}>
                 {images.map((item, idx) => (
@@ -253,8 +257,6 @@ function EditLandmark() {
                   </Grid>
                 ))}
               </Grid>
-
-              {/* Кнопка "Добавить фото / PDF" */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Button
                   variant="contained"
@@ -272,20 +274,17 @@ function EditLandmark() {
                   <input type="file" hidden multiple onChange={handleFileChange} />
                 </Button>
               </Box>
-
-              {/* Кнопки "Сохранить" / "Удалить" */}
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                 {isSaving ? (
-                  <Box display="flex" alignItems="center" gap={1}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <CircularProgress size={24} />
                     <Typography>Сохраняем...</Typography>
                   </Box>
                 ) : (
                   <Button variant="contained" color="primary" type="submit">
-                    Сохранить
+                    Сохранить изменения
                   </Button>
                 )}
-
                 <Button variant="contained" color="error" onClick={handleDelete}>
                   Удалить
                 </Button>

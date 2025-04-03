@@ -1,9 +1,8 @@
-// src/pages/CreateLandmark.js
-
 import React, { useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
-import { uploadToCloudinary } from "../utils/cloudinary";
+// Заменяем импорт функции загрузки с Cloudinary на Firebase Storage
+import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 
 import {
   Box,
@@ -83,17 +82,17 @@ function CreateLandmark() {
   };
 
   /**
-   * Сохранение достопримечательности (Firestore + Cloudinary).
+   * Сохранение достопримечательности (Firestore + Firebase Storage).
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
 
     try {
-      // 1) Загрузить фото в Cloudinary
+      // 1) Загружаем фото в Firebase Storage в папку "landmarks"
       const uploadedUrls = [];
       for (let item of images) {
-        const secureUrl = await uploadToCloudinary(item.file);
+        const secureUrl = await uploadToFirebaseStorageInFolder(item.file, "landmarks");
         uploadedUrls.push(secureUrl);
       }
 

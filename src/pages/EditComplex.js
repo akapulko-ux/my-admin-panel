@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
-// Импорт для загрузки фотографий в Firebase Storage вместо Cloudinary
-import { uploadToFirebaseStorage } from "../utils/firebaseStorage";
+// Используем функцию загрузки и удаления из Firebase Storage
+import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -33,7 +33,7 @@ function EditComplex() {
 
   // Состояния для загрузки
   const [loading, setLoading] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   // Основные поля
@@ -60,12 +60,12 @@ function EditComplex() {
   const [leaseYears, setLeaseYears] = useState("");
   const [docsLink, setDocsLink] = useState("");
 
-  // Три новых поля: SHGB, PBG, SLF
+  // Новые поля: SHGB, PBG, SLF
   const [shgb, setShgb] = useState("");
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
 
-  // Новое поле «Юридическое название компании»
+  // Поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
   // Поля о пляже
@@ -192,45 +192,64 @@ function EditComplex() {
   // Перестановка (Drag & Drop)
   const moveImage = (dragIndex, hoverIndex) => {
     setImages((prev) => {
-      const arr = [...prev];
-      const [draggedItem] = arr.splice(dragIndex, 1);
-      arr.splice(hoverIndex, 0, draggedItem);
-      return arr;
+      const updated = [...prev];
+      const [draggedItem] = updated.splice(dragIndex, 1);
+      updated.splice(hoverIndex, 0, draggedItem);
+      return updated;
     });
   };
 
-  // Удалить одно фото
-  const handleRemoveImage = (index) => {
+  // Функция удаления изображения
+  const handleRemoveImage = async (index) => {
+    const removed = images[index];
+    console.log("Удаляем изображение с URL:", removed.url);
     setImages((prev) => {
       const updated = [...prev];
       updated.splice(index, 1);
       return updated;
     });
+    // Если это старое фото (file === null) и URL не локальный blob, удаляем его физически из Storage
+    if (!removed.file && !removed.url.startsWith("blob:")) {
+      try {
+        await deleteFileFromFirebaseStorage(removed.url);
+        console.log("Файл удалён физически из Storage");
+      } catch (error) {
+        console.error("Ошибка удаления файла из Firebase Storage:", error);
+      }
+    } else {
+      console.log("Локальный blob URL — физическое удаление не требуется");
+    }
+  };
+
+  // Функция удаления всех фотографий из Storage
+  const deleteAllImagesFromStorage = async () => {
+    const deletionPromises = images.map((img) => {
+      if (!img.file && !img.url.startsWith("blob:")) {
+        return deleteFileFromFirebaseStorage(img.url).catch((error) => {
+          console.error("Ошибка удаления файла из Storage:", error);
+          return Promise.resolve();
+        });
+      }
+      return Promise.resolve();
+    });
+    await Promise.all(deletionPromises);
   };
 
   // Сохранение изменений
   const handleSave = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-
+    setIsSaving(true);
     try {
-      // Собираем итоговый массив URL
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
-          // Новое фото — теперь загружаем в Firebase Storage вместо Cloudinary
-          const url = await uploadToFirebaseStorage(item.file);
+          // Новое изображение — загружаем в Firebase Storage в папку "complexes"
+          const url = await uploadToFirebaseStorageInFolder(item.file, "complexes");
           finalUrls.push(url);
         } else {
-          // Старое
           finalUrls.push(item.url);
         }
       }
-
-      // Если ownershipForm = "Leashold", leaseYears, иначе ""
-      const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
-
-      // Собираем объект
       const updatedData = {
         number: complexNumber,
         name,
@@ -244,45 +263,40 @@ function EditComplex() {
         city,
         rdtr,
         images: finalUrls,
-
         managementCompany,
         ownershipForm,
         landStatus,
         completionDate,
         videoLink,
         docsLink,
-        leaseYears: finalLeaseYears,
-
-        // Три новых поля
+        leaseYears: ownershipForm === "Leashold" ? leaseYears : "",
         shgb,
         pbg,
         slf,
-
-        // Юридическое название компании
         legalCompanyName,
-
-        // [NEW] ROI и 3D Тур
         roi,
         threeDTour
       };
-
-      // Обновляем документ
       await updateDoc(doc(db, "complexes", id), updatedData);
-
       alert("Комплекс обновлён!");
+      // Обновляем состояние images, чтобы для всех файлов file стало null
+      setImages(finalUrls.map((url) => ({ id: crypto.randomUUID(), url, file: null })));
     } catch (error) {
       console.error("Ошибка обновления комплекса:", error);
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  // Удаление всего комплекса
+  // Удаление всего комплекса и всех фотографий
   const handleDelete = async () => {
     if (window.confirm("Вы действительно хотите удалить этот комплекс?")) {
       try {
+        // Сначала удаляем физически все файлы из Storage
+        await deleteAllImagesFromStorage();
+        // Затем удаляем документ из Firestore
         await deleteDoc(doc(db, "complexes", id));
-        alert("Комплекс удалён!");
+        alert("Комплекс и все фотографии удалены!");
         navigate("/complex/list");
       } catch (error) {
         console.error("Ошибка удаления комплекса:", error);
@@ -301,7 +315,6 @@ function EditComplex() {
           <Typography variant="h5" gutterBottom>
             Редактировать Комплекс (ID: {id})
           </Typography>
-
           <DndProvider backend={HTML5Backend}>
             <Box
               component="form"
@@ -354,7 +367,7 @@ function EditComplex() {
                 disabled
               />
 
-              {/* Город */}
+              {/* Город (Select) */}
               <FormControl>
                 <InputLabel id="city-label">Город</InputLabel>
                 <Select
@@ -371,11 +384,11 @@ function EditComplex() {
                   <MenuItem value="Kab. Bangli">Kab. Bangli</MenuItem>
                   <MenuItem value="Kab. Karangasem">Kab. Karangasem</MenuItem>
                   <MenuItem value="Kab. Buleleng">Kab. Buleleng</MenuItem>
-                  <MenuItem value="Kota Denpasar">Kota Denpasar</MenuItem>
+                  <MenuItem value="Kota Denpasar">Kота Denpasar</MenuItem>
                 </Select>
               </FormControl>
 
-              {/* RDTR */}
+              {/* RDTR (Select) */}
               <FormControl>
                 <InputLabel id="rdtr-label">RDTR</InputLabel>
                 <Select
@@ -384,15 +397,12 @@ function EditComplex() {
                   value={rdtr}
                   onChange={(e) => setRdtr(e.target.value)}
                 >
-                  <MenuItem value="">(не выбрано)</MenuItem>
                   <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
                   <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
                   <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">
-                    RDTR Kecamatan Abiansemal
-                  </MenuItem>
+                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
                   <MenuItem value="RDTR Wilayah Перencanaan Petang">
                     RDTR Wilayah Перencания Petang
                   </MenuItem>
@@ -404,15 +414,6 @@ function EditComplex() {
                 </Select>
               </FormControl>
 
-              <TextField
-                label="Описание"
-                multiline
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-
-              {/* Управляющая компания */}
               <TextField
                 label="Управляющая компания"
                 value={managementCompany}
@@ -553,7 +554,7 @@ function EditComplex() {
                   variant="contained"
                   component="label"
                   disabled={isUploading}
-                  sx={{ display: "flex", alignItems: "center" }}
+                  sx={{ width: "820px", mt: 2 }}
                 >
                   {isUploading ? (
                     <>
@@ -561,14 +562,14 @@ function EditComplex() {
                       Загрузка...
                     </>
                   ) : (
-                    "Добавить фото / PDF"
+                    "Выбрать фото / PDF"
                   )}
                   <input type="file" hidden multiple onChange={handleFileChange} />
                 </Button>
               </Box>
 
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                {isLoading ? (
+                {isSaving ? (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <CircularProgress size={24} />
                     <Typography>Сохраняем...</Typography>
@@ -580,7 +581,7 @@ function EditComplex() {
                 )}
 
                 <Button variant="contained" color="error" onClick={handleDelete}>
-                  Удалить комплекс
+                  Удалить
                 </Button>
               </Box>
             </Box>

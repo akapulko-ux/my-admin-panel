@@ -1,22 +1,15 @@
-// src/pages/CreateComplex.js
-
 import React, { useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
-import { uploadToCloudinary } from "../utils/cloudinary";
+// Заменяем импорт uploadToCloudinary на загрузку в Firebase Storage
+import { uploadToFirebaseStorage } from "../utils/firebaseStorage";
 
-// DnD Provider и back-end
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
-// Импорт библиотеки для сжатия
 import imageCompression from "browser-image-compression";
-
-// Импортируем функцию конвертации PDF
 import { convertPdfToImages } from "../utils/pdfUtils";
-
-// Импортируем функцию расчёта дистанции до пляжа
 import { getDistanceToNearestBeach } from "../utils/beachDistance";
 
 import {
@@ -60,7 +53,7 @@ function CreateComplex() {
   const [description, setDescription] = useState("");
 
   // Поле «Вознаграждение» (от 1 до 10, шаг 0.5)
-  const [commission, setCommission] = useState("1");
+  const [commission, setCommission] = useState("1.0");
 
   // Поле "ROI" (ссылка на гугл-таблицу)
   const [roi, setRoi] = useState("");
@@ -166,10 +159,10 @@ function CreateComplex() {
     setIsLoading(true);
 
     try {
-      // 1) Загружаем фото в Cloudinary
+      // 1) Загружаем фото в Firebase Storage
       const uploadedUrls = [];
       for (let item of previews) {
-        const secureUrl = await uploadToCloudinary(item.file);
+        const secureUrl = await uploadToFirebaseStorage(item.file);
         uploadedUrls.push(secureUrl);
       }
 
@@ -285,8 +278,7 @@ function CreateComplex() {
   // Генерируем список значений (1, 1.5, 2, ..., 10) для поля "Вознаграждение"
   const commissionOptions = [];
   for (let val = 1; val <= 10; val += 0.5) {
-    commissionOptions.push(val.toFixed(1)); // "1.0", "1.5", ...
-
+    commissionOptions.push(val.toFixed(1));
   }
 
   return (
@@ -611,7 +603,7 @@ function CreateComplex() {
               </Box>
 
               {isLoading ? (
-                <Box display="flex" alignItems="center" gap={1} sx={{ mt: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
                   <CircularProgress size={24} />
                   <Typography>Сохраняем...</Typography>
                 </Box>
