@@ -1,5 +1,3 @@
-// src/pages/ListComplexes.js
-
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 import {
@@ -21,10 +19,13 @@ import {
   TextField,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  LinearProgress
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Link } from "react-router-dom";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 function ListComplexes() {
   const [complexes, setComplexes] = useState([]);
@@ -55,7 +56,7 @@ function ListComplexes() {
   const [filterSlf, setFilterSlf] = useState("");
   const [filterLegalCompanyName, setFilterLegalCompanyName] = useState("");
 
-  // --- Поля для массового редактирования (все поля, аналогичные EditComplex) ---
+  // --- Поля для массового редактирования (аналогичные EditComplex) ---
   const [massEditNumber, setMassEditNumber] = useState("");
   const [massEditName, setMassEditName] = useState("");
   const [massEditDeveloper, setMassEditDeveloper] = useState("");
@@ -78,6 +79,16 @@ function ListComplexes() {
   const [massEditPbg, setMassEditPbg] = useState("");
   const [massEditSlf, setMassEditSlf] = useState("");
   const [massEditLegalCompanyName, setMassEditLegalCompanyName] = useState("");
+  // [NEW] Массовое редактирование «Вознаграждение»
+  const [massEditCommission, setMassEditCommission] = useState("");
+  // Добавляем недостающий state для massEditPool
+  const [massEditPool, setMassEditPool] = useState("");
+
+  // --- Новые состояния для скачивания фотографий ---
+  const [downloading, setDownloading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [downloadedImages, setDownloadedImages] = useState(0);
+  const [totalImages, setTotalImages] = useState(0);
 
   // Функция загрузки комплексов
   const fetchComplexes = async () => {
@@ -338,6 +349,14 @@ function ListComplexes() {
         if (massEditLegalCompanyName.trim() !== "") {
           newData.legalCompanyName = massEditLegalCompanyName;
         }
+        // [NEW] Массовое редактирование commission
+        if (massEditCommission.trim() !== "") {
+          newData.commission = parseFloat(massEditCommission) || 0;
+        }
+        // Добавляем massEditPool, если задан
+        if (massEditPool.trim() !== "") {
+          newData.pool = massEditPool;
+        }
 
         if (Object.keys(newData).length > 0) {
           await updateDoc(ref, newData);
@@ -352,6 +371,69 @@ function ListComplexes() {
     }
   };
 
+  // --- Утилиты для скачивания фотографий ---
+  const sanitizeFolderName = (name) => {
+    return name.replace(/[^a-zA-Z0-9-_ ]/g, "").trim() || "Complex";
+  };
+
+  const getExtensionFromBlob = (blob) => {
+    const type = blob.type;
+    if (type.includes("jpeg")) return "jpg";
+    if (type.includes("png")) return "png";
+    if (type.includes("gif")) return "gif";
+    return "jpg"; // fallback
+  };
+
+  // --- Функция для скачивания всех фотографий ---
+  const handleDownloadAllPhotos = async () => {
+    setDownloading(true);
+    setProgress(0);
+    setDownloadedImages(0);
+    let total = 0;
+    // Подсчитываем общее количество изображений во всех комплексах
+    complexes.forEach((complex) => {
+      if (complex.images && Array.isArray(complex.images)) {
+        total += complex.images.length;
+      }
+    });
+    setTotalImages(total);
+
+    const zip = new JSZip();
+    let downloadedCount = 0;
+
+    // Итерация по каждому комплексу
+    for (const complex of complexes) {
+      const folderName = sanitizeFolderName(complex.name || "БезНазвание");
+      const folder = zip.folder(folderName);
+      if (complex.images && Array.isArray(complex.images)) {
+        for (const [index, imageUrl] of complex.images.entries()) {
+          try {
+            const response = await fetch(imageUrl);
+            if (!response.ok) {
+              console.error(`Ошибка загрузки изображения ${imageUrl}: ${response.statusText}`);
+              continue;
+            }
+            const blob = await response.blob();
+            const ext = getExtensionFromBlob(blob);
+            const fileName = `image_${index + 1}.${ext}`;
+            folder.file(fileName, blob);
+          } catch (err) {
+            console.error("Ошибка при скачивании изображения:", err);
+          }
+          downloadedCount++;
+          setDownloadedImages(downloadedCount);
+          setProgress(Math.round((downloadedCount / total) * 100));
+        }
+      }
+    }
+
+    const zipBlob = await zip.generateAsync({ type: "blob" }, (metadata) => {
+      setProgress(Math.round(metadata.percent));
+    });
+    saveAs(zipBlob, "complexes_photos.zip");
+    setDownloading(false);
+  };
+
   if (loading) {
     return <Typography>Загрузка комплексов...</Typography>;
   }
@@ -362,13 +444,34 @@ function ListComplexes() {
         Список Комплексов
       </Typography>
 
+      {/* --- Новая кнопка для скачивания фотографий --- */}
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleDownloadAllPhotos}
+          disabled={downloading}
+        >
+          Скачать все фотографии
+        </Button>
+      </Box>
+
+      {/* Прогресс-бар при скачивании */}
+      {downloading && (
+        <Box sx={{ mb: 2 }}>
+          <Typography>
+            Загружено {downloadedImages} из {totalImages} изображений ({progress}%)
+          </Typography>
+          <LinearProgress variant="determinate" value={progress} />
+        </Box>
+      )}
+
       {/* --- Блок ФИЛЬТРА по всем полям (EditComplex) --- */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle1" gutterBottom>
           Фильтр по всем полям
         </Typography>
 
-        {/* Пример collapsible (Accordion) для фильтра */}
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>Развернуть / Свернуть фильтр</Typography>
@@ -631,6 +734,13 @@ function ListComplexes() {
                 onChange={(e) => setMassEditLandStatus(e.target.value)}
               />
               <TextField
+                label="Бассейн (pool)"
+                variant="outlined"
+                size="small"
+                value={massEditPool}
+                onChange={(e) => setMassEditPool(e.target.value)}
+              />
+              <TextField
                 label="Дата заверш. (completionDate)"
                 variant="outlined"
                 size="small"
@@ -685,6 +795,14 @@ function ListComplexes() {
                 size="small"
                 value={massEditLegalCompanyName}
                 onChange={(e) => setMassEditLegalCompanyName(e.target.value)}
+              />
+              {/* [NEW] Массовое редактирование «Вознаграждение» */}
+              <TextField
+                label="Вознаграждение (commission)"
+                variant="outlined"
+                size="small"
+                value={massEditCommission}
+                onChange={(e) => setMassEditCommission(e.target.value)}
               />
             </Box>
 

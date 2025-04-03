@@ -1,17 +1,14 @@
-// src/pages/EditComplex.js
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
-import { uploadToCloudinary } from "../utils/cloudinary";
+// Импорт для загрузки фотографий в Firebase Storage вместо Cloudinary
+import { uploadToFirebaseStorage } from "../utils/firebaseStorage";
 
-// Для Drag & Drop
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
-// Импорт для сжатия и PDF-конвертации
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
 
@@ -221,8 +218,8 @@ function EditComplex() {
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
-          // Новое фото
-          const url = await uploadToCloudinary(item.file);
+          // Новое фото — теперь загружаем в Firebase Storage вместо Cloudinary
+          const url = await uploadToFirebaseStorage(item.file);
           finalUrls.push(url);
         } else {
           // Старое
@@ -572,7 +569,7 @@ function EditComplex() {
 
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                 {isLoading ? (
-                  <Box display="flex" alignItems="center" gap={1}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <CircularProgress size={24} />
                     <Typography>Сохраняем...</Typography>
                   </Box>

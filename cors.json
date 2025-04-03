@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["http://localhost:3000", "https://bali-estate-1130f.web.app"],
+    "method": ["GET", "POST", "PUT", "DELETE"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "x-goog-meta-custom-header", "Authorization"]
+  }
+]
