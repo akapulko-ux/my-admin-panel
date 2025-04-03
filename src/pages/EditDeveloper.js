@@ -3,13 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import {
-  collection,
-  doc,
-  getDoc,
-  addDoc,
-  updateDoc
-} from "firebase/firestore";
+import { collection, doc, getDoc, addDoc, updateDoc } from "firebase/firestore";
+import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage"; // Функции для работы со Storage
+import imageCompression from "browser-image-compression";
 
 import {
   Box,
@@ -21,35 +17,27 @@ import {
   CircularProgress
 } from "@mui/material";
 
-// Импорт для загрузки в Cloudinary
-import { uploadToCloudinary } from "../utils/cloudinary";
-
-// Импорт для сжатия изображений
-import imageCompression from "browser-image-compression";
-
 function EditDeveloper() {
   const navigate = useNavigate();
   const { id } = useParams(); // либо "new", либо реальный docId
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  
-  // Логотип (храним URL и File для предпросмотра)
+
+  // Логотип: File (для загрузки) и URL (для предпросмотра)
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Загружаем данные, если id != "new"
+  // Загружаем данные, если id не "new"
   useEffect(() => {
     async function fetchData() {
       if (id === "new") {
-        // Новый застройщик, нечего грузить
         setLoading(false);
         return;
       }
-
       try {
         const ref = doc(db, "developers", id);
         const snap = await getDoc(ref);
@@ -58,7 +46,7 @@ function EditDeveloper() {
           setName(data.name || "");
           setDescription(data.description || "");
           if (data.logo) {
-            setLogoPreview(data.logo); // URL
+            setLogoPreview(data.logo);
           }
         }
       } catch (error) {
@@ -73,11 +61,8 @@ function EditDeveloper() {
   // Обработчик выбора файла (логотип)
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
-
     const file = e.target.files[0];
     if (!file) return;
-
-    // Сжимаем (необязательно, но полезно)
     try {
       const compressed = await imageCompression(file, {
         maxSizeMB: 5,
@@ -90,37 +75,51 @@ function EditDeveloper() {
     }
   };
 
-  // Сохранение (Create / Update)
+  // Сохранение (создание или обновление)
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-
     try {
-      // 1) Если есть логотип (logoFile) — загружаем в Cloudinary
-      let logoUrl = logoPreview; // если уже был
+      // Сохраняем старый логотип для последующего удаления
+      const oldLogoUrl = logoPreview;
+
+      let newLogoUrl = logoPreview;
+
+      // Если выбран новый логотип, сначала загружаем его в Storage
       if (logoFile) {
-        logoUrl = await uploadToCloudinary(logoFile);
+        newLogoUrl = await uploadToFirebaseStorageInFolder(logoFile, "developers");
       }
 
-      // 2) Собираем данные
+      // Подготавливаем данные для обновления или создания
       const newData = {
         name: name.trim(),
         description: description.trim(),
-        logo: logoUrl || "" // может быть пусто
+        logo: newLogoUrl || ""
       };
 
-      // 3) Если id === "new", создаём новый документ
       if (id === "new") {
         await addDoc(collection(db, "developers"), newData);
       } else {
-        // Иначе обновляем существующий
         await updateDoc(doc(db, "developers", id), newData);
       }
 
+      // Если документ редактируется и выбран новый логотип,
+      // а старый логотип существует и отличается от нового, удаляем старый
+      if (id !== "new" && logoFile && oldLogoUrl && oldLogoUrl !== newLogoUrl && !oldLogoUrl.startsWith("blob:")) {
+        try {
+          await deleteFileFromFirebaseStorage(oldLogoUrl);
+          console.log("Старый логотип успешно удалён из Storage");
+        } catch (deleteError) {
+          console.error("Ошибка удаления старого логотипа:", deleteError);
+          // Можно продолжить даже если удаление не удалось
+        }
+      }
+
       alert("Сохранено!");
-      navigate("/developers/list"); // или куда-то ещё
+      navigate("/developers/list");
     } catch (error) {
       console.error("Ошибка сохранения застройщика:", error);
+      alert("Ошибка при сохранении!");
     } finally {
       setIsSaving(false);
     }
@@ -141,21 +140,17 @@ function EditDeveloper() {
           <Typography variant="h5" gutterBottom>
             {id === "new" ? "Создать Застройщика" : "Редактировать Застройщика"}
           </Typography>
-
           <Box
             component="form"
             onSubmit={handleSave}
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
-            {/* Имя */}
             <TextField
               label="Имя застройщика"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
-
-            {/* Описание */}
             <TextField
               label="Описание"
               multiline
@@ -163,8 +158,6 @@ function EditDeveloper() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-
-            {/* Логотип (предпросмотр) */}
             {logoPreview && (
               <Box>
                 <Typography>Предпросмотр логотипа:</Typography>
@@ -179,8 +172,6 @@ function EditDeveloper() {
               Загрузить логотип
               <input type="file" hidden onChange={handleFileChange} />
             </Button>
-
-            {/* Кнопка "Создать" или "Сохранить" */}
             {isSaving ? (
               <Box display="flex" alignItems="center" gap={1}>
                 <CircularProgress size={24} />
