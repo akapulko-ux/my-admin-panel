@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
-// Заменяем импорт uploadToCloudinary на загрузку в Firebase Storage
-import { uploadToFirebaseStorage } from "../utils/firebaseStorage";
+// Заменяем импорт uploadToCloudinary на загрузку в Firebase Storage с указанием папки
+import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -159,10 +159,11 @@ function CreateComplex() {
     setIsLoading(true);
 
     try {
-      // 1) Загружаем фото в Firebase Storage
+      // 1) Загружаем фото в Firebase Storage в папку "complexes"
       const uploadedUrls = [];
       for (let item of previews) {
-        const secureUrl = await uploadToFirebaseStorage(item.file);
+        // Используем функцию uploadToFirebaseStorageInFolder с указанием папки "complexes"
+        const secureUrl = await uploadToFirebaseStorageInFolder(item.file, "complexes");
         uploadedUrls.push(secureUrl);
       }
 
@@ -263,7 +264,7 @@ function CreateComplex() {
       setPbg("");
       setSlf("");
       setLegalCompanyName("");
-      setCommission("1");
+      setCommission("1.0");
       setRoi("");
       setThreeDTour("");
 
@@ -437,7 +438,7 @@ function CreateComplex() {
                   <MenuItem value="Kab. Bangli">Kab. Bangli</MenuItem>
                   <MenuItem value="Kab. Karangasem">Kab. Karangasem</MenuItem>
                   <MenuItem value="Kab. Buleleng">Kab. Buleleng</MenuItem>
-                  <MenuItem value="Kota Denpasar">Kota Denpasar</MenuItem>
+                  <MenuItem value="Kota Denpasar">Kота Denpasar</MenuItem>
                 </Select>
               </FormControl>
 
@@ -453,11 +454,9 @@ function CreateComplex() {
                   <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
                   <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
-                  <MenuItem value="RDTR Kuta Selatan">RDTR Кuta Selatan</MenuItem>
+                  <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">
-                    RDTR Kecamatan Abiansemal
-                  </MenuItem>
+                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
                   <MenuItem value="RDTR Wilayah Перencanaan Petang">
                     RDTR Wilayah Перencания Petang
                   </MenuItem>
@@ -550,7 +549,7 @@ function CreateComplex() {
                 onChange={(e) => setSlf(e.target.value)}
               />
 
-              {/* Новое поле: «Юридическое название компании» */}
+              {/* Поле «Юридическое название компании» */}
               <TextField
                 label="Юридическое название компании"
                 value={legalCompanyName}
@@ -558,7 +557,7 @@ function CreateComplex() {
               />
 
               <Typography sx={{ mt: 2 }}>
-                Предпросмотр выбранных фото (Drag & Drop):
+                Предпросмотр выбранных фото:
               </Typography>
               <Grid container spacing={2}>
                 {previews.map((item, idx) => (
