@@ -1,3 +1,5 @@
+// src/pages/EditComplex.js
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
@@ -68,11 +70,6 @@ function EditComplex() {
   // Поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
-  // Поля о пляже
-  const [nearestBeachName, setNearestBeachName] = useState("");
-  const [beachDistanceKm, setBeachDistanceKm] = useState(0);
-  const [beachTravelTimeMin, setBeachTravelTimeMin] = useState(0);
-
   // [NEW] Поля «ROI» и «3D Тур»
   const [roi, setRoi] = useState("");
   const [threeDTour, setThreeDTour] = useState("");
@@ -80,6 +77,13 @@ function EditComplex() {
   // Массив объектов для фото (старые + новые)
   // Каждый элемент: { id, url, file }
   const [images, setImages] = useState([]);
+
+  // Добавляем недостающие состояния для commission
+  const [commission, setCommission] = useState("1.0");
+  const commissionOptions = [];
+  for (let val = 1; val <= 10; val += 0.5) {
+    commissionOptions.push(val.toFixed(1));
+  }
 
   // Загрузка данных из Firestore
   useEffect(() => {
@@ -118,11 +122,6 @@ function EditComplex() {
 
           setLegalCompanyName(data.legalCompanyName || "");
 
-          // Пляж
-          setNearestBeachName(data.nearestBeachName || "");
-          setBeachDistanceKm(data.beachDistanceKm || 0);
-          setBeachTravelTimeMin(data.beachTravelTimeMin || 0);
-
           // [NEW] ROI и 3D Тур
           setRoi(data.roi || "");
           setThreeDTour(data.threeDTour || "");
@@ -134,6 +133,12 @@ function EditComplex() {
             file: null
           }));
           setImages(oldImages);
+
+          // Если commission есть, приводим к строке с одним знаком после запятой
+          if (data.commission !== undefined) {
+            const c = parseFloat(data.commission);
+            setCommission(c.toFixed(1));
+          }
         }
       } catch (error) {
         console.error("Ошибка загрузки комплекса:", error);
@@ -240,10 +245,11 @@ function EditComplex() {
     e.preventDefault();
     setIsSaving(true);
     try {
+      // Собираем итоговый массив URL (старые + новые)
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
-          // Новое изображение — загружаем в Firebase Storage в папку "complexes"
+          // Новое фото — загружаем в Firebase Storage в папку "complexes"
           const url = await uploadToFirebaseStorageInFolder(item.file, "complexes");
           finalUrls.push(url);
         } else {
@@ -275,7 +281,8 @@ function EditComplex() {
         slf,
         legalCompanyName,
         roi,
-        threeDTour
+        threeDTour,
+        commission
       };
       await updateDoc(doc(db, "complexes", id), updatedData);
       alert("Комплекс обновлён!");
@@ -358,6 +365,14 @@ function EditComplex() {
                 value={areaRange}
                 onChange={(e) => setAreaRange(e.target.value)}
               />
+              {/* Добавлено поле "Описание" */}
+              <TextField
+                label="Описание"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                multiline
+                rows={3}
+              />
 
               {/* Провинция (Bali), disabled */}
               <TextField
@@ -403,14 +418,10 @@ function EditComplex() {
                   <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
                   <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                  <MenuItem value="RDTR Wilayah Перencanaan Petang">
-                    RDTR Wilayah Перencания Petang
-                  </MenuItem>
+                  <MenuItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Tegallalang">
-                    RDTR Kecamatan Tegallalang
-                  </MenuItem>
+                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
                 </Select>
               </FormControl>
 
@@ -502,34 +513,22 @@ function EditComplex() {
                 onChange={(e) => setLegalCompanyName(e.target.value)}
               />
 
-              {/* Ближайший пляж, дистанция, время поездки - только чтение */}
-              <TextField
-                label="Ближайший пляж"
-                value={nearestBeachName}
-                InputProps={{ readOnly: true }}
-              />
-              <TextField
-                label="Дистанция до пляжа (км)"
-                value={Math.round(beachDistanceKm)}
-                InputProps={{ readOnly: true }}
-              />
-              <TextField
-                label="Время поездки (мин)"
-                value={Math.round(beachTravelTimeMin)}
-                InputProps={{ readOnly: true }}
-              />
-
-              {/* [NEW] ROI и 3D Тур */}
-              <TextField
-                label="ROI (ссылка)"
-                value={roi}
-                onChange={(e) => setRoi(e.target.value)}
-              />
-              <TextField
-                label="3D Тур (ссылка)"
-                value={threeDTour}
-                onChange={(e) => setThreeDTour(e.target.value)}
-              />
+              {/* [NEW] Поле «Вознаграждение» */}
+              <FormControl>
+                <InputLabel id="commission-label">Вознаграждение</InputLabel>
+                <Select
+                  labelId="commission-label"
+                  label="Вознаграждение"
+                  value={commission}
+                  onChange={(e) => setCommission(e.target.value)}
+                >
+                  {commissionOptions.map((val) => (
+                    <MenuItem key={val} value={val}>
+                      {val}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
               <Typography sx={{ mt: 2 }}>
                 Существующие (и новые) фото (Drag & Drop):
@@ -556,16 +555,10 @@ function EditComplex() {
                   disabled={isUploading}
                   sx={{ width: "820px", mt: 2 }}
                 >
-                  {isUploading ? (
-                    <>
-                      <CircularProgress size={20} sx={{ mr: 1 }} />
-                      Загрузка...
-                    </>
-                  ) : (
-                    "Выбрать фото / PDF"
-                  )}
-                  <input type="file" hidden multiple onChange={handleFileChange} />
+                  Загрузить новые фото / PDF
+                  <input type="file" hidden multiple onChange={(e) => handleFileChange(e)} />
                 </Button>
+                {isUploading && <CircularProgress size={24} />}
               </Box>
 
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
@@ -576,7 +569,7 @@ function EditComplex() {
                   </Box>
                 ) : (
                   <Button variant="contained" color="primary" type="submit">
-                    Сохранить изменения
+                    Сохранить
                   </Button>
                 )}
 

@@ -1,3 +1,5 @@
+// src/pages/App.js
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import {
@@ -40,7 +42,7 @@ import EditDeveloper from "./pages/EditDeveloper";
 import SupportChats from "./pages/SupportChats";
 
 // Cloudinary
-import UnusedCloudinaryImages from "./pages/UnusedCloudinaryImages";
+// Кнопка "Очистка Cloudinary" удалена
 
 import { useAuth } from "./AuthContext";
 
@@ -113,10 +115,7 @@ function App() {
               <ListItemText primary="Чаты поддержки" />
             </ListItem>
 
-            {/* Очистка Cloudinary */}
-            <ListItem button component={Link} to="/cloudinary/unused">
-              <ListItemText primary="Очистка Cloudinary" />
-            </ListItem>
+            {/* Кнопка "Очистка Cloudinary" удалена */}
           </List>
         </Box>
       </Drawer>
@@ -192,13 +191,6 @@ function App() {
           <Route path="/support/chats" element={
             <ProtectedRoute requiredRoles={["admin", "moderator"]}>
               <SupportChats />
-            </ProtectedRoute>
-          } />
-
-          {/* Cloudinary */}
-          <Route path="/cloudinary/unused" element={
-            <ProtectedRoute requiredRoles={["admin"]}>
-              <UnusedCloudinaryImages />
             </ProtectedRoute>
           } />
 
