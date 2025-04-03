@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import { uploadToCloudinary } from "../utils/cloudinary";
+// Импортируем функцию загрузки в Firebase Storage в нужную папку
+import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 
 import {
   Box,
@@ -228,9 +229,7 @@ function CreateProperty() {
       if (found) {
         setCoordinates(found.coordinates || "");
         // Застройщик: приводим к заглавным + пробелам
-        setDeveloper(
-          found.developer.toUpperCase().replace(/[^A-Z ]/g, "")
-        );
+        setDeveloper(found.developer.toUpperCase().replace(/[^A-Z ]/g, ""));
         setDistrict(found.district || "");
         if (found.city) setCity(found.city);
         if (found.rdtr) setRdtr(found.rdtr);
@@ -263,10 +262,10 @@ function CreateProperty() {
     setIsSaving(true);
 
     try {
-      // Загружаем фото
+      // Загружаем фото через Firebase Storage в папку "property"
       const imageUrls = [];
       for (let item of dndItems) {
-        const url = await uploadToCloudinary(item.file);
+        const url = await uploadToFirebaseStorageInFolder(item.file, "property");
         imageUrls.push(url);
       }
 
@@ -318,10 +317,10 @@ function CreateProperty() {
         commission: finalCommission
       };
 
-      // Сохраняем
+      // Сохраняем объект в Firestore
       await addDoc(collection(db, "properties"), newProp);
 
-      // Сбрасываем
+      // Сбрасываем поля формы
       setPrice("");
       setType("Вилла");
       setComplex("");
@@ -331,7 +330,6 @@ function CreateProperty() {
       setCity("Kab. Badung");
       setRdtr("RDTR Kecamatan Ubud");
       setIsAutoFill(false);
-
       setStatus("Строится");
       setBuildingType("Новый комплекс");
       setBedrooms("");
@@ -572,17 +570,11 @@ function CreateProperty() {
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
                   <MenuItem value="RDTR Kuta Selatan">RDTR Кuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">
-                    RDTR Kecamatan Abiansemal
-                  </MenuItem>
-                  <MenuItem value="RDTR Wilayah Перencания Petang">
-                    RDTR Wilayah Перencания Petang
-                  </MenuItem>
+                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
+                  <MenuItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Tegallalang">
-                    RDTR Kecamatan Tegallalang
-                  </MenuItem>
+                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
                 </Select>
               </FormControl>
 
@@ -649,9 +641,7 @@ function CreateProperty() {
                   <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem>
                   <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
                   <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
-                  <MenuItem value="Заповедная зона (RTH)">
-                    Заповедная зона (RTH)
-                  </MenuItem>
+                  <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
                 </Select>
               </FormControl>
 

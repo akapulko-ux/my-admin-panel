@@ -26,6 +26,8 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Link } from "react-router-dom";
+// Импорт функции загрузки в Firebase Storage (используем папку "property")
+import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 
 function ListProperties() {
   const [properties, setProperties] = useState([]);
@@ -106,7 +108,7 @@ function ListProperties() {
           a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
         const timeB =
           b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0;
-        return timeB - timeA; // от новых к старым
+        return timeB - timeA;
       });
 
       setProperties(data);
@@ -134,11 +136,36 @@ function ListProperties() {
       }
       const data = snap.data();
 
-      // Убираем createdAt, чтобы создать новое
+      // Копируем данные, исключая createdAt
       const { createdAt, ...rest } = data;
+      // Если в объекте есть фотографии, для каждого фото выполняем загрузку заново в Firebase Storage,
+      // чтобы получить новый URL (уникальную копию)
+      let newImages = [];
+      if (Array.isArray(rest.images)) {
+        newImages = await Promise.all(
+          rest.images.map(async (imgUrl) => {
+            try {
+              const response = await fetch(imgUrl);
+              if (response.ok) {
+                const blob = await response.blob();
+                const newUrl = await uploadToFirebaseStorageInFolder(blob, "property");
+                return newUrl;
+              } else {
+                console.error(`Ошибка загрузки изображения ${imgUrl}: ${response.statusText}`);
+                return imgUrl;
+              }
+            } catch (error) {
+              console.error("Ошибка при обработке изображения:", error);
+              return imgUrl;
+            }
+          })
+        );
+      }
+
       const newData = {
         ...rest,
-        createdAt: new Date(), // или можно не ставить
+        images: newImages,
+        createdAt: new Date()
       };
 
       await addDoc(collection(db, "properties"), newData);
@@ -153,7 +180,6 @@ function ListProperties() {
   const handleFilter = () => {
     let result = [...properties];
 
-    // price (строка -> сравниваем как "включает")
     if (filterPrice.trim() !== "") {
       result = result.filter((p) =>
         String(p.price ?? "").includes(filterPrice.trim())
@@ -196,9 +222,7 @@ function ListProperties() {
     }
     if (filterOwnershipForm.trim() !== "") {
       result = result.filter((p) =>
-        p.ownershipForm
-          ?.toLowerCase()
-          .includes(filterOwnershipForm.toLowerCase())
+        p.ownershipForm?.toLowerCase().includes(filterOwnershipForm.toLowerCase())
       );
     }
     if (filterLandStatus.trim() !== "") {
@@ -248,9 +272,7 @@ function ListProperties() {
     }
     if (filterManagementCompany.trim() !== "") {
       result = result.filter((p) =>
-        p.managementCompany
-          ?.toLowerCase()
-          .includes(filterManagementCompany.toLowerCase())
+        p.managementCompany?.toLowerCase().includes(filterManagementCompany.toLowerCase())
       );
     }
     if (filterCompletionDate.trim() !== "") {
@@ -280,12 +302,9 @@ function ListProperties() {
     }
     if (filterLegalCompanyName.trim() !== "") {
       result = result.filter((p) =>
-        p.legalCompanyName
-          ?.toLowerCase()
-          .includes(filterLegalCompanyName.toLowerCase())
+        p.legalCompanyName?.toLowerCase().includes(filterLegalCompanyName.toLowerCase())
       );
     }
-    // [NEW] Фильтр по commission
     if (filterCommission.trim() !== "") {
       result = result.filter((p) =>
         String(p.commission ?? "").includes(filterCommission.trim())
@@ -310,7 +329,6 @@ function ListProperties() {
         const ref = doc(db, "properties", item.id);
         const newData = {};
 
-        // Если поле massEditPrice не пустое, обновляем price
         if (massEditPrice.trim() !== "") {
           newData.price = parseFloat(massEditPrice) || 0;
         }
@@ -386,12 +404,10 @@ function ListProperties() {
         if (massEditLegalCompanyName.trim() !== "") {
           newData.legalCompanyName = massEditLegalCompanyName;
         }
-        // [NEW] Массовое редактирование commission
         if (massEditCommission.trim() !== "") {
           newData.commission = parseFloat(massEditCommission) || 0;
         }
 
-        // Если есть что обновлять
         if (Object.keys(newData).length > 0) {
           await updateDoc(ref, newData);
         }
@@ -577,7 +593,6 @@ function ListProperties() {
                 value={filterLegalCompanyName}
                 onChange={(e) => setFilterLegalCompanyName(e.target.value)}
               />
-              {/* [NEW] Фильтр по commission */}
               <TextField
                 label="Вознаграждение (commission)"
                 size="small"
@@ -585,12 +600,7 @@ function ListProperties() {
                 onChange={(e) => setFilterCommission(e.target.value)}
               />
             </Box>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ mt: 2 }}
-              onClick={handleFilter}
-            >
+            <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleFilter}>
               Применить фильтр
             </Button>
           </AccordionDetails>
@@ -602,196 +612,38 @@ function ListProperties() {
         <Typography variant="subtitle1" gutterBottom>
           Массовое редактирование (для отфильтрованных объектов)
         </Typography>
-
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>Развернуть / Свернуть массовое редактирование</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
-              <TextField
-                label="Цена (price)"
-                variant="outlined"
-                size="small"
-                value={massEditPrice}
-                onChange={(e) => setMassEditPrice(e.target.value)}
-              />
-              <TextField
-                label="Тип (type)"
-                variant="outlined"
-                size="small"
-                value={massEditType}
-                onChange={(e) => setMassEditType(e.target.value)}
-              />
-              <TextField
-                label="Координаты (coordinates)"
-                variant="outlined"
-                size="small"
-                value={massEditCoordinates}
-                onChange={(e) => setMassEditCoordinates(e.target.value)}
-              />
-              <TextField
-                label="Статус (status)"
-                variant="outlined"
-                size="small"
-                value={massEditStatus}
-                onChange={(e) => setMassEditStatus(e.target.value)}
-              />
-              <TextField
-                label="Район (district)"
-                variant="outlined"
-                size="small"
-                value={massEditDistrict}
-                onChange={(e) => setMassEditDistrict(e.target.value)}
-              />
-              <TextField
-                label="Тип постройки (buildingType)"
-                variant="outlined"
-                size="small"
-                value={massEditBuildingType}
-                onChange={(e) => setMassEditBuildingType(e.target.value)}
-              />
-              <TextField
-                label="Спальни (bedrooms)"
-                variant="outlined"
-                size="small"
-                value={massEditBedrooms}
-                onChange={(e) => setMassEditBedrooms(e.target.value)}
-              />
-              <TextField
-                label="Класс (classRating)"
-                variant="outlined"
-                size="small"
-                value={massEditClassRating}
-                onChange={(e) => setMassEditClassRating(e.target.value)}
-              />
-              <TextField
-                label="Форма собств. (ownershipForm)"
-                variant="outlined"
-                size="small"
-                value={massEditOwnershipForm}
-                onChange={(e) => setMassEditOwnershipForm(e.target.value)}
-              />
-              <TextField
-                label="Статус земли (landStatus)"
-                variant="outlined"
-                size="small"
-                value={massEditLandStatus}
-                onChange={(e) => setMassEditLandStatus(e.target.value)}
-              />
-              <TextField
-                label="Бассейн (pool)"
-                variant="outlined"
-                size="small"
-                value={massEditPool}
-                onChange={(e) => setMassEditPool(e.target.value)}
-              />
-              <TextField
-                label="Описание (description)"
-                variant="outlined"
-                size="small"
-                value={massEditDescription}
-                onChange={(e) => setMassEditDescription(e.target.value)}
-              />
-              <TextField
-                label="Застройщик (developer)"
-                variant="outlined"
-                size="small"
-                value={massEditDeveloper}
-                onChange={(e) => setMassEditDeveloper(e.target.value)}
-              />
-              <TextField
-                label="Комплекс (complex)"
-                variant="outlined"
-                size="small"
-                value={massEditComplex}
-                onChange={(e) => setMassEditComplex(e.target.value)}
-              />
-              <TextField
-                label="Площадь (area)"
-                variant="outlined"
-                size="small"
-                value={massEditArea}
-                onChange={(e) => setMassEditArea(e.target.value)}
-              />
-              <TextField
-                label="Провинция (province)"
-                variant="outlined"
-                size="small"
-                value={massEditProvince}
-                onChange={(e) => setMassEditProvince(e.target.value)}
-              />
-              <TextField
-                label="Город (city)"
-                variant="outlined"
-                size="small"
-                value={massEditCity}
-                onChange={(e) => setMassEditCity(e.target.value)}
-              />
-              <TextField
-                label="RDTR"
-                variant="outlined"
-                size="small"
-                value={massEditRdtr}
-                onChange={(e) => setMassEditRdtr(e.target.value)}
-              />
-              <TextField
-                label="Упр. компания (managementCompany)"
-                variant="outlined"
-                size="small"
-                value={massEditManagementCompany}
-                onChange={(e) => setMassEditManagementCompany(e.target.value)}
-              />
-              <TextField
-                label="Дата заверш. (completionDate)"
-                variant="outlined"
-                size="small"
-                value={massEditCompletionDate}
-                onChange={(e) => setMassEditCompletionDate(e.target.value)}
-              />
-              <TextField
-                label="Лет (leaseYears)"
-                variant="outlined"
-                size="small"
-                value={massEditLeaseYears}
-                onChange={(e) => setMassEditLeaseYears(e.target.value)}
-              />
-              <TextField
-                label="SHGB"
-                variant="outlined"
-                size="small"
-                value={massEditShgb}
-                onChange={(e) => setMassEditShgb(e.target.value)}
-              />
-              <TextField
-                label="PBG"
-                variant="outlined"
-                size="small"
-                value={massEditPbg}
-                onChange={(e) => setMassEditPbg(e.target.value)}
-              />
-              <TextField
-                label="SLF"
-                variant="outlined"
-                size="small"
-                value={massEditSlf}
-                onChange={(e) => setMassEditSlf(e.target.value)}
-              />
-              <TextField
-                label="Юр. название (legalCompanyName)"
-                variant="outlined"
-                size="small"
-                value={massEditLegalCompanyName}
-                onChange={(e) => setMassEditLegalCompanyName(e.target.value)}
-              />
-              {/* [NEW] Массовое редактирование commission */}
-              <TextField
-                label="Вознаграждение (commission)"
-                variant="outlined"
-                size="small"
-                value={massEditCommission}
-                onChange={(e) => setMassEditCommission(e.target.value)}
-              />
+              <TextField label="Цена (price)" variant="outlined" size="small" value={massEditPrice} onChange={(e) => setMassEditPrice(e.target.value)} />
+              <TextField label="Тип (type)" variant="outlined" size="small" value={massEditType} onChange={(e) => setMassEditType(e.target.value)} />
+              <TextField label="Координаты (coordinates)" variant="outlined" size="small" value={massEditCoordinates} onChange={(e) => setMassEditCoordinates(e.target.value)} />
+              <TextField label="Статус (status)" variant="outlined" size="small" value={massEditStatus} onChange={(e) => setMassEditStatus(e.target.value)} />
+              <TextField label="Район (district)" variant="outlined" size="small" value={massEditDistrict} onChange={(e) => setMassEditDistrict(e.target.value)} />
+              <TextField label="Тип постройки (buildingType)" variant="outlined" size="small" value={massEditBuildingType} onChange={(e) => setMassEditBuildingType(e.target.value)} />
+              <TextField label="Спальни (bedrooms)" variant="outlined" size="small" value={massEditBedrooms} onChange={(e) => setMassEditBedrooms(e.target.value)} />
+              <TextField label="Класс (classRating)" variant="outlined" size="small" value={massEditClassRating} onChange={(e) => setMassEditClassRating(e.target.value)} />
+              <TextField label="Форма собств. (ownershipForm)" variant="outlined" size="small" value={massEditOwnershipForm} onChange={(e) => setMassEditOwnershipForm(e.target.value)} />
+              <TextField label="Статус земли (landStatus)" variant="outlined" size="small" value={massEditLandStatus} onChange={(e) => setMassEditLandStatus(e.target.value)} />
+              <TextField label="Бассейн (pool)" variant="outlined" size="small" value={massEditPool} onChange={(e) => setMassEditPool(e.target.value)} />
+              <TextField label="Описание (description)" variant="outlined" size="small" value={massEditDescription} onChange={(e) => setMassEditDescription(e.target.value)} />
+              <TextField label="Застройщик (developer)" variant="outlined" size="small" value={massEditDeveloper} onChange={(e) => setMassEditDeveloper(e.target.value)} />
+              <TextField label="Комплекс (complex)" variant="outlined" size="small" value={massEditComplex} onChange={(e) => setMassEditComplex(e.target.value)} />
+              <TextField label="Площадь (area)" variant="outlined" size="small" value={massEditArea} onChange={(e) => setMassEditArea(e.target.value)} />
+              <TextField label="Провинция (province)" variant="outlined" size="small" value={massEditProvince} onChange={(e) => setMassEditProvince(e.target.value)} />
+              <TextField label="Город (city)" variant="outlined" size="small" value={massEditCity} onChange={(e) => setMassEditCity(e.target.value)} />
+              <TextField label="RDTR" variant="outlined" size="small" value={massEditRdtr} onChange={(e) => setMassEditRdtr(e.target.value)} />
+              <TextField label="Упр. компания (managementCompany)" variant="outlined" size="small" value={massEditManagementCompany} onChange={(e) => setMassEditManagementCompany(e.target.value)} />
+              <TextField label="Дата заверш. (completionDate)" variant="outlined" size="small" value={massEditCompletionDate} onChange={(e) => setMassEditCompletionDate(e.target.value)} />
+              <TextField label="Лет (leaseYears)" variant="outlined" size="small" value={massEditLeaseYears} onChange={(e) => setMassEditLeaseYears(e.target.value)} />
+              <TextField label="SHGB" variant="outlined" size="small" value={massEditShgb} onChange={(e) => setMassEditShgb(e.target.value)} />
+              <TextField label="PBG" variant="outlined" size="small" value={massEditPbg} onChange={(e) => setMassEditPbg(e.target.value)} />
+              <TextField label="SLF" variant="outlined" size="small" value={massEditSlf} onChange={(e) => setMassEditSlf(e.target.value)} />
+              <TextField label="Юр. название (legalCompanyName)" variant="outlined" size="small" value={massEditLegalCompanyName} onChange={(e) => setMassEditLegalCompanyName(e.target.value)} />
+              <TextField label="Вознаграждение (commission)" variant="outlined" size="small" value={massEditCommission} onChange={(e) => setMassEditCommission(e.target.value)} />
             </Box>
             <Button variant="contained" color="warning" onClick={handleMassEdit}>
               Массово изменить
@@ -803,10 +655,8 @@ function ListProperties() {
       {/* --- Список объектов (после фильтра) --- */}
       <Grid container spacing={2}>
         {filteredProperties.map((property) => {
-          // Парсим price как число, затем форматируем
           const priceValue = parseFloat(property.price) || 0;
           const formattedPrice = priceValue.toLocaleString("ru-RU");
-
           return (
             <Grid item xs={12} sm={6} md={4} key={property.id}>
               <Card variant="outlined">
@@ -832,23 +682,17 @@ function ListProperties() {
                   <Typography variant="body2">
                     Комплекс: {property.complex}
                   </Typography>
-
-                  {/* Доп. поля: Спальни, Площадь */}
                   <Typography variant="body2">
                     Спальни: {property.bedrooms}
                   </Typography>
                   <Typography variant="body2">
                     Площадь: {property.area}
                   </Typography>
-
-                  {/* Можно добавить вывод commission */}
                   {property.commission !== undefined && (
                     <Typography variant="body2">
                       Вознаграждение: {property.commission}
                     </Typography>
                   )}
-
-                  {/* Кнопка «Редактировать» */}
                   <Button
                     variant="contained"
                     component={Link}
@@ -857,8 +701,6 @@ function ListProperties() {
                   >
                     Редактировать
                   </Button>
-
-                  {/* Кнопка «Дублировать» */}
                   <Button
                     variant="outlined"
                     color="secondary"

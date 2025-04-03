@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
-import { uploadToCloudinary } from "../utils/cloudinary";
+// Импорт функций для загрузки и удаления из Firebase Storage
+import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 import { useParams, useNavigate } from "react-router-dom";
 
 import {
@@ -76,11 +77,9 @@ function EditProperty() {
 
   // [NEW] Поле «Вознаграждение» (commission) — от 1 до 10, шаг 0.5
   const [commission, setCommission] = useState("1.0");
-
-  // Создаём массив опций [ "1.0", "1.5", "2.0", ..., "10.0" ]
   const commissionOptions = [];
   for (let val = 1; val <= 10; val += 0.5) {
-    commissionOptions.push(val.toFixed(1)); // например "1.0", "1.5", "2.0"...
+    commissionOptions.push(val.toFixed(1));
   }
 
   // Массив объектов для фото (старые + новые)
@@ -96,11 +95,9 @@ function EditProperty() {
         if (snap.exists()) {
           const data = snap.data();
 
-          // Цена (число) -> строка
           setPrice(data.price?.toString() || "");
           setType(data.type || "");
 
-          // Координаты
           if (typeof data.latitude === "number" && typeof data.longitude === "number") {
             setCoordinates(`${data.latitude}, ${data.longitude}`);
           } else {
@@ -116,7 +113,6 @@ function EditProperty() {
           setBedrooms(data.bedrooms || "");
           setArea(data.area || "");
 
-          // Province, city, rdtr
           setProvince("Bali");
           setCity(data.city || "");
           setRdtr(data.rdtr || "");
@@ -126,7 +122,6 @@ function EditProperty() {
           setLandStatus(data.landStatus || "");
           setPool(data.pool || "");
 
-          // Дата завершения (Timestamp -> "YYYY-MM")
           if (data.completionDate instanceof Timestamp) {
             const dateObj = data.completionDate.toDate();
             const yyyy = dateObj.getFullYear();
@@ -136,26 +131,19 @@ function EditProperty() {
             setCompletionDate(data.completionDate || "");
           }
 
-          // Лет (для Leashold)
           setLeaseYears(data.leaseYears || "");
-
-          // Три новых поля: SHGB, PBG, SLF
           setShgb(data.shgb || "");
           setPbg(data.pbg || "");
           setSlf(data.slf || "");
-
-          // Юридическое название компании
           setLegalCompanyName(data.legalCompanyName || "");
 
-          // Если уже есть commission (число), приводим к строке с одним знаком после запятой
           if (data.commission !== undefined) {
             const c = parseFloat(data.commission);
             setCommission(c.toFixed(1));
           } else {
-            setCommission("1.0"); // значение по умолчанию
+            setCommission("1.0");
           }
 
-          // Преобразуем массив строк (URL) в объекты { id, url, file: null }
           const oldImages = (data.images || []).map((url) => ({
             id: crypto.randomUUID(),
             url,
@@ -172,29 +160,25 @@ function EditProperty() {
     fetchProperty();
   }, [id]);
 
-  // Обработчик выбора новых файлов (с учётом сжатия и PDF-конвертации)
+  // Обработчик выбора новых файлов (с учетом сжатия и PDF-конвертации)
   const handleFileChange = async (e) => {
     if (!e.target.files) return;
 
-    setIsUploading(true); // Показываем спиннер и блокируем кнопку
+    setIsUploading(true);
+    const selectedFiles = Array.from(e.target.files);
+    const newImagesArr = [];
 
-    // Динамический импорт imageCompression
     const imageCompression = (await import("browser-image-compression")).default;
     const compressionOptions = {
       maxSizeMB: 10,
       useWebWorker: true
     };
 
-    const selectedFiles = Array.from(e.target.files);
-    const newImagesArr = [];
-
     for (let file of selectedFiles) {
       try {
         if (file.type === "application/pdf") {
-          // Если это PDF — конвертируем
           const { convertPdfToImages } = await import("../utils/pdfUtils");
           const pageBlobs = await convertPdfToImages(file);
-
           for (let blob of pageBlobs) {
             const compressed = await imageCompression(blob, compressionOptions);
             newImagesArr.push({
@@ -204,7 +188,6 @@ function EditProperty() {
             });
           }
         } else {
-          // Обычное изображение
           const compressedFile = await imageCompression(file, compressionOptions);
           newImagesArr.push({
             id: crypto.randomUUID(),
@@ -218,7 +201,7 @@ function EditProperty() {
     }
 
     setImages((prev) => [...prev, ...newImagesArr]);
-    setIsUploading(false); // Выключаем спиннер
+    setIsUploading(false);
   };
 
   // Перестановка (Drag & Drop)
@@ -231,11 +214,22 @@ function EditProperty() {
     });
   };
 
-  // Удаление одного фото
-  const handleRemoveImage = (idx) => {
-    const updated = [...images];
-    updated.splice(idx, 1);
-    setImages(updated);
+  // Удаление одного фото с физическим удалением из Storage, если это старое фото
+  const handleRemoveImage = async (idx) => {
+    const removed = images[idx];
+    setImages((prev) => {
+      const updated = [...prev];
+      updated.splice(idx, 1);
+      return updated;
+    });
+    if (!removed.file && removed.url && !removed.url.startsWith("blob:")) {
+      try {
+        await deleteFileFromFirebaseStorage(removed.url);
+        console.log("Файл удалён из Storage");
+      } catch (error) {
+        console.error("Ошибка удаления файла из Firebase Storage:", error);
+      }
+    }
   };
 
   // Сохранение изменений
@@ -244,23 +238,17 @@ function EditProperty() {
     setIsSaving(true);
 
     try {
-      // Собираем итоговый массив URL (старые + новые)
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
-          // Новое фото
-          const url = await uploadToCloudinary(item.file);
+          // Новое фото — загружаем в Firebase Storage в папку "property"
+          const url = await uploadToFirebaseStorageInFolder(item.file, "property");
           finalUrls.push(url);
         } else {
-          // Старое фото
           finalUrls.push(item.url);
         }
       }
 
-      // Парсим цену
-      const parsedPrice = parseFloat(price) || 0;
-
-      // Координаты -> latitude, longitude
       let latitude = 0;
       let longitude = 0;
       if (coordinates.trim()) {
@@ -269,7 +257,6 @@ function EditProperty() {
         longitude = parseFloat(lonStr.trim()) || 0;
       }
 
-      // Дата завершения "YYYY-MM" -> Timestamp
       let compDateStamp = null;
       if (completionDate) {
         const [yyyy, mm] = completionDate.split("-");
@@ -279,15 +266,11 @@ function EditProperty() {
         compDateStamp = Timestamp.fromDate(dateObj);
       }
 
-      // Если Leashold, сохраняем leaseYears, иначе ""
       const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
-
-      // Парсим commission (строка -> число), либо 1.0 по умолчанию
       const finalCommission = parseFloat(commission) || 1.0;
 
-      // Собираем данные
       const updatedData = {
-        price: parsedPrice,
+        price: parseFloat(price) || 0,
         type,
         latitude,
         longitude,
@@ -299,7 +282,7 @@ function EditProperty() {
         buildingType,
         bedrooms,
         area,
-        province: "Bali",
+        province,
         city,
         rdtr,
         classRating,
@@ -310,23 +293,15 @@ function EditProperty() {
         pool,
         images: finalUrls,
         leaseYears: finalLeaseYears,
-
-        // Три новых поля
         shgb,
         pbg,
         slf,
-
-        // Новое поле «Юридическое название компании»
         legalCompanyName,
-
-        // Вознаграждение
         commission: finalCommission
       };
 
-      // Обновляем документ
       await updateDoc(doc(db, "properties", id), updatedData);
 
-      // (Опционально) обновляем локальный стейт
       const updatedImagesState = finalUrls.map((url) => ({
         id: crypto.randomUUID(),
         url,
@@ -337,12 +312,13 @@ function EditProperty() {
       alert("Объект обновлён!");
     } catch (error) {
       console.error("Ошибка обновления объекта:", error);
+      alert("Ошибка при обновлении объекта!");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Удаление всего объекта
+  // Удаление объекта
   const handleDelete = async () => {
     if (window.confirm("Вы действительно хотите удалить этот объект?")) {
       try {
@@ -368,69 +344,30 @@ function EditProperty() {
           </Typography>
 
           <DndProvider backend={HTML5Backend}>
-            <Box
-              component="form"
-              onSubmit={handleSave}
-              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-            >
-              {/* Цена (USD) */}
-              <TextField
-                label="Цена (USD)"
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-
-              {/* Тип (Select) */}
+            <Box component="form" onSubmit={handleSave} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <TextField label="Цена (USD)" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
               <FormControl>
                 <InputLabel id="type-label">Тип</InputLabel>
-                <Select
-                  labelId="type-label"
-                  label="Тип"
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                >
+                <Select labelId="type-label" label="Тип" value={type} onChange={(e) => setType(e.target.value)}>
                   <MenuItem value="Вилла">Вилла</MenuItem>
                   <MenuItem value="Апартаменты">Апартаменты</MenuItem>
                   <MenuItem value="Дом">Дом</MenuItem>
-                  <MenuItem value="Коммерческая недвижимость">
-                    Коммерческая недвижимость
-                  </MenuItem>
+                  <MenuItem value="Коммерческая недвижимость">Коммерческая недвижимость</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Координаты */}
-              <TextField
-                label="Координаты (шир, долг)"
-                value={coordinates}
-                onChange={(e) => setCoordinates(e.target.value)}
-              />
-
-              {/* Статус */}
+              <TextField label="Координаты (шир, долг)" value={coordinates} onChange={(e) => setCoordinates(e.target.value)} />
               <FormControl>
                 <InputLabel id="status-label">Статус</InputLabel>
-                <Select
-                  labelId="status-label"
-                  label="Статус"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
+                <Select labelId="status-label" label="Статус" value={status} onChange={(e) => setStatus(e.target.value)}>
                   <MenuItem value="Проект">Проект</MenuItem>
                   <MenuItem value="Строится">Строится</MenuItem>
                   <MenuItem value="Готовый">Готовый</MenuItem>
                   <MenuItem value="От собственника">От собственника</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Район */}
               <FormControl>
                 <InputLabel id="district-label">Район</InputLabel>
-                <Select
-                  labelId="district-label"
-                  label="Район"
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                >
+                <Select labelId="district-label" label="Район" value={district} onChange={(e) => setDistrict(e.target.value)}>
                   <MenuItem value="">(не выбрано)</MenuItem>
                   <MenuItem value="Амед">Амед</MenuItem>
                   <MenuItem value="Берава">Берава</MenuItem>
@@ -452,45 +389,19 @@ function EditProperty() {
                   <MenuItem value="Ломбок">Ломбок</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Застройщик */}
-              <TextField
-                label="Застройщик"
-                value={developer}
-                onChange={(e) => setDeveloper(e.target.value)}
-              />
-
-              {/* Комплекс */}
-              <TextField
-                label="Комплекс"
-                value={complex}
-                onChange={(e) => setComplex(e.target.value)}
-              />
-
-              {/* Тип постройки */}
+              <TextField label="Застройщик" value={developer} onChange={(e) => setDeveloper(e.target.value)} />
+              <TextField label="Комплекс" value={complex} onChange={(e) => setComplex(e.target.value)} />
               <FormControl>
                 <InputLabel id="buildingType-label">Тип постройки</InputLabel>
-                <Select
-                  labelId="buildingType-label"
-                  label="Тип постройки"
-                  value={buildingType}
-                  onChange={(e) => setBuildingType(e.target.value)}
-                >
+                <Select labelId="buildingType-label" label="Тип постройки" value={buildingType} onChange={(e) => setBuildingType(e.target.value)}>
                   <MenuItem value="Новый комплекс">Новый комплекс</MenuItem>
                   <MenuItem value="Реновация">Реновация</MenuItem>
                   <MenuItem value="ИЖС">ИЖС</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Спальни */}
               <FormControl>
                 <InputLabel id="bedrooms-label">Спальни</InputLabel>
-                <Select
-                  labelId="bedrooms-label"
-                  label="Спальни"
-                  value={bedrooms}
-                  onChange={(e) => setBedrooms(e.target.value)}
-                >
+                <Select labelId="bedrooms-label" label="Спальни" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)}>
                   <MenuItem value="">(не выбрано)</MenuItem>
                   <MenuItem value="Студия">Студия</MenuItem>
                   <MenuItem value="1">1</MenuItem>
@@ -505,31 +416,11 @@ function EditProperty() {
                   <MenuItem value="10">10</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Площадь */}
-              <TextField
-                label="Площадь (м²)"
-                type="number"
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-              />
-
-              {/* Провинция (Bali) */}
-              <TextField
-                label="Провинция"
-                value={province}
-                disabled
-              />
-
-              {/* Город */}
+              <TextField label="Площадь (м²)" type="number" value={area} onChange={(e) => setArea(e.target.value)} />
+              <TextField label="Провинция" value={province} disabled />
               <FormControl>
                 <InputLabel id="city-label">Город</InputLabel>
-                <Select
-                  labelId="city-label"
-                  label="Город"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                >
+                <Select labelId="city-label" label="Город" value={city} onChange={(e) => setCity(e.target.value)}>
                   <MenuItem value="">(не выбрано)</MenuItem>
                   <MenuItem value="Kab. Jembrana">Kab. Jembrana</MenuItem>
                   <MenuItem value="Kab. Tabanan">Kab. Tabanan</MenuItem>
@@ -541,44 +432,24 @@ function EditProperty() {
                   <MenuItem value="Kota Denpasar">Kota Denpasar</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* RDTR */}
               <FormControl>
                 <InputLabel id="rdtr-label">RDTR</InputLabel>
-                <Select
-                  labelId="rdtr-label"
-                  label="RDTR"
-                  value={rdtr}
-                  onChange={(e) => setRdtr(e.target.value)}
-                >
+                <Select labelId="rdtr-label" label="RDTR" value={rdtr} onChange={(e) => setRdtr(e.target.value)}>
                   <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
                   <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
                   <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
                   <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
                   <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">
-                    RDTR Kecamatan Abiansemal
-                  </MenuItem>
-                  <MenuItem value="RDTR Wilayah Перencanaan Petang">
-                    RDTR Wilayah Перencания Petang
-                  </MenuItem>
+                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
+                  <MenuItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</MenuItem>
                   <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
                   <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Tegallalang">
-                    RDTR Kecamatan Tegallalang
-                  </MenuItem>
+                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Класс */}
               <FormControl>
                 <InputLabel id="classRating-label">Класс</InputLabel>
-                <Select
-                  labelId="classRating-label"
-                  label="Класс"
-                  value={classRating}
-                  onChange={(e) => setClassRating(e.target.value)}
-                >
+                <Select labelId="classRating-label" label="Класс" value={classRating} onChange={(e) => setClassRating(e.target.value)}>
                   <MenuItem value="Эконом (C)">Эконом (C)</MenuItem>
                   <MenuItem value="Комфорт (B)">Комфорт (B)</MenuItem>
                   <MenuItem value="Комфорт плюс (B+)">Комфорт плюс (B+)</MenuItem>
@@ -586,46 +457,20 @@ function EditProperty() {
                   <MenuItem value="Лакшери (A++)">Лакшери (A++)</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Управляющая компания */}
-              <TextField
-                label="Управляющая компания"
-                value={managementCompany}
-                onChange={(e) => setManagementCompany(e.target.value)}
-              />
-
-              {/* Форма собственности */}
+              <TextField label="Управляющая компания" value={managementCompany} onChange={(e) => setManagementCompany(e.target.value)} />
               <FormControl>
                 <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
-                <Select
-                  labelId="ownershipForm-label"
-                  label="Форма собственности"
-                  value={ownershipForm}
-                  onChange={(e) => setOwnershipForm(e.target.value)}
-                >
+                <Select labelId="ownershipForm-label" label="Форма собственности" value={ownershipForm} onChange={(e) => setOwnershipForm(e.target.value)}>
                   <MenuItem value="Leashold">Leashold</MenuItem>
                   <MenuItem value="Freehold">Freehold</MenuItem>
                 </Select>
               </FormControl>
-
               {ownershipForm === "Leashold" && (
-                <TextField
-                  label="Лет"
-                  type="number"
-                  value={leaseYears}
-                  onChange={(e) => setLeaseYears(e.target.value)}
-                />
+                <TextField label="Лет" type="number" value={leaseYears} onChange={(e) => setLeaseYears(e.target.value)} />
               )}
-
-              {/* Статус земли */}
               <FormControl>
                 <InputLabel id="landStatus-label">Статус земли</InputLabel>
-                <Select
-                  labelId="landStatus-label"
-                  label="Статус земли"
-                  value={landStatus}
-                  onChange={(e) => setLandStatus(e.target.value)}
-                >
+                <Select labelId="landStatus-label" label="Статус земли" value={landStatus} onChange={(e) => setLandStatus(e.target.value)}>
                   <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
                   <MenuItem value="Торговая зона (K)">Торговая зона (K)</MenuItem>
                   <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem>
@@ -634,74 +479,24 @@ function EditProperty() {
                   <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Дата завершения (месяц/год) */}
-              <TextField
-                label="Дата завершения (месяц/год)"
-                type="month"
-                InputLabelProps={{ shrink: true }}
-                value={completionDate}
-                onChange={(e) => setCompletionDate(e.target.value)}
-              />
-
-              {/* Бассейн */}
+              <TextField label="Дата завершения (месяц/год)" type="month" InputLabelProps={{ shrink: true }} value={completionDate} onChange={(e) => setCompletionDate(e.target.value)} />
               <FormControl>
                 <InputLabel id="pool-label">Бассейн</InputLabel>
-                <Select
-                  labelId="pool-label"
-                  label="Бассейн"
-                  value={pool}
-                  onChange={(e) => setPool(e.target.value)}
-                >
+                <Select labelId="pool-label" label="Бассейн" value={pool} onChange={(e) => setPool(e.target.value)}>
                   <MenuItem value="">(не выбрано)</MenuItem>
                   <MenuItem value="Нет">Нет</MenuItem>
                   <MenuItem value="Частный">Частный</MenuItem>
                   <MenuItem value="Общий">Общий</MenuItem>
                 </Select>
               </FormControl>
-
-              {/* Описание */}
-              <TextField
-                label="Описание"
-                multiline
-                rows={6}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-
-              {/* Три новых поля: SHGB, PBG, SLF */}
-              <TextField
-                label="Сертификат права на землю (SHGB)"
-                value={shgb}
-                onChange={(e) => setShgb(e.target.value)}
-              />
-              <TextField
-                label="Разрешение на строительство (PBG)"
-                value={pbg}
-                onChange={(e) => setPbg(e.target.value)}
-              />
-              <TextField
-                label="Сертификат готовности здания (SLF)"
-                value={slf}
-                onChange={(e) => setSlf(e.target.value)}
-              />
-
-              {/* Новое поле: «Юридическое название компании» */}
-              <TextField
-                label="Юридическое название компании"
-                value={legalCompanyName}
-                onChange={(e) => setLegalCompanyName(e.target.value)}
-              />
-
-              {/* [NEW] Поле «Вознаграждение» */}
+              <TextField label="Описание" multiline rows={6} value={description} onChange={(e) => setDescription(e.target.value)} />
+              <TextField label="Сертификат права на землю (SHGB)" value={shgb} onChange={(e) => setShgb(e.target.value)} />
+              <TextField label="Разрешение на строительство (PBG)" value={pbg} onChange={(e) => setPbg(e.target.value)} />
+              <TextField label="Сертификат готовности здания (SLF)" value={slf} onChange={(e) => setSlf(e.target.value)} />
+              <TextField label="Юридическое название компании" value={legalCompanyName} onChange={(e) => setLegalCompanyName(e.target.value)} />
               <FormControl>
                 <InputLabel id="commission-label">Вознаграждение</InputLabel>
-                <Select
-                  labelId="commission-label"
-                  label="Вознаграждение"
-                  value={commission}
-                  onChange={(e) => setCommission(e.target.value)}
-                >
+                <Select labelId="commission-label" label="Вознаграждение" value={commission} onChange={(e) => setCommission(e.target.value)}>
                   {commissionOptions.map((val) => (
                     <MenuItem key={val} value={val}>
                       {val}
@@ -709,25 +504,16 @@ function EditProperty() {
                   ))}
                 </Select>
               </FormControl>
-
-              <Typography sx={{ mt: 2 }}>
-                Существующие (и новые) фото (Drag & Drop):
-              </Typography>
+              <Typography sx={{ mt: 2 }}>Существующие (и новые) фото (Drag & Drop):</Typography>
               <DndProvider backend={HTML5Backend}>
                 <Grid container spacing={2}>
                   {images.map((item, idx) => (
                     <Grid item xs={6} sm={4} key={item.id}>
-                      <DraggablePreviewItem
-                        item={item}
-                        index={idx}
-                        moveItem={moveImage}
-                        onRemove={() => handleRemoveImage(idx)}
-                      />
+                      <DraggablePreviewItem item={item} index={idx} moveItem={moveImage} onRemove={() => handleRemoveImage(idx)} />
                     </Grid>
                   ))}
                 </Grid>
               </DndProvider>
-
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button variant="contained" component="label" disabled={isUploading}>
                   Загрузить новые фото / PDF
@@ -735,10 +521,9 @@ function EditProperty() {
                 </Button>
                 {isUploading && <CircularProgress size={24} />}
               </Box>
-
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                 {isSaving ? (
-                  <Box display="flex" alignItems="center" gap={1}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <CircularProgress size={24} />
                     <Typography>Сохраняем...</Typography>
                   </Box>
@@ -747,7 +532,6 @@ function EditProperty() {
                     Сохранить
                   </Button>
                 )}
-
                 <Button variant="contained" color="error" onClick={handleDelete}>
                   Удалить объект
                 </Button>
