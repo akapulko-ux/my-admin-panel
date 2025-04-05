@@ -1,6 +1,8 @@
 {
   "functions": {
-    "source": "functions"
+    "source": "functions",
+    "runtime": "nodejs18",
+    "gen": "1"
   },
   "hosting": {
     "public": "build",
