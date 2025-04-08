@@ -6,10 +6,14 @@ const path = require("path");
 const os = require("os");
 const fs = require("fs");
 
+// Инициализируем admin SDK
 admin.initializeApp();
-const client = new speech.SpeechClient();
+
+// Клиент для распознавания речи
+const speechClient = new speech.SpeechClient();
 const gcs = new Storage();
 
+// Функция транскрипции голосового сообщения
 exports.transcribeVoiceMessage = functions.https.onCall(async (data, context) => {
   console.log("Received data:", data);
   const { agentId, clientTelegramId, messageId, audioURL, languageCode } = data.data || data;
@@ -36,14 +40,14 @@ exports.transcribeVoiceMessage = functions.https.onCall(async (data, context) =>
   };
   
   const config = {
-    encoding: "LINEAR16",           // Теперь аудио записывается в формате LINEAR16 (.wav)
+    encoding: "LINEAR16",           // Аудио записывается в формате LINEAR16 (.wav)
     sampleRateHertz: 16000,         // Частота дискретизации 16000 Гц
     languageCode: languageCode || "ru-RU",
     alternativeLanguageCodes: ["en-US", "fr-FR", "de-DE", "zh-CN", "id-ID"]
   };
   
   const request = { audio, config };
-  const [response] = await client.recognize(request);
+  const [response] = await speechClient.recognize(request);
   
   const transcription = response.results
     .map(result => result.alternatives[0].transcript)
@@ -56,4 +60,42 @@ exports.transcribeVoiceMessage = functions.https.onCall(async (data, context) =>
     .update({ transcription });
   
   return { transcription };
+});
+
+//
+// Новая функция многоязычного перевода текста.
+// Принимает входной текст и массив целевых языков, автоматически определяет исходный язык
+// и переводит текст на каждый из указанных языков (например, ["en", "ru", "id", "fr", "de", "zh"]).
+//
+exports.multiTranslate = functions.https.onCall(async (data, context) => {
+  // Извлекаем параметры из data.data (если они есть) или напрямую из data
+  const requestData = data.data || data;
+  const text = requestData.text;
+  const targetLanguages = requestData.targetLanguages;
+  
+  if (!text || !targetLanguages || !Array.isArray(targetLanguages) || targetLanguages.length === 0) {
+    throw new functions.https.HttpsError("invalid-argument", "Необходимо передать текст и непустой массив целевых языков.");
+  }
+  
+  try {
+    // Инициализируем клиент Google Cloud Translate API
+    const { Translate } = require('@google-cloud/translate').v2;
+    const translateClient = new Translate();
+    
+    // Автоматическое определение языка исходного текста
+    const [detection] = await translateClient.detect(text);
+    const sourceLanguage = detection.language;
+    
+    let translations = {};
+    // Переводим текст на каждый целевой язык
+    for (let lang of targetLanguages) {
+      let [translatedText] = await translateClient.translate(text, { from: sourceLanguage, to: lang });
+      translations[lang] = translatedText;
+    }
+    
+    return { sourceLanguage, translations };
+  } catch (error) {
+    console.error("Ошибка перевода:", error);
+    throw new functions.https.HttpsError("unknown", error.message, error);
+  }
 });
