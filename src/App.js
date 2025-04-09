@@ -1,5 +1,4 @@
 // src/pages/App.js
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import {
@@ -41,8 +40,8 @@ import EditDeveloper from "./pages/EditDeveloper";
 // Поддержка
 import SupportChats from "./pages/SupportChats";
 
-// Cloudinary
-// Кнопка "Очистка Cloudinary" удалена
+// Шахматка
+import Chessboard from "./pages/Chessboard"; // Импортируем новый компонент
 
 import { useAuth } from "./AuthContext";
 
@@ -113,6 +112,11 @@ function App() {
             {/* Поддержка */}
             <ListItem button component={Link} to="/support/chats">
               <ListItemText primary="Чаты поддержки" />
+            </ListItem>
+
+            {/* Шахматка */}
+            <ListItem button component={Link} to="/chessboard">
+              <ListItemText primary="Шахматки" />
             </ListItem>
 
             {/* Кнопка "Очистка Cloudinary" удалена */}
@@ -191,6 +195,13 @@ function App() {
           <Route path="/support/chats" element={
             <ProtectedRoute requiredRoles={["admin", "moderator"]}>
               <SupportChats />
+            </ProtectedRoute>
+          } />
+
+          {/* Шахматка */}
+          <Route path="/chessboard" element={
+            <ProtectedRoute requiredRoles={["admin", "moderator"]}>
+              <Chessboard />
             </ProtectedRoute>
           } />
 
