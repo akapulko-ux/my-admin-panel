@@ -9,7 +9,7 @@ const firebaseConfig = {
   projectId: "bali-estate-1130f",
   storageBucket: "bali-estate-1130f.appspot.com",
   messagingSenderId: "794245545645",
-  appId: "1:794245545645:ios:d9abd3ac5e8a0452bbd024"
+  appId: "1:794245545645:web:d9abd3ac5e8a0452bbd024"
 };
 
 // 🔥 Инициализация Firebase App

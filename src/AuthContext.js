@@ -30,7 +30,26 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
+  const login = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential;
+    } catch (error) {
+      console.error("Ошибка входа:", error);
+      if (error.code === "auth/invalid-credential") {
+        throw new Error("Неверный email или пароль");
+      } else if (error.code === "auth/user-not-found") {
+        throw new Error("Пользователь не найден");
+      } else if (error.code === "auth/wrong-password") {
+        throw new Error("Неверный пароль");
+      } else if (error.code === "auth/invalid-email") {
+        throw new Error("Неверный формат email");
+      } else {
+        throw new Error("Ошибка входа: " + error.message);
+      }
+    }
+  };
+
   const logout = () => signOut(auth);
 
   return (

@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // === Утилиты ===
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+    function isAgent() {
+      return isSignedIn() && request.auth.token.role == 'agent';
+    }
+
+    // === Коллекция агентов и всё внутри неё ===
+    match /agents/{agentId} {
+      // админ может всё, агент — только свои данные  
+      allow read, write: if isAdmin() || (isAgent() && request.auth.uid == agentId);
+
+      // чаты
+      match /chats/{chatId} {
+        allow read, write: if isAdmin() || (isAgent() && request.auth.uid == agentId);
+
+        // support внутри чатов
+        match /support/{supportId} {
+          allow read, write: if isAdmin() || (isAgent() && request.auth.uid == agentId);
+        }
+      }
+
+      // избранное агента
+      match /favorites/{favoriteId} {
+        allow read, write: if isAdmin() || (isAgent() && request.auth.uid == agentId);
+      }
+
+      // подборки агента
+      match /selections/{selectionId} {
+        allow read, write: if isAdmin() || (isAgent() && request.auth.uid == agentId);
+      }
+    }
+
+    // === Недвижимость ===
+    match /properties/{propertyId} {
+      // публичное чтение
+      allow read: if true;
+      // добавление/изменение/удаление — только admin или agent
+      allow create, update, delete: if isAdmin() || isAgent();
+
+      match /documents/{docId} {
+        allow read: if true;
+        allow create, update, delete: if isAdmin() || isAgent();
+      }
+    }
+
+    // === Комплексы ===
+    match /complexes/{complexId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() || isAgent();
+    }
+
+    // === Профили пользователей ===
+    match /users/{userId} {
+      // админ видит/меняет любые, агент — только свой
+      allow read, update: if isAdmin() || (isAgent() && request.auth.uid == userId);
+    }
+
+    // === PDF-файлы (если хранятся в Firestore) ===
+    match /pdfs/{pdfId} {
+      allow read, create, update, delete: if isAdmin() || isAgent();
+    }
+
+    // === Фоллбэк для любых новых коллекций ===
+    match /{path=**} {
+      // чтение всем залогиненным
+      allow read:    if isSignedIn();
+      // запись — только admin и agent
+      allow create, update, delete: if isAdmin() || isAgent();
+    }
+  }
+}
