@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "./firebaseConfig";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
 
@@ -20,7 +20,21 @@ export function AuthProvider({ children }) {
         if (snap.exists()) {
           setRole(snap.data().role || "agent");
         } else {
-          setRole("agent");
+          // Если документ пользователя не существует, создаем его с ролью agent
+          try {
+            const userData = {
+              email: user.email,
+              role: "agent",
+              createdAt: new Date(),
+              uid: user.uid
+            };
+            await setDoc(docRef, userData);
+            setRole("agent");
+            console.log("Создан новый документ пользователя с ролью agent");
+          } catch (error) {
+            console.error("Ошибка создания документа пользователя:", error);
+            setRole("agent"); // Используем роль по умолчанию даже если создание не удалось
+          }
         }
       } else {
         setRole(null);

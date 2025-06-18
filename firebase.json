@@ -5,20 +5,6 @@
       "runtime": "nodejs18",
       "gen": "1",
       "codebase": "default"
-    },
-    {
-      "source": "fire",
-      "codebase": "fire",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint"
-      ]
     }
   ],
   "hosting": {

@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/firestore");
 const speech = require("@google-cloud/speech");
 const { Storage } = require("@google-cloud/storage");
 const path = require("path");
@@ -97,5 +98,49 @@ exports.multiTranslate = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error("Ошибка перевода:", error);
     throw new functions.https.HttpsError("unknown", error.message, error);
+  }
+});
+
+// Функция для автоматического создания custom claims при создании документа пользователя
+exports.createUserRoleClaims = onDocumentCreated("users/{userId}", async (event) => {
+  const newData = event.data.data();
+  const userId = event.params.userId;
+
+  try {
+    // Устанавливаем custom claims на основе роли в Firestore
+    const role = newData.role || 'agent';
+    await admin.auth().setCustomUserClaims(userId, { role: role });
+    console.log(`Custom claims установлены для нового пользователя ${userId} с ролью ${role}`);
+    
+    // Обновляем документ с информацией о времени установки claims
+    await event.data.ref.update({
+      lastRoleUpdate: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    return { success: true, message: `Custom claims установлены для роли ${role}` };
+  } catch (error) {
+    console.error('Ошибка при установке custom claims для нового пользователя:', error);
+    throw new Error('Ошибка при установке custom claims для нового пользователя');
+  }
+});
+
+// Функция обновления custom claims при изменении роли пользователя (gen 2)
+exports.updateUserRoleClaims = onDocumentUpdated("users/{userId}", async (event) => {
+  const newData = event.data.after.data();
+  const previousData = event.data.before.data();
+  const userId = event.params.userId;
+
+  if (newData.role !== previousData.role) {
+    try {
+      await admin.auth().setCustomUserClaims(userId, { role: newData.role });
+      console.log(`Роль пользователя ${userId} обновлена на ${newData.role}`);
+      await event.data.after.ref.update({
+        lastRoleUpdate: admin.firestore.FieldValue.serverTimestamp()
+      });
+      return { success: true, message: `Роль обновлена на ${newData.role}` };
+    } catch (error) {
+      console.error('Ошибка при обновлении роли:', error);
+      throw new Error('Ошибка при обновлении роли пользователя');
+    }
   }
 });

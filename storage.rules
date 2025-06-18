@@ -1,20 +1,35 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
+    // === Утилиты ===
     function isSignedIn() {
       return request.auth != null;
     }
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.role == 'admin';
-    }
-    function isAgent() {
-      return isSignedIn() && request.auth.token.role == 'agent';
+
+    // Проверка роли через custom claims
+    function hasRoleInToken(role) {
+      return isSignedIn() && request.auth.token.role == role;
     }
 
-    // Все изображения хранятся в папке images/
-    match /images/{imagePath=**} {
-      // Просмотр — публичный (если нужно)
+    // Проверка роли через Firestore
+    function hasRoleInFirestore(role) {
+      return isSignedIn() && 
+        exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    // Комбинированная проверка роли (либо через token, либо через Firestore)
+    function isAdmin() {
+      return hasRoleInToken('admin') || hasRoleInFirestore('admin');
+    }
+
+    function isAgent() {
+      return hasRoleInToken('agent') || hasRoleInFirestore('agent');
+    }
+
+    // Правила для всех файлов
+    match /{allPaths=**} {
+      // Просмотр — публичный
       allow read: if true;
       // Загрузка и удаление — только агент/админ
       allow write, delete: if isAdmin() || isAgent();

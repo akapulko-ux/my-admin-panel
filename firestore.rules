@@ -5,11 +5,26 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.role == 'admin';
+
+    // Проверка роли через custom claims
+    function hasRoleInToken(role) {
+      return isSignedIn() && request.auth.token.role == role;
     }
+
+    // Проверка роли через Firestore
+    function hasRoleInFirestore(role) {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    // Комбинированная проверка роли (либо через token, либо через Firestore)
+    function isAdmin() {
+      return hasRoleInToken('admin') || hasRoleInFirestore('admin');
+    }
+
     function isAgent() {
-      return isSignedIn() && request.auth.token.role == 'agent';
+      return hasRoleInToken('agent') || hasRoleInFirestore('agent');
     }
 
     // === Коллекция агентов и всё внутри неё ===
@@ -61,6 +76,8 @@ service cloud.firestore {
     match /users/{userId} {
       // админ видит/меняет любые, агент — только свой
       allow read, update: if isAdmin() || (isAgent() && request.auth.uid == userId);
+      // разрешаем создание документа пользователя самому пользователю при регистрации
+      allow create: if isSignedIn() && request.auth.uid == userId;
     }
 
     // === PDF-файлы (если хранятся в Firestore) ===
