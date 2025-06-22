@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "bali-estate-1130f"
-  }
+  },
+  "targets": {
+    "bali-estate-1130f": {
+      "hosting": {
+        "admin-panel": [
+          "admin-panel-bali"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
