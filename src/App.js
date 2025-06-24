@@ -27,6 +27,8 @@ import ListComplexes from "./pages/ListComplexes";
 import CreateProperty from "./pages/CreateProperty";
 import EditProperty from "./pages/EditProperty";
 import ListProperties from "./pages/ListProperties";
+import PropertiesGallery from "./pages/PropertiesGallery";
+import PropertyDetail from "./pages/PropertyDetail";
 
 // Достопримечательности
 import CreateLandmark from "./pages/CreateLandmark";
@@ -95,6 +97,9 @@ function App() {
             <ListItem button component={Link} to="/property/list">
               <ListItemText primary="Список Объектов" />
             </ListItem>
+            <ListItem button component={Link} to="/property/gallery">
+              <ListItemText primary="Галерея Объектов" />
+            </ListItem>
 
             {/* Достопримечательности */}
             <ListItem button component={Link} to="/landmark/new">
@@ -159,6 +164,16 @@ function App() {
           <Route path="/property/list" element={
             <ProtectedRoute requiredRoles={["admin", "moderator"]}>
               <ListProperties />
+            </ProtectedRoute>
+          } />
+          <Route path="/property/:id" element={
+            <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
+              <PropertyDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/property/gallery" element={
+            <ProtectedRoute requiredRoles={["admin", "moderator", "agent"]}>
+              <PropertiesGallery />
             </ProtectedRoute>
           } />
 

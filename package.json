@@ -16,6 +16,8 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.8.4",
     "browser-image-compression": "^2.0.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "date-fns": "^2.30.0",
     "dotenv": "^16.4.7",
     "file-saver": "^2.0.5",
@@ -24,6 +26,7 @@
     "framer-motion": "^12.6.2",
     "geolib": "^3.3.4",
     "jszip": "^3.10.1",
+    "lucide-react": "^0.522.0",
     "node-fetch": "^3.3.2",
     "pdfjs-dist": "^4.10.38",
     "react": "^18.2.0",
@@ -33,6 +36,8 @@
     "react-firebase-hooks": "^5.1.1",
     "react-pdf": "^9.2.1",
     "react-router-dom": "^7.2.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -60,9 +65,10 @@
     ]
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.10",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
     "react-scripts": "^5.0.1",
-    "tailwindcss": "^4.0.17"
+    "tailwindcss": "^3.4.4"
   }
 }

@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
               uid: user.uid
             };
             await setDoc(docRef, userData);
-            setRole("agent");
+          setRole("agent");
             console.log("Создан новый документ пользователя с ролью agent");
           } catch (error) {
             console.error("Ошибка создания документа пользователя:", error);
