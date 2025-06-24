@@ -489,9 +489,9 @@ function CreateComplex() {
               {ownershipForm === "Leashold" && (
                 <TextField
                   label="Лет"
-                  type="number"
                   value={leaseYears}
                   onChange={(e) => setLeaseYears(e.target.value)}
+                  placeholder="Например: 30, 30+20"
                 />
               )}
 

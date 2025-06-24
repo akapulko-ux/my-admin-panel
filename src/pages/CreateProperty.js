@@ -620,10 +620,10 @@ function CreateProperty() {
               {ownershipForm === "Leashold" && (
                 <TextField
                   label="Лет"
-                  type="number"
                   value={leaseYears}
                   onChange={(e) => setLeaseYears(e.target.value)}
                   disabled={isAutoFill}
+                  placeholder="Например: 30, 30+20"
                 />
               )}
 
