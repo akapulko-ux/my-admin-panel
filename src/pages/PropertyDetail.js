@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp } from "firebase/firestore";
+import { useAuth } from "../AuthContext";
+import { useCache } from "../CacheContext";
 import {
   Bed,
   Ruler,
@@ -17,11 +19,16 @@ import {
 } from "lucide-react";
 
 function PropertyDetail() {
+  console.log('PropertyDetail: Component mounted');
   const { id } = useParams();
+  console.log('PropertyDetail: Got id from params:', id);
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const { currentUser, role } = useAuth();
+  const { getPropertyDetails, propertiesCache } = useCache();
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -40,23 +47,76 @@ function PropertyDetail() {
     }).format(price);
   };
 
+  // Получение имени застройщика по ID
+  const fetchDeveloperName = async (developerId) => {
+    try {
+      const developerDoc = await getDoc(doc(db, "developers", developerId));
+      if (developerDoc.exists()) {
+        return developerDoc.data().name;
+      }
+      return null;
+    } catch (err) {
+      console.error("Ошибка загрузки застройщика:", err);
+      return null;
+    }
+  };
+
   useEffect(() => {
     async function fetchData() {
       try {
-        const snap = await getDoc(doc(db, "properties", id));
-        if (snap.exists()) {
-          setProperty({ id: snap.id, ...snap.data() });
+        console.log('PropertyDetail: Starting to fetch data for id:', id);
+        console.log('PropertyDetail: Current role:', role);
+        
+        // Если пользователь - застройщик, получаем его developerId
+        let userDeveloperName = null;
+        if (role === 'застройщик' && currentUser) {
+          console.log('PropertyDetail: Fetching developer info for user:', currentUser.uid);
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          if (userDoc.exists() && userDoc.data().developerId) {
+            userDeveloperName = await fetchDeveloperName(userDoc.data().developerId);
+            console.log('PropertyDetail: Found developer name:', userDeveloperName);
+          }
+        }
+
+        // Сначала проверяем кеш
+        let propertyData;
+        const cachedDetails = propertiesCache.details[id];
+        if (cachedDetails?.data && Date.now() - cachedDetails.timestamp < 5 * 60 * 1000) {
+          propertyData = cachedDetails.data;
+        } else {
+          propertyData = await getPropertyDetails(id);
+        }
+        
+        if (propertyData) {
+          console.log('PropertyDetail: Property data:', propertyData);
+          
+          // Проверяем права доступа для застройщика
+          if (role === 'застройщик') {
+            console.log('PropertyDetail: Checking access for developer');
+            console.log('PropertyDetail: Property developer:', propertyData.developer);
+            console.log('PropertyDetail: User developer name:', userDeveloperName);
+            if (propertyData.developer !== userDeveloperName) {
+              console.log('PropertyDetail: Access denied');
+              setAccessDenied(true);
+              return;
+            }
+          }
+          
+          setProperty(propertyData);
+        } else {
+          console.log('PropertyDetail: Property not found');
         }
       } catch (err) {
-        console.error(err);
+        console.error('PropertyDetail: Error:', err);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [id]);
+  }, [id, currentUser, role, getPropertyDetails, propertiesCache]);
 
   const getLatLng = () => {
+    if (!property) return null;
     let lat = null;
     let lng = null;
     if (property.latitude && property.longitude) {
@@ -87,6 +147,11 @@ function PropertyDetail() {
     );
   }
 
+  // Если доступ запрещен, перенаправляем на галерею
+  if (accessDenied) {
+    return <Navigate to="/property/gallery" />;
+  }
+
   if (!property) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
@@ -107,6 +172,12 @@ function PropertyDetail() {
       value: property.area ? `${safeDisplay(property.area)} м²` : "—",
       icon: Ruler,
       show: property.area,
+    },
+    {
+      label: "Этажность",
+      value: property.floors ? `${safeDisplay(property.floors)} этаж${property.floors === 1 ? '' : property.floors < 5 ? 'а' : 'ей'}` : "—",
+      icon: Building2,
+      show: property.floors !== undefined,
     },
     {
       label: "Класс",
