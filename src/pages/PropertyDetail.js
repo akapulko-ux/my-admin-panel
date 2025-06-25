@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
 import {
@@ -29,6 +29,67 @@ function PropertyDetail() {
   const [accessDenied, setAccessDenied] = useState(false);
   const { currentUser, role } = useAuth();
   const { getPropertyDetails, propertiesCache } = useCache();
+  
+  // Новые состояния для редактирования
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedValues, setEditedValues] = useState({});
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Функция для проверки, может ли пользователь редактировать объект
+  const canEdit = () => {
+    console.log('canEdit check:', {
+      role,
+      isAdmin: role === 'admin',
+      isDeveloper: role === 'застройщик',
+      propertyDeveloper: property?.developer,
+      userDeveloperName: property?.userDeveloperName
+    });
+    
+    if (role === 'admin') return true;
+    if (role === 'застройщик') return true; // Временно разрешим всем застройщикам для проверки
+    return false;
+  };
+
+  // Функция для обработки изменений значений
+  const handleValueChange = (field, value) => {
+    let processedValue = value;
+    if (field === 'price') {
+      // Убираем все нечисловые символы, кроме цифр
+      processedValue = value.replace(/[^\d]/g, '');
+      processedValue = processedValue ? parseInt(processedValue) : 0;
+    }
+    
+    setEditedValues(prev => {
+      const newValues = { ...prev, [field]: processedValue };
+      setHasChanges(JSON.stringify(newValues) !== JSON.stringify({}));
+      return newValues;
+    });
+  };
+
+  // Функция для сохранения изменений
+  const handleSave = async () => {
+    try {
+      const propertyRef = doc(db, "properties", id);
+      await updateDoc(propertyRef, editedValues);
+      setProperty(prev => ({ ...prev, ...editedValues }));
+      setEditedValues({});
+      setHasChanges(false);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Ошибка при сохранении изменений:", error);
+      alert("Произошла ошибка при сохранении изменений");
+    }
+  };
+
+  // Функция для отмены редактирования
+  const handleCancel = () => {
+    setEditedValues({});
+    setHasChanges(false);
+    setIsEditing(false);
+  };
+
+  // Список неизменяемых полей
+  const nonEditableFields = ['classRating', 'district', 'landStatus'];
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -61,6 +122,114 @@ function PropertyDetail() {
     }
   };
 
+  // Добавляем списки значений для выпадающих списков
+  const typeOptions = [
+    "Вилла",
+    "Апартаменты",
+    "Дом",
+    "Коммерческая недвижимость",
+    "Апарт-вилла",
+    "Таунхаус",
+    "Земельный участок"
+  ];
+
+  const bedroomsOptions = [
+    "Студия",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+  ];
+
+  const buildingTypeOptions = [
+    "Новый комплекс",
+    "Реновация",
+    "ИЖС"
+  ];
+
+  const statusOptions = [
+    "Проект",
+    "Строится",
+    "Готовый",
+    "От собственника"
+  ];
+
+  const poolOptions = [
+    "Нет",
+    "Частный",
+    "Общий"
+  ];
+
+  // Добавляем список значений для формы собственности
+  const ownershipFormOptions = [
+    "Leashold",
+    "Freehold"
+  ];
+
+  // Обновляем функцию рендеринга значения
+  const renderEditableValue = (field, value, type, options) => {
+    if (isEditing && !nonEditableFields.includes(field)) {
+      if (field === 'ownershipForm') {
+        return (
+          <div className="space-y-2">
+            <select
+              value={editedValues[field] || value || ''}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">(не выбрано)</option>
+              {options.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            {(editedValues[field] || value) === 'Leashold' && (
+              <input
+                type="text"
+                value={editedValues.leaseYears || property.leaseYears || ''}
+                onChange={(e) => handleValueChange('leaseYears', e.target.value)}
+                placeholder="Например: 30, 30+20"
+                className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+              />
+            )}
+          </div>
+        );
+      } else if (options) {
+        return (
+          <select
+            value={editedValues[field] || value || ''}
+            onChange={(e) => handleValueChange(field, e.target.value)}
+            className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+          >
+            <option value="">(не выбрано)</option>
+            {options.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        );
+      } else {
+        return (
+          <input
+            type={type || "text"}
+            value={editedValues[field] || value || ''}
+            onChange={(e) => handleValueChange(field, e.target.value)}
+            className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+          />
+        );
+      }
+    }
+    return (
+      <div className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
+        {value}
+      </div>
+    );
+  };
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -89,6 +258,9 @@ function PropertyDetail() {
         
         if (propertyData) {
           console.log('PropertyDetail: Property data:', propertyData);
+          
+          // Добавляем информацию о застройщике пользователя в данные объекта
+          propertyData.userDeveloperName = userDeveloperName;
           
           // Проверяем права доступа для застройщика
           if (role === 'застройщик') {
@@ -164,68 +336,92 @@ function PropertyDetail() {
     {
       label: property.bedrooms === 0 ? "Студия" : "Спален",
       value: property.bedrooms === 0 ? "Студия" : safeDisplay(property.bedrooms),
+      field: "bedrooms",
       icon: Bed,
       show: property.bedrooms !== undefined,
+      type: "select",
+      options: bedroomsOptions
     },
     {
       label: "Площадь",
       value: property.area ? `${safeDisplay(property.area)} м²` : "—",
+      field: "area",
       icon: Ruler,
       show: property.area,
+      type: "number"
     },
     {
       label: "Этажность",
       value: property.floors ? `${safeDisplay(property.floors)} этаж${property.floors === 1 ? '' : property.floors < 5 ? 'а' : 'ей'}` : "—",
+      field: "floors",
       icon: Building2,
       show: property.floors !== undefined,
+      type: "number"
     },
     {
       label: "Класс",
       value: safeDisplay(property.classRating),
+      field: "classRating",
       icon: Star,
       show: property.classRating,
     },
     {
       label: "Район",
       value: safeDisplay(property.district),
+      field: "district",
       icon: MapPin,
       show: property.district,
     },
     {
       label: "Тип постройки",
       value: safeDisplay(property.buildingType),
+      field: "buildingType",
       icon: Home,
       show: property.buildingType,
+      type: "select",
+      options: buildingTypeOptions
     },
     {
       label: "Статус строительства",
       value: safeDisplay(property.status),
+      field: "status",
       icon: Hammer,
       show: property.status,
+      type: "select",
+      options: statusOptions
     },
     {
       label: "Статус земли",
       value: safeDisplay(property.landStatus),
+      field: "landStatus",
       icon: MapPin,
       show: property.landStatus,
     },
     {
       label: "Бассейн",
       value: safeDisplay(property.pool),
+      field: "pool",
       icon: Droplet,
       show: property.pool,
+      type: "select",
+      options: poolOptions
     },
     {
       label: "Собственность",
       value: property.ownershipForm ? `${property.ownershipForm}${property.leaseYears ? ` ${property.leaseYears} лет` : ""}` : "—",
+      field: "ownershipForm",
       icon: FileText,
       show: property.ownershipForm,
+      type: "select",
+      options: ownershipFormOptions
     },
     {
       label: "Дата завершения",
       value: safeDisplay(property.completionDate),
+      field: "completionDate",
       icon: Calendar,
       show: property.completionDate,
+      type: "date"
     },
   ].filter((a) => a.show);
 
@@ -289,7 +485,16 @@ function PropertyDetail() {
       {/* Цена и кнопка "на карте" в одной строке */}
       <div className="flex items-start justify-between mb-4">
         <div className="text-4xl font-semibold text-gray-600">
-          {formatPrice(property.price)}
+          {isEditing ? (
+            <input
+              type="number"
+              value={editedValues.price || property.price || ''}
+              onChange={(e) => handleValueChange('price', e.target.value)}
+              className="w-48 px-2 py-1 border border-gray-300 rounded text-4xl"
+            />
+          ) : (
+            formatPrice(property.price)
+          )}
         </div>
 
         {getLatLng() && (
@@ -304,42 +509,115 @@ function PropertyDetail() {
       </div>
 
       {/* Тип */}
-      {property.type && (
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">
-          {safeDisplay(property.type)}
-        </h2>
+      <div className="text-2xl font-bold mb-4 text-gray-800">
+        {isEditing ? (
+          <select
+            value={editedValues.type || property.type || ''}
+            onChange={(e) => handleValueChange('type', e.target.value)}
+            className="w-full px-2 py-1 border border-gray-300 rounded text-2xl"
+          >
+            <option value="">(не выбрано)</option>
+            {typeOptions.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        ) : (
+          safeDisplay(property.type)
+        )}
+      </div>
+
+      {property.description && (
+        <p className="text-gray-600 mb-6 whitespace-pre-line">{property.description}</p>
       )}
 
       {/* Сетка характеристик */}
       <div className="grid grid-cols-2 gap-4">
-        {attributes.map(({ label, value, icon: Icon }) => (
+        {attributes.map(({ label, value, icon: Icon, field, type, options }) => (
           <div key={label} className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
               <Icon className="w-5 h-5" />
             </div>
             <div>
               <div className="text-xs text-gray-500 leading-none mb-1">{label}</div>
-              <div className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {value}
-              </div>
+              {renderEditableValue(field, value, type, options)}
             </div>
           </div>
         ))}
       </div>
 
+      {/* Кнопки редактирования */}
+      {canEdit() && (
+        <div className="mt-8 flex justify-end gap-4">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Отменить
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!hasChanges}
+                className={`px-4 py-2 rounded-lg text-white ${
+                  hasChanges
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
+              >
+                Сохранить
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Редактировать
+            </button>
+          )}
+        </div>
+      )}
+
       {/* LIGHTBOX */}
       {lightbox && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={() => setLightbox(false)}>
-          <div className="relative max-w-screen max-h-screen flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <img src={property.images[currentImg]} alt="full" className="max-w-full max-h-full object-contain" />
-
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+          <div className="relative w-full h-full">
+            <img
+              src={property.images[currentImg]}
+              alt={`Фото ${currentImg + 1}`}
+              className="absolute inset-0 m-auto max-w-full max-h-full object-contain"
+              onClick={() => setLightbox(false)}
+            />
+            {/* Кнопка закрытия */}
+            <button
+              className="absolute top-4 right-4 text-white text-4xl"
+              onClick={() => setLightbox(false)}
+            >
+              ×
+            </button>
+            {/* Стрелка влево */}
             {currentImg > 0 && (
-              <button onClick={() => setCurrentImg((i) => i - 1)} className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl">◀</button>
+              <button
+                onClick={() => setCurrentImg(prev => prev - 1)}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-all"
+              >
+                ←
+              </button>
             )}
+            {/* Стрелка вправо */}
             {currentImg < property.images.length - 1 && (
-              <button onClick={() => setCurrentImg((i) => i + 1)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl">▶</button>
+              <button
+                onClick={() => setCurrentImg(prev => prev + 1)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-all"
+              >
+                →
+              </button>
             )}
-            <button onClick={() => setLightbox(false)} className="absolute top-4 right-4 text-white text-3xl">✕</button>
+            {/* Счетчик фотографий */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black bg-opacity-50 px-4 py-2 rounded-full">
+              {currentImg + 1} / {property.images.length}
+            </div>
           </div>
         </div>
       )}

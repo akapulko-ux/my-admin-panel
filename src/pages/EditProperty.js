@@ -353,6 +353,9 @@ function EditProperty() {
                   <MenuItem value="Апартаменты">Апартаменты</MenuItem>
                   <MenuItem value="Дом">Дом</MenuItem>
                   <MenuItem value="Коммерческая недвижимость">Коммерческая недвижимость</MenuItem>
+                  <MenuItem value="Апарт-вилла">Апарт-вилла</MenuItem>
+                  <MenuItem value="Таунхаус">Таунхаус</MenuItem>
+                  <MenuItem value="Земельный участок">Земельный участок</MenuItem>
                 </Select>
               </FormControl>
               <TextField label="Координаты (шир, долг)" value={coordinates} onChange={(e) => setCoordinates(e.target.value)} />
