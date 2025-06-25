@@ -11,17 +11,17 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccountPath),
 });
 
-async function removeAdminCustomClaim() {
+async function setAdminCustomClaim() {
   try {
-    // Удаляем custom claim { role: 'admin' } для указанного UID
-    await admin.auth().setCustomUserClaims(targetUid, null);
+    // Устанавливаем custom claim { role: 'admin' } для указанного UID
+    await admin.auth().setCustomUserClaims(targetUid, { role: 'admin' });
 
-    console.log(`Custom claims успешно удалены для пользователя с UID: ${targetUid}`);
+    console.log(`Custom claims успешно установлены для пользователя с UID: ${targetUid}`);
     console.log('Пользователю нужно выйти из системы и снова войти для обновления токена.');
 
   } catch (error) {
-    console.error('Ошибка при удалении custom claims:', error);
+    console.error('Ошибка при установке custom claims:', error);
   }
 }
 
-removeAdminCustomClaim(); 
+setAdminCustomClaim(); 

@@ -14,6 +14,33 @@ admin.initializeApp();
 const speechClient = new speech.SpeechClient();
 const gcs = new Storage();
 
+// Определение ролей и их алиасов
+const ROLES = {
+  admin: ['admin', 'administrator', 'администратор'],
+  moderator: ['moderator', 'модератор', 'mod'],
+  premium_agent: ['premium_agent', 'premium agent', 'премиум агент', 'премиум-агент', 'premium'],
+  agent: ['agent', 'агент'],
+  user: ['user', 'пользователь', ''],
+  застройщик: ['застройщик']
+};
+
+// Функция для нормализации роли
+function normalizeRole(role) {
+  if (!role) return 'user';
+  
+  const normalizedRole = role.toLowerCase().trim();
+  
+  // Ищем соответствие в алиасах
+  for (const [roleKey, aliases] of Object.entries(ROLES)) {
+    if (aliases.includes(normalizedRole)) {
+      return roleKey;
+    }
+  }
+  
+  console.warn(`Неизвестная роль "${role}" будет заменена на "user"`);
+  return 'user';
+}
+
 // Функция транскрипции голосового сообщения
 exports.transcribeVoiceMessage = functions.https.onCall(async (data, context) => {
   console.log("Received data:", data);
@@ -109,7 +136,14 @@ exports.createUserRoleClaims = onDocumentCreated("users/{userId}", async (event)
   try {
     // Устанавливаем custom claims на основе роли в Firestore
     const role = newData.role || 'agent';
-    await admin.auth().setCustomUserClaims(userId, { role: role });
+    const claims = { role: role };
+    
+    // Если роль - застройщик и указан developerId, добавляем его в claims
+    if (role === 'застройщик' && newData.developerId) {
+      claims.developerId = newData.developerId;
+    }
+    
+    await admin.auth().setCustomUserClaims(userId, claims);
     console.log(`Custom claims установлены для нового пользователя ${userId} с ролью ${role}`);
     
     // Обновляем документ с информацией о времени установки claims
@@ -124,19 +158,30 @@ exports.createUserRoleClaims = onDocumentCreated("users/{userId}", async (event)
   }
 });
 
-// Функция обновления custom claims при изменении роли пользователя (gen 2)
+// Функция обновления custom claims при изменении роли пользователя
 exports.updateUserRoleClaims = onDocumentUpdated("users/{userId}", async (event) => {
   const newData = event.data.after.data();
   const previousData = event.data.before.data();
   const userId = event.params.userId;
 
-  if (newData.role !== previousData.role) {
+  // Проверяем изменение роли или developerId
+  if (newData.role !== previousData.role || 
+      (newData.role === 'застройщик' && newData.developerId !== previousData.developerId)) {
     try {
-      await admin.auth().setCustomUserClaims(userId, { role: newData.role });
+      const claims = { role: newData.role };
+      
+      // Если роль - застройщик и указан developerId, добавляем его в claims
+      if (newData.role === 'застройщик' && newData.developerId) {
+        claims.developerId = newData.developerId;
+      }
+      
+      await admin.auth().setCustomUserClaims(userId, claims);
       console.log(`Роль пользователя ${userId} обновлена на ${newData.role}`);
+      
       await event.data.after.ref.update({
         lastRoleUpdate: admin.firestore.FieldValue.serverTimestamp()
       });
+      
       return { success: true, message: `Роль обновлена на ${newData.role}` };
     } catch (error) {
       console.error('Ошибка при обновлении роли:', error);

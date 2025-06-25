@@ -17,6 +17,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 
 import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import UserManagement from "./pages/UserManagement";
 
 // Комплексы
 import CreateComplex from "./pages/CreateComplex";
@@ -124,6 +125,11 @@ function App() {
               <ListItemText primary="Шахматки" />
             </ListItem>
 
+            {/* Управление пользователями */}
+            <ListItem button component={Link} to="/users/manage">
+              <ListItemText primary="Управление пользователями" />
+            </ListItem>
+
             {/* Кнопка "Очистка Cloudinary" удалена */}
           </List>
         </Box>
@@ -217,6 +223,13 @@ function App() {
           <Route path="/chessboard" element={
             <ProtectedRoute requiredRoles={["admin", "moderator"]}>
               <Chessboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Управление пользователями */}
+          <Route path="/users/manage" element={
+            <ProtectedRoute requiredRoles={["admin"]}>
+              <UserManagement />
             </ProtectedRoute>
           } />
 
