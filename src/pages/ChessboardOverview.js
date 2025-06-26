@@ -99,8 +99,8 @@ const ChessboardOverview = () => {
     fetchChessboard();
   }, [publicId]);
 
-  // Обновляем логику масштабирования
-  useEffect(() => {
+  // Функция для расчета масштаба
+  const calculateScale = () => {
     if (contentRef.current && chessboard) {
       const content = contentRef.current;
       const contentWidth = content.scrollWidth;
@@ -114,13 +114,52 @@ const ChessboardOverview = () => {
         return;
       }
 
-      const scaleX = viewportWidth / contentWidth;
-      const scaleY = viewportHeight / contentHeight;
-      const newScale = Math.min(scaleX, scaleY, 1);
+      // Учитываем отступы
+      const padding = 32; // 16px с каждой стороны
+      const availableWidth = viewportWidth - padding;
+      const availableHeight = viewportHeight - padding;
 
+      const scaleX = availableWidth / contentWidth;
+      const scaleY = availableHeight / contentHeight;
+      
+      // Используем минимальный масштаб, но не больше 1
+      const newScale = Math.min(scaleX, scaleY, 1);
+      
       setScale(newScale);
     }
+  };
+
+  // Обновляем масштаб при изменении размера окна
+  useEffect(() => {
+    const handleResize = () => {
+      calculateScale();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [chessboard]);
+
+  // Обновляем масштаб при загрузке данных
+  useEffect(() => {
+    if (chessboard) {
+      // Используем setTimeout, чтобы дать время для рендеринга контента
+      setTimeout(() => {
+        calculateScale();
+      }, 100);
+    }
+  }, [chessboard]);
+
+  // Дополнительный useEffect для гарантированного расчета масштаба
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (contentRef.current && chessboard) {
+        calculateScale();
+        clearInterval(timer);
+      }
+    }, 100);
+
+    return () => clearInterval(timer);
+  }, [contentRef.current, chessboard]);
 
   if (loading) {
     return (
@@ -172,10 +211,15 @@ const ChessboardOverview = () => {
           `}
           style={{
             transform: window.innerWidth <= 768 ? 'none' : `scale(${scale})`,
-            transformOrigin: 'top left'
+            transformOrigin: 'top left',
+            padding: '16px',
+            minHeight: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start'
           }}
         >
-          <div ref={contentRef} className="w-fit p-4">
+          <div ref={contentRef} className="w-fit">
             {/* Информация о комплексе */}
             {complex && (
               <Card className="mb-6 bg-white/5 border-white/10">
@@ -233,7 +277,7 @@ const ChessboardOverview = () => {
             {/* Секции */}
             <div className="space-y-6">
               {chessboard.sections.map((section, sectionIdx) => (
-                <Card key={sectionIdx} className="border border-[#2a2e36] bg-[#1a1d24]">
+                <Card key={sectionIdx} className="border border-[#2a2e36] bg-[#1a1d24] w-fit">
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <Home className="w-6 h-6 text-green-400" />
@@ -256,9 +300,19 @@ const ChessboardOverview = () => {
                               )}
                             </div>
 
-                            <div className="flex gap-3 overflow-x-auto pb-2">
+                            <div className="flex flex-nowrap gap-3 pb-2">
                               {floor.units.map((unit, unitIdx) => (
-                                <Card key={unitIdx} className={`${getStatusColor(unit.status)} w-[200px] relative`}>
+                                <Card 
+                                  key={unitIdx} 
+                                  className={`
+                                    ${getStatusColor(unit.status)} 
+                                    w-[200px] flex-shrink-0
+                                    relative
+                                    transition-transform duration-200 ease-in-out
+                                    hover:scale-[1.02]
+                                    hover:shadow-xl
+                                  `}
+                                >
                                   <CardHeader className="p-3">
                                     <div className="flex items-center justify-between">
                                       <span className="font-bold">{unit.id}</span>
