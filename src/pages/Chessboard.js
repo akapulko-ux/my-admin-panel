@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from "../firebaseConfig";
-import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp, setDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -35,6 +35,7 @@ import {
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useAuth } from '../AuthContext';
 
 // Создаем пустые структуры данных
 // eslint-disable-next-line no-unused-vars
@@ -552,11 +553,12 @@ const SortableUnit = ({
 const Chessboard = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, role } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [sections, setSections] = useState([]);
-  const [publicUrl, setPublicUrl] = useState("");
 
   // Оборачиваем объекты в useMemo
   const defaultUnit = useMemo(() => ({
@@ -583,6 +585,57 @@ const Chessboard = () => {
     floors: []
   }), []);
 
+  // Добавим функцию для создания записи в истории изменений
+  const createHistoryRecord = async (chessboardId, action) => {
+    try {
+      await addDoc(collection(db, "chessboard_history"), {
+        chessboardId,
+        action,
+        timestamp: serverTimestamp(),
+        userId: user.uid,
+        userName: user.email,
+        userRole: role
+      });
+    } catch (error) {
+      console.error("Error creating history record:", error);
+    }
+  };
+
+  // Добавим функцию для создания уведомления
+  const createNotification = async (chessboardId, action) => {
+    try {
+      await addDoc(collection(db, "notifications"), {
+        type: "chessboard",
+        action,
+        chessboardId,
+        chessboardName: name,
+        createdAt: serverTimestamp(),
+        createdBy: user.uid,
+        createdByEmail: user.email,
+        status: "unread",
+        forRoles: ["admin", "застройщик"]
+      });
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
+  };
+
+  // Добавим функцию для настройки прав доступа
+  const setupAccessRights = async (chessboardId) => {
+    try {
+      await setDoc(doc(db, "chessboard_access", chessboardId), {
+        owners: [user.uid],
+        editors: [],
+        viewers: [],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: user.uid
+      });
+    } catch (error) {
+      console.error("Error setting up access rights:", error);
+    }
+  };
+
   // Оборачиваем loadChessboard в useCallback
   const loadChessboard = useCallback(async () => {
     try {
@@ -593,7 +646,6 @@ const Chessboard = () => {
         const data = docSnap.data();
         setName(data.name || "");
         setDescription(data.description || "");
-        setPublicUrl(data.publicUrl || "");
         
         const processedSections = data.sections.map(section => ({
           ...defaultSection,
@@ -731,10 +783,22 @@ const Chessboard = () => {
 
   // Сохранение шахматки
   const handleSave = async () => {
+    setIsSaving(true);
     try {
+      // Получаем текущий publicUrl для существующей шахматки
+      let existingPublicUrl = "";
+      if (id && id !== "new") {
+        const docRef = doc(db, "chessboards", id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          existingPublicUrl = docSnap.data().publicUrl || "";
+        }
+      }
+
       const chessboardData = {
         name,
         description,
+        publicUrl: id === "new" ? Math.random().toString(36).substring(2, 15) : existingPublicUrl,
         sections: sections.map(section => ({
           name: section.name,
           floors: section.floors.map(floor => ({
@@ -759,20 +823,40 @@ const Chessboard = () => {
 
       if (!id || id === "new") {
         // Создание новой шахматки
-        const randomId = Math.random().toString(36).substring(2, 15);
-        chessboardData.publicUrl = randomId;
         chessboardData.createdAt = serverTimestamp();
+        chessboardData.createdBy = user.uid;
+        chessboardData.createdByEmail = user.email;
         
         const docRef = await addDoc(collection(db, "chessboards"), chessboardData);
+        
+        // Создаем запись в истории
+        await createHistoryRecord(docRef.id, "create");
+        
+        // Настраиваем права доступа
+        await setupAccessRights(docRef.id);
+        
+        // Создаем уведомление
+        await createNotification(docRef.id, "create");
+        
         navigate("/chessboard");
       } else {
         // Обновление существующей шахматки
-        await updateDoc(doc(db, "chessboards", id), chessboardData);
+        const docRef = doc(db, "chessboards", id);
+        await updateDoc(docRef, chessboardData);
+        
+        // Создаем запись в истории об обновлении
+        await createHistoryRecord(id, "update");
+        
+        // Создаем уведомление об обновлении
+        await createNotification(id, "update");
+        
         navigate("/chessboard");
       }
     } catch (error) {
       console.error("Error saving chessboard:", error);
       alert("Ошибка при сохранении шахматки");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -887,11 +971,27 @@ const Chessboard = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                <Save className="w-4 h-4 mr-2" />
-                Сохранить
+              <Button 
+                onClick={handleSave} 
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Сохранение...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Сохранить
+                  </>
+                )}
               </Button>
-              <Button variant="outline" onClick={() => navigate("/chessboard")}>
+              <Button variant="outline" onClick={() => navigate("/chessboard")} disabled={isSaving}>
                 К списку
               </Button>
             </div>

@@ -10,10 +10,8 @@ import {
   Landmark,
   Users2,
   MessageSquare,
-  LogOut,
   Menu,
   ChevronRight,
-  Plus,
   LayoutGrid
 } from 'lucide-react';
 
