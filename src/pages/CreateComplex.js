@@ -26,6 +26,7 @@ import {
   MenuItem,
   CircularProgress
 } from "@mui/material";
+import { showSuccess } from '../utils/notifications';
 
 function CreateComplex() {
   // ----- Поля формы -----
@@ -268,7 +269,7 @@ function CreateComplex() {
       setRoi("");
       setThreeDTour("");
 
-      alert("Комплекс создан!");
+      showSuccess("Комплекс создан!");
     } catch (error) {
       console.error("Ошибка создания комплекса:", error);
     } finally {

@@ -26,6 +26,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Link } from "react-router-dom";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { showError, showSuccess, showInfo } from '../utils/notifications';
 
 function ListComplexes() {
   const [complexes, setComplexes] = useState([]);
@@ -249,7 +250,7 @@ function ListComplexes() {
       const ref = doc(db, "complexes", docId);
       const snap = await getDoc(ref);
       if (!snap.exists()) {
-        alert("Документ не найден");
+        showError("Документ не найден");
         return;
       }
       const data = snap.data();
@@ -260,7 +261,7 @@ function ListComplexes() {
       };
 
       await addDoc(collection(db, "complexes"), newData);
-      alert("Дубликат создан!");
+      showSuccess("Дубликат создан!");
       fetchComplexes();
     } catch (error) {
       console.error("Ошибка при дублировании комплекса:", error);
@@ -363,11 +364,11 @@ function ListComplexes() {
         }
       }
 
-      alert("Массовое редактирование выполнено!");
+      showSuccess("Массовое редактирование выполнено!");
       fetchComplexes();
     } catch (err) {
       console.error("Ошибка массового редактирования:", err);
-      alert("Ошибка: " + err.message);
+      showError("Ошибка: " + err.message);
     }
   };
 

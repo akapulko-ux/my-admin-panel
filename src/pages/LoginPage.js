@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { showError } from '../utils/notifications';
 
 // Маршруты по умолчанию для разных ролей
 const DEFAULT_ROUTES = {
@@ -32,7 +33,7 @@ function LoginPage() {
       const defaultRoute = DEFAULT_ROUTES[role] || '/property/gallery';
       navigate(defaultRoute);
     } catch (err) {
-      alert("Ошибка входа: " + err.message);
+      showError("Ошибка входа: " + err.message);
     }
   };
 

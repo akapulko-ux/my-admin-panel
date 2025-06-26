@@ -22,6 +22,7 @@ import {
   Grid,
   CircularProgress
 } from "@mui/material";
+import { showSuccess } from '../utils/notifications';
 
 function EditLandmark() {
   const { id } = useParams();
@@ -172,7 +173,7 @@ function EditLandmark() {
         images: finalUrls
       };
       await updateDoc(doc(db, "landmarks", id), updatedData);
-      alert("Достопримечательность обновлена!");
+      showSuccess("Достопримечательность обновлена!");
       // Обновляем состояние images, чтобы для всех файлов file было null
       setImages(finalUrls.map(url => ({ id: crypto.randomUUID(), url, file: null })));
     } catch (error) {
@@ -201,7 +202,7 @@ function EditLandmark() {
         await Promise.all(deletionPromises);
         // Затем удаляем документ из Firestore
         await deleteDoc(doc(db, "landmarks", id));
-        alert("Достопримечательность и все фотографии удалены!");
+        showSuccess("Достопримечательность и все фотографии удалены!");
         navigate("/landmark/list");
       } catch (error) {
         console.error("Ошибка удаления достопримечательности:", error);

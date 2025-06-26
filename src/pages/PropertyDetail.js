@@ -17,6 +17,7 @@ import {
   Droplet,
   Map as MapIcon,
 } from "lucide-react";
+import { showError } from '../utils/notifications';
 
 function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
@@ -77,7 +78,7 @@ function PropertyDetail() {
       setIsEditing(false);
     } catch (error) {
       console.error("Ошибка при сохранении изменений:", error);
-      alert("Произошла ошибка при сохранении изменений");
+      showError("Произошла ошибка при сохранении изменений");
     }
   };
 

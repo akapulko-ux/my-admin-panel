@@ -5,6 +5,7 @@ import { db } from "../firebaseConfig";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 // Импортируем функцию загрузки в Firebase Storage в нужную папку
 import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
+import { showSuccess } from '../utils/notifications';
 
 import {
   Box,
@@ -349,7 +350,7 @@ function CreateProperty() {
       setCommission("1.0");
       setDndItems([]);
 
-      alert("Объект создан!");
+      showSuccess("Объект создан!");
     } catch (error) {
       console.error("Ошибка создания объекта:", error);
     } finally {

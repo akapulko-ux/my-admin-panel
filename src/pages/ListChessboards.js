@@ -13,12 +13,15 @@ import {
   Calendar,
   Link as LinkIcon
 } from 'lucide-react';
+import { showSuccess, showError, showInfo } from '../utils/notifications';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const ListChessboards = () => {
   const navigate = useNavigate();
   const [chessboards, setChessboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [complexNames, setComplexNames] = useState({});
+  const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, chessboard: null });
 
   // Загрузка списка шахматок
   useEffect(() => {
@@ -70,23 +73,33 @@ const ListChessboards = () => {
 
   // Удаление шахматки
   const handleDelete = async (id, name, complexId) => {
-    if (window.confirm(`Вы уверены, что хотите удалить шахматку "${name}"?`)) {
-      try {
-        // Если шахматка привязана к комплексу, удаляем ссылку
-        if (complexId) {
-          await updateDoc(doc(db, "complexes", complexId), {
-            chessboardPublicUrl: null
-          });
-        }
+    setDeleteDialog({
+      isOpen: true,
+      chessboard: { id, name, complexId }
+    });
+  };
 
-        // Удаляем саму шахматку
-        await deleteDoc(doc(db, "chessboards", id));
-        setChessboards(prev => prev.filter(item => item.id !== id));
-        alert("Шахматка удалена!");
-      } catch (error) {
-        console.error("Ошибка удаления:", error);
-        alert("Ошибка при удалении шахматки");
+  const confirmDelete = async () => {
+    if (!deleteDialog.chessboard) return;
+    
+    const { id, name, complexId } = deleteDialog.chessboard;
+    try {
+      // Если шахматка привязана к комплексу, удаляем ссылку
+      if (complexId) {
+        await updateDoc(doc(db, "complexes", complexId), {
+          chessboardPublicUrl: null
+        });
       }
+
+      // Удаляем саму шахматку
+      await deleteDoc(doc(db, "chessboards", id));
+      setChessboards(prev => prev.filter(item => item.id !== id));
+      showSuccess("Шахматка удалена!");
+    } catch (error) {
+      console.error("Ошибка удаления:", error);
+      showError("Ошибка при удалении шахматки");
+    } finally {
+      setDeleteDialog({ isOpen: false, chessboard: null });
     }
   };
 
@@ -146,7 +159,7 @@ const ListChessboards = () => {
   const copyPublicLink = (publicUrl) => {
     const link = `${window.location.origin}/public/${publicUrl}`;
     navigator.clipboard.writeText(link);
-    alert("Публичная ссылка скопирована!");
+    showInfo("Публичная ссылка скопирована!");
   };
 
   if (loading) {
@@ -159,6 +172,13 @@ const ListChessboards = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false, chessboard: null })}
+        onConfirm={confirmDelete}
+        title="Подтверждение удаления"
+        description={`Вы уверены, что хотите удалить шахматку "${deleteDialog.chessboard?.name}"?`}
+      />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Шахматки</h1>
         <Button

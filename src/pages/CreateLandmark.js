@@ -3,6 +3,7 @@ import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 // Заменяем импорт функции загрузки с Cloudinary на Firebase Storage
 import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
+import { showSuccess } from '../utils/notifications';
 
 import {
   Box,
@@ -114,7 +115,7 @@ function CreateLandmark() {
       setDescription("");
       setImages([]);
 
-      alert("Достопримечательность создана!");
+      showSuccess("Достопримечательность создана!");
     } catch (error) {
       console.error("Ошибка создания достопримечательности:", error);
     } finally {

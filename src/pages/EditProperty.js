@@ -6,6 +6,7 @@ import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore
 // Импорт функций для загрузки и удаления из Firebase Storage
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 import { useParams, useNavigate } from "react-router-dom";
+import { showSuccess, showError } from '../utils/notifications';
 
 import {
   Box,
@@ -309,10 +310,10 @@ function EditProperty() {
       }));
       setImages(updatedImagesState);
 
-      alert("Объект обновлён!");
+      showSuccess("Объект обновлён!");
     } catch (error) {
       console.error("Ошибка обновления объекта:", error);
-      alert("Ошибка при обновлении объекта!");
+      showError("Ошибка при обновлении объекта!");
     } finally {
       setIsSaving(false);
     }
@@ -323,7 +324,7 @@ function EditProperty() {
     if (window.confirm("Вы действительно хотите удалить этот объект?")) {
       try {
         await deleteDoc(doc(db, "properties", id));
-        alert("Объект удалён!");
+        showSuccess("Объект удалён!");
         navigate("/property/list");
       } catch (error) {
         console.error("Ошибка удаления объекта:", error);

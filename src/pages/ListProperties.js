@@ -28,6 +28,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Link } from "react-router-dom";
 // Импорт функции загрузки в Firebase Storage (используем папку "property")
 import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
+import { showError, showSuccess } from '../utils/notifications';
 
 function ListProperties() {
   const [properties, setProperties] = useState([]);
@@ -131,7 +132,7 @@ function ListProperties() {
       const ref = doc(db, "properties", docId);
       const snap = await getDoc(ref);
       if (!snap.exists()) {
-        alert("Документ не найден.");
+        showError("Документ не найден.");
         return;
       }
       const data = snap.data();
@@ -169,7 +170,7 @@ function ListProperties() {
       };
 
       await addDoc(collection(db, "properties"), newData);
-      alert("Дубликат создан!");
+      showSuccess("Дубликат создан!");
       fetchProperties();
     } catch (error) {
       console.error("Ошибка при дублировании объекта:", error);
@@ -413,11 +414,11 @@ function ListProperties() {
         }
       }
 
-      alert("Массовое редактирование выполнено!");
+      showSuccess("Массовое редактирование выполнено!");
       fetchProperties();
     } catch (err) {
       console.error("Ошибка массового редактирования:", err);
-      alert("Ошибка: " + err.message);
+      showError("Ошибка: " + err.message);
     }
   };
 

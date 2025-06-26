@@ -6,6 +6,7 @@ import { db } from "../firebaseConfig";
 import { collection, doc, getDoc, addDoc, updateDoc } from "firebase/firestore";
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage"; // Функции для работы со Storage
 import imageCompression from "browser-image-compression";
+import { showSuccess, showError } from '../utils/notifications';
 
 import {
   Box,
@@ -115,11 +116,11 @@ function EditDeveloper() {
         }
       }
 
-      alert("Сохранено!");
+      showSuccess("Сохранено!");
       navigate("/developers/list");
     } catch (error) {
       console.error("Ошибка сохранения застройщика:", error);
-      alert("Ошибка при сохранении!");
+      showError("Ошибка при сохранении!");
     } finally {
       setIsSaving(false);
     }

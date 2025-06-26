@@ -9,6 +9,7 @@ import { LogOut } from "lucide-react";
 import { cn } from "./lib/utils";
 import { useAuth } from "./AuthContext";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import { Toaster } from 'react-hot-toast';
 
 // Комплексы
 import CreateComplex from "./pages/CreateComplex";
@@ -98,6 +99,7 @@ function App() {
     <Router>
       <AuthProvider>
         <CacheProvider>
+          <Toaster />
           <Routes>
             {/* Публичные маршруты - без оболочки админ-панели */}
             <Route path="/public/:publicId" element={<PublicChessboard />} />

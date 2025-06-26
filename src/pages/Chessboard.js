@@ -49,6 +49,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAuth } from '../AuthContext';
+import { showError, showSuccess } from '../utils/notifications';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 // Создаем пустые структуры данных
 // eslint-disable-next-line no-unused-vars
@@ -900,7 +902,7 @@ const Chessboard = () => {
     try {
       // Валидация
       if (!id && !selectedComplexId) {
-        alert("Пожалуйста, выберите комплекс");
+        showError("Пожалуйста, выберите комплекс");
         setIsSaving(false);
         return;
       }
@@ -913,7 +915,7 @@ const Chessboard = () => {
         );
         const existingChessboards = await getDocs(existingChessboardsQuery);
         if (!existingChessboards.empty) {
-          alert("К этому комплексу уже привязана шахматка");
+          showError("К этому комплексу уже привязана шахматка");
           setIsSaving(false);
           return;
         }
@@ -980,33 +982,46 @@ const Chessboard = () => {
     }
   };
 
+  const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, id: null, name: null });
+
   // Обновляем handleDelete для удаления ссылки из комплекса
   const handleDelete = async (id, name) => {
-    if (window.confirm(`Вы уверены, что хотите удалить шахматку "${name}"?`)) {
-      try {
-        // Получаем данные шахматки
-        const chessboardRef = doc(db, "chessboards", id);
-        const chessboardSnap = await getDoc(chessboardRef);
+    setDeleteDialog({
+      isOpen: true,
+      id,
+      name
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.id || !deleteDialog.name) return;
+    
+    const { id, name } = deleteDialog;
+    try {
+      // Получаем данные шахматки
+      const chessboardRef = doc(db, "chessboards", id);
+      const chessboardSnap = await getDoc(chessboardRef);
+      
+      if (chessboardSnap.exists()) {
+        const chessboardData = chessboardSnap.data();
         
-        if (chessboardSnap.exists()) {
-          const chessboardData = chessboardSnap.data();
-          
-          // Если шахматка привязана к комплексу, удаляем ссылку
-          if (chessboardData.complexId) {
-            await updateDoc(doc(db, "complexes", chessboardData.complexId), {
-              chessboardPublicUrl: null
-            });
-          }
+        // Если шахматка привязана к комплексу, удаляем ссылку
+        if (chessboardData.complexId) {
+          await updateDoc(doc(db, "complexes", chessboardData.complexId), {
+            chessboardPublicUrl: null
+          });
         }
-        
-        // Удаляем саму шахматку
-        await deleteDoc(chessboardRef);
-        alert("Шахматка удалена!");
-        navigate('/chessboard');
-      } catch (error) {
-        console.error("Ошибка удаления:", error);
-        alert("Ошибка при удалении шахматки");
       }
+      
+      // Удаляем саму шахматку
+      await deleteDoc(chessboardRef);
+      showSuccess("Шахматка удалена!");
+      navigate('/chessboard');
+    } catch (error) {
+      console.error("Ошибка удаления:", error);
+      showError("Ошибка при удалении шахматки");
+    } finally {
+      setDeleteDialog({ isOpen: false, id: null, name: null });
     }
   };
 
@@ -1093,6 +1108,13 @@ const Chessboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false, id: null, name: null })}
+        onConfirm={confirmDelete}
+        title="Подтверждение удаления"
+        description={`Вы уверены, что хотите удалить шахматку "${deleteDialog.name}"?`}
+      />
       {/* Breadcrumbs */}
       <nav className="flex text-sm text-gray-600">
         <button 

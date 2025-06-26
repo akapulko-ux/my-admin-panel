@@ -28,6 +28,7 @@ import {
   MenuItem,
   CircularProgress
 } from "@mui/material";
+import { showSuccess } from '../utils/notifications';
 
 function EditComplex() {
   const { id } = useParams();
@@ -285,7 +286,7 @@ function EditComplex() {
         commission
       };
       await updateDoc(doc(db, "complexes", id), updatedData);
-      alert("Комплекс обновлён!");
+      showSuccess("Комплекс обновлён!");
       // Обновляем состояние images, чтобы для всех файлов file стало null
       setImages(finalUrls.map((url) => ({ id: crypto.randomUUID(), url, file: null })));
     } catch (error) {
@@ -303,7 +304,7 @@ function EditComplex() {
         await deleteAllImagesFromStorage();
         // Затем удаляем документ из Firestore
         await deleteDoc(doc(db, "complexes", id));
-        alert("Комплекс и все фотографии удалены!");
+        showSuccess("Комплекс и все фотографии удалены!");
         navigate("/complex/list");
       } catch (error) {
         console.error("Ошибка удаления комплекса:", error);
