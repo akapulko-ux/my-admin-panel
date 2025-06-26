@@ -1,20 +1,14 @@
 // src/pages/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import {
-  AppBar,
-  Box,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  Toolbar,
-  Typography
-} from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
 import { CacheProvider } from "./CacheContext";
 import { AuthProvider } from "./AuthContext";
+import Navigation from "./components/Navigation";
+import { Button } from "./components/ui/button";
+import { LogOut } from "lucide-react";
+import { cn } from "./lib/utils";
+import { useAuth } from "./AuthContext";
+import ProtectedRoute from "./pages/ProtectedRoute";
 
 // Комплексы
 import CreateComplex from "./pages/CreateComplex";
@@ -50,14 +44,9 @@ import ChessboardOverview from "./pages/ChessboardOverview";
 // Прочее
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
-import { useAuth } from "./AuthContext";
-import ProtectedRoute from "./pages/ProtectedRoute";
 
-function App() {
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const { currentUser, logout, role } = useAuth();
-
-  const toggleDrawer = (open) => () => setDrawerOpen(open);
+const AdminLayout = ({ children }) => {
+  const { currentUser, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -68,220 +57,172 @@ function App() {
   };
 
   return (
+    <div className="flex h-screen">
+      <Navigation />
+      <div className="flex-1 flex flex-col">
+        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex h-14 items-center px-6 justify-between">
+            <Link 
+              to="/" 
+              className={cn(
+                "text-lg font-semibold transition-colors hover:text-primary",
+                "flex items-center gap-2"
+              )}
+            >
+              IT Agent Admin Panel
+            </Link>
+            
+            {currentUser && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Выйти</span>
+              </Button>
+            )}
+          </div>
+        </header>
+        <main className="flex-1 overflow-auto p-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+function App() {
+  return (
     <Router>
       <AuthProvider>
         <CacheProvider>
-          <AppBar position="static">
-            <Toolbar>
-              {role !== 'застройщик' && (
-                <IconButton 
-                  edge="start" 
-                  color="inherit" 
-                  onClick={toggleDrawer(true)} 
-                  sx={{ mr: 2 }}
-                >
-                  <MenuIcon />
-                </IconButton>
-              )}
-              <Typography 
-                variant="h6" 
-                component={Link} 
-                to="/" 
-                sx={{ 
-                  flexGrow: 1,
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  '&:hover': {
-                    opacity: 0.8
-                  },
-                  cursor: 'pointer'
-                }}
-              >
-                IT Agent Admin Panel
-              </Typography>
-              {currentUser ? (
-                <IconButton color="inherit" onClick={handleLogout}>
-                  Выйти
-                </IconButton>
-              ) : null}
-            </Toolbar>
-          </AppBar>
+          <Routes>
+            {/* Публичные маршруты - без оболочки админ-панели */}
+            <Route path="/public/:publicId" element={<PublicChessboard />} />
+            <Route path="/public-chessboard/:publicId" element={<PublicChessboard />} />
+            <Route path="/chessboard-overview/:publicId" element={<ChessboardOverview />} />
 
-          <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-            <Box sx={{ width: 240 }} onClick={toggleDrawer(false)}>
-              <List>
-                {/* Комплексы */}
-                <ListItem button component={Link} to="/complex/new">
-                  <ListItemText primary="Создать Комплекс" />
-                </ListItem>
-                <ListItem button component={Link} to="/complex/list">
-                  <ListItemText primary="Список Комплексов" />
-                </ListItem>
+            {/* Административные маршруты - с оболочкой админ-панели */}
+            <Route path="*" element={
+              <AdminLayout>
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  
+                  <Route path="/chessboard" element={
+                    <ProtectedRoute>
+                      <ListChessboards />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/chessboard/:id" element={
+                    <ProtectedRoute>
+                      <Chessboard />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Объекты */}
-                <ListItem button component={Link} to="/property/new">
-                  <ListItemText primary="Создать Объект" />
-                </ListItem>
-                <ListItem button component={Link} to="/property/list">
-                  <ListItemText primary="Список Объектов" />
-                </ListItem>
-                <ListItem button component={Link} to="/property/gallery">
-                  <ListItemText primary="Галерея Объектов" />
-                </ListItem>
+                  {/* Комплексы */}
+                  <Route path="/complex/new" element={
+                    <ProtectedRoute>
+                      <CreateComplex />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/complex/edit/:id" element={
+                    <ProtectedRoute>
+                      <EditComplex />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/complex/list" element={
+                    <ProtectedRoute>
+                      <ListComplexes />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Достопримечательности */}
-                <ListItem button component={Link} to="/landmark/new">
-                  <ListItemText primary="Создать Достопримечательность" />
-                </ListItem>
-                <ListItem button component={Link} to="/landmark/list">
-                  <ListItemText primary="Список Достопримечательностей" />
-                </ListItem>
+                  {/* Объекты */}
+                  <Route path="/property/new" element={
+                    <ProtectedRoute>
+                      <CreateProperty />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/property/edit/:id" element={
+                    <ProtectedRoute>
+                      <EditProperty />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/property/list" element={
+                    <ProtectedRoute>
+                      <ListProperties />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/property/gallery" element={
+                    <ProtectedRoute>
+                      <PropertiesGallery />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/property/:id" element={
+                    <ProtectedRoute>
+                      <PropertyDetail />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Застройщики */}
-                <ListItem button component={Link} to="/developers/list">
-                  <ListItemText primary="Застройщики" />
-                </ListItem>
+                  {/* Достопримечательности */}
+                  <Route path="/landmark/new" element={
+                    <ProtectedRoute>
+                      <CreateLandmark />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/landmark/edit/:id" element={
+                    <ProtectedRoute>
+                      <EditLandmark />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/landmark/list" element={
+                    <ProtectedRoute>
+                      <ListLandmarks />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Поддержка */}
-                <ListItem button component={Link} to="/support/chats">
-                  <ListItemText primary="Чаты поддержки" />
-                </ListItem>
+                  {/* Застройщики */}
+                  <Route path="/developers/list" element={
+                    <ProtectedRoute>
+                      <ListDevelopers />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/developers/edit/:id" element={
+                    <ProtectedRoute>
+                      <EditDeveloper />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Шахматка */}
-                <ListItem button component={Link} to="/chessboard">
-                  <ListItemText primary="Шахматки" />
-                </ListItem>
+                  {/* Поддержка */}
+                  <Route path="/support/chats" element={
+                    <ProtectedRoute>
+                      <SupportChats />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/support/chats/:id" element={
+                    <ProtectedRoute>
+                      <SupportChatDetail />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Управление пользователями */}
-                <ListItem button component={Link} to="/users/manage">
-                  <ListItemText primary="Управление пользователями" />
-                </ListItem>
-              </List>
-            </Box>
-          </Drawer>
+                  {/* Управление пользователями */}
+                  <Route path="/users/manage" element={
+                    <ProtectedRoute>
+                      <UserManagement />
+                    </ProtectedRoute>
+                  } />
 
-          <Box sx={{ p: 2 }}>
-            <Routes>
-              {/* Авторизация */}
-              <Route path="/login" element={<LoginPage />} />
-
-              {/* Шахматки (защищенные) */}
-              <Route path="/chessboard" element={
-                <ProtectedRoute>
-                  <ListChessboards />
-                </ProtectedRoute>
-              } />
-              <Route path="/chessboard/:id" element={
-                <ProtectedRoute>
-                  <Chessboard />
-                </ProtectedRoute>
-              } />
-
-              {/* Публичные страницы шахматки */}
-              <Route path="/public-chessboard/:publicId" element={<PublicChessboard />} />
-              <Route path="/public/:publicId" element={<PublicChessboard />} />
-              <Route path="/chessboard-overview/:publicId" element={<ChessboardOverview />} />
-
-              {/* Комплексы */}
-              <Route path="/complex/new" element={
-                <ProtectedRoute>
-                  <CreateComplex />
-                </ProtectedRoute>
-              } />
-              <Route path="/complex/edit/:id" element={
-                <ProtectedRoute>
-                  <EditComplex />
-                </ProtectedRoute>
-              } />
-              <Route path="/complex/list" element={
-                <ProtectedRoute>
-                  <ListComplexes />
-                </ProtectedRoute>
-              } />
-
-              {/* Объекты */}
-              <Route path="/property/new" element={
-                <ProtectedRoute>
-                  <CreateProperty />
-                </ProtectedRoute>
-              } />
-              <Route path="/property/edit/:id" element={
-                <ProtectedRoute>
-                  <EditProperty />
-                </ProtectedRoute>
-              } />
-              <Route path="/property/list" element={
-                <ProtectedRoute>
-                  <ListProperties />
-                </ProtectedRoute>
-              } />
-              <Route path="/property/gallery" element={
-                <ProtectedRoute>
-                  <PropertiesGallery />
-                </ProtectedRoute>
-              } />
-              <Route path="/property/:id" element={
-                <ProtectedRoute>
-                  <PropertyDetail />
-                </ProtectedRoute>
-              } />
-
-              {/* Достопримечательности */}
-              <Route path="/landmark/new" element={
-                <ProtectedRoute>
-                  <CreateLandmark />
-                </ProtectedRoute>
-              } />
-              <Route path="/landmark/edit/:id" element={
-                <ProtectedRoute>
-                  <EditLandmark />
-                </ProtectedRoute>
-              } />
-              <Route path="/landmark/list" element={
-                <ProtectedRoute>
-                  <ListLandmarks />
-                </ProtectedRoute>
-              } />
-
-              {/* Застройщики */}
-              <Route path="/developers/list" element={
-                <ProtectedRoute>
-                  <ListDevelopers />
-                </ProtectedRoute>
-              } />
-              <Route path="/developers/edit/:id" element={
-                <ProtectedRoute>
-                  <EditDeveloper />
-                </ProtectedRoute>
-              } />
-
-              {/* Поддержка */}
-              <Route path="/support/chats" element={
-                <ProtectedRoute>
-                  <SupportChats />
-                </ProtectedRoute>
-              } />
-              <Route path="/support/chats/:id" element={
-                <ProtectedRoute>
-                  <SupportChatDetail />
-                </ProtectedRoute>
-              } />
-
-              {/* Управление пользователями */}
-              <Route path="/users/manage" element={
-                <ProtectedRoute>
-                  <UserManagement />
-                </ProtectedRoute>
-              } />
-
-              {/* Главная страница */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <PropertiesGallery />
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </Box>
+                  {/* Главная страница */}
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <PropertiesGallery />
+                    </ProtectedRoute>
+                  } />
+                </Routes>
+              </AdminLayout>
+            } />
+          </Routes>
         </CacheProvider>
       </AuthProvider>
     </Router>

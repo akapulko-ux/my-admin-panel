@@ -1,36 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { Button } from './ui/button';
-import { Card } from './ui/card';
+import { cn } from '../lib/utils';
 import {
+  Home,
   Building2,
+  Building,
+  Landmark,
+  Users2,
+  MessageSquare,
   LogOut,
   Menu,
-  MessageSquare,
-  Users2
+  ChevronRight,
+  Plus,
+  LayoutGrid
 } from 'lucide-react';
-import {
-  Box,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Divider
-} from '@mui/material';
-import {
-  Home as HomeIcon,
-  Business as BusinessIcon,
-  LocationCity as LocationCityIcon,
-  Apartment as ApartmentIcon,
-  People as PeopleIcon,
-  Support as SupportIcon,
-  GridView as GridViewIcon
-} from '@mui/icons-material';
 
 // Определяем доступ к маршрутам для разных ролей
 const ROUTE_ACCESS = {
-  admin: ['*'], // Админ имеет доступ ко всем маршрутам
+  admin: ['*'],
   модератор: [
     '/property/*',
     '/complex/*',
@@ -59,6 +48,8 @@ const ROUTE_ACCESS = {
 
 const Navigation = () => {
   const { role } = useAuth();
+  const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Для застройщика не показываем боковую панель
   if (role === 'застройщик') {
@@ -78,109 +69,120 @@ const Navigation = () => {
     });
   };
 
+  const NavItem = ({ to, icon: Icon, children, isSubItem = false }) => {
+    const isActive = location.pathname === to;
+    
+    return (
+      <Link 
+        to={to}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
+          isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-accent-foreground",
+          isSubItem && "pl-9"
+        )}
+      >
+        {!isSubItem && Icon && <Icon className="h-4 w-4" />}
+        <span className={cn(
+          "flex-1 truncate",
+          isCollapsed && !isSubItem && "hidden"
+        )}>
+          {children}
+        </span>
+        {isActive && <ChevronRight className="h-3 w-3 ml-auto" />}
+      </Link>
+    );
+  };
+
   return (
-    <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-      <List component="nav">
-        {/* Галерея объектов (доступна всем) */}
-        <ListItem button component={Link} to="/property/gallery">
-          <ListItemIcon>
-            <HomeIcon />
-          </ListItemIcon>
-          <ListItemText primary="Галерея объектов" />
-        </ListItem>
+    <div className={cn(
+      "flex flex-col gap-4 p-4 h-screen border-r",
+      isCollapsed ? "w-[70px]" : "w-[250px]"
+    )}>
+      <div className="flex items-center justify-between">
+        {!isCollapsed && (
+          <span className="text-lg font-semibold">
+            Админ панель
+          </span>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="ml-auto"
+        >
+          <Menu className="h-4 w-4" />
+        </Button>
+      </div>
 
-        <Divider />
+      <nav className="space-y-1">
+        <NavItem to="/property/gallery" icon={Home}>
+          Галерея объектов
+        </NavItem>
 
-        {/* Объекты - доступны админу, модератору и агентам */}
         {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
           <>
-            <ListItem button component={Link} to="/property/list">
-              <ListItemIcon>
-                <ApartmentIcon />
-              </ListItemIcon>
-              <ListItemText primary="Объекты" />
-            </ListItem>
-            {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
-              <ListItem button component={Link} to="/property/new">
-                <ListItemText primary="Создать объект" inset />
-              </ListItem>
+            <NavItem to="/property/list" icon={Building}>
+              Объекты
+            </NavItem>
+            {!isCollapsed && (
+              <NavItem to="/property/new" isSubItem>
+                Создать объект
+              </NavItem>
             )}
           </>
         )}
 
-        {/* Комплексы - доступны админу и модератору */}
         {['admin', 'модератор'].includes(role) && (
           <>
-            <ListItem button component={Link} to="/complex/list">
-              <ListItemIcon>
-                <LocationCityIcon />
-              </ListItemIcon>
-              <ListItemText primary="Комплексы" />
-            </ListItem>
-            <ListItem button component={Link} to="/complex/new">
-              <ListItemText primary="Создать комплекс" inset />
-            </ListItem>
+            <NavItem to="/complex/list" icon={Building2}>
+              Комплексы
+            </NavItem>
+            {!isCollapsed && (
+              <NavItem to="/complex/new" isSubItem>
+                Создать комплекс
+              </NavItem>
+            )}
           </>
         )}
 
-        {/* Застройщики - доступны админу и модератору */}
         {['admin', 'модератор'].includes(role) && (
-          <ListItem button component={Link} to="/developers/list">
-            <ListItemIcon>
-              <BusinessIcon />
-            </ListItemIcon>
-            <ListItemText primary="Застройщики" />
-          </ListItem>
+          <NavItem to="/developers/list" icon={Building2}>
+            Застройщики
+          </NavItem>
         )}
 
-        {/* Достопримечательности - доступны админу и модератору */}
         {['admin', 'модератор'].includes(role) && (
           <>
-            <ListItem button component={Link} to="/landmark/list">
-              <ListItemIcon>
-                <LocationCityIcon />
-              </ListItemIcon>
-              <ListItemText primary="Достопримечательности" />
-            </ListItem>
-            <ListItem button component={Link} to="/landmark/new">
-              <ListItemText primary="Создать достопримечательность" inset />
-            </ListItem>
+            <NavItem to="/landmark/list" icon={Landmark}>
+              Достопримечательности
+            </NavItem>
+            {!isCollapsed && (
+              <NavItem to="/landmark/new" isSubItem>
+                Создать достопримечательность
+              </NavItem>
+            )}
           </>
         )}
 
-        <Divider />
-
-        {/* Шахматка */}
         {['admin', 'модератор'].includes(role) && (
-          <ListItem button component={Link} to="/chessboard">
-            <ListItemIcon>
-              <GridViewIcon />
-            </ListItemIcon>
-            <ListItemText primary="Шахматки" />
-          </ListItem>
+          <NavItem to="/chessboard" icon={LayoutGrid}>
+            Шахматки
+          </NavItem>
         )}
 
-        {/* Поддержка - доступна всем кроме застройщика */}
         {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
-          <ListItem button component={Link} to="/support/chats">
-            <ListItemIcon>
-              <SupportIcon />
-            </ListItemIcon>
-            <ListItemText primary="Поддержка" />
-          </ListItem>
+          <NavItem to="/support/chats" icon={MessageSquare}>
+            Поддержка
+          </NavItem>
         )}
 
-        {/* Управление пользователями - только для админа */}
         {role === 'admin' && (
-          <ListItem button component={Link} to="/users/manage">
-            <ListItemIcon>
-              <PeopleIcon />
-            </ListItemIcon>
-            <ListItemText primary="Управление пользователями" />
-          </ListItem>
+          <NavItem to="/users/manage" icon={Users2}>
+            Управление пользователями
+          </NavItem>
         )}
-      </List>
-    </Box>
+      </nav>
+    </div>
   );
 };
 

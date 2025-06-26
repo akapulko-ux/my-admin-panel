@@ -55,9 +55,11 @@ const getStatusColor = (status) => {
   }
 };
 
-const PublicChessboard = () => {
+const PublicChessboard = ({ publicId: propPublicId }) => {
   const navigate = useNavigate();
-  const { publicId } = useParams();
+  const { publicId: urlPublicId } = useParams();
+  const publicId = propPublicId || urlPublicId;
+  
   const [chessboard, setChessboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

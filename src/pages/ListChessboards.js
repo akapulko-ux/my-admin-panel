@@ -112,7 +112,7 @@ const ListChessboards = () => {
 
   // Копирование публичной ссылки
   const copyPublicLink = (publicUrl) => {
-    const link = `${window.location.origin}/public-chessboard/${publicUrl}`;
+    const link = `${window.location.origin}/public/${publicUrl}`;
     navigator.clipboard.writeText(link);
     alert("Публичная ссылка скопирована!");
   };
@@ -163,23 +163,14 @@ const ListChessboards = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <h2 className="text-xl font-semibold">{chessboard.name || "Без названия"}</h2>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => navigate(`/chessboard/${chessboard.id}`)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Редактировать
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(chessboard.id, chessboard.name)}
-                        title="Удалить"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(chessboard.id, chessboard.name)}
+                      title="Удалить"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
                   </div>
                 </CardHeader>
                 
@@ -221,14 +212,24 @@ const ListChessboards = () => {
                       <div className="flex items-center gap-2 text-xs text-gray-500 border-t pt-3 mb-3">
                         <LinkIcon className="w-3 h-3" />
                         <span className="flex-1">Публичная ссылка доступна</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyPublicLink(chessboard.publicUrl)}
-                          title="Копировать ссылку"
-                        >
-                          <LinkIcon className="w-3 h-3" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyPublicLink(chessboard.publicUrl)}
+                            title="Копировать ссылку"
+                          >
+                            <LinkIcon className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => window.open(`/public/${chessboard.publicUrl}`, '_blank')}
+                            title="Открыть в новой вкладке"
+                          >
+                            <Eye className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     )}
 
