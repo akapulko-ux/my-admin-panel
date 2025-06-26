@@ -151,7 +151,7 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                   <Building className="w-8 h-8 text-blue-600" />
                   <div>
                     <CardTitle className="text-2xl">{complex.name}</CardTitle>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="flex flex-col gap-2 mt-4">
                       {complex.district && (
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-gray-500" />
@@ -164,37 +164,12 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                           <span className="text-gray-600">{complex.developer}</span>
                         </div>
                       )}
-                      {complex.priceFrom && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Цена от: ${complex.priceFrom}</span>
-                        </div>
-                      )}
-                      {complex.areaRange && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Площадь: {complex.areaRange}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
               </CardHeader>
             </Card>
           )}
-
-          {/* Карточка шахматки */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Building className="w-8 h-8 text-blue-600" />
-                <div>
-                  <CardTitle className="text-2xl">{chessboard.name || "Без названия"}</CardTitle>
-                  {chessboard.description && (
-                    <p className="text-gray-600 mt-1">{chessboard.description}</p>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
         </div>
 
         {/* Секции */}

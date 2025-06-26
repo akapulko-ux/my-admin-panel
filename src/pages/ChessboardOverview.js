@@ -228,7 +228,7 @@ const ChessboardOverview = () => {
                     <Building className="w-8 h-8 text-blue-400" />
                     <div className="flex-1">
                       <h2 className="text-2xl text-white">{complex.name}</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="flex flex-col gap-2 mt-4">
                         {complex.district && (
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4 text-gray-400" />
@@ -241,38 +241,12 @@ const ChessboardOverview = () => {
                             <span className="text-gray-300">{complex.developer}</span>
                           </div>
                         )}
-                        {complex.priceFrom && (
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-300">Цена от: ${complex.priceFrom}</span>
-                          </div>
-                        )}
-                        {complex.areaRange && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-300">Площадь: {complex.areaRange}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
                 </CardHeader>
               </Card>
             )}
-
-            {/* Заголовок шахматки */}
-            <Card className="mb-6 bg-white/5 border-white/10">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <Building className="w-8 h-8 text-blue-400" />
-                  <div>
-                    <h2 className="text-2xl text-white">{chessboard.name || "Без названия"}</h2>
-                    {chessboard.description && (
-                      <p className="text-gray-400 mt-1">{chessboard.description}</p>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
 
             {/* Секции */}
             <div className="space-y-6">
