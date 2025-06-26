@@ -1,5 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import {
+  Building2,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Users2
+} from 'lucide-react';
 import {
   Box,
   List,
@@ -15,10 +25,8 @@ import {
   Apartment as ApartmentIcon,
   People as PeopleIcon,
   Support as SupportIcon,
-  GridView as GridViewIcon,
-  AccountBox as AccountBoxIcon
+  GridView as GridViewIcon
 } from '@mui/icons-material';
-import { useAuth } from '../AuthContext';
 
 // Определяем доступ к маршрутам для разных ролей
 const ROUTE_ACCESS = {
@@ -142,13 +150,13 @@ const Navigation = () => {
 
         <Divider />
 
-        {/* Шахматка - доступна админу и модератору */}
+        {/* Шахматка */}
         {['admin', 'модератор'].includes(role) && (
           <ListItem button component={Link} to="/chessboard">
             <ListItemIcon>
               <GridViewIcon />
             </ListItemIcon>
-            <ListItemText primary="Шахматка" />
+            <ListItemText primary="Шахматки" />
           </ListItem>
         )}
 

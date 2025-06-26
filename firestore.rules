@@ -27,6 +27,14 @@ service cloud.firestore {
       return hasRoleInToken('agent') || hasRoleInFirestore('agent');
     }
 
+    // === Шахматки ===
+    match /chessboards/{chessboardId} {
+      // Чтение разрешено всем (для публичных ссылок)
+      allow read: if true;
+      // Создание/изменение/удаление только для админов и модераторов
+      allow create, update, delete: if isAdmin() || hasRoleInFirestore('модератор');
+    }
+
     // === Коллекция агентов и всё внутри неё ===
     match /agents/{agentId} {
       // админ может всё, агент — только свои данные  
