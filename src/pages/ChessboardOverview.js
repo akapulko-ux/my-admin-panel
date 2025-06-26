@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from "../firebaseConfig";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Building, Home, MapPin, ArrowLeft } from "lucide-react";
+import { Building, Home, MapPin, ArrowLeft, DollarSign } from "lucide-react";
 import { Button } from "../components/ui/button";
 
 // Утилиты для форматирования
@@ -58,6 +58,7 @@ const ChessboardOverview = () => {
   const { publicId } = useParams();
   const navigate = useNavigate();
   const [chessboard, setChessboard] = useState(null);
+  const [complex, setComplex] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [scale, setScale] = useState(1);
@@ -80,6 +81,14 @@ const ChessboardOverview = () => {
           ...querySnapshot.docs[0].data()
         };
         setChessboard(chessboardData);
+
+        // Если есть привязанный комплекс, загружаем его данные
+        if (chessboardData.complexId) {
+          const complexDoc = await getDoc(doc(db, "complexes", chessboardData.complexId));
+          if (complexDoc.exists()) {
+            setComplex(complexDoc.data());
+          }
+        }
       } catch (error) {
         console.error("Ошибка загрузки:", error);
         setError("Ошибка при загрузке шахматки");
@@ -167,7 +176,46 @@ const ChessboardOverview = () => {
           }}
         >
           <div ref={contentRef} className="w-fit p-4">
-            {/* Заголовок */}
+            {/* Информация о комплексе */}
+            {complex && (
+              <Card className="mb-6 bg-white/5 border-white/10">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <Building className="w-8 h-8 text-blue-400" />
+                    <div className="flex-1">
+                      <h2 className="text-2xl text-white">{complex.name}</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        {complex.district && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-300">{complex.district}</span>
+                          </div>
+                        )}
+                        {complex.developer && (
+                          <div className="flex items-center gap-2">
+                            <Building className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-300">{complex.developer}</span>
+                          </div>
+                        )}
+                        {complex.priceFrom && (
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-300">Цена от: ${complex.priceFrom}</span>
+                          </div>
+                        )}
+                        {complex.areaRange && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-300">Площадь: {complex.areaRange}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            )}
+
+            {/* Заголовок шахматки */}
             <Card className="mb-6 bg-white/5 border-white/10">
               <CardHeader>
                 <div className="flex items-center gap-3">

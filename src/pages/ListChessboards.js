@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, deleteDoc, doc, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, orderBy, query, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -18,11 +18,38 @@ const ListChessboards = () => {
   const navigate = useNavigate();
   const [chessboards, setChessboards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [complexNames, setComplexNames] = useState({});
 
   // Загрузка списка шахматок
   useEffect(() => {
     fetchChessboards();
   }, []);
+
+  // Загрузка имен комплексов
+  useEffect(() => {
+    const loadComplexNames = async () => {
+      try {
+        const complexIds = [...new Set(chessboards
+          .map(board => board.complexId)
+          .filter(Boolean))];
+
+        if (complexIds.length === 0) return;
+
+        const names = {};
+        for (const complexId of complexIds) {
+          const docSnap = await getDoc(doc(db, "complexes", complexId));
+          if (docSnap.exists()) {
+            names[complexId] = docSnap.data().name;
+          }
+        }
+        setComplexNames(names);
+      } catch (error) {
+        console.error("Ошибка загрузки имен комплексов:", error);
+      }
+    };
+
+    loadComplexNames();
+  }, [chessboards]);
 
   const fetchChessboards = async () => {
     setLoading(true);
@@ -42,9 +69,17 @@ const ListChessboards = () => {
   };
 
   // Удаление шахматки
-  const handleDelete = async (id, name) => {
+  const handleDelete = async (id, name, complexId) => {
     if (window.confirm(`Вы уверены, что хотите удалить шахматку "${name}"?`)) {
       try {
+        // Если шахматка привязана к комплексу, удаляем ссылку
+        if (complexId) {
+          await updateDoc(doc(db, "complexes", complexId), {
+            chessboardPublicUrl: null
+          });
+        }
+
+        // Удаляем саму шахматку
         await deleteDoc(doc(db, "chessboards", id));
         setChessboards(prev => prev.filter(item => item.id !== id));
         alert("Шахматка удалена!");
@@ -163,7 +198,7 @@ const ListChessboards = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleDelete(chessboard.id, chessboard.name)}
+                      onClick={() => handleDelete(chessboard.id, chessboard.name, chessboard.complexId)}
                       title="Удалить"
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
@@ -173,6 +208,14 @@ const ListChessboards = () => {
                 
                 <CardContent className="pt-0">
                   <div className="space-y-3">
+                    {/* Информация о комплексе */}
+                    {chessboard.complexId && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Building className="w-4 h-4" />
+                        <span>Комплекс: {complexNames[chessboard.complexId] || "Загрузка..."}</span>
+                      </div>
+                    )}
+
                     {/* Статистика */}
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center">

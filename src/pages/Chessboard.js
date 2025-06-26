@@ -2,7 +2,19 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from "../firebaseConfig";
-import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp, setDoc } from "firebase/firestore";
+import { 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  addDoc, 
+  collection, 
+  serverTimestamp, 
+  setDoc,
+  getDocs,
+  query,
+  where,
+  deleteDoc
+} from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -16,7 +28,8 @@ import {
   MapPin,
   DollarSign,
   Copy,
-  GripVertical
+  GripVertical,
+  AlertCircle
 } from "lucide-react";
 import {
   DndContext,
@@ -553,12 +566,17 @@ const SortableUnit = ({
 const Chessboard = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [sections, setSections] = useState([]);
+
+  // Состояния для работы с комплексами
+  const [complexes, setComplexes] = useState([]);
+  const [selectedComplexId, setSelectedComplexId] = useState('');
+  const [complexError, setComplexError] = useState('');
 
   // Оборачиваем объекты в useMemo
   const defaultUnit = useMemo(() => ({
@@ -592,9 +610,9 @@ const Chessboard = () => {
         chessboardId,
         action,
         timestamp: serverTimestamp(),
-        userId: user.uid,
-        userName: user.email,
-        userRole: role
+        userId: currentUser.uid,
+        userName: currentUser.email,
+        userRole: currentUser.role
       });
     } catch (error) {
       console.error("Error creating history record:", error);
@@ -610,8 +628,8 @@ const Chessboard = () => {
         chessboardId,
         chessboardName: name,
         createdAt: serverTimestamp(),
-        createdBy: user.uid,
-        createdByEmail: user.email,
+        createdBy: currentUser.uid,
+        createdByEmail: currentUser.email,
         status: "unread",
         forRoles: ["admin", "застройщик"]
       });
@@ -624,56 +642,101 @@ const Chessboard = () => {
   const setupAccessRights = async (chessboardId) => {
     try {
       await setDoc(doc(db, "chessboard_access", chessboardId), {
-        owners: [user.uid],
+        owners: [currentUser.uid],
         editors: [],
         viewers: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        createdBy: user.uid
+        createdBy: currentUser.uid
       });
     } catch (error) {
       console.error("Error setting up access rights:", error);
     }
   };
 
-  // Оборачиваем loadChessboard в useCallback
-  const loadChessboard = useCallback(async () => {
-    try {
-      const docRef = doc(db, "chessboards", id);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setName(data.name || "");
-        setDescription(data.description || "");
-        
-        const processedSections = data.sections.map(section => ({
-          ...defaultSection,
-          ...section,
-          floors: section.floors.map(floor => ({
-            ...defaultFloor,
-            ...floor,
-            units: floor.units.map(unit => ({
-              ...defaultUnit,
-              ...unit
-            }))
-          }))
-        }));
-        
-        setSections(processedSections);
-      }
-    } catch (error) {
-      console.error("Error loading chessboard:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [id, defaultSection, defaultFloor, defaultUnit]);
-
-  // Инициализация данных
+  // Загрузка списка доступных комплексов
   useEffect(() => {
+    const loadComplexes = async () => {
+      try {
+        // Получаем все комплексы
+        const complexesSnapshot = await getDocs(collection(db, "complexes"));
+        const allComplexes = complexesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name
+        }));
+
+        // Получаем все шахматки, чтобы проверить какие комплексы уже имеют шахматку
+        const chessboardsSnapshot = await getDocs(collection(db, "chessboards"));
+        const usedComplexIds = new Set(
+          chessboardsSnapshot.docs
+            .map(doc => doc.data().complexId)
+            .filter(Boolean)
+        );
+
+        // Фильтруем комплексы, оставляя только те, у которых нет шахматки
+        const availableComplexes = allComplexes.filter(complex => !usedComplexIds.has(complex.id));
+        
+        setComplexes(availableComplexes);
+      } catch (error) {
+        console.error("Ошибка загрузки комплексов:", error);
+        setComplexError("Ошибка загрузки списка комплексов");
+      }
+    };
+
+    if (!id || id === 'new') {
+      loadComplexes();
+    }
+  }, [id]);
+
+  // Загрузка данных шахматки
+  useEffect(() => {
+    const loadChessboard = async () => {
+      setLoading(true);
+      try {
+        const docRef = doc(db, "chessboards", id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          
+          // Если есть привязанный комплекс, загружаем его данные
+          if (data.complexId) {
+            const complexDoc = await getDoc(doc(db, "complexes", data.complexId));
+            if (complexDoc.exists()) {
+              const complexData = complexDoc.data();
+              setName(complexData.name || "");
+            }
+          }
+          
+          setDescription(data.description || "");
+          setSelectedComplexId(data.complexId || "");
+          
+          const processedSections = data.sections.map(section => ({
+            ...defaultSection,
+            ...section,
+            floors: section.floors.map(floor => ({
+              ...defaultFloor,
+              ...floor,
+              units: floor.units.map(unit => ({
+                ...defaultUnit,
+                ...unit
+              }))
+            }))
+          }));
+          
+          setSections(processedSections);
+        }
+      } catch (error) {
+        console.error("Error loading chessboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (id && id !== "new") {
       loadChessboard();
     } else {
+      // Инициализация новой шахматки
       const initialSection = {
         ...defaultSection,
         name: "Секция 1",
@@ -689,7 +752,7 @@ const Chessboard = () => {
       setSections([initialSection]);
       setLoading(false);
     }
-  }, [id, defaultSection, defaultFloor, defaultUnit, loadChessboard]);
+  }, [id, defaultSection, defaultFloor, defaultUnit]);
 
   // Добавление новой секции
   const addSection = () => {
@@ -785,78 +848,121 @@ const Chessboard = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Получаем текущий publicUrl для существующей шахматки
-      let existingPublicUrl = "";
-      if (id && id !== "new") {
-        const docRef = doc(db, "chessboards", id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          existingPublicUrl = docSnap.data().publicUrl || "";
+      // Валидация
+      if (!id && !selectedComplexId) {
+        alert("Пожалуйста, выберите комплекс");
+        setIsSaving(false);
+        return;
+      }
+
+      // Проверяем, не привязана ли уже шахматка к этому комплексу
+      if (!id) {
+        const existingChessboardsQuery = query(
+          collection(db, "chessboards"),
+          where("complexId", "==", selectedComplexId)
+        );
+        const existingChessboards = await getDocs(existingChessboardsQuery);
+        if (!existingChessboards.empty) {
+          alert("К этому комплексу уже привязана шахматка");
+          setIsSaving(false);
+          return;
         }
       }
 
+      // Получаем актуальное название комплекса
+      let complexName = "";
+      if (selectedComplexId) {
+        const complexDoc = await getDoc(doc(db, "complexes", selectedComplexId));
+        if (complexDoc.exists()) {
+          complexName = complexDoc.data().name || "";
+        }
+      }
+
+      // Подготовка данных
       const chessboardData = {
-        name,
+        name: complexName, // Всегда используем название из комплекса
         description,
-        publicUrl: id === "new" ? Math.random().toString(36).substring(2, 15) : existingPublicUrl,
-        sections: sections.map(section => ({
-          name: section.name,
-          floors: section.floors.map(floor => ({
-            floor: floor.floor,
-            units: floor.units.map(unit => ({
-              id: unit.id,
-              propertyType: unit.propertyType || defaultUnit.propertyType,
-              floors: unit.floors || defaultUnit.floors,
-              rooms: unit.rooms || defaultUnit.rooms,
-              bathrooms: unit.bathrooms || defaultUnit.bathrooms,
-              area: unit.area || defaultUnit.area,
-              view: unit.view || defaultUnit.view,
-              priceUSD: unit.priceUSD || defaultUnit.priceUSD,
-              priceIDR: unit.priceIDR || defaultUnit.priceIDR,
-              showPriceIDR: unit.showPriceIDR ?? defaultUnit.showPriceIDR,
-              status: unit.status || defaultUnit.status
-            }))
-          }))
-        })),
-        updatedAt: serverTimestamp()
+        sections,
+        updatedAt: serverTimestamp(),
+        complexId: selectedComplexId || null
       };
 
-      if (!id || id === "new") {
+      if (id && id !== "new") {
+        // Обновление существующей шахматки
+        const docRef = doc(db, "chessboards", id);
+        await updateDoc(docRef, chessboardData);
+
+        // Создаем запись в истории
+        await createHistoryRecord(id, "update");
+        
+        // Создаем уведомление
+        await createNotification(id, "update");
+      } else {
         // Создание новой шахматки
         chessboardData.createdAt = serverTimestamp();
-        chessboardData.createdBy = user.uid;
-        chessboardData.createdByEmail = user.email;
+        chessboardData.createdBy = currentUser.uid;
+        chessboardData.createdByEmail = currentUser.email;
+        
+        // Генерируем публичный URL
+        const publicUrl = generatePublicId();
+        chessboardData.publicUrl = publicUrl;
         
         const docRef = await addDoc(collection(db, "chessboards"), chessboardData);
+        
+        // Обновляем комплекс, добавляя ссылку на шахматку
+        if (selectedComplexId) {
+          await updateDoc(doc(db, "complexes", selectedComplexId), {
+            chessboardPublicUrl: publicUrl
+          });
+        }
+
+        // Настраиваем права доступа
+        await setupAccessRights(docRef.id);
         
         // Создаем запись в истории
         await createHistoryRecord(docRef.id, "create");
         
-        // Настраиваем права доступа
-        await setupAccessRights(docRef.id);
-        
         // Создаем уведомление
         await createNotification(docRef.id, "create");
-        
-        navigate("/chessboard");
-      } else {
-        // Обновление существующей шахматки
-        const docRef = doc(db, "chessboards", id);
-        await updateDoc(docRef, chessboardData);
-        
-        // Создаем запись в истории об обновлении
-        await createHistoryRecord(id, "update");
-        
-        // Создаем уведомление об обновлении
-        await createNotification(id, "update");
-        
-        navigate("/chessboard");
       }
+
+      // После всех операций перенаправляем на список шахматок
+      navigate("/chessboard");
     } catch (error) {
-      console.error("Error saving chessboard:", error);
-      alert("Ошибка при сохранении шахматки");
+      console.error("Ошибка сохранения:", error);
+      alert(handleFirestoreError(error));
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Обновляем handleDelete для удаления ссылки из комплекса
+  const handleDelete = async (id, name) => {
+    if (window.confirm(`Вы уверены, что хотите удалить шахматку "${name}"?`)) {
+      try {
+        // Получаем данные шахматки
+        const chessboardRef = doc(db, "chessboards", id);
+        const chessboardSnap = await getDoc(chessboardRef);
+        
+        if (chessboardSnap.exists()) {
+          const chessboardData = chessboardSnap.data();
+          
+          // Если шахматка привязана к комплексу, удаляем ссылку
+          if (chessboardData.complexId) {
+            await updateDoc(doc(db, "complexes", chessboardData.complexId), {
+              chessboardPublicUrl: null
+            });
+          }
+        }
+        
+        // Удаляем саму шахматку
+        await deleteDoc(chessboardRef);
+        alert("Шахматка удалена!");
+        navigate('/chessboard');
+      } catch (error) {
+        console.error("Ошибка удаления:", error);
+        alert("Ошибка при удалении шахматки");
+      }
     }
   };
 
@@ -998,24 +1104,68 @@ const Chessboard = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Название</label>
-            <input
-              type="text"
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Введите название объекта"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Описание</label>
+          {/* Поле выбора комплекса (только для новой шахматки) */}
+          {(!id || id === "new") && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Выберите комплекс *
+              </label>
+              <select
+                value={selectedComplexId}
+                onChange={(e) => {
+                  setSelectedComplexId(e.target.value);
+                  // Автоматически устанавливаем название из выбранного комплекса
+                  const selectedComplex = complexes.find(c => c.id === e.target.value);
+                  if (selectedComplex) {
+                    setName(selectedComplex.name);
+                  }
+                }}
+                className="w-full p-2 border rounded-md"
+                required
+              >
+                <option value="">Выберите комплекс</option>
+                {complexes.map((complex) => (
+                  <option key={complex.id} value={complex.id}>
+                    {complex.name}
+                  </option>
+                ))}
+              </select>
+              {complexError && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {complexError}
+                </p>
+              )}
+              {complexes.length === 0 && !complexError && (
+                <p className="text-amber-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  Нет доступных комплексов без шахматки
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Отображаем название комплекса при редактировании */}
+          {id && id !== "new" && selectedComplexId && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Комплекс
+              </label>
+              <div className="p-2 bg-gray-50 border rounded-md">
+                {name}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Описание
+            </label>
             <textarea
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)} 
-              rows={3} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Описание объекта"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              rows={3}
             />
           </div>
         </CardContent>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from "../firebaseConfig";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Building, Home, MapPin, Eye } from "lucide-react";
+import { Building, Home, MapPin, Eye, Link as LinkIcon } from "lucide-react";
 import ChessboardOverview from './ChessboardOverview';
 import { Button } from "../components/ui/button";
 
@@ -61,6 +61,7 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
   const publicId = propPublicId || urlPublicId;
   
   const [chessboard, setChessboard] = useState(null);
+  const [complex, setComplex] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
@@ -83,6 +84,14 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
           ...querySnapshot.docs[0].data()
         };
         setChessboard(chessboardData);
+
+        // Если есть привязанный комплекс, загружаем его данные
+        if (chessboardData.complexId) {
+          const complexDoc = await getDoc(doc(db, "complexes", chessboardData.complexId));
+          if (complexDoc.exists()) {
+            setComplex(complexDoc.data());
+          }
+        }
       } catch (error) {
         console.error("Ошибка загрузки:", error);
         setError("Ошибка при загрузке шахматки");
@@ -132,20 +141,61 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
           </Button>
         </div>
         
-        {/* Остальной контент */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Building className="w-8 h-8 text-blue-600" />
-              <div>
-                <CardTitle className="text-2xl">{chessboard.name || "Без названия"}</CardTitle>
-                {chessboard.description && (
-                  <p className="text-gray-600 mt-1">{chessboard.description}</p>
-                )}
+        {/* Информация о комплексе и шахматке */}
+        <div className="space-y-6 mb-6">
+          {/* Карточка комплекса */}
+          {complex && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Building className="w-8 h-8 text-blue-600" />
+                  <div>
+                    <CardTitle className="text-2xl">{complex.name}</CardTitle>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      {complex.district && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600">{complex.district}</span>
+                        </div>
+                      )}
+                      {complex.developer && (
+                        <div className="flex items-center gap-2">
+                          <Building className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600">{complex.developer}</span>
+                        </div>
+                      )}
+                      {complex.priceFrom && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600">Цена от: ${complex.priceFrom}</span>
+                        </div>
+                      )}
+                      {complex.areaRange && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600">Площадь: {complex.areaRange}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          )}
+
+          {/* Карточка шахматки */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Building className="w-8 h-8 text-blue-600" />
+                <div>
+                  <CardTitle className="text-2xl">{chessboard.name || "Без названия"}</CardTitle>
+                  {chessboard.description && (
+                    <p className="text-gray-600 mt-1">{chessboard.description}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          </CardHeader>
-        </Card>
+            </CardHeader>
+          </Card>
+        </div>
 
         {/* Секции */}
         <div className="space-y-6">
