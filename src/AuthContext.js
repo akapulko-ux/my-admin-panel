@@ -47,7 +47,30 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return userCredential;
+      // Получаем роль пользователя сразу после входа
+      const docRef = doc(db, "users", userCredential.user.uid);
+      const snap = await getDoc(docRef);
+      let userRole = "agent";
+      
+      if (snap.exists()) {
+        userRole = snap.data().role || "agent";
+      } else {
+        // Если документ пользователя не существует, создаем его с ролью agent
+        try {
+          const userData = {
+            email: userCredential.user.email,
+            role: "agent",
+            createdAt: new Date(),
+            uid: userCredential.user.uid
+          };
+          await setDoc(docRef, userData);
+          console.log("Создан новый документ пользователя с ролью agent");
+        } catch (error) {
+          console.error("Ошибка создания документа пользователя:", error);
+        }
+      }
+      
+      return { userCredential, role: userRole };
     } catch (error) {
       console.error("Ошибка входа:", error);
       if (error.code === "auth/invalid-credential") {

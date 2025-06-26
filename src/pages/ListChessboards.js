@@ -7,14 +7,11 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { 
   Plus, 
-  Edit3, 
   Trash2, 
   Building, 
-  Home,
   Eye,
   Calendar,
-  Link as LinkIcon,
-  Users
+  Link as LinkIcon
 } from 'lucide-react';
 
 const ListChessboards = () => {

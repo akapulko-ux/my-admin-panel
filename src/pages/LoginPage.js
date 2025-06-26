@@ -1,8 +1,21 @@
 import React, { useState } from "react";
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Box, Card, CardContent, TextField, Typography, Button, Link } from "@mui/material";
 import ResetPasswordModal from "../components/ResetPasswordModal";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+
+// Маршруты по умолчанию для разных ролей
+const DEFAULT_ROUTES = {
+  admin: '/complex/list',
+  модератор: '/complex/list',
+  'премиум агент': '/property/list',
+  agent: '/property/gallery',
+  застройщик: '/chessboard',
+  user: '/property/gallery'
+};
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,35 +27,58 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      navigate("/complex/list");
+      const { role } = await login(email, password);
+      // Используем роль, полученную непосредственно при входе
+      const defaultRoute = DEFAULT_ROUTES[role] || '/property/gallery';
+      navigate(defaultRoute);
     } catch (err) {
       alert("Ошибка входа: " + err.message);
     }
   };
 
   return (
-    <Box sx={{ maxWidth: 400, margin: "auto", p: 2 }}>
-      <Card>
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold text-center">
+            Вход в систему
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Вход
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <TextField label="Пароль" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            <Button variant="contained" type="submit">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="example@mail.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full">
               Войти
             </Button>
-            <Link
-              component="button"
-              variant="body2"
+            <Button
+              type="button"
+              variant="link"
               onClick={() => setResetModalOpen(true)}
-              sx={{ textAlign: "center", mt: 1 }}
+              className="w-full"
             >
               Забыли пароль?
-            </Link>
-          </Box>
+            </Button>
+          </form>
         </CardContent>
       </Card>
 
@@ -50,7 +86,7 @@ function LoginPage() {
         open={resetModalOpen} 
         onClose={() => setResetModalOpen(false)} 
       />
-    </Box>
+    </div>
   );
 }
 

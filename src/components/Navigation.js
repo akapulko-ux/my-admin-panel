@@ -39,7 +39,9 @@ const ROUTE_ACCESS = {
     '/support/*'
   ],
   застройщик: [
-    '/gallery/*'
+    '/property/gallery',
+    '/chessboard',
+    '/chessboard/*'
   ],
   user: [
     '/gallery/*'
@@ -51,11 +53,9 @@ const Navigation = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Для застройщика не показываем боковую панель
-  if (role === 'застройщик') {
-    return null;
-  }
-
+  // Функция для проверки доступа к маршрутам
+  // Временно не используется, но может понадобиться для будущих проверок доступа
+  // eslint-disable-next-line no-unused-vars
   const hasAccess = (path) => {
     const allowedPaths = ROUTE_ACCESS[role] || ROUTE_ACCESS.user;
     
@@ -115,9 +115,11 @@ const Navigation = () => {
       </div>
 
       <nav className="space-y-1">
-        <NavItem to="/property/gallery" icon={Home}>
-          Галерея объектов
-        </NavItem>
+        {['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
+          <NavItem to="/property/gallery" icon={Home}>
+            Галерея объектов
+          </NavItem>
+        )}
 
         {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
           <>
@@ -164,7 +166,7 @@ const Navigation = () => {
           </>
         )}
 
-        {['admin', 'модератор'].includes(role) && (
+        {['admin', 'модератор', 'застройщик'].includes(role) && (
           <NavItem to="/chessboard" icon={LayoutGrid}>
             Шахматки
           </NavItem>

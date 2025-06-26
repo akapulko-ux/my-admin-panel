@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import {
   DndContext,
-  DragOverlay,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
@@ -38,6 +37,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 // Создаем пустые структуры данных
+// eslint-disable-next-line no-unused-vars
 const createDefaultUnit = () => ({
   id: crypto.randomUUID().substring(0, 8),
   rooms: '',
@@ -58,6 +58,7 @@ const createDefaultSection = () => ({
 });
 
 // Начальное состояние - одна пустая секция
+// eslint-disable-next-line no-unused-vars
 const initialData = {
   sections: [createDefaultSection()]
 };
@@ -122,6 +123,7 @@ const getViewBadge = (view) => {
 };
 
 // Новые функции валидации
+// eslint-disable-next-line no-unused-vars
 const validateChessboard = (data) => {
   const errors = [];
   
@@ -170,6 +172,7 @@ const validateChessboard = (data) => {
 };
 
 // Функция для обработки ошибок Firestore
+// eslint-disable-next-line no-unused-vars
 const handleFirestoreError = (error) => {
   console.error("Детали ошибки:", error);
   
@@ -190,6 +193,7 @@ const handleFirestoreError = (error) => {
 };
 
 // Генерация уникального ID для публичной ссылки
+// eslint-disable-next-line no-unused-vars
 const generatePublicId = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
