@@ -345,8 +345,12 @@ const SortableUnit = ({
   canRemoveUnit,
   exchangeRate,
   formatPrice,
-  formatPriceUSD
+  formatPriceUSD,
+  onExchangeRateChange
 }) => {
+  const [isEditingRate, setIsEditingRate] = useState(false);
+  const [tempRate, setTempRate] = useState(exchangeRate);
+  
   const {
     attributes,
     listeners,
@@ -358,6 +362,12 @@ const SortableUnit = ({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+  };
+
+  const handleRateSubmit = (e) => {
+    e.preventDefault();
+    onExchangeRateChange(tempRate);
+    setIsEditingRate(false);
   };
 
   return (
@@ -500,7 +510,26 @@ const SortableUnit = ({
           <div>
             <label className="block text-xs text-white/90 font-semibold mb-1">
               Цена (USD → IDR) 
-              <span className="text-yellow-200 font-bold">1:{exchangeRate.toLocaleString()}</span>
+              {isEditingRate ? (
+                <form onSubmit={handleRateSubmit} className="inline-flex items-center ml-1">
+                  <span className="text-yellow-200 font-bold">1:</span>
+                  <input
+                    type="number"
+                    value={tempRate}
+                    onChange={(e) => setTempRate(parseFloat(e.target.value) || 0)}
+                    onBlur={handleRateSubmit}
+                    autoFocus
+                    className="w-20 px-1 py-0.5 bg-white/20 text-yellow-200 font-bold border border-yellow-200/50 rounded focus:outline-none focus:ring-1 focus:ring-yellow-200"
+                  />
+                </form>
+              ) : (
+                <button
+                  onClick={() => setIsEditingRate(true)}
+                  className="text-yellow-200 font-bold hover:text-yellow-300 cursor-pointer ml-1"
+                >
+                  1:{exchangeRate.toLocaleString()}
+                </button>
+              )}
             </label>
             
             {/* Ввод в долларах */}
@@ -509,7 +538,11 @@ const SortableUnit = ({
               <input
                 type="number"
                 value={unit.priceUSD === null ? '' : unit.priceUSD}
-                onChange={(e) => onUnitChange('priceUSD', e.target.value)}
+                onChange={(e) => {
+                  const priceUSD = parseFloat(e.target.value) || 0;
+                  onUnitChange('priceUSD', priceUSD);
+                  onUnitChange('priceIDR', priceUSD * exchangeRate);
+                }}
                 className="flex-1 px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white"
                 placeholder="0"
               />
@@ -566,6 +599,8 @@ const Chessboard = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [sections, setSections] = useState([]);
+  const [exchangeRate, setExchangeRate] = useState(16000);
+  const [isEditingRate, setIsEditingRate] = useState(false);
 
   // Состояния для работы с комплексами
   const [complexes, setComplexes] = useState([]);
@@ -648,6 +683,26 @@ const Chessboard = () => {
     }
   };
 
+  // Функция для обновления курса и пересчета цен
+  const updateExchangeRate = (newRate) => {
+    const rate = parseFloat(newRate) || 16000;
+    setExchangeRate(rate);
+    
+    // Пересчитываем цены во всех юнитах
+    setSections(prevSections => {
+      return prevSections.map(section => ({
+        ...section,
+        floors: section.floors.map(floor => ({
+          ...floor,
+          units: floor.units.map(unit => ({
+            ...unit,
+            priceIDR: (parseFloat(unit.priceUSD) || 0) * rate
+          }))
+        }))
+      }));
+    });
+  };
+
   // Загрузка списка доступных комплексов
   useEffect(() => {
     const loadComplexes = async () => {
@@ -704,6 +759,7 @@ const Chessboard = () => {
           
           setDescription(data.description || "");
           setSelectedComplexId(data.complexId || "");
+          setExchangeRate(data.exchangeRate || 16000);
           
           const processedSections = data.sections.map(section => ({
             ...defaultSection,
@@ -872,59 +928,53 @@ const Chessboard = () => {
         }
       }
 
-      // Подготовка данных
-      const chessboardData = {
+      const data = {
         name: complexName, // Всегда используем название из комплекса
-        description,
         sections,
+        description,
+        complexId: selectedComplexId || null,
+        exchangeRate,
         updatedAt: serverTimestamp(),
-        complexId: selectedComplexId || null
+        updatedBy: currentUser.uid
       };
 
-      if (id && id !== "new") {
+      if (!id || id === "new") {
+        // Создание новой шахматки
+        data.createdAt = serverTimestamp();
+        data.createdBy = currentUser.uid;
+        data.publicUrl = await generatePublicId();
+
+        // Сохраняем новую шахматку
+        const docRef = await addDoc(collection(db, "chessboards"), data);
+
+        // Настраиваем права доступа
+        await setupAccessRights(docRef.id);
+
+        // Создаем запись в истории
+        await createHistoryRecord(docRef.id, "create");
+
+        // Создаем уведомление
+        await createNotification(docRef.id, "create");
+
+        // Перенаправляем на список шахматок
+        navigate("/chessboard");
+      } else {
         // Обновление существующей шахматки
         const docRef = doc(db, "chessboards", id);
-        await updateDoc(docRef, chessboardData);
+        await updateDoc(docRef, data);
 
         // Создаем запись в истории
         await createHistoryRecord(id, "update");
         
         // Создаем уведомление
         await createNotification(id, "update");
-      } else {
-        // Создание новой шахматки
-        chessboardData.createdAt = serverTimestamp();
-        chessboardData.createdBy = currentUser.uid;
-        chessboardData.createdByEmail = currentUser.email;
-        
-        // Генерируем публичный URL
-        const publicUrl = generatePublicId();
-        chessboardData.publicUrl = publicUrl;
-        
-        const docRef = await addDoc(collection(db, "chessboards"), chessboardData);
-        
-        // Обновляем комплекс, добавляя ссылку на шахматку
-        if (selectedComplexId) {
-          await updateDoc(doc(db, "complexes", selectedComplexId), {
-            chessboardPublicUrl: publicUrl
-          });
-        }
 
-        // Настраиваем права доступа
-        await setupAccessRights(docRef.id);
-        
-        // Создаем запись в истории
-        await createHistoryRecord(docRef.id, "create");
-        
-        // Создаем уведомление
-        await createNotification(docRef.id, "create");
+        // Перенаправляем на список шахматок
+        navigate("/chessboard");
       }
-
-      // После всех операций перенаправляем на список шахматок
-      navigate("/chessboard");
     } catch (error) {
-      console.error("Ошибка сохранения:", error);
-      alert(handleFirestoreError(error));
+      console.error("Error saving chessboard:", error);
+      handleFirestoreError(error);
     } finally {
       setIsSaving(false);
     }
@@ -1267,9 +1317,10 @@ const Chessboard = () => {
                                         });
                                       }}
                                       canRemoveUnit={floor.units.length > 1}
-                                      exchangeRate={16000}
+                                      exchangeRate={exchangeRate}
                                       formatPrice={formatPrice}
                                       formatPriceUSD={formatPriceUSD}
+                                      onExchangeRateChange={updateExchangeRate}
                                     />
                                   ))}
                                 </div>
