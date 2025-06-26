@@ -593,7 +593,7 @@ const SortableUnit = ({
 const Chessboard = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, role } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
@@ -601,6 +601,7 @@ const Chessboard = () => {
   const [sections, setSections] = useState([]);
   const [exchangeRate, setExchangeRate] = useState(16000);
   const [isEditingRate, setIsEditingRate] = useState(false);
+  const [developerId, setDeveloperId] = useState(null);
 
   // Состояния для работы с комплексами
   const [complexes, setComplexes] = useState([]);
@@ -703,39 +704,65 @@ const Chessboard = () => {
     });
   };
 
+  // Загрузка developerId для пользователя-застройщика
+  useEffect(() => {
+    const loadDeveloperId = async () => {
+      if (role === 'застройщик' && currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          if (userDoc.exists()) {
+            setDeveloperId(userDoc.data().developerId);
+          }
+        } catch (error) {
+          console.error("Ошибка загрузки developerId:", error);
+        }
+      }
+    };
+    loadDeveloperId();
+  }, [currentUser, role]);
+
   // Загрузка списка доступных комплексов
   useEffect(() => {
     const loadComplexes = async () => {
       try {
+        console.log('Загрузка комплексов. Role:', role, 'DeveloperId:', developerId);
+        
         // Получаем все комплексы
         const complexesSnapshot = await getDocs(collection(db, "complexes"));
         const allComplexes = complexesSnapshot.docs.map(doc => ({
           id: doc.id,
           name: doc.data().name
         }));
+        console.log('Найдено комплексов:', allComplexes.length, allComplexes);
 
-        // Получаем все шахматки, чтобы проверить какие комплексы уже имеют шахматку
-        const chessboardsSnapshot = await getDocs(collection(db, "chessboards"));
-        const usedComplexIds = new Set(
-          chessboardsSnapshot.docs
-            .map(doc => doc.data().complexId)
-            .filter(Boolean)
-        );
+        // Получаем шахматки с учетом developerId
+        let chessboardsQuery;
+        if (role === 'застройщик' && developerId) {
+          console.log('Загружаем шахматки для застройщика');
+          chessboardsQuery = query(
+            collection(db, "chessboards"),
+            where("developerId", "==", developerId)
+          );
+        } else {
+          console.log('Загружаем все шахматки');
+          chessboardsQuery = collection(db, "chessboards");
+        }
 
-        // Фильтруем комплексы, оставляя только те, у которых нет шахматки
-        const availableComplexes = allComplexes.filter(complex => !usedComplexIds.has(complex.id));
-        
+        const chessboardsSnapshot = await getDocs(chessboardsQuery);
+        const complexesWithChessboards = chessboardsSnapshot.docs.map(doc => doc.data().complexId);
+        console.log('Комплексы с шахматками:', complexesWithChessboards);
+
+        // Фильтруем комплексы, исключая те, у которых уже есть шахматка
+        const availableComplexes = allComplexes.filter(complex => !complexesWithChessboards.includes(complex.id));
+        console.log('Доступные комплексы:', availableComplexes);
+
         setComplexes(availableComplexes);
       } catch (error) {
-        console.error("Ошибка загрузки комплексов:", error);
-        setComplexError("Ошибка загрузки списка комплексов");
+        console.error('Ошибка загрузки комплексов:', error);
       }
     };
-
-    if (!id || id === 'new') {
-      loadComplexes();
-    }
-  }, [id]);
+    loadComplexes();
+  }, [role, developerId]);
 
   // Загрузка данных шахматки
   useEffect(() => {
@@ -747,6 +774,15 @@ const Chessboard = () => {
         
         if (docSnap.exists()) {
           const data = docSnap.data();
+
+          // Проверка прав доступа для застройщика
+          if (role === 'застройщик' && developerId) {
+            if (data.developerId !== developerId) {
+              alert("У вас нет доступа к этой шахматке");
+              navigate('/chessboard');
+              return;
+            }
+          }
           
           // Если есть привязанный комплекс, загружаем его данные
           if (data.complexId) {
@@ -802,7 +838,7 @@ const Chessboard = () => {
       setSections([initialSection]);
       setLoading(false);
     }
-  }, [id, defaultSection, defaultFloor, defaultUnit]);
+  }, [id, defaultSection, defaultFloor, defaultUnit, role, developerId, navigate]);
 
   // Добавление новой секции
   const addSection = () => {
@@ -898,6 +934,8 @@ const Chessboard = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      console.log('Начало сохранения шахматки. Role:', role, 'CurrentUser:', currentUser);
+
       // Валидация
       if (!id && !selectedComplexId) {
         alert("Пожалуйста, выберите комплекс");
@@ -905,15 +943,50 @@ const Chessboard = () => {
         return;
       }
 
+      // Для застройщика проверяем наличие developerId
+      let currentDeveloperId = null;
+      if (role === 'застройщик') {
+        console.log('Сохранение шахматки для застройщика. Role:', role);
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          console.log('Получен документ пользователя:', userDoc.exists());
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            console.log('Данные пользователя:', userData);
+            currentDeveloperId = userData.developerId;
+            console.log('Получен developerId:', currentDeveloperId);
+          } else {
+            console.error('Документ пользователя не найден');
+          }
+          if (!currentDeveloperId) {
+            alert("Ошибка: не указан застройщик для вашего аккаунта");
+            setIsSaving(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Ошибка при получении developerId:', error);
+          alert("Ошибка при получении данных застройщика");
+          setIsSaving(false);
+          return;
+        }
+      }
+
       // Проверяем, не привязана ли уже шахматка к этому комплексу
       if (!id) {
-        const existingChessboardsQuery = query(
-          collection(db, "chessboards"),
-          where("complexId", "==", selectedComplexId)
-        );
-        const existingChessboards = await getDocs(existingChessboardsQuery);
-        if (!existingChessboards.empty) {
-          alert("К этому комплексу уже привязана шахматка");
+        try {
+          const existingChessboardsQuery = query(
+            collection(db, "chessboards"),
+            where("complexId", "==", selectedComplexId)
+          );
+          const existingChessboards = await getDocs(existingChessboardsQuery);
+          if (!existingChessboards.empty) {
+            alert("К этому комплексу уже привязана шахматка");
+            setIsSaving(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Ошибка при проверке существующих шахматок:', error);
+          alert("Ошибка при проверке существующих шахматок");
           setIsSaving(false);
           return;
         }
@@ -922,59 +995,67 @@ const Chessboard = () => {
       // Получаем актуальное название комплекса
       let complexName = "";
       if (selectedComplexId) {
-        const complexDoc = await getDoc(doc(db, "complexes", selectedComplexId));
-        if (complexDoc.exists()) {
-          complexName = complexDoc.data().name || "";
+        try {
+          const complexDoc = await getDoc(doc(db, "complexes", selectedComplexId));
+          if (complexDoc.exists()) {
+            complexName = complexDoc.data().name || "";
+          }
+        } catch (error) {
+          console.error('Ошибка при получении названия комплекса:', error);
         }
       }
 
-      const data = {
-        name: complexName, // Всегда используем название из комплекса
-        sections,
+      const chessboardData = {
+        name,
         description,
-        complexId: selectedComplexId || null,
+        sections,
         exchangeRate,
+        complexId: selectedComplexId || null,
+        complexName,
         updatedAt: serverTimestamp(),
-        updatedBy: currentUser.uid
+        updatedBy: currentUser.uid,
+        // Добавляем developerId только для застройщика
+        ...(role === 'застройщик' && { developerId: currentDeveloperId })
       };
 
-      if (!id || id === "new") {
-        // Создание новой шахматки
-        data.createdAt = serverTimestamp();
-        data.createdBy = currentUser.uid;
-        data.publicUrl = await generatePublicId();
+      console.log('Подготовленные данные для сохранения:', chessboardData);
 
-        // Сохраняем новую шахматку
-        const docRef = await addDoc(collection(db, "chessboards"), data);
-
-        // Настраиваем права доступа
-        await setupAccessRights(docRef.id);
-
-        // Создаем запись в истории
-        await createHistoryRecord(docRef.id, "create");
-
-        // Создаем уведомление
-        await createNotification(docRef.id, "create");
-
-        // Перенаправляем на список шахматок
-        navigate("/chessboard");
+      if (!id || id === 'new') {
+        try {
+          // Создание новой шахматки
+          console.log('Создаем новую шахматку...');
+          chessboardData.createdAt = serverTimestamp();
+          chessboardData.createdBy = currentUser.uid;
+          const docRef = await addDoc(collection(db, "chessboards"), chessboardData);
+          console.log('Шахматка создана с ID:', docRef.id);
+          await createHistoryRecord(docRef.id, "create");
+          navigate(`/chessboard/${docRef.id}`);
+        } catch (error) {
+          console.error('Ошибка при создании новой шахматки:', error);
+          throw error;
+        }
       } else {
-        // Обновление существующей шахматки
-        const docRef = doc(db, "chessboards", id);
-        await updateDoc(docRef, data);
-
-        // Создаем запись в истории
-        await createHistoryRecord(id, "update");
-        
-        // Создаем уведомление
-        await createNotification(id, "update");
-
-        // Перенаправляем на список шахматок
-        navigate("/chessboard");
+        try {
+          // Обновление существующей шахматки
+          console.log('Обновляем существующую шахматку...');
+          await updateDoc(doc(db, "chessboards", id), chessboardData);
+          console.log('Шахматка обновлена');
+          await createHistoryRecord(id, "update");
+        } catch (error) {
+          console.error('Ошибка при обновлении шахматки:', error);
+          throw error;
+        }
       }
+
+      alert(id ? "Шахматка обновлена!" : "Шахматка создана!");
     } catch (error) {
-      console.error("Error saving chessboard:", error);
-      handleFirestoreError(error);
+      console.error("Ошибка сохранения шахматки:", error);
+      console.error("Полная информация об ошибке:", {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      alert(`Произошла ошибка при сохранении: ${error.message}`);
     } finally {
       setIsSaving(false);
     }
