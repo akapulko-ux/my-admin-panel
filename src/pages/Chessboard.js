@@ -551,12 +551,6 @@ const SortableUnit = ({
               <option value="sold" className="text-rose-800">✖ Продано</option>
             </select>
           </div>
-          
-          <div className="pt-2 space-y-2">
-            {getPropertyTypeBadge(unit.propertyType || 'Апартаменты')}
-            {getStatusBadge(unit.status)}
-            {getViewBadge(unit.view || 'Море')}
-          </div>
         </div>
       </CardContent>
     </Card>
