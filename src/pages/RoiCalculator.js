@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -144,6 +144,7 @@ const RoiCalculator = () => {
 
   const [savedCalculations, setSavedCalculations] = useState([]);
   const [calculationName, setCalculationName] = useState('');
+  const [pdfLanguage, setPdfLanguage] = useState('en');
 
   // Загрузка сохраненных расчетов при монтировании
   useEffect(() => {
@@ -524,18 +525,34 @@ const RoiCalculator = () => {
                 <Download className="mr-2 h-4 w-4" /> Экспорт в CSV
               </Button>
 
-              <PDFDownloadLink
-                document={<Presentation data={calculationResults} />}
-                fileName="investor-presentation.pdf"
-                style={{ textDecoration: 'none' }}
-              >
-                {({ loading }) => (
-                  <Button variant="outline" size="sm" disabled={loading}>
-                    <Download className="mr-2 h-4 w-4" />
-                    {loading ? 'Генерация...' : 'Скачать презентацию'}
-                  </Button>
-                )}
-              </PDFDownloadLink>
+              <div className="flex items-center gap-2">
+                <Select value={pdfLanguage} onValueChange={setPdfLanguage}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="ru">Русский</SelectItem>
+                    <SelectItem value="id">Indonesian</SelectItem>
+                  </SelectContent>
+                </Select>
+                <PDFDownloadLink
+                  document={<Presentation 
+                    data={calculationResults} 
+                    inputs={{ costData, rentalData, expensesData }}
+                    language={pdfLanguage}
+                  />}
+                  fileName={`investor-presentation-${pdfLanguage}.pdf`}
+                  style={{ textDecoration: 'none' }}
+                >
+                  {({ loading }) => (
+                    <Button variant="outline" size="sm" disabled={loading}>
+                      <Download className="mr-2 h-4 w-4" />
+                      {loading ? '...' : 'PDF'}
+                    </Button>
+                  )}
+                </PDFDownloadLink>
+              </div>
             </div>
           </div>
 
@@ -577,8 +594,11 @@ const RoiCalculator = () => {
             <ResponsiveContainer width="100%" height="100%">
               {calculationResults?.graphData && calculationResults.graphData.length > 0 ? (
                 <LineChart
+                  isAnimationActive={false}
                   data={calculationResults.graphData}
-                  margin={{ top: 20, right: 100, left: 70, bottom: 40 }}
+                  margin={{
+                    top: 20, right: 30, left: 20, bottom: 5,
+                  }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis
@@ -636,7 +656,6 @@ const RoiCalculator = () => {
                     strokeWidth={2}
                     dot={{ r: 4, fill: '#8884d8' }}
                     activeDot={{ r: 6, fill: '#8884d8' }}
-                    isAnimationActive={true}
                   />
                   <Line
                     yAxisId="right"
@@ -647,7 +666,6 @@ const RoiCalculator = () => {
                     strokeWidth={2}
                     dot={{ r: 4, fill: '#82ca9d' }}
                     activeDot={{ r: 6, fill: '#82ca9d' }}
-                    isAnimationActive={true}
                   />
                 </LineChart>
               ) : (

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { translations } from '../lib/translations';
 
 // Register fonts
 Font.register({
@@ -75,6 +76,81 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: 'bold',
       color: '#3498db',
+  },
+  table: {
+    display: "table",
+    width: "auto",
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+    marginTop: 20,
+  },
+  tableRow: {
+    margin: "auto",
+    flexDirection: "row"
+  },
+  tableColHeader: {
+    width: "50%",
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    backgroundColor: '#f2f2f2',
+    padding: 5,
+  },
+  tableCol: {
+    width: "50%",
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    padding: 5,
+  },
+  tableCellHeader: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  tableCell: {
+    fontSize: 10
+  },
+  chartContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  chartImage: {
+    width: 500,
+    height: 'auto',
+  },
+  profitabilityTable: {
+    display: "table",
+    width: "auto",
+    marginTop: 20,
+  },
+  profitabilityTableRow: {
+    margin: "auto",
+    flexDirection: "row",
+    backgroundColor: '#f2f2f2',
+  },
+  profitabilityTableRowAlt: {
+    backgroundColor: '#ffffff',
+  },
+  profitabilityTableColHeader: {
+    width: "33.33%",
+    backgroundColor: '#34495e',
+    padding: 8,
+  },
+  profitabilityTableCellHeader: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  profitabilityTableCol: {
+    width: "33.33%",
+    padding: 8,
+  },
+  profitabilityTableCell: {
+    fontSize: 10
   }
 });
 
@@ -88,8 +164,28 @@ const formatPercentage = (value) => {
     return `${value.toFixed(2)}%`;
 }
 
-const Presentation = ({ data }) => {
-    if (!data) {
+const Table = ({ title, data, lang }) => (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={styles.table}>
+      {Object.entries(data).map(([key, value]) => (
+        <View style={styles.tableRow} key={key}>
+          <View style={styles.tableCol}>
+            <Text style={styles.tableCell}>{lang[key] || key}</Text>
+          </View>
+          <View style={styles.tableCol}>
+            <Text style={styles.tableCell}>{value || 'N/A'}</Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  </View>
+);
+
+const Presentation = ({ data, inputs, language = 'en' }) => {
+    const t = translations[language];
+
+    if (!data || !inputs) {
         return (
             <Document>
                 <Page style={styles.page}>
@@ -107,55 +203,101 @@ const Presentation = ({ data }) => {
     annualExpenses,
     annualNetProfit,
     roi,
-    paybackPeriod
+    paybackPeriod,
+    graphData
   } = data;
+  
+  const { costData, rentalData, expensesData } = inputs;
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.logo}>
-            <Text>My Admin Panel</Text>
+            <Text>{t.logo}</Text>
         </View>
-        <Text style={styles.header}>Investor ROI Presentation</Text>
+        <Text style={styles.header}>{t.title}</Text>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Investment Summary</Text>
+          <Text style={styles.sectionTitle}>{t.investmentSummary}</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>Total Investment</Text>
+            <Text style={styles.label}>{t.totalInvestment}</Text>
             <Text style={styles.value}>{formatCurrency(totalInvestment)}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Payback Period (Years)</Text>
+            <Text style={styles.label}>{t.paybackPeriod}</Text>
             <Text style={styles.value}>{paybackPeriod ? paybackPeriod.toFixed(1) : 'N/A'}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Annual Financials</Text>
+          <Text style={styles.sectionTitle}>{t.annualFinancials}</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>Gross Rental Income</Text>
+            <Text style={styles.label}>{t.grossRentalIncome}</Text>
             <Text style={styles.value}>{formatCurrency(annualRentalIncome)}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Operating Expenses</Text>
+            <Text style={styles.label}>{t.operatingExpenses}</Text>
             <Text style={styles.value}>{formatCurrency(annualExpenses)}</Text>
           </View>
            <View style={styles.row}>
-            <Text style={styles.label}>Net Operating Income (NOI)</Text>
+            <Text style={styles.label}>{t.noi}</Text>
             <Text style={styles.value}>{formatCurrency(annualNetProfit)}</Text>
           </View>
         </View>
         
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Key Performance Indicators (KPIs)</Text>
+            <Text style={styles.sectionTitle}>{t.kpis}</Text>
             <View style={styles.row}>
-                <Text style={styles.label}>Return on Investment (ROI)</Text>
+                <Text style={styles.label}>{t.roi}</Text>
                 <Text style={styles.roiValue}>{formatPercentage(roi)}</Text>
             </View>
         </View>
 
         <Text style={styles.footer}>
-          This document is computer-generated and contains confidential information.
+          {t.footer}
+        </Text>
+      </Page>
+
+      <Page size="A4" style={styles.page}>
+         <Text style={styles.header}>{t.detailedInputsTitle}</Text>
+         <Table title={t.investmentCosts} data={costData} lang={t} />
+         <Table title={t.rentalIncomeData} data={rentalData} lang={t} />
+         <Table title={t.annualExpenses} data={expensesData} lang={t} />
+         <Text style={styles.footer}>
+          {t.page2Footer}
+        </Text>
+      </Page>
+
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.header}>{t.profitabilityTitle}</Text>
+        <View style={styles.profitabilityTable}>
+          <View style={styles.profitabilityTableRow} fixed>
+            <View style={styles.profitabilityTableColHeader}>
+              <Text style={styles.profitabilityTableCellHeader}>{t.year}</Text>
+            </View>
+            <View style={styles.profitabilityTableColHeader}>
+              <Text style={styles.profitabilityTableCellHeader}>{t.annualNetProfit}</Text>
+            </View>
+            <View style={styles.profitabilityTableColHeader}>
+              <Text style={styles.profitabilityTableCellHeader}>{t.accumulatedProfit}</Text>
+            </View>
+          </View>
+          {graphData.map((row, index) => (
+            <View style={[styles.profitabilityTableRow, index % 2 === 0 ? styles.profitabilityTableRowAlt : {}]} key={row.year} wrap={false}>
+              <View style={styles.profitabilityTableCol}>
+                <Text style={styles.profitabilityTableCell}>{row.year}</Text>
+              </View>
+              <View style={styles.profitabilityTableCol}>
+                <Text style={styles.profitabilityTableCell}>{formatCurrency(row.profit)}</Text>
+              </View>
+              <View style={styles.profitabilityTableCol}>
+                <Text style={styles.profitabilityTableCell}>{formatCurrency(row.accumulatedProfit)}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+        <Text style={styles.footer}>
+          {t.page3Footer}
         </Text>
       </Page>
     </Document>
