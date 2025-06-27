@@ -12,7 +12,8 @@ import {
   MessageSquare,
   Menu,
   ChevronRight,
-  LayoutGrid
+  LayoutGrid,
+  Calculator
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -173,6 +174,12 @@ const Navigation = () => {
         {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
           <NavItem to="/support/chats" icon={MessageSquare}>
             Поддержка
+          </NavItem>
+        )}
+
+        {['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
+          <NavItem to="/roi-calculator" icon={Calculator}>
+            Калькулятор ROI
           </NavItem>
         )}
 

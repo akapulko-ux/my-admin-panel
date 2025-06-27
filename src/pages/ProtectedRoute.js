@@ -10,20 +10,24 @@ const ROUTE_ACCESS = {
     '/complex/*',
     '/developers/*',
     '/landmark/*',
-    '/support/*'
+    '/support/*',
+    '/roi-calculator'
   ],
   'премиум агент': [
     '/property/*',
-    '/support/*'
+    '/support/*',
+    '/roi-calculator'
   ],
   agent: [
     '/property/*',
-    '/support/*'
+    '/support/*',
+    '/roi-calculator'
   ],
   застройщик: [
     '/property/gallery',
     '/chessboard',
     '/chessboard/*',
+    '/roi-calculator',
     '/'
   ],
   user: [

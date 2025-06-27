@@ -42,6 +42,9 @@ import ListChessboards from "./pages/ListChessboards";
 import PublicChessboard from "./pages/PublicChessboard";
 import ChessboardOverview from "./pages/ChessboardOverview";
 
+// Калькулятор ROI
+import RoiCalculator from "./pages/RoiCalculator";
+
 // Прочее
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
@@ -120,6 +123,13 @@ function App() {
                   <Route path="/chessboard/:id" element={
                     <ProtectedRoute>
                       <Chessboard />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Калькулятор ROI */}
+                  <Route path="/roi-calculator" element={
+                    <ProtectedRoute>
+                      <RoiCalculator />
                     </ProtectedRoute>
                   } />
 
