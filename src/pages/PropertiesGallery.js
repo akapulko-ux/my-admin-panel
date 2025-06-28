@@ -35,6 +35,20 @@ function PropertiesGallery() {
     }
   };
 
+  // Получение названия комплекса по ID
+  const fetchComplexName = async (complexId) => {
+    try {
+      const complexDoc = await getDoc(doc(db, "complexes", complexId));
+      if (complexDoc.exists()) {
+        return complexDoc.data().name;
+      }
+      return null;
+    } catch (err) {
+      console.error("Ошибка загрузки комплекса:", err);
+      return null;
+    }
+  };
+
   // Загрузка данных из кеша или Firestore
   const fetchProperties = useCallback(async () => {
     try {
@@ -62,14 +76,30 @@ function PropertiesGallery() {
         filteredData = data.filter(property => property.developer === developerNameToFilter);
       }
 
+      // Загружаем названия комплексов для объектов
+      const propertiesWithComplexNames = await Promise.all(
+        filteredData.map(async (property) => {
+          if (property.complexId) {
+            try {
+              const complexName = await fetchComplexName(property.complexId);
+              return { ...property, complexName };
+            } catch (err) {
+              console.error("Ошибка при загрузке названия комплекса:", err);
+              return property;
+            }
+          }
+          return property;
+        })
+      );
+
       // Сортировка - новые сверху
-      filteredData.sort((a, b) => {
+      propertiesWithComplexNames.sort((a, b) => {
         const tA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
         const tB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0;
         return tB - tA;
       });
 
-      setProperties(filteredData);
+      setProperties(propertiesWithComplexNames);
     } catch (err) {
       console.error("Ошибка загрузки объектов:", err);
     } finally {
@@ -143,6 +173,11 @@ function PropertiesGallery() {
 
               {/* Текстовая информация */}
               <div className="flex flex-col text-gray-900 space-y-0.5">
+                {(p.complexName || p.complex) && (
+                  <span className="text-lg font-semibold leading-none text-black">
+                    {safeDisplay(p.complexName || p.complex)}
+                  </span>
+                )}
                 <span className="text-lg font-semibold leading-none">
                   {formatPrice(p.price)}
                 </span>
@@ -153,7 +188,6 @@ function PropertiesGallery() {
                     {p.bedrooms === 0 ? "Студия" : `Спален: ${safeDisplay(p.bedrooms)}`}
                   </span>
                 )}
-                {p.classRating && <span className="text-sm">{safeDisplay(p.classRating)}</span>}
                 {p.district && <span className="text-sm">{safeDisplay(p.district)}</span>}
                 {/* Показываем застройщика только для не-застройщиков */}
                 {role !== 'застройщик' && p.developer && (

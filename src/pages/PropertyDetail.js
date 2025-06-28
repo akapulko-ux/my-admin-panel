@@ -16,6 +16,7 @@ import {
   Calendar,
   Droplet,
   Map as MapIcon,
+  Layers,
 } from "lucide-react";
 import { showError } from '../utils/notifications';
 
@@ -90,7 +91,7 @@ function PropertyDetail() {
   };
 
   // Список неизменяемых полей
-  const nonEditableFields = ['classRating', 'district', 'landStatus'];
+  const nonEditableFields = ['classRating', 'district', 'landStatus', 'developer', 'complex'];
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -119,6 +120,20 @@ function PropertyDetail() {
       return null;
     } catch (err) {
       console.error("Ошибка загрузки застройщика:", err);
+      return null;
+    }
+  };
+
+  // Получение названия комплекса по ID
+  const fetchComplexName = async (complexId) => {
+    try {
+      const complexDoc = await getDoc(doc(db, "complexes", complexId));
+      if (complexDoc.exists()) {
+        return complexDoc.data().name;
+      }
+      return null;
+    } catch (err) {
+      console.error("Ошибка загрузки комплекса:", err);
       return null;
     }
   };
@@ -176,11 +191,14 @@ function PropertyDetail() {
   // Обновляем функцию рендеринга значения
   const renderEditableValue = (field, value, type, options) => {
     if (isEditing && !nonEditableFields.includes(field)) {
+      // Получаем исходное значение из объекта property, а не отформатированное value
+      const originalValue = property[field];
+      
       if (field === 'ownershipForm') {
         return (
           <div className="space-y-2">
             <select
-              value={editedValues[field] || value || ''}
+              value={editedValues[field] || originalValue || ''}
               onChange={(e) => handleValueChange(field, e.target.value)}
               className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
             >
@@ -189,7 +207,7 @@ function PropertyDetail() {
                 <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
-            {(editedValues[field] || value) === 'Leashold' && (
+            {(editedValues[field] || originalValue) === 'Leashold' && (
               <input
                 type="text"
                 value={editedValues.leaseYears || property.leaseYears || ''}
@@ -203,7 +221,7 @@ function PropertyDetail() {
       } else if (options) {
         return (
           <select
-            value={editedValues[field] || value || ''}
+            value={editedValues[field] || originalValue || ''}
             onChange={(e) => handleValueChange(field, e.target.value)}
             className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
           >
@@ -217,7 +235,7 @@ function PropertyDetail() {
         return (
           <input
             type={type || "text"}
-            value={editedValues[field] || value || ''}
+            value={editedValues[field] || originalValue || ''}
             onChange={(e) => handleValueChange(field, e.target.value)}
             className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
           />
@@ -262,6 +280,26 @@ function PropertyDetail() {
           
           // Добавляем информацию о застройщике пользователя в данные объекта
           propertyData.userDeveloperName = userDeveloperName;
+          
+          // Загружаем имя застройщика если есть developerId
+          if (propertyData.developerId) {
+            try {
+              const developerName = await fetchDeveloperName(propertyData.developerId);
+              propertyData.developerName = developerName;
+            } catch (err) {
+              console.error("Ошибка при загрузке имени застройщика:", err);
+            }
+          }
+          
+          // Загружаем название комплекса если есть complexId
+          if (propertyData.complexId) {
+            try {
+              const complexName = await fetchComplexName(propertyData.complexId);
+              propertyData.complexName = complexName;
+            } catch (err) {
+              console.error("Ошибка при загрузке названия комплекса:", err);
+            }
+          }
           
           // Проверяем права доступа для застройщика
           if (role === 'застройщик') {
@@ -352,10 +390,24 @@ function PropertyDetail() {
       type: "number"
     },
     {
+      label: "Застройщик",
+      value: safeDisplay(property.developerName || property.developer),
+      field: "developer",
+      icon: Building2,
+      show: property.developerName || property.developer,
+    },
+    {
+      label: "Комплекс",
+      value: safeDisplay(property.complexName || property.complex),
+      field: "complex",
+      icon: Home,
+      show: property.complexName || property.complex,
+    },
+    {
       label: "Этажность",
       value: property.floors ? `${safeDisplay(property.floors)} этаж${property.floors === 1 ? '' : property.floors < 5 ? 'а' : 'ей'}` : "—",
       field: "floors",
-      icon: Building2,
+      icon: Layers,
       show: property.floors !== undefined,
       type: "number"
     },
@@ -377,7 +429,7 @@ function PropertyDetail() {
       label: "Тип постройки",
       value: safeDisplay(property.buildingType),
       field: "buildingType",
-      icon: Home,
+      icon: Hammer,
       show: property.buildingType,
       type: "select",
       options: buildingTypeOptions
