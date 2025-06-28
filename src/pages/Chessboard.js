@@ -595,7 +595,7 @@ const SortableUnit = ({
 const Chessboard = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, role } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
@@ -705,16 +705,48 @@ const Chessboard = () => {
     });
   };
 
+  // Функция для получения имени застройщика по ID
+  const fetchDeveloperName = async (developerId) => {
+    try {
+      const developerDoc = await getDoc(doc(db, "developers", developerId));
+      if (developerDoc.exists()) {
+        return developerDoc.data().name;
+      }
+      return null;
+    } catch (err) {
+      console.error("Ошибка загрузки застройщика:", err);
+      return null;
+    }
+  };
+
   // Загрузка списка доступных комплексов
   useEffect(() => {
     const loadComplexes = async () => {
       try {
+        // Если пользователь - застройщик, получаем его developerId и название застройщика
+        let userDeveloperName = null;
+        if (role === 'застройщик' && currentUser) {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          if (userDoc.exists() && userDoc.data().developerId) {
+            userDeveloperName = await fetchDeveloperName(userDoc.data().developerId);
+          }
+        }
+
         // Получаем все комплексы
         const complexesSnapshot = await getDocs(collection(db, "complexes"));
         const allComplexes = complexesSnapshot.docs.map(doc => ({
           id: doc.id,
-          name: doc.data().name
+          name: doc.data().name,
+          developer: doc.data().developer || ""
         }));
+
+        // Фильтруем комплексы по застройщику для роли "застройщик"
+        let filteredByDeveloper = allComplexes;
+        if (role === 'застройщик' && userDeveloperName) {
+          filteredByDeveloper = allComplexes.filter(complex => 
+            complex.developer === userDeveloperName
+          );
+        }
 
         // Получаем все шахматки, чтобы проверить какие комплексы уже имеют шахматку
         const chessboardsSnapshot = await getDocs(collection(db, "chessboards"));
@@ -725,9 +757,14 @@ const Chessboard = () => {
         );
 
         // Фильтруем комплексы, оставляя только те, у которых нет шахматки
-        const availableComplexes = allComplexes.filter(complex => !usedComplexIds.has(complex.id));
+        const availableComplexes = filteredByDeveloper.filter(complex => !usedComplexIds.has(complex.id));
         
         setComplexes(availableComplexes);
+
+        // Если нет доступных комплексов для застройщика, показываем специальное сообщение
+        if (role === 'застройщик' && userDeveloperName && availableComplexes.length === 0) {
+          setComplexError(`Нет доступных комплексов для застройщика "${userDeveloperName}" без шахматки`);
+        }
       } catch (error) {
         console.error("Ошибка загрузки комплексов:", error);
         setComplexError("Ошибка загрузки списка комплексов");
@@ -737,7 +774,7 @@ const Chessboard = () => {
     if (!id || id === 'new') {
       loadComplexes();
     }
-  }, [id]);
+  }, [id, role, currentUser]);
 
   // Загрузка данных шахматки
   useEffect(() => {

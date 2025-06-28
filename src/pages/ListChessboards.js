@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, deleteDoc, doc, orderBy, query, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import { useAuth } from "../AuthContext";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -18,6 +19,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 const ListChessboards = () => {
   const navigate = useNavigate();
+  const { currentUser, role } = useAuth();
   const [chessboards, setChessboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [complexNames, setComplexNames] = useState({});
@@ -26,7 +28,7 @@ const ListChessboards = () => {
   // Загрузка списка шахматок
   useEffect(() => {
     fetchChessboards();
-  }, []);
+  }, [role, currentUser]);
 
   // Загрузка имен комплексов
   useEffect(() => {
@@ -54,16 +56,70 @@ const ListChessboards = () => {
     loadComplexNames();
   }, [chessboards]);
 
+  // Функция для получения имени застройщика по ID
+  const fetchDeveloperName = async (developerId) => {
+    try {
+      const developerDoc = await getDoc(doc(db, "developers", developerId));
+      if (developerDoc.exists()) {
+        return developerDoc.data().name;
+      }
+      return null;
+    } catch (err) {
+      console.error("Ошибка загрузки застройщика:", err);
+      return null;
+    }
+  };
+
   const fetchChessboards = async () => {
     setLoading(true);
     try {
+      // Если пользователь - застройщик, получаем его название застройщика
+      let userDeveloperName = null;
+      if (role === 'застройщик' && currentUser) {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists() && userDoc.data().developerId) {
+          userDeveloperName = await fetchDeveloperName(userDoc.data().developerId);
+        }
+      }
+
       const q = query(collection(db, "chessboards"), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
-      const chessboardsData = querySnapshot.docs.map(doc => ({
+      const allChessboards = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setChessboards(chessboardsData);
+
+      // Если пользователь - застройщик, фильтруем шахматки по его комплексам
+      let filteredChessboards = allChessboards;
+      if (role === 'застройщик' && userDeveloperName) {
+        // Получаем данные о комплексах для каждой шахматки
+        const chessboardsWithComplexData = await Promise.all(
+          allChessboards.map(async (chessboard) => {
+            if (chessboard.complexId) {
+              try {
+                const complexDoc = await getDoc(doc(db, "complexes", chessboard.complexId));
+                if (complexDoc.exists()) {
+                  const complexData = complexDoc.data();
+                  return {
+                    ...chessboard,
+                    complexDeveloper: complexData.developer || ""
+                  };
+                }
+              } catch (error) {
+                console.error("Ошибка загрузки комплекса:", error);
+              }
+            }
+            return { ...chessboard, complexDeveloper: "" };
+          })
+        );
+
+        // Фильтруем по застройщику
+        filteredChessboards = chessboardsWithComplexData.filter(
+          chessboard => chessboard.complexDeveloper === userDeveloperName
+        );
+      }
+
+      setChessboards(filteredChessboards);
     } catch (error) {
       console.error("Ошибка загрузки шахматок:", error);
     } finally {

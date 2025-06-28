@@ -51,8 +51,8 @@ service cloud.firestore {
     match /chessboards/{chessboardId} {
       // Чтение разрешено всем (для публичных ссылок)
       allow read: if true;
-      // Создание/изменение/удаление только для админов и модераторов
-      allow create, update, delete: if isAdmin() || isModerator();
+      // Создание/изменение/удаление для админов, модераторов и застройщиков
+      allow create, update, delete: if isAdmin() || isModerator() || isDeveloper();
     }
 
     // === Коллекция агентов и всё внутри неё ===
