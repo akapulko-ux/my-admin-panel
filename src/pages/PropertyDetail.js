@@ -17,8 +17,10 @@ import {
   Droplet,
   Map as MapIcon,
   Layers,
+  Bath,
 } from "lucide-react";
 import { showError } from '../utils/notifications';
+import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
 
 function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
@@ -36,6 +38,9 @@ function PropertyDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedValues, setEditedValues] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Состояния для загрузки файлов
+  const [uploading, setUploading] = useState({});
 
   // Функция для проверки, может ли пользователь редактировать объект
   const canEdit = () => {
@@ -88,6 +93,114 @@ function PropertyDetail() {
     setEditedValues({});
     setHasChanges(false);
     setIsEditing(false);
+  };
+
+  // Функция для загрузки нового файла
+  const handleFileUpload = (fieldName) => {
+    if (!canEdit()) {
+      showError("У вас нет прав для редактирования объекта");
+      return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+    input.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      setUploading(prev => ({ ...prev, [fieldName]: true }));
+      
+      try {
+        // Определяем подпапку в зависимости от типа файла
+        let folder;
+        if (fieldName === 'layoutFileURL') {
+          folder = 'documents/layout';
+        } else if (fieldName === 'pkkprFileURL') {
+          folder = 'documents/pkkpr';
+        } else if (fieldName === 'roiFileURL') {
+          folder = 'documents/roi';
+        } else {
+          folder = 'documents';
+        }
+        
+        const url = await uploadToFirebaseStorageInFolder(file, folder);
+        
+        // Обновляем объект в базе данных
+        const propertyRef = doc(db, "properties", id);
+        await updateDoc(propertyRef, { [fieldName]: url });
+        
+        // Обновляем локальное состояние
+        setProperty(prev => ({ ...prev, [fieldName]: url }));
+        
+        console.log(`Файл ${fieldName} успешно загружен в ${folder}:`, url);
+      } catch (error) {
+        console.error(`Ошибка загрузки файла ${fieldName}:`, error);
+        showError("Произошла ошибка при загрузке файла");
+      } finally {
+        setUploading(prev => ({ ...prev, [fieldName]: false }));
+      }
+    };
+    input.click();
+  };
+
+  // Функция для обновления существующего файла
+  const handleFileUpdate = (fieldName) => {
+    if (!canEdit()) {
+      showError("У вас нет прав для редактирования объекта");
+      return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+    input.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      setUploading(prev => ({ ...prev, [fieldName]: true }));
+      
+      try {
+        // Удаляем старый файл
+        if (property[fieldName]) {
+          try {
+            await deleteFileFromFirebaseStorage(property[fieldName]);
+          } catch (deleteError) {
+            console.warn(`Не удалось удалить старый файл ${fieldName}:`, deleteError);
+          }
+        }
+        
+        // Определяем подпапку в зависимости от типа файла
+        let folder;
+        if (fieldName === 'layoutFileURL') {
+          folder = 'documents/layout';
+        } else if (fieldName === 'pkkprFileURL') {
+          folder = 'documents/pkkpr';
+        } else if (fieldName === 'roiFileURL') {
+          folder = 'documents/roi';
+        } else {
+          folder = 'documents';
+        }
+        
+        // Загружаем новый файл
+        const url = await uploadToFirebaseStorageInFolder(file, folder);
+        
+        // Обновляем объект в базе данных
+        const propertyRef = doc(db, "properties", id);
+        await updateDoc(propertyRef, { [fieldName]: url });
+        
+        // Обновляем локальное состояние
+        setProperty(prev => ({ ...prev, [fieldName]: url }));
+        
+        console.log(`Файл ${fieldName} успешно обновлен в ${folder}:`, url);
+      } catch (error) {
+        console.error(`Ошибка обновления файла ${fieldName}:`, error);
+        showError("Произошла ошибка при обновлении файла");
+      } finally {
+        setUploading(prev => ({ ...prev, [fieldName]: false }));
+      }
+    };
+    input.click();
   };
 
   // Список неизменяемых полей
@@ -161,6 +274,15 @@ function PropertyDetail() {
     "8",
     "9",
     "10"
+  ];
+
+  const bathroomsOptions = [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
   ];
 
   const buildingTypeOptions = [
@@ -377,7 +499,6 @@ function PropertyDetail() {
       value: property.bedrooms === 0 ? "Студия" : safeDisplay(property.bedrooms),
       field: "bedrooms",
       icon: Bed,
-      show: property.bedrooms !== undefined,
       type: "select",
       options: bedroomsOptions
     },
@@ -386,7 +507,6 @@ function PropertyDetail() {
       value: property.area ? `${safeDisplay(property.area)} м²` : "—",
       field: "area",
       icon: Ruler,
-      show: property.area,
       type: "number"
     },
     {
@@ -394,21 +514,26 @@ function PropertyDetail() {
       value: safeDisplay(property.developerName || property.developer),
       field: "developer",
       icon: Building2,
-      show: property.developerName || property.developer,
     },
     {
       label: "Комплекс",
       value: safeDisplay(property.complexName || property.complex),
       field: "complex",
       icon: Home,
-      show: property.complexName || property.complex,
+    },
+    {
+      label: "Санузлы",
+      value: safeDisplay(property.bathrooms),
+      field: "bathrooms",
+      icon: Bath,
+      type: "select",
+      options: bathroomsOptions
     },
     {
       label: "Этажность",
       value: property.floors ? `${safeDisplay(property.floors)} этаж${property.floors === 1 ? '' : property.floors < 5 ? 'а' : 'ей'}` : "—",
       field: "floors",
       icon: Layers,
-      show: property.floors !== undefined,
       type: "number"
     },
     {
@@ -416,21 +541,18 @@ function PropertyDetail() {
       value: safeDisplay(property.classRating),
       field: "classRating",
       icon: Star,
-      show: property.classRating,
     },
     {
       label: "Район",
       value: safeDisplay(property.district),
       field: "district",
       icon: MapPin,
-      show: property.district,
     },
     {
       label: "Тип постройки",
       value: safeDisplay(property.buildingType),
       field: "buildingType",
       icon: Hammer,
-      show: property.buildingType,
       type: "select",
       options: buildingTypeOptions
     },
@@ -439,7 +561,6 @@ function PropertyDetail() {
       value: safeDisplay(property.status),
       field: "status",
       icon: Hammer,
-      show: property.status,
       type: "select",
       options: statusOptions
     },
@@ -448,14 +569,12 @@ function PropertyDetail() {
       value: safeDisplay(property.landStatus),
       field: "landStatus",
       icon: MapPin,
-      show: property.landStatus,
     },
     {
       label: "Бассейн",
       value: safeDisplay(property.pool),
       field: "pool",
       icon: Droplet,
-      show: property.pool,
       type: "select",
       options: poolOptions
     },
@@ -464,7 +583,6 @@ function PropertyDetail() {
       value: property.ownershipForm ? `${property.ownershipForm}${property.leaseYears ? ` ${property.leaseYears} лет` : ""}` : "—",
       field: "ownershipForm",
       icon: FileText,
-      show: property.ownershipForm,
       type: "select",
       options: ownershipFormOptions
     },
@@ -473,10 +591,9 @@ function PropertyDetail() {
       value: safeDisplay(property.completionDate),
       field: "completionDate",
       icon: Calendar,
-      show: property.completionDate,
       type: "date"
     },
-  ].filter((a) => a.show);
+  ];
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -596,6 +713,188 @@ function PropertyDetail() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Секция Документы */}
+      <div className="mt-8">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Документы</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Юридическое название компании:</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('legalCompanyName', safeDisplay(property.legalCompanyName), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Налоговый номер (NPWP):</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('npwp', safeDisplay(property.npwp), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Разрешение на использование земли (PKKPR):</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('pkkpr', safeDisplay(property.pkkpr), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Сертификат права на землю (SHGB):</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('shgb', safeDisplay(property.shgb), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Разрешение на строительство (PBG):</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('pbg', safeDisplay(property.pbg), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Сертификат готовности здания (SLF):</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('slf', safeDisplay(property.slf), 'text')}
+            </div>
+          </div>
+          
+          {/* Файловые поля */}
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Планировка:</span>
+            <div className="flex gap-2">
+              {property.layoutFileURL ? (
+                <>
+                  <button 
+                    onClick={() => window.open(property.layoutFileURL, '_blank')}
+                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Просмотреть
+                  </button>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpdate('layoutFileURL')}
+                      disabled={uploading.layoutFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.layoutFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      } text-white`}
+                    >
+                      {uploading.layoutFileURL ? 'Загрузка...' : 'Обновить'}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">Файл не загружен</span>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('layoutFileURL')}
+                      disabled={uploading.layoutFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.layoutFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white`}
+                    >
+                      {uploading.layoutFileURL ? 'Загрузка...' : 'Загрузить'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Файл PKKPR:</span>
+            <div className="flex gap-2">
+              {property.pkkprFileURL ? (
+                <>
+                  <button 
+                    onClick={() => window.open(property.pkkprFileURL, '_blank')}
+                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Просмотреть
+                  </button>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpdate('pkkprFileURL')}
+                      disabled={uploading.pkkprFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.pkkprFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      } text-white`}
+                    >
+                      {uploading.pkkprFileURL ? 'Загрузка...' : 'Обновить'}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">Файл не загружен</span>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('pkkprFileURL')}
+                      disabled={uploading.pkkprFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.pkkprFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white`}
+                    >
+                      {uploading.pkkprFileURL ? 'Загрузка...' : 'Загрузить'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">ROI файл:</span>
+            <div className="flex gap-2">
+              {property.roiFileURL ? (
+                <>
+                  <button 
+                    onClick={() => window.open(property.roiFileURL, '_blank')}
+                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Просмотреть
+                  </button>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpdate('roiFileURL')}
+                      disabled={uploading.roiFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.roiFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      } text-white`}
+                    >
+                      {uploading.roiFileURL ? 'Загрузка...' : 'Обновить'}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">Файл не загружен</span>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('roiFileURL')}
+                      disabled={uploading.roiFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.roiFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white`}
+                    >
+                      {uploading.roiFileURL ? 'Загрузка...' : 'Загрузить'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Кнопки редактирования */}
