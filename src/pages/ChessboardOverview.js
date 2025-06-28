@@ -108,14 +108,8 @@ const ChessboardOverview = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight - 64; // Высота минус высота шапки
 
-      // На мобильных устройствах не масштабируем
-      if (window.innerWidth <= 768) {
-        setScale(1);
-        return;
-      }
-
-      // Учитываем отступы
-      const padding = 32; // 16px с каждой стороны
+      // Учитываем отступы (меньше на мобильных)
+      const padding = window.innerWidth <= 768 ? 16 : 32; // 8px с каждой стороны на мобильных, 16px на десктопе
       const availableWidth = viewportWidth - padding;
       const availableHeight = viewportHeight - padding;
 
@@ -203,14 +197,11 @@ const ChessboardOverview = () => {
       </div>
 
       {/* Основной контент */}
-      <div className="absolute inset-0 top-16 bg-[#0f1117] overflow-auto">
+      <div className="absolute inset-0 top-16 bg-[#0f1117] overflow-auto" style={{ touchAction: 'pan-x pan-y pinch-zoom' }}>
         <div 
-          className={`
-            min-w-fit
-            ${window.innerWidth <= 768 ? '' : 'transform-gpu'}
-          `}
+          className="min-w-fit transform-gpu"
           style={{
-            transform: window.innerWidth <= 768 ? 'none' : `scale(${scale})`,
+            transform: `scale(${scale})`,
             transformOrigin: 'top left',
             padding: '16px',
             minHeight: '100%',
