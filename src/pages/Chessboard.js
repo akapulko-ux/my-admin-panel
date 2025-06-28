@@ -506,6 +506,18 @@ const SortableUnit = ({
                     <option value="Двор">🏡 Двор</option>
                   </select>
               </div>
+              <div>
+                <label className="block text-xs text-white/90 font-semibold mb-1">Сторона</label>
+                  <select
+                    value={unit.side || ''} 
+                    onChange={(e) => onUnitChange('side', e.target.value)}
+                    className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
+                  >
+                    <option value="">❓ Не указана</option>
+                    <option value="Рассветная">🌅 Рассветная</option>
+                    <option value="Закатная">🌇 Закатная</option>
+                  </select>
+              </div>
             </div>
           </div>
           
@@ -618,6 +630,7 @@ const Chessboard = () => {
     bathrooms: "1",
     area: "",
     view: "",
+    side: "", // Добавляем поле для стороны
     priceUSD: 0,
     priceIDR: 0,
     showPriceIDR: false,
@@ -864,14 +877,13 @@ const Chessboard = () => {
     setSections(prev => {
       const newSections = [...prev];
       const section = newSections[sectionIndex];
-      const floorNumber = section.floors.length + 1;
       
       section.floors.push({
         ...defaultFloor,
-        floor: floorNumber.toString(),
+        floor: "", // Не устанавливаем номер этажа автоматически - пользователь сам его введет
         units: [{
           ...defaultUnit,
-          id: `${sectionIndex + 1}-${floorNumber.toString().padStart(2, '0')}-01`
+          id: crypto.randomUUID().substring(0, 8) // Используем уникальный ID вместо зависимости от номера этажа
         }]
       });
       
@@ -893,11 +905,10 @@ const Chessboard = () => {
       const newSections = [...prev];
       const section = newSections[sectionIndex];
       const floor = section.floors[floorIndex];
-      const unitNumber = floor.units.length + 1;
       
       floor.units.push({
         ...defaultUnit,
-        id: `${sectionIndex + 1}-${floor.floor.toString().padStart(2, '0')}-${unitNumber.toString().padStart(2, '0')}`
+        id: crypto.randomUUID().substring(0, 8) // Используем уникальный ID независимо от номера этажа
       });
 
       // Получаем индекс нового юнита
@@ -1310,7 +1321,6 @@ const Chessboard = () => {
                       strategy={verticalListSortingStrategy}
                     >
                       {section.floors
-                        .sort((a, b) => b.floor - a.floor)
                         .map((floor, floorIdx) => (
                           <SortableFloor
                             key={floorIdx}

@@ -185,7 +185,6 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
               <CardContent>
                 <div className="space-y-4">
                   {section.floors
-                    .sort((a, b) => b.floor - a.floor)
                     .map((floor, floorIdx) => (
                       <div key={floorIdx} className="border rounded-lg p-4 bg-gray-50">
                         <div className="flex items-center gap-2 mb-4">
@@ -260,6 +259,14 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                                         {unit.bathrooms === '6' && '6 санузлов'}
                                       </span>
                                     </div>
+                                    {unit.side && (
+                                      <div className="flex items-center gap-1">
+                                        <span className="font-semibold text-white">
+                                          {unit.side === 'Рассветная' && 'Рассветная сторона'}
+                                          {unit.side === 'Закатная' && 'Закатная сторона'}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
 
                                   {unit.status === 'free' && unit.priceUSD > 0 && (
