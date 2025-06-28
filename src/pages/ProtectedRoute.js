@@ -25,6 +25,7 @@ const ROUTE_ACCESS = {
   ],
   застройщик: [
     '/property/gallery',
+    '/property/*',
     '/chessboard',
     '/chessboard/*',
     '/roi-calculator',
