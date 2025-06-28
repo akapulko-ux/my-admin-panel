@@ -274,18 +274,12 @@ const ChessboardOverview = () => {
                               )}
                             </div>
 
-                            <div className="flex flex-nowrap gap-3 pb-2">
+                            <div className="overflow-x-auto pb-4">
+                              <div className="flex gap-3 min-w-max">
                               {floor.units.map((unit, unitIdx) => (
                                 <Card 
                                   key={unitIdx} 
-                                  className={`
-                                    ${getStatusColor(unit.status)} 
-                                    w-[200px] flex-shrink-0
-                                    relative
-                                    transition-transform duration-200 ease-in-out
-                                    hover:scale-[1.02]
-                                    hover:shadow-xl
-                                  `}
+                                  className={`${getStatusColor(unit.status)} hover:shadow-lg hover:scale-105 transition-all duration-200 w-[300px] relative flex-shrink-0`}
                                 >
                                   <CardHeader className="p-3">
                                     <div className="flex items-center justify-between">
@@ -369,6 +363,7 @@ const ChessboardOverview = () => {
                                   </CardContent>
                                 </Card>
                               ))}
+                              </div>
                             </div>
                           </div>
                         ))}
