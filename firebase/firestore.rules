@@ -1,0 +1,161 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // === Утилиты ===
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Проверка роли через custom claims
+    function hasRoleInToken(role) {
+      return isSignedIn() && request.auth.token.role == role;
+    }
+
+    // Проверка роли через Firestore
+    function hasRoleInFirestore(role) {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    // Комбинированная проверка роли (либо через token, либо через Firestore)
+    function isAdmin() {
+      return hasRoleInToken('admin') || hasRoleInFirestore('admin');
+    }
+
+    function isAgent() {
+      return hasRoleInToken('agent') || hasRoleInFirestore('agent');
+    }
+
+    function isPremiumAgent() {
+      return hasRoleInToken('premium agent') || hasRoleInFirestore('premium agent');
+    }
+
+    function isDeveloper() {
+      return hasRoleInToken('застройщик') || hasRoleInFirestore('застройщик');
+    }
+
+    function isModerator() {
+      return hasRoleInFirestore('модератор');
+    }
+
+    function isAnyAgent() {
+      return isAgent() || isPremiumAgent();
+    }
+
+    function canManageProperties() {
+      return isAdmin() || isAnyAgent() || isDeveloper();
+    }
+
+    // === Шахматки (специфично для админ-панели) ===
+    match /chessboards/{chessboardId} {
+      // Чтение разрешено всем (для публичных ссылок)
+      allow read: if true;
+      // Создание/изменение/удаление только для админов и модераторов
+      allow create, update, delete: if isAdmin() || isModerator();
+    }
+
+    // === Коллекция агентов и всё внутри неё ===
+    match /agents/{agentId} {
+      // админ может всё, агент (обычный, премиум) или застройщик — только свои данные  
+      allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+
+      // чаты
+      match /chats/{chatId} {
+        allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+
+        // support внутри чатов
+        match /support/{supportId} {
+          allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+        }
+      }
+
+      // избранное агента
+      match /favorites/{favoriteId} {
+        allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+      }
+
+      // подборки агента
+      match /selections/{selectionId} {
+        allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+      }
+    }
+
+    // === Недвижимость ===
+    match /properties/{propertyId} {
+      // публичное чтение
+      allow read: if true;
+      // добавление/изменение/удаление — только admin, agent (обычный или премиум) или застройщик
+      allow create, update, delete: if canManageProperties();
+
+      match /documents/{docId} {
+        allow read: if true;
+        allow create, update, delete: if canManageProperties();
+      }
+    }
+
+    // === Комплексы ===
+    match /complexes/{complexId} {
+      allow read: if true;
+      allow create, update, delete: if canManageProperties();
+    }
+
+    // === Профили пользователей ===
+    match /users/{userId} {
+      // админ видит/меняет любые (для админки), обычные пользователи — только свой
+      allow read, update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      // разрешаем создание документа пользователя самому пользователю при регистрации
+      allow create: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // === PDF-файлы (если хранятся в Firestore) ===
+    match /pdfs/{pdfId} {
+      allow read, create, update, delete: if canManageProperties();
+    }
+
+    // === PKKPR документы ===
+    match /pkkpr_documents/{pkkprNumber} {
+      // публичное чтение
+      allow read: if true;
+      // создание/изменение/удаление — только admin, agent (обычный или премиум) или застройщик
+      allow create, update, delete: if canManageProperties();
+    }
+
+    // === Voice AI Agent ===
+    match /voiceAISessions/{sessionId} {
+      allow read, write: if isSignedIn() &&
+        (resource.data.agentId == request.auth.uid ||
+         request.data.agentId == request.auth.uid);
+    }
+
+    match /voiceAILeads/{leadId} {
+      allow read, write: if isSignedIn() &&
+        (resource.data.agentId == request.auth.uid ||
+         request.data.agentId == request.auth.uid);
+    }
+
+    match /voiceAISettings/{userId} {
+      allow read, write: if isSignedIn() &&
+        request.auth.uid == userId;
+    }
+
+    // === Transcription Usage ===
+    match /transcriptionUsage/{userId} {
+      // пользователи могут читать и писать только свои данные использования
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      
+      match /monthly/{monthKey} {
+        // пользователи могут читать и писать только свои месячные данные
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+
+    // === Фоллбэк для любых новых коллекций ===
+    match /{path=**} {
+      // чтение всем залогиненным
+      allow read: if isSignedIn();
+      // запись — только admin, agent (обычный или премиум) или застройщик
+      allow create, update, delete: if canManageProperties();
+    }
+  }
+}
