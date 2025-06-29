@@ -8,7 +8,7 @@ import { Card } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import toast from 'react-hot-toast';
 
-const FixationChat = ({ chatId, isOpen, onClose }) => {
+const FixationChat = ({ chatId, agentId, isOpen, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -23,11 +23,11 @@ const FixationChat = ({ chatId, isOpen, onClose }) => {
   };
 
   useEffect(() => {
-    if (isOpen && chatId) {
+    if (isOpen && chatId && agentId) {
       // Получаем данные чата
       const fetchChatData = async () => {
         try {
-          const chatRef = doc(db, 'agents', currentUser.uid, 'chats', chatId);
+          const chatRef = doc(db, 'agents', agentId, 'chats', chatId);
           const chatDoc = await getDoc(chatRef);
           if (chatDoc.exists()) {
             setChatData(chatDoc.data());
@@ -41,7 +41,7 @@ const FixationChat = ({ chatId, isOpen, onClose }) => {
       fetchChatData();
 
       // Подписываемся на обновления сообщений
-      const messagesRef = collection(db, 'agents', currentUser.uid, 'chats', chatId, 'messages');
+      const messagesRef = collection(db, 'agents', agentId, 'chats', chatId, 'messages');
       const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -64,16 +64,16 @@ const FixationChat = ({ chatId, isOpen, onClose }) => {
         setMessages([]);
       };
     }
-  }, [chatId, isOpen, currentUser.uid]);
+  }, [chatId, agentId, isOpen]);
 
   // Отправка нового сообщения
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !agentId) return;
 
     try {
-      const messagesRef = collection(db, 'agents', currentUser.uid, 'chats', chatId, 'messages');
-      const chatRef = doc(db, 'agents', currentUser.uid, 'chats', chatId);
+      const messagesRef = collection(db, 'agents', agentId, 'chats', chatId, 'messages');
+      const chatRef = doc(db, 'agents', agentId, 'chats', chatId);
 
       // Добавляем новое сообщение
       await addDoc(messagesRef, {
@@ -81,7 +81,7 @@ const FixationChat = ({ chatId, isOpen, onClose }) => {
         senderId: currentUser.uid,
         senderName: currentUser.email,
         timestamp: Timestamp.now(),
-        isFromCurrentUser: true
+        isFromCurrentUser: false // Для админа это сообщение от поддержки
       });
 
       // Обновляем последнее сообщение в чате

@@ -45,6 +45,7 @@ const ClientFixations = () => {
   const [rejectComment, setRejectComment] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState(null);
+  const [selectedAgentId, setSelectedAgentId] = useState(null);
 
   // Функция для открытия диалога подтверждения
   const openApproveDialog = (fixation) => {
@@ -164,7 +165,7 @@ const ClientFixations = () => {
       const validUntilFormatted = new Date(validUntilDate).toLocaleDateString('ru-RU');
       const systemMessage = `Ваш клиент ${selectedFixation.clientName} ${selectedFixation.clientPhone} зафиксирован за вами у застройщика ${selectedFixation.developerName} до ${validUntilFormatted}`;
       
-      const messagesRef = collection(db, 'agents', currentUser.uid, 'chats', selectedFixation.chatId, 'messages');
+      const messagesRef = collection(db, 'agents', selectedFixation.agentId, 'chats', selectedFixation.chatId, 'messages');
       await addDoc(messagesRef, {
         text: systemMessage,
         senderId: 'system',
@@ -176,7 +177,7 @@ const ClientFixations = () => {
       });
 
       // Обновляем последнее сообщение в чате
-      const chatRef = doc(db, 'agents', currentUser.uid, 'chats', selectedFixation.chatId);
+      const chatRef = doc(db, 'agents', selectedFixation.agentId, 'chats', selectedFixation.chatId);
       await updateDoc(chatRef, {
         lastMessage: systemMessage,
         timestamp: Timestamp.now()
@@ -200,7 +201,7 @@ const ClientFixations = () => {
       // Отправляем системное сообщение в чат фиксации
       const systemMessage = `Ваша заявка на фиксацию клиента ${selectedFixation.clientName} ${selectedFixation.clientPhone} у застройщика ${selectedFixation.developerName} отклонена. Причина отклонения: ${rejectComment}`;
       
-      const messagesRef = collection(db, 'agents', currentUser.uid, 'chats', selectedFixation.chatId, 'messages');
+      const messagesRef = collection(db, 'agents', selectedFixation.agentId, 'chats', selectedFixation.chatId, 'messages');
       await addDoc(messagesRef, {
         text: systemMessage,
         senderId: 'system',
@@ -212,7 +213,7 @@ const ClientFixations = () => {
       });
 
       // Обновляем последнее сообщение в чате
-      const chatRef = doc(db, 'agents', currentUser.uid, 'chats', selectedFixation.chatId);
+      const chatRef = doc(db, 'agents', selectedFixation.agentId, 'chats', selectedFixation.chatId);
       await updateDoc(chatRef, {
         lastMessage: systemMessage,
         timestamp: Timestamp.now()
@@ -336,6 +337,7 @@ const ClientFixations = () => {
   // Функция для открытия чата
   const openChat = (fixation) => {
     setSelectedChatId(fixation.chatId);
+    setSelectedAgentId(fixation.agentId);
     setIsChatOpen(true);
   };
 
@@ -343,6 +345,7 @@ const ClientFixations = () => {
   const closeChat = () => {
     setIsChatOpen(false);
     setSelectedChatId(null);
+    setSelectedAgentId(null);
   };
 
   useEffect(() => {
@@ -591,6 +594,7 @@ const ClientFixations = () => {
       {/* Компонент чата */}
       <FixationChat
         chatId={selectedChatId}
+        agentId={selectedAgentId}
         isOpen={isChatOpen}
         onClose={closeChat}
       />
