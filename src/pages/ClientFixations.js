@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, updateDoc, doc, Timestamp, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { Card } from '../components/ui/card';
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
+import FixationChat from '../components/FixationChat';
 import toast from 'react-hot-toast';
 
 // Функция для форматирования даты
@@ -38,9 +39,12 @@ const ClientFixations = () => {
   const { currentUser, role: userRole } = useAuth();
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedFixation, setSelectedFixation] = useState(null);
   const [validUntilDate, setValidUntilDate] = useState('');
   const [rejectComment, setRejectComment] = useState('');
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedChatId, setSelectedChatId] = useState(null);
 
   // Функция для открытия диалога подтверждения
   const openApproveDialog = (fixation) => {
@@ -71,6 +75,18 @@ const ClientFixations = () => {
     setIsRejectDialogOpen(false);
     setSelectedFixation(null);
     setRejectComment('');
+  };
+
+  // Функция для открытия диалога удаления
+  const openDeleteDialog = (fixation) => {
+    setSelectedFixation(fixation);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Функция для закрытия диалога удаления
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setSelectedFixation(null);
   };
 
   // Функция для получения статуса с правильным цветом
@@ -137,15 +153,114 @@ const ClientFixations = () => {
   };
 
   // Функция для подтверждения фиксации с выбранной датой
-  const handleApproveFixation = () => {
+  const handleApproveFixation = async () => {
     if (!selectedFixation || !validUntilDate) return;
-    updateFixationStatus(selectedFixation.id, 'Зафиксирован', validUntilDate);
+    
+    try {
+      // Обновляем статус фиксации
+      await updateFixationStatus(selectedFixation.id, 'Зафиксирован', validUntilDate);
+      
+      // Отправляем системное сообщение в чат фиксации
+      const validUntilFormatted = new Date(validUntilDate).toLocaleDateString('ru-RU');
+      const systemMessage = `Ваш клиент ${selectedFixation.clientName} ${selectedFixation.clientPhone} зафиксирован за вами у застройщика ${selectedFixation.developerName} до ${validUntilFormatted}`;
+      
+      const messagesRef = collection(db, 'agents', currentUser.uid, 'chats', selectedFixation.chatId, 'messages');
+      await addDoc(messagesRef, {
+        text: systemMessage,
+        senderId: 'system',
+        sender_id: 'system',
+        sender_name: 'Система',
+        sender_role: 'system',
+        timestamp: Timestamp.now(),
+        isFromCurrentUser: false
+      });
+
+      // Обновляем последнее сообщение в чате
+      const chatRef = doc(db, 'agents', currentUser.uid, 'chats', selectedFixation.chatId);
+      await updateDoc(chatRef, {
+        lastMessage: systemMessage,
+        timestamp: Timestamp.now()
+      });
+
+      toast.success('Фиксация подтверждена и сообщение отправлено в чат');
+    } catch (error) {
+      console.error('Ошибка при подтверждении фиксации:', error);
+      toast.error('Ошибка при подтверждении фиксации');
+    }
   };
 
   // Функция для отклонения фиксации с комментарием
-  const handleRejectFixation = () => {
+  const handleRejectFixation = async () => {
     if (!selectedFixation || rejectComment.length < 10) return;
-    updateFixationStatus(selectedFixation.id, 'Отклонен', null, rejectComment);
+    
+    try {
+      // Обновляем статус фиксации
+      await updateFixationStatus(selectedFixation.id, 'Отклонен', null, rejectComment);
+      
+      // Отправляем системное сообщение в чат фиксации
+      const systemMessage = `Ваша заявка на фиксацию клиента ${selectedFixation.clientName} ${selectedFixation.clientPhone} у застройщика ${selectedFixation.developerName} отклонена. Причина отклонения: ${rejectComment}`;
+      
+      const messagesRef = collection(db, 'agents', currentUser.uid, 'chats', selectedFixation.chatId, 'messages');
+      await addDoc(messagesRef, {
+        text: systemMessage,
+        senderId: 'system',
+        sender_id: 'system',
+        sender_name: 'Система',
+        sender_role: 'system',
+        timestamp: Timestamp.now(),
+        isFromCurrentUser: false
+      });
+
+      // Обновляем последнее сообщение в чате
+      const chatRef = doc(db, 'agents', currentUser.uid, 'chats', selectedFixation.chatId);
+      await updateDoc(chatRef, {
+        lastMessage: systemMessage,
+        timestamp: Timestamp.now()
+      });
+
+      toast.success('Фиксация отклонена и сообщение отправлено в чат');
+    } catch (error) {
+      console.error('Ошибка при отклонении фиксации:', error);
+      toast.error('Ошибка при отклонении фиксации');
+    }
+  };
+
+  // Функция для удаления фиксации и чата
+  const handleDeleteFixation = async () => {
+    if (!selectedFixation) return;
+
+    try {
+      const batch = writeBatch(db);
+
+      // Удаляем документ фиксации
+      const fixationRef = doc(db, 'clientFixations', selectedFixation.id);
+      batch.delete(fixationRef);
+
+      // Удаляем чат и все его сообщения
+      const chatRef = doc(db, 'agents', selectedFixation.agentId, 'chats', selectedFixation.chatId);
+      const messagesRef = collection(db, 'agents', selectedFixation.agentId, 'chats', selectedFixation.chatId, 'messages');
+      
+      // Получаем все сообщения чата для удаления
+      const messagesSnapshot = await getDocs(messagesRef);
+      messagesSnapshot.docs.forEach(messageDoc => {
+        batch.delete(messageDoc.ref);
+      });
+
+      // Удаляем сам чат
+      batch.delete(chatRef);
+
+      // Выполняем batch операцию
+      await batch.commit();
+
+      // Обновляем локальное состояние
+      setFixations(prev => prev.filter(f => f.id !== selectedFixation.id));
+
+      toast.success('Фиксация и чат успешно удалены');
+      closeDeleteDialog();
+    } catch (error) {
+      console.error('Ошибка при удалении фиксации:', error);
+      toast.error('Ошибка при удалении фиксации');
+    }
   };
 
   // Функция для проверки и обновления истекших фиксаций
@@ -198,10 +313,16 @@ const ClientFixations = () => {
       }
 
       const snapshot = await getDocs(fixationsQuery);
-      const fixationsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const fixationsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        // Формируем chatId из префикса и ID фиксации
+        const chatId = `fix-${doc.id}`;
+        return {
+          id: doc.id,
+          chatId,
+          ...data,
+        };
+      });
 
       setFixations(fixationsData);
       checkAndUpdateExpiredFixations(fixationsData);
@@ -210,6 +331,18 @@ const ClientFixations = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Функция для открытия чата
+  const openChat = (fixation) => {
+    setSelectedChatId(fixation.chatId);
+    setIsChatOpen(true);
+  };
+
+  // Функция для закрытия чата
+  const closeChat = () => {
+    setIsChatOpen(false);
+    setSelectedChatId(null);
   };
 
   useEffect(() => {
@@ -257,7 +390,7 @@ const ClientFixations = () => {
           Обновить
         </Button>
       </div>
-
+      
       <div className="grid gap-4">
         {fixations.map((fixation) => (
           <Card key={fixation.id} className="p-4">
@@ -286,8 +419,25 @@ const ClientFixations = () => {
                     </p>
                   </div>
                 )}
+              </div>
+              <div className="text-right">
+                <div className="mb-2">
+                  {getStatusBadge(fixation.status)}
+                </div>
+                <p className="text-sm text-gray-600">
+                  {formatDate(fixation.dateTime.seconds * 1000)}
+                </p>
+                {fixation.validUntil && (
+                  <p className="text-sm text-gray-600">
+                    Действует до: {formatDate(fixation.validUntil.seconds * 1000)}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-between mt-4">
+              <div>
                 {fixation.status === 'На согласовании' && userRole === 'admin' && (
-                  <div className="mt-4 space-x-2">
+                  <div className="space-x-2">
                     <Button
                       onClick={() => openApproveDialog(fixation)}
                       className="bg-green-500 hover:bg-green-600 text-white"
@@ -303,17 +453,25 @@ const ClientFixations = () => {
                   </div>
                 )}
               </div>
-              <div className="text-right">
-                <div className="mb-2">
-                  {getStatusBadge(fixation.status)}
-                </div>
-                <p className="text-sm text-gray-600">
-                  {formatDate(fixation.dateTime.seconds * 1000)}
-                </p>
-                {fixation.validUntil && (
-                  <p className="text-sm text-gray-600">
-                    Действует до: {formatDate(fixation.validUntil.seconds * 1000)}
-                  </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => openChat(fixation)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Чат с агентом
+                </Button>
+                {userRole === 'admin' && (
+                  <Button
+                    onClick={() => openDeleteDialog(fixation)}
+                    variant="outline"
+                    size="sm"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </Button>
                 )}
               </div>
             </div>
@@ -398,6 +556,44 @@ const ClientFixations = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Диалог удаления фиксации */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Удаление фиксации</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-700">
+              Вы уверены, что хотите удалить фиксацию клиента <strong>{selectedFixation?.clientName}</strong>?
+            </p>
+            <p className="text-red-600 text-sm mt-2">
+              Это действие нельзя отменить. Будут удалены фиксация и все связанные с ней сообщения в чате.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeDeleteDialog}
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleDeleteFixation}
+              className="bg-red-500 hover:bg-red-600 text-white ml-2"
+            >
+              Удалить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Компонент чата */}
+      <FixationChat
+        chatId={selectedChatId}
+        isOpen={isChatOpen}
+        onClose={closeChat}
+      />
     </div>
   );
 };
