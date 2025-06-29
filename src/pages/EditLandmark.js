@@ -23,6 +23,15 @@ import {
   CircularProgress
 } from "@mui/material";
 import { showSuccess } from '../utils/notifications';
+import { Landmark, Upload, Save, Trash2 } from "lucide-react";
+
+import {
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 
 function EditLandmark() {
   const { id } = useParams();
@@ -211,90 +220,138 @@ function EditLandmark() {
   };
 
   if (loading) {
-    return <Box sx={{ p: 2 }}>Загрузка...</Box>;
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
-    <Box sx={{ maxWidth: 800, margin: "auto", p: 2 }}>
-      <Card variant="outlined">
+    <div className="container mx-auto py-8 px-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Landmark className="h-6 w-6" />
+            Редактировать Достопримечательность
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Редактировать Достопримечательность (ID: {id})
-          </Typography>
-          <DndProvider backend={HTML5Backend}>
-            <Box
-              component="form"
-              onSubmit={handleSave}
-              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-            >
-              <TextField
-                label="Название"
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Название</Label>
+              <Input
+                id="name"
                 value={name}
                 onChange={handleNameChange}
                 required
+                placeholder="Только заглавные латинские буквы"
               />
-              <TextField
-                label="Координаты (шир, долг)"
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="coordinates">Координаты (шир, долг)</Label>
+              <Input
+                id="coordinates"
                 value={coordinates}
                 onChange={(e) => setCoordinates(e.target.value)}
+                required
+                placeholder="Например: -8.409518, 115.188919"
               />
-              <TextField
-                label="Описание"
-                multiline
-                rows={4}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Описание</Label>
+              <Textarea
+                id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+                placeholder="Опишите достопримечательность..."
               />
-              <Typography>Фото (Drag & Drop):</Typography>
-              <Grid container spacing={2}>
-                {images.map((item, idx) => (
-                  <Grid item xs={6} sm={4} key={item.id}>
-                    <DraggablePreviewItem
-                      item={item}
-                      index={idx}
-                      moveItem={moveImage}
-                      onRemove={() => handleRemoveImage(idx)}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            </div>
+
+            <div className="space-y-4">
+              <Label>Фотографии (Drag & Drop)</Label>
+              <DndProvider backend={HTML5Backend}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {images.map((item, idx) => (
+                    <div key={item.id} className="relative">
+                      <DraggablePreviewItem
+                        item={item}
+                        index={idx}
+                        moveItem={moveImage}
+                        onRemove={() => handleRemoveImage(idx)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </DndProvider>
+
+              <div className="flex items-center gap-4">
                 <Button
-                  variant="contained"
-                  component="label"
+                  type="button"
+                  variant="outline"
                   disabled={isUploading}
+                  onClick={() => document.getElementById('file-upload').click()}
+                  className="relative"
                 >
                   {isUploading ? (
-                    <>
-                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                       Загрузка...
-                    </>
+                    </div>
                   ) : (
-                    "Добавить фото / PDF"
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Добавить фото / PDF
+                    </>
                   )}
-                  <input type="file" hidden multiple onChange={handleFileChange} />
                 </Button>
-              </Box>
-              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  multiple
+                  onChange={handleFileChange}
+                  accept="image/*,application/pdf"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                className="min-w-[150px]"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Удалить
+              </Button>
+
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="min-w-[150px]"
+              >
                 {isSaving ? (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CircularProgress size={24} />
-                    <Typography>Сохраняем...</Typography>
-                  </Box>
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Сохранение...
+                  </div>
                 ) : (
-                  <Button variant="contained" color="primary" type="submit">
-                    Сохранить изменения
-                  </Button>
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Сохранить
+                  </>
                 )}
-                <Button variant="contained" color="error" onClick={handleDelete}>
-                  Удалить
-                </Button>
-              </Box>
-            </Box>
-          </DndProvider>
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }
 

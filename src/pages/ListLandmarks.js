@@ -3,19 +3,19 @@ import { db } from "../firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { useNavigate } from "react-router-dom";
+import { Landmark, Plus, Download, Pencil, Search } from "lucide-react";
 
 import {
-  Box,
-  CircularProgress,
-  Typography,
   Card,
   CardContent,
-  Grid,
-  Button,
-  TextField,
-  LinearProgress
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 
 // Функция для очистки имени папки
 const sanitizeFolderName = (name) => {
@@ -126,103 +126,104 @@ function ListLandmarks() {
 
   if (loading) {
     return (
-      <Box sx={{ p: 2 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (landmarks.length === 0) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Typography>Нет достопримечательностей</Typography>
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h5" gutterBottom>
-        Список Достопримечательностей
-      </Typography>
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Список Достопримечательностей</h1>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate("/landmark/new")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Добавить достопримечательность
+          </Button>
+          <Button variant="outline" onClick={handleDownloadAllPhotos} disabled={downloading}>
+            <Download className="mr-2 h-4 w-4" />
+            Скачать все фотографии
+          </Button>
+        </div>
+      </div>
 
       {/* Строка поиска */}
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          label="Поиск"
-          variant="outlined"
-          size="small"
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          className="pl-10"
+          placeholder="Поиск по названию, координатам или описанию..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Введите название, координаты или описание..."
-          fullWidth
         />
-      </Box>
-
-      {/* Кнопка скачивания всех фотографий */}
-      <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleDownloadAllPhotos}
-          disabled={downloading}
-        >
-          Скачать все фотографии
-        </Button>
-      </Box>
+      </div>
 
       {/* Прогресс-бар */}
       {downloading && (
-        <Box sx={{ mb: 2 }}>
-          <Typography>
+        <div className="mb-6">
+          <div className="text-sm text-muted-foreground mb-2">
             Загружено {downloadedImages} из {totalImages} изображений ({progress}%)
-          </Typography>
-          <LinearProgress variant="determinate" value={progress} />
-        </Box>
+          </div>
+          <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+            <div 
+              className="bg-primary h-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
       )}
 
       {filteredLandmarks.length === 0 ? (
-        <Typography>Ничего не найдено по вашему запросу.</Typography>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Landmark className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-xl text-muted-foreground">
+              {landmarks.length === 0 ? "Нет достопримечательностей" : "Ничего не найдено по вашему запросу"}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <Grid container spacing={2}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredLandmarks.map((landmark) => (
-            <Grid item xs={12} sm={6} md={4} key={landmark.id}>
-              <Card>
+            <Card key={landmark.id} className="overflow-hidden">
+              {landmark.images && landmark.images.length > 0 && (
+                <div className="aspect-video relative overflow-hidden">
+                  <img
+                    src={landmark.images[0]}
+                    alt={landmark.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <CardHeader>
+                <CardTitle>{landmark.name || "Без названия"}</CardTitle>
+                <CardDescription>
+                  Координаты: {landmark.coordinates || "не указаны"}
+                </CardDescription>
+              </CardHeader>
+              {landmark.description && (
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    {landmark.name || "Без названия"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Координаты: {landmark.coordinates || "не указаны"}
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    {landmark.description || ""}
-                  </Typography>
-                  {landmark.images && landmark.images.length > 0 && (
-                    <Box sx={{ mt: 2 }}>
-                      <img
-                        src={landmark.images[0]}
-                        alt="landmark"
-                        style={{ width: "100%", borderRadius: 4 }}
-                      />
-                    </Box>
-                  )}
-                  <Box sx={{ mt: 2 }}>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => navigate(`/landmark/edit/${landmark.id}`)}
-                    >
-                      Редактировать
-                    </Button>
-                  </Box>
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {landmark.description}
+                  </p>
                 </CardContent>
-              </Card>
-            </Grid>
+              )}
+              <CardFooter>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => navigate(`/landmark/edit/${landmark.id}`)}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Редактировать
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
-        </Grid>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }
 

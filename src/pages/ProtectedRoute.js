@@ -33,19 +33,40 @@ const ROUTE_ACCESS = {
     '/chessboard/*',
     '/roi-calculator',
     '/client-fixations',
-    '/'
+    '/dashboard'
   ],
   user: [
     '/property/gallery',
-    '/'
+    '/dashboard'
   ]
 };
 
-const ProtectedRoute = ({ children }) => {
+// Маршруты по умолчанию для разных ролей
+const DEFAULT_ROUTES = {
+  admin: '/complex/list',
+  модератор: '/complex/list',
+  'премиум агент': '/property/list',
+  agent: '/property/gallery',
+  застройщик: '/chessboard',
+  user: '/property/gallery'
+};
+
+const ProtectedRoute = ({ children, isPublic = false }) => {
   const { currentUser, role } = useAuth();
 
+  // Для публичных маршрутов
+  if (isPublic) {
+    // Если пользователь авторизован, перенаправляем на дашборд
+    if (currentUser) {
+      const defaultRoute = DEFAULT_ROUTES[role] || '/dashboard';
+      return <Navigate to={defaultRoute} />;
+    }
+    return children;
+  }
+
+  // Для защищенных маршрутов
   if (!currentUser) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
 
   // Получаем текущий путь
@@ -72,7 +93,7 @@ const ProtectedRoute = ({ children }) => {
   });
 
   if (!hasAccess) {
-    return <Navigate to="/property/gallery" />;
+    return <Navigate to="/dashboard" />;
   }
 
   return children;

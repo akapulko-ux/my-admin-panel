@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
-import {
-  Box,
-  CircularProgress,
-  Typography,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Button
-} from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { Building2, Plus, Pencil } from "lucide-react";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 function ListDevelopers() {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ function ListDevelopers() {
             devs.push({
               id: docSnap.id, // чтобы знать, какой документ редактировать
               name: data.name,
+              description: data.description || "",
               logo: data.logo || null
             });
           }
@@ -54,84 +56,69 @@ function ListDevelopers() {
     loadDevelopers();
   }, []);
 
-  if (loading) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h5" gutterBottom>
-        Список Застройщиков
-      </Typography>
-
-      {/* Кнопка "Создать нового застройщика" -> /developer/edit/new */}
-      <Box sx={{ mb: 2 }}>
-        <Button
-          variant="contained"
-          onClick={() => navigate("/developer/edit/new")}
-        >
-          Создать Застройщика
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Список Застройщиков</h1>
+        <Button onClick={() => navigate("/developers/edit/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Добавить Застройщика
         </Button>
-      </Box>
+      </div>
 
-      {developers.length === 0 ? (
-        <Typography>Нет застройщиков</Typography>
+      {loading ? (
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : developers.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-xl text-muted-foreground">Нет застройщиков</p>
+          </CardContent>
+        </Card>
       ) : (
-        <List>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {developers.map((dev) => (
-            <ListItem
-              key={dev.id}
-              secondaryAction={
+            <Card key={dev.id} className="overflow-hidden">
+              <CardHeader className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  {dev.logo ? (
+                    <img
+                      src={dev.logo}
+                      alt={dev.name}
+                      className="w-16 h-16 object-contain rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Building2 className="h-8 w-8 text-primary" />
+                    </div>
+                  )}
+                  <div>
+                    <CardTitle className="text-xl">{dev.name}</CardTitle>
+                    {dev.description && (
+                      <CardDescription className="mt-2 line-clamp-2">
+                        {dev.description}
+                      </CardDescription>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardFooter>
                 <Button
-                  variant="outlined"
-                  onClick={() => navigate(`/developer/edit/${dev.id}`)}
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => navigate(`/developers/edit/${dev.id}`)}
                 >
+                  <Pencil className="mr-2 h-4 w-4" />
                   Редактировать
                 </Button>
-              }
-            >
-              <ListItemAvatar>
-                {dev.logo ? (
-                  <Box
-                    component="img"
-                    src={dev.logo}
-                    alt={dev.name}
-                    sx={{
-                      width: 60,   // фиксированная ширина
-                      height: "auto", // высота автоматически сохраняет пропорции
-                      objectFit: "contain",
-                    }}
-                  />
-                ) : (
-                  // Если логотипа нет, используем стандартный Avatar с первой буквой
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      backgroundColor: "primary.main",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                      fontSize: "1rem",
-                    }}
-                  >
-                    {dev.name.charAt(0).toUpperCase()}
-                  </Box>
-                )}
-              </ListItemAvatar>
-              {/* Добавлен отступ слева, равный примерно 3 пробелам */}
-              <ListItemText primary={dev.name} sx={{ ml: 2 }} />
-            </ListItem>
+              </CardFooter>
+            </Card>
           ))}
-        </List>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }
 

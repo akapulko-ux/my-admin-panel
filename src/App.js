@@ -13,6 +13,9 @@ import { Toaster } from 'react-hot-toast';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
+// Лендинг
+import LandingPage from "./pages/LandingPage";
+
 // Комплексы
 import CreateComplex from "./pages/CreateComplex";
 import EditComplex from "./pages/EditComplex";
@@ -53,6 +56,9 @@ import ClientFixations from "./pages/ClientFixations";
 // Прочее
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
+
+// Заявки на регистрацию
+import RegistrationRequests from "./pages/RegistrationRequests";
 
 const AdminLayout = ({ children }) => {
   const { currentUser, logout, role } = useAuth();
@@ -143,13 +149,19 @@ function App() {
             <Route path="/public/:publicId" element={<PublicChessboard />} />
             <Route path="/public-chessboard/:publicId" element={<PublicChessboard />} />
             <Route path="/chessboard-overview/:publicId" element={<ChessboardOverview />} />
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Лендинг для неавторизованных пользователей */}
+            <Route path="/" element={
+              <ProtectedRoute isPublic>
+                <LandingPage />
+              </ProtectedRoute>
+            } />
 
             {/* Административные маршруты - с оболочкой админ-панели */}
             <Route path="*" element={
               <AdminLayout>
                 <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  
                   <Route path="/chessboard" element={
                     <ProtectedRoute>
                       <ListChessboards />
@@ -267,8 +279,15 @@ function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* Главная страница */}
-                  <Route path="/" element={
+                  {/* Заявки на регистрацию (только для админа) */}
+                  <Route path="/registration-requests" element={
+                    <ProtectedRoute>
+                      <RegistrationRequests />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Главная страница для авторизованных пользователей */}
+                  <Route path="/dashboard" element={
                     <ProtectedRoute>
                       <PropertiesGallery />
                     </ProtectedRoute>

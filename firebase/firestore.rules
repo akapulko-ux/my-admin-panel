@@ -47,6 +47,14 @@ service cloud.firestore {
       return isAdmin() || isAnyAgent() || isDeveloper();
     }
 
+    // === Заявки на регистрацию ===
+    match /registrationRequests/{requestId} {
+      // Создание доступно всем (для отправки заявок)
+      allow create: if true;
+      // Чтение и обновление статуса только для админов
+      allow read, update: if isAdmin();
+    }
+
     // === Шахматки (специфично для админ-панели) ===
     match /chessboards/{chessboardId} {
       // Чтение разрешено всем (для публичных ссылок)

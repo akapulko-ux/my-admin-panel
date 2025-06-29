@@ -1,7 +1,9 @@
 // src/components/DraggablePreviewItem.js
 
-import React from "react";
-import { useDrag, useDrop } from "react-dnd";
+import React, { useRef } from 'react';
+import { useDrag, useDrop } from 'react-dnd';
+import { X } from 'lucide-react';
+import { Button } from './ui/button';
 
 /** Тип для DnD (тот же, что и в EditComplex) */
 const DRAG_TYPE = "EXISTING_IMAGE";
@@ -14,67 +16,62 @@ const DRAG_TYPE = "EXISTING_IMAGE";
  * @param {function} props.moveItem(dragIndex: number, hoverIndex: number): void - перестановка
  * @param {function} props.onRemove(index: number): void - удаление
  */
-export default function DraggablePreviewItem({ item, index, moveItem, onRemove }) {
-  // Источник (useDrag)
-  const [{ isDragging }, dragRef] = useDrag({
-    type: DRAG_TYPE,
-    item: { index }, // При «захвате» передаём индекс
+const DraggablePreviewItem = ({ id, index, url, onRemove, moveImage }) => {
+  const ref = useRef(null);
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'IMAGE',
+    item: { id, index },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });
 
-  // Приёмник (useDrop)
-  const [, dropRef] = useDrop({
-    accept: DRAG_TYPE,
-    hover: (dragged) => {
-      if (dragged.index !== index) {
-        moveItem(dragged.index, index);
-        // Обновляем dragged.index, чтобы не было «дёргания»
-        dragged.index = index;
+  const [, drop] = useDrop({
+    accept: 'IMAGE',
+    hover(item, monitor) {
+      if (!ref.current) {
+        return;
       }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      moveImage(dragIndex, hoverIndex);
+      item.index = hoverIndex;
     },
   });
 
-  // Объединяем ссылки ref
-  const refFn = (node) => {
-    dragRef(node);
-    dropRef(node);
-  };
+  drag(drop(ref));
 
   return (
     <div
-      ref={refFn}
-      style={{
-        position: "relative",
-        border: "1px solid #ccc",
-        borderRadius: 4,
-        overflow: "hidden",
-        cursor: "move",
-        opacity: isDragging ? 0.4 : 1,
-      }}
+      ref={ref}
+      className={`relative group aspect-square rounded-lg overflow-hidden border ${
+        isDragging ? 'opacity-50' : 'opacity-100'
+      }`}
+      style={{ cursor: 'move' }}
     >
       <img
-        src={item.url}
-        alt="complex"
-        style={{ width: "100%", display: "block" }}
+        src={url}
+        alt={`Preview ${index + 1}`}
+        className="w-full h-full object-cover"
       />
-      <button
-        onClick={() => onRemove(index)}
-        style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          background: "red",
-          color: "#fff",
-          border: "none",
-          cursor: "pointer",
-          padding: "4px 8px",
-          borderRadius: "4px",
-        }}
-      >
-        Удалить
-      </button>
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="destructive"
+          size="icon"
+          className="absolute top-2 right-2"
+          onClick={onRemove}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
-}
+};
+
+export default DraggablePreviewItem;

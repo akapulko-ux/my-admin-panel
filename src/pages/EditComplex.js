@@ -30,6 +30,17 @@ import {
 } from "@mui/material";
 import { showSuccess } from '../utils/notifications';
 
+// Импорт компонентов shadcn
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { CustomSelect } from "../components/ui/custom-select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
+import { Badge } from "../components/ui/badge";
+
+// Иконки
+import { ArrowLeft, Loader2, Save, Trash2, Upload } from "lucide-react";
+
 function EditComplex() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -317,272 +328,381 @@ function EditComplex() {
   }
 
   return (
-    <Box sx={{ maxWidth: 700, margin: "auto", p: 2 }}>
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Редактировать Комплекс (ID: {id})
-          </Typography>
-          <DndProvider backend={HTML5Backend}>
-            <Box
-              component="form"
-              onSubmit={handleSave}
-              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-            >
-              <TextField
-                label="Номер комплекса"
-                value={complexNumber}
-                onChange={(e) => setComplexNumber(e.target.value)}
-                required
-              />
-              <TextField
-                label="Название"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <TextField
-                label="Застройщик"
-                value={developer}
-                onChange={(e) => setDeveloper(e.target.value)}
-              />
-              <TextField
-                label="Район"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-              />
-              <TextField
-                label="Координаты"
-                value={coordinates}
-                onChange={(e) => setCoordinates(e.target.value)}
-              />
-              <TextField
-                label="Цена от (USD)"
-                type="number"
-                value={priceFrom}
-                onChange={(e) => setPriceFrom(e.target.value)}
-              />
-              <TextField
-                label="Диапазон площади"
-                value={areaRange}
-                onChange={(e) => setAreaRange(e.target.value)}
-              />
-              {/* Добавлено поле "Описание" */}
-              <TextField
-                label="Описание"
+    <div className="container mx-auto p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate("/complexes")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold">Редактировать комплекс</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={loading || isSaving}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Удалить
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={loading || isSaving}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Сохранить
+          </Button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : (
+        <form onSubmit={handleSave} className="space-y-6">
+          {/* Основная информация */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Основная информация</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="complexNumber">Номер комплекса</Label>
+                <Input
+                  id="complexNumber"
+                  value={complexNumber}
+                  onChange={(e) => setComplexNumber(e.target.value)}
+                  placeholder="Введите номер комплекса"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Название</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Введите название комплекса"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="developer">Застройщик</Label>
+                <Input
+                  id="developer"
+                  value={developer}
+                  onChange={(e) => setDeveloper(e.target.value)}
+                  placeholder="Введите название застройщика"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="district">Район</Label>
+                <Input
+                  id="district"
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  placeholder="Введите район"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="coordinates">Координаты</Label>
+                <Input
+                  id="coordinates"
+                  value={coordinates}
+                  onChange={(e) => setCoordinates(e.target.value)}
+                  placeholder="Введите координаты"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="priceFrom">Цена от</Label>
+                <Input
+                  id="priceFrom"
+                  value={priceFrom}
+                  onChange={(e) => setPriceFrom(e.target.value)}
+                  placeholder="Введите цену"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="areaRange">Диапазон площади</Label>
+                <Input
+                  id="areaRange"
+                  value={areaRange}
+                  onChange={(e) => setAreaRange(e.target.value)}
+                  placeholder="Введите диапазон площади"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="commission">Комиссия</Label>
+                <CustomSelect
+                  id="commission"
+                  value={commission}
+                  onValueChange={setCommission}
+                  options={commissionOptions.map(val => ({
+                    label: `${val}%`,
+                    value: val
+                  }))}
+                />
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="description">Описание</Label>
+              <Textarea
+                id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                multiline
-                rows={3}
+                placeholder="Введите описание комплекса"
+                className="min-h-[100px]"
               />
+            </div>
+          </Card>
 
-              {/* Провинция (Bali), disabled */}
-              <TextField
-                label="Провинция"
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
-                disabled
-              />
-
-              {/* Город (Select) */}
-              <FormControl>
-                <InputLabel id="city-label">Город</InputLabel>
-                <Select
-                  labelId="city-label"
-                  label="Город"
+          {/* Местоположение */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Местоположение</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="province">Провинция</Label>
+                <CustomSelect
+                  id="province"
+                  value={province}
+                  onValueChange={setProvince}
+                  options={[
+                    { label: "Bali", value: "Bali" }
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">Город</Label>
+                <Input
+                  id="city"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                >
-                  <MenuItem value="">(не выбрано)</MenuItem>
-                  <MenuItem value="Kab. Jembrana">Kab. Jembrana</MenuItem>
-                  <MenuItem value="Kab. Tabanan">Kab. Tabanan</MenuItem>
-                  <MenuItem value="Kab. Badung">Kab. Badung</MenuItem>
-                  <MenuItem value="Kab. Gianyar">Kab. Gianyar</MenuItem>
-                  <MenuItem value="Kab. Bangli">Kab. Bangli</MenuItem>
-                  <MenuItem value="Kab. Karangasem">Kab. Karangasem</MenuItem>
-                  <MenuItem value="Kab. Buleleng">Kab. Buleleng</MenuItem>
-                  <MenuItem value="Kota Denpasar">Kота Denpasar</MenuItem>
-                </Select>
-              </FormControl>
-
-              {/* RDTR (Select) */}
-              <FormControl>
-                <InputLabel id="rdtr-label">RDTR</InputLabel>
-                <Select
-                  labelId="rdtr-label"
-                  label="RDTR"
+                  placeholder="Введите город"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rdtr">RDTR</Label>
+                <Input
+                  id="rdtr"
                   value={rdtr}
                   onChange={(e) => setRdtr(e.target.value)}
-                >
-                  <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
-                  <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
-                  <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
-                  <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                  <MenuItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
-                </Select>
-              </FormControl>
+                  placeholder="Введите RDTR"
+                />
+              </div>
+            </div>
+          </Card>
 
-              <TextField
-                label="Управляющая компания"
-                value={managementCompany}
-                onChange={(e) => setManagementCompany(e.target.value)}
-              />
-              <FormControl>
-                <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
-                <Select
-                  labelId="ownershipForm-label"
-                  label="Форма собственности"
+          {/* Юридическая информация */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Юридическая информация</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="managementCompany">Управляющая компания</Label>
+                <Input
+                  id="managementCompany"
+                  value={managementCompany}
+                  onChange={(e) => setManagementCompany(e.target.value)}
+                  placeholder="Введите название управляющей компании"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ownershipForm">Форма собственности</Label>
+                <CustomSelect
+                  id="ownershipForm"
                   value={ownershipForm}
-                  onChange={(e) => setOwnershipForm(e.target.value)}
-                >
-                  <MenuItem value="Leashold">Leashold</MenuItem>
-                  <MenuItem value="Freehold">Freehold</MenuItem>
-                </Select>
-              </FormControl>
-
-              {ownershipForm === "Leashold" && (
-                <TextField
-                  label="Лет"
+                  onValueChange={setOwnershipForm}
+                  options={[
+                    { label: "Freehold", value: "Freehold" },
+                    { label: "Leasehold", value: "Leasehold" }
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="landStatus">Статус земли</Label>
+                <CustomSelect
+                  id="landStatus"
+                  value={landStatus}
+                  onValueChange={setLandStatus}
+                  options={[
+                    { label: "Туристическая зона (W)", value: "Туристическая зона (W)" },
+                    { label: "Жилая зона (P)", value: "Жилая зона (P)" }
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="completionDate">Дата завершения</Label>
+                <Input
+                  id="completionDate"
+                  value={completionDate}
+                  onChange={(e) => setCompletionDate(e.target.value)}
+                  placeholder="Введите дату завершения"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="leaseYears">Срок аренды (лет)</Label>
+                <Input
+                  id="leaseYears"
                   value={leaseYears}
                   onChange={(e) => setLeaseYears(e.target.value)}
-                  placeholder="Например: 30, 30+20"
+                  placeholder="Введите срок аренды"
                 />
-              )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="legalCompanyName">Юридическое название компании</Label>
+                <Input
+                  id="legalCompanyName"
+                  value={legalCompanyName}
+                  onChange={(e) => setLegalCompanyName(e.target.value)}
+                  placeholder="Введите юридическое название"
+                />
+              </div>
+            </div>
+          </Card>
 
-              <FormControl>
-                <InputLabel id="landStatus-label">Статус земли</InputLabel>
-                <Select
-                  labelId="landStatus-label"
-                  label="Статус земли"
-                  value={landStatus}
-                  onChange={(e) => setLandStatus(e.target.value)}
-                >
-                  <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
-                  <MenuItem value="Торговая зона (K)">Торговая зона (K)</MenuItem>
-                  <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem>
-                  <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
-                  <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
-                  <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
-                </Select>
-              </FormControl>
+          {/* Документы и ссылки */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Документы и ссылки</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="shgb">SHGB</Label>
+                <Input
+                  id="shgb"
+                  value={shgb}
+                  onChange={(e) => setShgb(e.target.value)}
+                  placeholder="Введите SHGB"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pbg">PBG</Label>
+                <Input
+                  id="pbg"
+                  value={pbg}
+                  onChange={(e) => setPbg(e.target.value)}
+                  placeholder="Введите PBG"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="slf">SLF</Label>
+                <Input
+                  id="slf"
+                  value={slf}
+                  onChange={(e) => setSlf(e.target.value)}
+                  placeholder="Введите SLF"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="docsLink">Ссылка на документы</Label>
+                <Input
+                  id="docsLink"
+                  value={docsLink}
+                  onChange={(e) => setDocsLink(e.target.value)}
+                  placeholder="Введите ссылку на документы"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="videoLink">Ссылка на видео</Label>
+                <Input
+                  id="videoLink"
+                  value={videoLink}
+                  onChange={(e) => setVideoLink(e.target.value)}
+                  placeholder="Введите ссылку на видео"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="threeDTour">3D Тур</Label>
+                <Input
+                  id="threeDTour"
+                  value={threeDTour}
+                  onChange={(e) => setThreeDTour(e.target.value)}
+                  placeholder="Введите ссылку на 3D тур"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="roi">ROI</Label>
+                <Input
+                  id="roi"
+                  value={roi}
+                  onChange={(e) => setRoi(e.target.value)}
+                  placeholder="Введите ROI"
+                />
+              </div>
+            </div>
+          </Card>
 
-              <TextField
-                label="Дата завершения (месяц/год)"
-                type="month"
-                value={completionDate}
-                onChange={(e) => setCompletionDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-
-              <TextField
-                label="Ссылка на видео"
-                value={videoLink}
-                onChange={(e) => setVideoLink(e.target.value)}
-              />
-
-              <TextField
-                label="Доступные юниты (ссылка)"
-                value={docsLink}
-                onChange={(e) => setDocsLink(e.target.value)}
-              />
-
-              {/* SHGB, PBG, SLF */}
-              <TextField
-                label="Сертификат права на землю (SHGB)"
-                value={shgb}
-                onChange={(e) => setShgb(e.target.value)}
-              />
-              <TextField
-                label="Разрешение на строительство (PBG)"
-                value={pbg}
-                onChange={(e) => setPbg(e.target.value)}
-              />
-              <TextField
-                label="Сертификат готовности здания (SLF)"
-                value={slf}
-                onChange={(e) => setSlf(e.target.value)}
-              />
-
-              {/* Юридическое название компании */}
-              <TextField
-                label="Юридическое название компании"
-                value={legalCompanyName}
-                onChange={(e) => setLegalCompanyName(e.target.value)}
-              />
-
-              {/* [NEW] Поле «Вознаграждение» */}
-              <FormControl>
-                <InputLabel id="commission-label">Вознаграждение</InputLabel>
-                <Select
-                  labelId="commission-label"
-                  label="Вознаграждение"
-                  value={commission}
-                  onChange={(e) => setCommission(e.target.value)}
-                >
-                  {commissionOptions.map((val) => (
-                    <MenuItem key={val} value={val}>
-                      {val}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <Typography sx={{ mt: 2 }}>
-                Существующие (и новые) фото (Drag & Drop):
-              </Typography>
-              <DndProvider backend={HTML5Backend}>
-                <Grid container spacing={2}>
-                  {images.map((item, idx) => (
-                    <Grid item xs={6} sm={4} key={item.id}>
-                      <DraggablePreviewItem
-                        item={item}
-                        index={idx}
-                        moveItem={moveImage}
-                        onRemove={() => handleRemoveImage(idx)}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </DndProvider>
-
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Button
-                  variant="contained"
-                  component="label"
+          {/* Фотографии */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Фотографии</h2>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="images"
                   disabled={isUploading}
-                  sx={{ width: "820px", mt: 2 }}
+                />
+                <Label
+                  htmlFor="images"
+                  className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Загрузить новые фото / PDF
-                  <input type="file" hidden multiple onChange={(e) => handleFileChange(e)} />
-                </Button>
-                {isUploading && <CircularProgress size={24} />}
-              </Box>
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  Загрузить фото
+                </Label>
+              </div>
+            </div>
+            
+            <DndProvider backend={HTML5Backend}>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {images.map((image, index) => (
+                  <DraggablePreviewItem
+                    key={image.id}
+                    id={image.id}
+                    index={index}
+                    url={image.url}
+                    onRemove={() => handleRemoveImage(index)}
+                    moveImage={moveImage}
+                  />
+                ))}
+              </div>
+            </DndProvider>
+          </Card>
+        </form>
+      )}
 
-              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                {isSaving ? (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CircularProgress size={24} />
-                    <Typography>Сохраняем...</Typography>
-                  </Box>
-                ) : (
-                  <Button variant="contained" color="primary" type="submit">
-                    Сохранить
-                  </Button>
-                )}
-
-                <Button variant="contained" color="error" onClick={handleDelete}>
-                  Удалить
-                </Button>
-              </Box>
-            </Box>
-          </DndProvider>
-        </CardContent>
-      </Card>
-    </Box>
+      {/* Диалог подтверждения удаления */}
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="destructive" className="hidden">Delete</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Удалить комплекс?</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Вы уверены, что хотите удалить этот комплекс? Это действие нельзя отменить.</p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => document.querySelector('[role="dialog"]')?.close()}>
+              Отмена
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Удалить
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 

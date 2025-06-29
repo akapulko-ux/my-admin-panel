@@ -8,20 +8,29 @@ import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "
 import { useParams, useNavigate } from "react-router-dom";
 import { showSuccess, showError } from '../utils/notifications';
 
+// Импорт компонентов shadcn
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Typography,
-  Button,
-  Grid,
-  FormControl,
-  InputLabel,
   Select,
-  MenuItem,
-  CircularProgress
-} from "@mui/material";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { Badge } from "../components/ui/badge";
+
+// Импорт иконок
+import { 
+  Loader2,
+  Trash2,
+  Save,
+  Upload,
+  X
+} from "lucide-react";
 
 // Для Drag & Drop
 import { DndProvider } from "react-dnd";
@@ -153,6 +162,7 @@ function EditProperty() {
         }
       } catch (error) {
         console.error("Ошибка загрузки объекта:", error);
+        showError("Ошибка при загрузке объекта");
       } finally {
         setLoading(false);
       }
@@ -160,79 +170,30 @@ function EditProperty() {
     fetchProperty();
   }, [id]);
 
-  // Обработчик выбора новых файлов (с учетом сжатия и PDF-конвертации)
+  // Обработчик выбора новых файлов
   const handleFileChange = async (e) => {
-    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
     setIsUploading(true);
-    const selectedFiles = Array.from(e.target.files);
-    const newImagesArr = [];
-
-    const imageCompression = (await import("browser-image-compression")).default;
-    const compressionOptions = {
-      maxSizeMB: 10,
-      useWebWorker: true
-    };
-
-    for (let file of selectedFiles) {
-      try {
-        if (file.type === "application/pdf") {
-          const { convertPdfToImages } = await import("../utils/pdfUtils");
-          const pageBlobs = await convertPdfToImages(file);
-          for (let blob of pageBlobs) {
-            const compressed = await imageCompression(blob, compressionOptions);
-            newImagesArr.push({
-              id: crypto.randomUUID(),
-              url: URL.createObjectURL(compressed),
-              file: compressed
-            });
-          }
-        } else {
-          const compressedFile = await imageCompression(file, compressionOptions);
-          newImagesArr.push({
-            id: crypto.randomUUID(),
-            url: URL.createObjectURL(compressedFile),
-            file: compressedFile
-          });
-        }
-      } catch (err) {
-        console.error("Ошибка обработки файла:", err);
-      }
-    }
-
-    setImages((prev) => [...prev, ...newImagesArr]);
-    setIsUploading(false);
-  };
-
-  // Перестановка (Drag & Drop)
-  const moveImage = (dragIndex, hoverIndex) => {
-    setImages((prev) => {
-      const arr = [...prev];
-      const [draggedItem] = arr.splice(dragIndex, 1);
-      arr.splice(hoverIndex, 0, draggedItem);
-      return arr;
-    });
-  };
-
-  // Удаление одного фото с физическим удалением из Storage, если это старое фото
-  const handleRemoveImage = async (idx) => {
-    const removed = images[idx];
-    setImages((prev) => {
-      const updated = [...prev];
-      updated.splice(idx, 1);
-      return updated;
-    });
-    if (!removed.file && removed.url && !removed.url.startsWith("blob:")) {
-      try {
-        await deleteFileFromFirebaseStorage(removed.url);
-        console.log("Файл удалён из Storage");
-      } catch (error) {
-        console.error("Ошибка удаления файла из Firebase Storage:", error);
-      }
+    try {
+      const newImages = await Promise.all(
+        files.map(async (file) => ({
+          id: crypto.randomUUID(),
+          url: URL.createObjectURL(file),
+          file
+        }))
+      );
+      setImages(prev => [...prev, ...newImages]);
+    } catch (error) {
+      console.error("Ошибка при обработке файлов:", error);
+      showError("Ошибка при обработке файлов");
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  // Сохранение изменений
+  // Обработчик сохранения
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -241,7 +202,6 @@ function EditProperty() {
       const finalUrls = [];
       for (let item of images) {
         if (item.file) {
-          // Новое фото — загружаем в Firebase Storage в папку "property"
           const url = await uploadToFirebaseStorageInFolder(item.file, "property");
           finalUrls.push(url);
         } else {
@@ -326,214 +286,444 @@ function EditProperty() {
         navigate("/property/list");
       } catch (error) {
         console.error("Ошибка удаления объекта:", error);
+        showError("Ошибка при удалении объекта");
       }
     }
   };
 
+  // Перемещение изображений
+  const moveImage = (dragIndex, hoverIndex) => {
+    const dragItem = images[dragIndex];
+    setImages(prev => {
+      const newImages = [...prev];
+      newImages.splice(dragIndex, 1);
+      newImages.splice(hoverIndex, 0, dragItem);
+      return newImages;
+    });
+  };
+
+  // Удаление изображения
+  const handleRemoveImage = (index) => {
+    setImages(prev => prev.filter((_, idx) => idx !== index));
+  };
+
   if (loading) {
-    return <Box sx={{ p: 2 }}>Загрузка...</Box>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
   }
 
   return (
-    <Box sx={{ maxWidth: 800, margin: "auto", p: 2 }}>
-      <Card variant="outlined">
+    <div className="container mx-auto py-6 px-4 max-w-5xl">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            Редактировать объект
+            <Badge variant="secondary" className="text-sm font-normal">
+              ID: {id}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        
         <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Редактировать Объект (ID: {id})
-          </Typography>
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price">Цена (USD)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
+                </div>
 
-          <DndProvider backend={HTML5Backend}>
-            <Box component="form" onSubmit={handleSave} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <TextField label="Цена (USD)" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
-              <FormControl>
-                <InputLabel id="type-label">Тип</InputLabel>
-                <Select labelId="type-label" label="Тип" value={type} onChange={(e) => setType(e.target.value)}>
-                  <MenuItem value="Вилла">Вилла</MenuItem>
-                  <MenuItem value="Апартаменты">Апартаменты</MenuItem>
-                  <MenuItem value="Дом">Дом</MenuItem>
-                  <MenuItem value="Коммерческая недвижимость">Коммерческая недвижимость</MenuItem>
-                  <MenuItem value="Апарт-вилла">Апарт-вилла</MenuItem>
-                  <MenuItem value="Таунхаус">Таунхаус</MenuItem>
-                  <MenuItem value="Земельный участок">Земельный участок</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField label="Координаты (шир, долг)" value={coordinates} onChange={(e) => setCoordinates(e.target.value)} />
-              <FormControl>
-                <InputLabel id="status-label">Статус</InputLabel>
-                <Select labelId="status-label" label="Статус" value={status} onChange={(e) => setStatus(e.target.value)}>
-                  <MenuItem value="Проект">Проект</MenuItem>
-                  <MenuItem value="Строится">Строится</MenuItem>
-                  <MenuItem value="Готовый">Готовый</MenuItem>
-                  <MenuItem value="От собственника">От собственника</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl>
-                <InputLabel id="district-label">Район</InputLabel>
-                <Select labelId="district-label" label="Район" value={district} onChange={(e) => setDistrict(e.target.value)}>
-                  <MenuItem value="">(не выбрано)</MenuItem>
-                  <MenuItem value="Амед">Амед</MenuItem>
-                  <MenuItem value="Берава">Берава</MenuItem>
-                  <MenuItem value="Джимбаран">Джимбаран</MenuItem>
-                  <MenuItem value="Кута">Кута</MenuItem>
-                  <MenuItem value="Ловина">Ловина</MenuItem>
-                  <MenuItem value="Нуану">Нуану</MenuItem>
-                  <MenuItem value="Нуса Дуа">Нуса Дуа</MenuItem>
-                  <MenuItem value="Переренан">Переренан</MenuItem>
-                  <MenuItem value="Санур">Санур</MenuItem>
-                  <MenuItem value="Семиньяк">Семиньяк</MenuItem>
-                  <MenuItem value="Убуд">Убуд</MenuItem>
-                  <MenuItem value="Улувату">Улувату</MenuItem>
-                  <MenuItem value="Умалас">Умалас</MenuItem>
-                  <MenuItem value="Унгасан">Унгасан</MenuItem>
-                  <MenuItem value="Чангу">Чангу</MenuItem>
-                  <MenuItem value="Чемаги">Чемаги</MenuItem>
-                  <MenuItem value="Гили Траванган">Гили Траванган</MenuItem>
-                  <MenuItem value="Ломбок">Ломбок</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField label="Застройщик" value={developer} onChange={(e) => setDeveloper(e.target.value)} />
-              <TextField label="Комплекс" value={complex} onChange={(e) => setComplex(e.target.value)} />
-              <FormControl>
-                <InputLabel id="buildingType-label">Тип постройки</InputLabel>
-                <Select labelId="buildingType-label" label="Тип постройки" value={buildingType} onChange={(e) => setBuildingType(e.target.value)}>
-                  <MenuItem value="Новый комплекс">Новый комплекс</MenuItem>
-                  <MenuItem value="Реновация">Реновация</MenuItem>
-                  <MenuItem value="ИЖС">ИЖС</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl>
-                <InputLabel id="bedrooms-label">Спальни</InputLabel>
-                <Select labelId="bedrooms-label" label="Спальни" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)}>
-                  <MenuItem value="">(не выбрано)</MenuItem>
-                  <MenuItem value="Студия">Студия</MenuItem>
-                  <MenuItem value="1">1</MenuItem>
-                  <MenuItem value="2">2</MenuItem>
-                  <MenuItem value="3">3</MenuItem>
-                  <MenuItem value="4">4</MenuItem>
-                  <MenuItem value="5">5</MenuItem>
-                  <MenuItem value="6">6</MenuItem>
-                  <MenuItem value="7">7</MenuItem>
-                  <MenuItem value="8">8</MenuItem>
-                  <MenuItem value="9">9</MenuItem>
-                  <MenuItem value="10">10</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField label="Площадь (м²)" type="number" value={area} onChange={(e) => setArea(e.target.value)} />
-              <TextField label="Провинция" value={province} disabled />
-              <FormControl>
-                <InputLabel id="city-label">Город</InputLabel>
-                <Select labelId="city-label" label="Город" value={city} onChange={(e) => setCity(e.target.value)}>
-                  <MenuItem value="">(не выбрано)</MenuItem>
-                  <MenuItem value="Kab. Jembrana">Kab. Jembrana</MenuItem>
-                  <MenuItem value="Kab. Tabanan">Kab. Tabanan</MenuItem>
-                  <MenuItem value="Kab. Badung">Kab. Badung</MenuItem>
-                  <MenuItem value="Kab. Gianyar">Kab. Gianyar</MenuItem>
-                  <MenuItem value="Kab. Bangli">Kab. Bangli</MenuItem>
-                  <MenuItem value="Kab. Karangasem">Kab. Karangasem</MenuItem>
-                  <MenuItem value="Kab. Buleleng">Kab. Buleleng</MenuItem>
-                  <MenuItem value="Kota Denpasar">Kota Denpasar</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl>
-                <InputLabel id="rdtr-label">RDTR</InputLabel>
-                <Select labelId="rdtr-label" label="RDTR" value={rdtr} onChange={(e) => setRdtr(e.target.value)}>
-                  <MenuItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</MenuItem>
-                  <MenuItem value="RDTR Kuta">RDTR Kuta</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</MenuItem>
-                  <MenuItem value="RDTR Kuta Selatan">RDTR Kuta Selatan</MenuItem>
-                  <MenuItem value="RDTR Mengwi">RDTR Mengwi</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</MenuItem>
-                  <MenuItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</MenuItem>
-                  <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
-                </Select>
-              </FormControl>
+                <div className="space-y-2">
+                  <Label htmlFor="type">Тип</Label>
+                  <Select value={type} onValueChange={setType}>
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder="Выберите тип" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Вилла">Вилла</SelectItem>
+                      <SelectItem value="Апартаменты">Апартаменты</SelectItem>
+                      <SelectItem value="Дом">Дом</SelectItem>
+                      <SelectItem value="Коммерческая недвижимость">Коммерческая недвижимость</SelectItem>
+                      <SelectItem value="Апарт-вилла">Апарт-вилла</SelectItem>
+                      <SelectItem value="Таунхаус">Таунхаус</SelectItem>
+                      <SelectItem value="Земельный участок">Земельный участок</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <TextField label="Управляющая компания" value={managementCompany} onChange={(e) => setManagementCompany(e.target.value)} />
-              <FormControl>
-                <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>
-                <Select labelId="ownershipForm-label" label="Форма собственности" value={ownershipForm} onChange={(e) => setOwnershipForm(e.target.value)}>
-                  <MenuItem value="Leashold">Leashold</MenuItem>
-                  <MenuItem value="Freehold">Freehold</MenuItem>
-                </Select>
-              </FormControl>
-              {ownershipForm === "Leashold" && (
-                <TextField label="Лет" value={leaseYears} onChange={(e) => setLeaseYears(e.target.value)} placeholder="Например: 30, 30+20" />
-              )}
-              <FormControl>
-                <InputLabel id="landStatus-label">Статус земли</InputLabel>
-                <Select labelId="landStatus-label" label="Статус земли" value={landStatus} onChange={(e) => setLandStatus(e.target.value)}>
-                  <MenuItem value="Туристическая зона (W)">Туристическая зона (W)</MenuItem>
-                  <MenuItem value="Торговая зона (K)">Торговая зона (K)</MenuItem>
-                  <MenuItem value="Смешанная зона (C)">Смешанная зона (C)</MenuItem>
-                  <MenuItem value="Жилая зона (R)">Жилая зона (R)</MenuItem>
-                  <MenuItem value="Сельхоз зона (P)">Сельхоз зона (P)</MenuItem>
-                  <MenuItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField label="Дата завершения (месяц/год)" type="month" InputLabelProps={{ shrink: true }} value={completionDate} onChange={(e) => setCompletionDate(e.target.value)} />
-              <FormControl>
-                <InputLabel id="pool-label">Бассейн</InputLabel>
-                <Select labelId="pool-label" label="Бассейн" value={pool} onChange={(e) => setPool(e.target.value)}>
-                  <MenuItem value="">(не выбрано)</MenuItem>
-                  <MenuItem value="Нет">Нет</MenuItem>
-                  <MenuItem value="Частный">Частный</MenuItem>
-                  <MenuItem value="Общий">Общий</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField label="Описание" multiline rows={6} value={description} onChange={(e) => setDescription(e.target.value)} />
-              <TextField label="Сертификат права на землю (SHGB)" value={shgb} onChange={(e) => setShgb(e.target.value)} />
-              <TextField label="Разрешение на строительство (PBG)" value={pbg} onChange={(e) => setPbg(e.target.value)} />
-              <TextField label="Сертификат готовности здания (SLF)" value={slf} onChange={(e) => setSlf(e.target.value)} />
-              <TextField label="Юридическое название компании" value={legalCompanyName} onChange={(e) => setLegalCompanyName(e.target.value)} />
-              <FormControl>
-                <InputLabel id="commission-label">Вознаграждение</InputLabel>
-                <Select labelId="commission-label" label="Вознаграждение" value={commission} onChange={(e) => setCommission(e.target.value)}>
-                  {commissionOptions.map((val) => (
-                    <MenuItem key={val} value={val}>
-                      {val}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Typography sx={{ mt: 2 }}>Существующие (и новые) фото (Drag & Drop):</Typography>
-              <DndProvider backend={HTML5Backend}>
-                <Grid container spacing={2}>
-                  {images.map((item, idx) => (
-                    <Grid item xs={6} sm={4} key={item.id}>
-                      <DraggablePreviewItem item={item} index={idx} moveItem={moveImage} onRemove={() => handleRemoveImage(idx)} />
-                    </Grid>
-                  ))}
-                </Grid>
-              </DndProvider>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Button variant="contained" component="label" disabled={isUploading}>
-                  Загрузить новые фото / PDF
-                  <input type="file" hidden multiple onChange={handleFileChange} />
-                </Button>
-                {isUploading && <CircularProgress size={24} />}
-              </Box>
-              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                {isSaving ? (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CircularProgress size={24} />
-                    <Typography>Сохраняем...</Typography>
-                  </Box>
-                ) : (
-                  <Button variant="contained" color="primary" type="submit">
-                    Сохранить
-                  </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="coordinates">Координаты (шир, долг)</Label>
+                  <Input
+                    id="coordinates"
+                    value={coordinates}
+                    onChange={(e) => setCoordinates(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Статус</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Выберите статус" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Проект">Проект</SelectItem>
+                      <SelectItem value="Строится">Строится</SelectItem>
+                      <SelectItem value="Готовый">Готовый</SelectItem>
+                      <SelectItem value="От собственника">От собственника</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="district">Район</Label>
+                  <Select value={district} onValueChange={setDistrict}>
+                    <SelectTrigger id="district">
+                      <SelectValue placeholder="Выберите район" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        "Амед", "Берава", "Джимбаран", "Кута", "Ловина", "Нуану",
+                        "Нуса Дуа", "Переренан", "Санур", "Семиньяк", "Убуд",
+                        "Улувату", "Умалас", "Унгасан", "Чангу", "Чемаги",
+                        "Гили Траванган", "Ломбок"
+                      ].map((item) => (
+                        <SelectItem key={item} value={item}>{item}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="developer">Застройщик</Label>
+                  <Input
+                    id="developer"
+                    value={developer}
+                    onChange={(e) => setDeveloper(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="complex">Комплекс</Label>
+                  <Input
+                    id="complex"
+                    value={complex}
+                    onChange={(e) => setComplex(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="buildingType">Тип постройки</Label>
+                  <Select value={buildingType} onValueChange={setBuildingType}>
+                    <SelectTrigger id="buildingType">
+                      <SelectValue placeholder="Выберите тип постройки" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Новый комплекс">Новый комплекс</SelectItem>
+                      <SelectItem value="Реновация">Реновация</SelectItem>
+                      <SelectItem value="ИЖС">ИЖС</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bedrooms">Спальни</Label>
+                  <Select value={bedrooms} onValueChange={setBedrooms}>
+                    <SelectTrigger id="bedrooms">
+                      <SelectValue placeholder="Выберите количество спален" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Студия">Студия</SelectItem>
+                      {[1,2,3,4,5,6,7,8,9,10].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="area">Площадь (м²)</Label>
+                  <Input
+                    id="area"
+                    type="number"
+                    value={area}
+                    onChange={(e) => setArea(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="province">Провинция</Label>
+                  <Input
+                    id="province"
+                    value={province}
+                    disabled
+                    className="bg-gray-100"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="city">Город</Label>
+                  <Select value={city} onValueChange={setCity}>
+                    <SelectTrigger id="city">
+                      <SelectValue placeholder="Выберите город" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        "Kab. Jembrana", "Kab. Tabanan", "Kab. Badung",
+                        "Kab. Gianyar", "Kab. Klungkung", "Kab. Bangli",
+                        "Kab. Karangasem", "Kab. Buleleng", "Kota Denpasar"
+                      ].map((item) => (
+                        <SelectItem key={item} value={item}>{item}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="rdtr">RDTR</Label>
+                  <Select value={rdtr} onValueChange={setRdtr}>
+                    <SelectTrigger id="rdtr">
+                      <SelectValue placeholder="Выберите RDTR" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        "RDTR Kecamatan Ubud", "RDTR Kuta",
+                        "RDTR Kecamatan Kuta Utara", "RDTR Kuta Selatan",
+                        "RDTR Mengwi", "RDTR Kecamatan Abiansemal",
+                        "RDTR Wilayah Перенцания Petang", "RDTR Kecamatan Sukawati",
+                        "RDTR Kecamatan Payangan", "RDTR Kecamatan Tegallalang"
+                      ].map((item) => (
+                        <SelectItem key={item} value={item}>{item}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="managementCompany">Управляющая компания</Label>
+                  <Input
+                    id="managementCompany"
+                    value={managementCompany}
+                    onChange={(e) => setManagementCompany(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ownershipForm">Форма собственности</Label>
+                  <Select value={ownershipForm} onValueChange={setOwnershipForm}>
+                    <SelectTrigger id="ownershipForm">
+                      <SelectValue placeholder="Выберите форму собственности" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Leashold">Leashold</SelectItem>
+                      <SelectItem value="Freehold">Freehold</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {ownershipForm === "Leashold" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="leaseYears">Лет</Label>
+                    <Input
+                      id="leaseYears"
+                      value={leaseYears}
+                      onChange={(e) => setLeaseYears(e.target.value)}
+                      placeholder="Например: 30, 30+20"
+                    />
+                  </div>
                 )}
-                <Button variant="contained" color="error" onClick={handleDelete}>
+
+                <div className="space-y-2">
+                  <Label htmlFor="landStatus">Статус земли</Label>
+                  <Select value={landStatus} onValueChange={setLandStatus}>
+                    <SelectTrigger id="landStatus">
+                      <SelectValue placeholder="Выберите статус земли" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Туристическая зона (W)">Туристическая зона (W)</SelectItem>
+                      <SelectItem value="Торговая зона (K)">Торговая зона (K)</SelectItem>
+                      <SelectItem value="Смешанная зона (C)">Смешанная зона (C)</SelectItem>
+                      <SelectItem value="Жилая зона (R)">Жилая зона (R)</SelectItem>
+                      <SelectItem value="Сельхоз зона (P)">Сельхоз зона (P)</SelectItem>
+                      <SelectItem value="Заповедная зона (RTH)">Заповедная зона (RTH)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="completionDate">Дата завершения (месяц/год)</Label>
+                  <Input
+                    id="completionDate"
+                    type="month"
+                    value={completionDate}
+                    onChange={(e) => setCompletionDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pool">Бассейн</Label>
+                  <Select value={pool} onValueChange={setPool}>
+                    <SelectTrigger id="pool">
+                      <SelectValue placeholder="Выберите тип бассейна" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Нет">Нет</SelectItem>
+                      <SelectItem value="Частный">Частный</SelectItem>
+                      <SelectItem value="Общий">Общий</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Описание</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-[150px]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="shgb">Сертификат права на землю (SHGB)</Label>
+                  <Input
+                    id="shgb"
+                    value={shgb}
+                    onChange={(e) => setShgb(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pbg">Разрешение на строительство (PBG)</Label>
+                  <Input
+                    id="pbg"
+                    value={pbg}
+                    onChange={(e) => setPbg(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="slf">Сертификат готовности здания (SLF)</Label>
+                  <Input
+                    id="slf"
+                    value={slf}
+                    onChange={(e) => setSlf(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="legalCompanyName">Юридическое название компании</Label>
+                  <Input
+                    id="legalCompanyName"
+                    value={legalCompanyName}
+                    onChange={(e) => setLegalCompanyName(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="commission">Вознаграждение</Label>
+                  <Select value={commission} onValueChange={setCommission}>
+                    <SelectTrigger id="commission">
+                      <SelectValue placeholder="Выберите размер вознаграждения" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commissionOptions.map((val) => (
+                        <SelectItem key={val} value={val}>{val}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label>Фотографии</Label>
+                <DndProvider backend={HTML5Backend}>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {images.map((item, idx) => (
+                      <DraggablePreviewItem
+                        key={item.id}
+                        item={item}
+                        index={idx}
+                        moveItem={moveImage}
+                        onRemove={() => handleRemoveImage(idx)}
+                      />
+                    ))}
+                  </div>
+                </DndProvider>
+
+                <div className="flex items-center gap-4">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => document.getElementById('file-upload').click()}
+                    disabled={isUploading}
+                    className="flex items-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Загрузить фото
+                  </Button>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  {isUploading && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Загрузка...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-6 border-t">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
                   Удалить объект
                 </Button>
-              </Box>
-            </Box>
-          </DndProvider>
+
+                <div className="flex items-center gap-4">
+                  <Button
+                    type="submit"
+                    disabled={isSaving}
+                    className="flex items-center gap-2"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Сохранить
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </form>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }
 

@@ -4,19 +4,21 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { collection, doc, getDoc, addDoc, updateDoc } from "firebase/firestore";
-import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage"; // Функции для работы со Storage
+import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 import imageCompression from "browser-image-compression";
 import { showSuccess, showError } from '../utils/notifications';
+import { Building2, Upload, Save } from "lucide-react";
 
 import {
-  Box,
   Card,
   CardContent,
-  TextField,
-  Typography,
-  Button,
-  CircularProgress
-} from "@mui/material";
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 
 function EditDeveloper() {
   const navigate = useNavigate();
@@ -52,6 +54,7 @@ function EditDeveloper() {
         }
       } catch (error) {
         console.error("Ошибка загрузки застройщика:", error);
+        showError("Ошибка при загрузке данных!");
       } finally {
         setLoading(false);
       }
@@ -73,6 +76,7 @@ function EditDeveloper() {
       setLogoPreview(URL.createObjectURL(compressed));
     } catch (err) {
       console.error("Ошибка сжатия:", err);
+      showError("Ошибка при обработке изображения!");
     }
   };
 
@@ -128,65 +132,98 @@ function EditDeveloper() {
 
   if (loading) {
     return (
-      <Box sx={{ p: 2 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "auto", p: 2 }}>
-      <Card variant="outlined">
+    <div className="container max-w-2xl mx-auto py-8 px-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-6 w-6" />
+            {id === "new" ? "Добавить Застройщика" : "Редактировать Застройщика"}
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h5" gutterBottom>
-            {id === "new" ? "Создать Застройщика" : "Редактировать Застройщика"}
-          </Typography>
-          <Box
-            component="form"
-            onSubmit={handleSave}
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            <TextField
-              label="Имя застройщика"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <TextField
-              label="Описание"
-              multiline
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Имя застройщика</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Введите имя застройщика"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Описание</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Введите описание застройщика"
+                rows={4}
+              />
+            </div>
+
             {logoPreview && (
-              <Box>
-                <Typography>Предпросмотр логотипа:</Typography>
-                <img
-                  src={logoPreview}
-                  alt="Logo preview"
-                  style={{ width: 150, height: "auto", borderRadius: 4 }}
+              <div className="space-y-2">
+                <Label>Текущий логотип</Label>
+                <div className="relative w-40 h-40 rounded-lg overflow-hidden border">
+                  <img
+                    src={logoPreview}
+                    alt="Logo preview"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="logo">Логотип</Label>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('logo').click()}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Загрузить логотип
+                </Button>
+                <input
+                  id="logo"
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
                 />
-              </Box>
-            )}
-            <Button variant="contained" component="label">
-              Загрузить логотип
-              <input type="file" hidden onChange={handleFileChange} />
-            </Button>
-            {isSaving ? (
-              <Box display="flex" alignItems="center" gap={1}>
-                <CircularProgress size={24} />
-                <Typography>Сохраняем...</Typography>
-              </Box>
-            ) : (
-              <Button variant="contained" color="primary" type="submit">
-                {id === "new" ? "Создать" : "Сохранить"}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Сохранение...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {id === "new" ? "Добавить" : "Сохранить"}
+                  </>
+                )}
               </Button>
-            )}
-          </Box>
+            </div>
+          </form>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }
 

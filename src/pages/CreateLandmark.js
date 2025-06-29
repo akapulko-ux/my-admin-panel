@@ -4,17 +4,18 @@ import { collection, addDoc } from "firebase/firestore";
 // Заменяем импорт функции загрузки с Cloudinary на Firebase Storage
 import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 import { showSuccess } from '../utils/notifications';
+import { Landmark, Plus, Upload, X, Save } from "lucide-react";
 
 import {
-  Box,
   Card,
   CardContent,
-  TextField,
-  Typography,
-  Button,
-  Grid,
-  CircularProgress
-} from "@mui/material";
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 
 import imageCompression from "browser-image-compression";
 
@@ -124,102 +125,125 @@ function CreateLandmark() {
   };
 
   return (
-    <Box sx={{ maxWidth: 700, margin: "auto", p: 2 }}>
-      <Card variant="outlined">
+    <div className="container mx-auto py-8 px-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Landmark className="h-6 w-6" />
+            Добавить Достопримечательность
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Создать Достопримечательность
-          </Typography>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Название</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={handleNameChange}
+                required
+                placeholder="Только заглавные латинские буквы"
+              />
+            </div>
 
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            {/* Поле «Название» — только A-Z и пробел */}
-            <TextField
-              label="Название"
-              value={name}
-              onChange={handleNameChange}
-              required
-            />
+            <div className="space-y-2">
+              <Label htmlFor="coordinates">Координаты (шир, долг)</Label>
+              <Input
+                id="coordinates"
+                value={coordinates}
+                onChange={(e) => setCoordinates(e.target.value)}
+                required
+                placeholder="Например: -8.409518, 115.188919"
+              />
+            </div>
 
-            {/* Поле «Координаты» */}
-            <TextField
-              label="Координаты (шир, долг)"
-              value={coordinates}
-              onChange={(e) => setCoordinates(e.target.value)}
-              required
-            />
+            <div className="space-y-2">
+              <Label htmlFor="description">Описание</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="Опишите достопримечательность..."
+              />
+            </div>
 
-            {/* Поле «Описание» */}
-            <TextField
-              label="Описание"
-              multiline
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-
-            {/* Предпросмотр выбранных фото */}
-            <Typography sx={{ mt: 2 }}>Предпросмотр фото:</Typography>
-            <Grid container spacing={2}>
-              {images.map((img) => (
-                <Grid item xs={6} sm={4} key={img.id}>
-                  <Box position="relative">
+            <div className="space-y-4">
+              <Label>Фотографии</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {images.map((img) => (
+                  <div key={img.id} className="relative group">
                     <img
                       src={img.url}
                       alt="preview"
-                      style={{ width: "100%", height: "auto", borderRadius: 4 }}
+                      className="w-full h-48 object-cover rounded-lg"
                     />
                     <Button
-                      variant="contained"
-                      color="error"
-                      size="small"
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => handleRemoveImage(img.id)}
-                      sx={{ position: "absolute", top: 8, right: 8 }}
                     >
-                      Удалить
+                      <X className="h-4 w-4" />
                     </Button>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
+                  </div>
+                ))}
+              </div>
 
-            {/* Кнопка «Загрузить фото» со спиннером */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isUploading}
+                  onClick={() => document.getElementById('file-upload').click()}
+                  className="relative"
+                >
+                  {isUploading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Загрузка...
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Загрузить фото
+                    </>
+                  )}
+                </Button>
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  multiple
+                  onChange={handleFileChange}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
               <Button
-                variant="contained"
-                component="label"
-                disabled={isUploading}
+                type="submit"
+                disabled={isSaving}
+                className="min-w-[150px]"
               >
-                {isUploading ? (
-                  <>
-                    <CircularProgress size={20} sx={{ mr: 1 }} />
-                    Загрузка...
-                  </>
+                {isSaving ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Сохранение...
+                  </div>
                 ) : (
-                  "Загрузить фото"
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Создать
+                  </>
                 )}
-                <input type="file" hidden multiple onChange={handleFileChange} />
               </Button>
-            </Box>
-
-            {/* Кнопка «Создать» или спиннер */}
-            {isSaving ? (
-              <Box display="flex" alignItems="center" gap={1}>
-                <CircularProgress size={24} />
-                <Typography>Сохраняем...</Typography>
-              </Box>
-            ) : (
-              <Button variant="contained" color="primary" type="submit">
-                Создать
-              </Button>
-            )}
-          </Box>
+            </div>
+          </form>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }
 

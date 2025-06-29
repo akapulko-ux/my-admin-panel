@@ -1,5 +1,3 @@
-// src/pages/ListProperties.js
-
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 import {
@@ -15,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import {
+import { 
   Filter, 
   Edit, 
   Copy, 
@@ -333,11 +331,12 @@ const PropertyCard = ({ property, onDuplicate }) => {
           
           <Button
             variant="outline"
-            size="icon"
+            size="sm"
             onClick={() => onDuplicate(property.id)}
-            className="w-9 h-9"
+            className="flex items-center gap-2"
           >
             <Copy className="w-4 h-4" />
+            Дублировать
           </Button>
         </div>
       </CardContent>
@@ -349,14 +348,14 @@ function ListProperties() {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  
   // Состояния для фильтров и массового редактирования
   const [filters, setFilters] = useState({});
   const [massEdit, setMassEdit] = useState({});
   
   // Состояния для раскрытия секций
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [isMassEditExpanded, setIsMassEditExpanded] = useState(false);
+  const [filterExpanded, setFilterExpanded] = useState(false);
+  const [massEditExpanded, setMassEditExpanded] = useState(false);
 
   // --- Загрузка данных из Firestore ---
   const fetchProperties = async () => {
@@ -514,51 +513,61 @@ function ListProperties() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Список Объектов</h1>
-        <Link to="/property/new">
-          <Button className="flex items-center gap-2">
-            <Home className="h-4 w-4" />
-            Добавить объект
-          </Button>
-        </Link>
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
+      {/* Заголовок */}
+      <div className="flex items-center gap-4">
+        <Home className="w-8 h-8 text-blue-600" />
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Список Объектов</h1>
+          <p className="text-gray-600 mt-1">
+            Найдено объектов: <span className="font-semibold">{filteredProperties.length}</span> из <span className="font-semibold">{properties.length}</span>
+          </p>
+        </div>
       </div>
 
+      {/* Фильтры */}
       <FilterSection
         filters={filters}
         setFilters={setFilters}
         onApplyFilter={handleFilter}
-        isExpanded={isFilterExpanded}
-        setIsExpanded={setIsFilterExpanded}
+        isExpanded={filterExpanded}
+        setIsExpanded={setFilterExpanded}
       />
 
+      {/* Массовое редактирование */}
       <MassEditSection
         massEdit={massEdit}
         setMassEdit={setMassEdit}
         onMassEdit={handleMassEdit}
-        isExpanded={isMassEditExpanded}
-        setIsExpanded={setIsMassEditExpanded}
+        isExpanded={massEditExpanded}
+        setIsExpanded={setMassEditExpanded}
         filteredCount={filteredProperties.length}
       />
 
-      {loading ? (
-        <div className="flex justify-center items-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Список объектов */}
+      {filteredProperties.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProperties.map((property) => (
             <PropertyCard
               key={property.id}
               property={property}
-              onDuplicate={() => handleDuplicate(property.id)}
+              onDuplicate={handleDuplicate}
             />
           ))}
         </div>
+      ) : (
+        <Card className="p-12">
+          <div className="text-center">
+            <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Объекты не найдены</h3>
+            <p className="text-gray-600">
+              Попробуйте изменить критерии фильтрации или сбросить фильтры
+            </p>
+          </div>
+        </Card>
       )}
     </div>
   );
 }
 
-export default ListProperties;
+export default ListProperties; 

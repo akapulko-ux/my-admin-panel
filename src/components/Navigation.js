@@ -14,7 +14,8 @@ import {
   ChevronRight,
   LayoutGrid,
   Calculator,
-  UserCheck
+  UserCheck,
+  ClipboardList
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -132,11 +133,6 @@ const Navigation = () => {
             <NavItem to="/property/list" icon={Building}>
               Объекты
             </NavItem>
-            {!isCollapsed && (
-              <NavItem to="/property/new" isSubItem>
-                Создать объект
-              </NavItem>
-            )}
           </>
         )}
 
@@ -145,11 +141,6 @@ const Navigation = () => {
             <NavItem to="/complex/list" icon={Building2}>
               Комплексы
             </NavItem>
-            {!isCollapsed && (
-              <NavItem to="/complex/new" isSubItem>
-                Создать комплекс
-              </NavItem>
-            )}
           </>
         )}
 
@@ -164,11 +155,6 @@ const Navigation = () => {
             <NavItem to="/landmark/list" icon={Landmark}>
               Достопримечательности
             </NavItem>
-            {!isCollapsed && (
-              <NavItem to="/landmark/new" isSubItem>
-                Создать достопримечательность
-              </NavItem>
-            )}
           </>
         )}
 
@@ -199,6 +185,12 @@ const Navigation = () => {
         {role === 'admin' && (
           <NavItem to="/users/manage" icon={Users2}>
             Управление пользователями
+          </NavItem>
+        )}
+
+        {role === 'admin' && (
+          <NavItem to="/registration-requests" icon={ClipboardList}>
+            Заявки на регистрацию
           </NavItem>
         )}
       </nav>
