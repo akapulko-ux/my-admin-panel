@@ -73,8 +73,7 @@ function CreateProperty() {
   // Провинция (Bali)
   const province = "Bali";
 
-  // Класс, форма собственности, ...
-  const [classRating, setClassRating] = useState("Комфорт (B)");
+  // Форма собственности, ...
   const [managementCompany, setManagementCompany] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("Freehold");
   const [landStatus, setLandStatus] = useState("Туристическая зона (W)");
@@ -301,7 +300,6 @@ function CreateProperty() {
         province,
         city,
         rdtr,
-        classRating,
         managementCompany,
         ownershipForm,
         landStatus,
@@ -335,7 +333,7 @@ function CreateProperty() {
       setBuildingType("Новый комплекс");
       setBedrooms("");
       setArea("");
-      setClassRating("Комфорт (B)");
+      
       setManagementCompany("");
       setOwnershipForm("Freehold");
       setLandStatus("Туристическая зона (W)");
@@ -579,22 +577,7 @@ function CreateProperty() {
                 </Select>
               </FormControl>
 
-              {/* Класс (Select) */}
-              <FormControl>
-                <InputLabel id="classRating-label">Класс</InputLabel>
-                <Select
-                  labelId="classRating-label"
-                  label="Класс"
-                  value={classRating}
-                  onChange={(e) => setClassRating(e.target.value)}
-                >
-                  <MenuItem value="Эконом (C)">Эконом (C)</MenuItem>
-                  <MenuItem value="Комфорт (B)">Комфорт (B)</MenuItem>
-                  <MenuItem value="Комфорт плюс (B+)">Комфорт плюс (B+)</MenuItem>
-                  <MenuItem value="Премиум (A)">Премиум (A)</MenuItem>
-                  <MenuItem value="Лакшери (A++)">Лакшери (A++)</MenuItem>
-                </Select>
-              </FormControl>
+
 
               {/* Управляющая компания */}
               <TextField

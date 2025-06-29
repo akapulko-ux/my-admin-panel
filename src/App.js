@@ -1,5 +1,5 @@
 // src/pages/App.js
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { CacheProvider } from "./CacheContext";
 import { AuthProvider } from "./AuthContext";
@@ -10,6 +10,8 @@ import { cn } from "./lib/utils";
 import { useAuth } from "./AuthContext";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import { Toaster } from 'react-hot-toast';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from './firebaseConfig';
 
 // Комплексы
 import CreateComplex from "./pages/CreateComplex";
@@ -53,7 +55,34 @@ import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
 
 const AdminLayout = ({ children }) => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, role } = useAuth();
+  const [developerName, setDeveloperName] = useState('');
+
+  useEffect(() => {
+    const fetchDeveloperName = async () => {
+      if (role === 'застройщик' && currentUser) {
+        try {
+          // Получаем developerId из профиля пользователя
+          const userRef = doc(db, 'users', currentUser.uid);
+          const userDoc = await getDoc(userRef);
+          const developerId = userDoc.data()?.developerId;
+
+          if (developerId) {
+            // Получаем название застройщика
+            const developerRef = doc(db, 'developers', developerId);
+            const developerDoc = await getDoc(developerRef);
+            if (developerDoc.exists()) {
+              setDeveloperName(developerDoc.data().name);
+            }
+          }
+        } catch (error) {
+          console.error('Ошибка при получении названия застройщика:', error);
+        }
+      }
+    };
+
+    fetchDeveloperName();
+  }, [role, currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -77,6 +106,9 @@ const AdminLayout = ({ children }) => {
               )}
             >
               IT Agent Admin Panel
+              {role === 'застройщик' && developerName && (
+                <span className="text-gray-500">({developerName})</span>
+              )}
             </Link>
             
             {currentUser && (

@@ -29,7 +29,9 @@ import {
   DollarSign,
   Copy,
   GripVertical,
-  AlertCircle
+  AlertCircle,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import {
   DndContext,
@@ -227,7 +229,11 @@ const SortableSection = ({
   onNameChange,
   onAddFloor,
   onRemoveSection,
-  canRemoveSection
+  canRemoveSection,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown
 }) => {
   const {
     attributes,
@@ -245,8 +251,8 @@ const SortableSection = ({
   return (
     <Card ref={setNodeRef} style={style} className="border-2">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-grow min-w-0">
             <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
               <GripVertical className="w-6 h-6 text-gray-400" />
             </div>
@@ -255,10 +261,31 @@ const SortableSection = ({
               type="text"
               value={section.name}
               onChange={(e) => onNameChange(e.target.value)}
-              className="text-xl font-semibold bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none"
+              className="text-xl font-semibold bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none flex-grow min-w-0"
+              style={{ width: `${Math.max(section.name.length * 0.6, 8)}ch` }}
             />
           </div>
           <div className="flex gap-2">
+            <div className="flex gap-1">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={onMoveUp}
+                disabled={!canMoveUp}
+                title="Переместить секцию вверх"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={onMoveDown}
+                disabled={!canMoveDown}
+                title="Переместить секцию вниз"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </div>
             <Button size="sm" onClick={onAddFloor} className="bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4 mr-1" />
               Этаж
@@ -422,10 +449,10 @@ const SortableUnit = ({
               onChange={(e) => onUnitChange('propertyType', e.target.value)}
               className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold mb-3"
             >
-              <option value="Апартаменты">🏢 Апартаменты</option>
-              <option value="Вилла">🏖️ Вилла</option>
-              <option value="Апарт-вилла">🏘️ Апарт-вилла</option>
-              <option value="Таунхаус">🏘️ Таунхаус</option>
+              <option value="Апартаменты">Апартаменты</option>
+              <option value="Вилла">Вилла</option>
+              <option value="Апарт-вилла">Апарт-вилла</option>
+              <option value="Таунхаус">Таунхаус</option>
             </select>
           </div>
           
@@ -438,9 +465,9 @@ const SortableUnit = ({
                   onChange={(e) => onUnitChange('floors', e.target.value)}
                   className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                 >
-                  <option value="1">🏢 1</option>
-                  <option value="2">🏢 2</option>
-                  <option value="3">🏢 3</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
                 </select>
               </div>
               <div>
@@ -464,13 +491,13 @@ const SortableUnit = ({
                     onChange={(e) => onUnitChange('rooms', e.target.value)}
                     className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                   >
-                    <option value="Студия">🏠 Студия</option>
-                    <option value="1">🛏️ 1</option>
-                    <option value="2">🛏️ 2</option>
-                    <option value="3">🛏️ 3</option>
-                    <option value="4">🛏️ 4</option>
-                    <option value="5">🛏️ 5</option>
-                    <option value="6">🛏️ 6</option>
+                    <option value="Студия">Студия</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
                   </select>
               </div>
               <div>
@@ -480,12 +507,12 @@ const SortableUnit = ({
                     onChange={(e) => onUnitChange('bathrooms', e.target.value)}
                     className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                   >
-                    <option value="1">🚿 1</option>
-                    <option value="2">🚿 2</option>
-                    <option value="3">🚿 3</option>
-                    <option value="4">🚿 4</option>
-                    <option value="5">🚿 5</option>
-                    <option value="6">🚿 6</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
                   </select>
               </div>
             </div>
@@ -498,12 +525,12 @@ const SortableUnit = ({
                     onChange={(e) => onUnitChange('view', e.target.value)}
                     className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                   >
-                    <option value="">❓ Не указан</option>
-                    <option value="Море">🌊 Море</option>
-                    <option value="Река">🌊 Река</option>
-                    <option value="Лес">🌳 Лес</option>
-                    <option value="Бассейн">🏊‍♂️ Бассейн</option>
-                    <option value="Двор">🏡 Двор</option>
+                    <option value="">Не указан</option>
+                    <option value="Море">Море</option>
+                    <option value="Река">Река</option>
+                    <option value="Лес">Лес</option>
+                    <option value="Бассейн">Бассейн</option>
+                    <option value="Двор">Двор</option>
                   </select>
               </div>
               <div>
@@ -513,9 +540,9 @@ const SortableUnit = ({
                     onChange={(e) => onUnitChange('side', e.target.value)}
                     className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                   >
-                    <option value="">❓ Не указана</option>
-                    <option value="Рассветная">🌅 Рассветная</option>
-                    <option value="Закатная">🌇 Закатная</option>
+                    <option value="">Не указана</option>
+                    <option value="Рассветная">Рассветная</option>
+                    <option value="Закатная">Закатная</option>
                   </select>
               </div>
             </div>
@@ -870,6 +897,29 @@ const Chessboard = () => {
         }]
       }]
     }]);
+  };
+
+  // Перемещение секции вверх
+  const moveSectionUp = (sectionIdx) => {
+    if (sectionIdx > 0) {
+      setSections(prev => {
+        const newSections = [...prev];
+        [newSections[sectionIdx - 1], newSections[sectionIdx]] = [newSections[sectionIdx], newSections[sectionIdx - 1]];
+        return newSections;
+      });
+    }
+  };
+
+  // Перемещение секции вниз
+  const moveSectionDown = (sectionIdx) => {
+    setSections(prev => {
+      if (sectionIdx < prev.length - 1) {
+        const newSections = [...prev];
+        [newSections[sectionIdx], newSections[sectionIdx + 1]] = [newSections[sectionIdx + 1], newSections[sectionIdx]];
+        return newSections;
+      }
+      return prev;
+    });
   };
 
   // Добавление нового этажа
@@ -1313,6 +1363,10 @@ const Chessboard = () => {
                   setSections(prev => prev.filter((_, sIdx) => sIdx !== sectionIdx));
                 }}
                 canRemoveSection={sections.length > 1}
+                onMoveUp={() => moveSectionUp(sectionIdx)}
+                onMoveDown={() => moveSectionDown(sectionIdx)}
+                canMoveUp={sectionIdx > 0}
+                canMoveDown={sectionIdx < sections.length - 1}
               >
                 <CardContent>
                   <div className="space-y-4">

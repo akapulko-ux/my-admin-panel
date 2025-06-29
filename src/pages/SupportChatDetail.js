@@ -10,19 +10,11 @@ import {
   serverTimestamp,
   getFirestore,
 } from "firebase/firestore";
-import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  IconButton,
-  Avatar,
-  AppBar,
-  Toolbar,
-  Container,
-} from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
 import { motion } from "framer-motion";
+import { Send, ArrowLeft, MessageCircle, Circle } from "lucide-react";
 
 const db = getFirestore();
 
@@ -81,120 +73,116 @@ export default function SupportChatDetail({ agentId, onClose }) {
     });
 
     setNewMessage("");
-    // Прокрутка произойдёт за счёт эффекта, зависящего от messages
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   return (
-    <Box
-      sx={{
-        height: "100vh",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      }}
-    >
-      <Container maxWidth="md" sx={{ py: 2 }}>
-        <Paper
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            height: "80vh",
-            borderRadius: 2,
-            overflow: "hidden",
-          }}
-        >
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="max-w-4xl mx-auto p-6">
+        <Card className="h-[calc(100vh-3rem)] flex flex-col">
           {/* Заголовок */}
-          <AppBar position="static" color="primary">
-            <Toolbar>
-              <Avatar
-                sx={{ mr: 2 }}
-                src="/path/to/your/avatar.png" // замените на ваш путь
-              >
-                ТП
-              </Avatar>
-              <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                Чат с агентом
-              </Typography>
-              <Typography variant="body2" sx={{ mr: 2 }}>
-                Онлайн
-              </Typography>
-              <IconButton color="inherit" onClick={onClose}>
-                X
-              </IconButton>
-            </Toolbar>
-          </AppBar>
+          <CardHeader className="flex-shrink-0 pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onClose}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Назад
+                </Button>
+                
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white flex items-center justify-center font-semibold text-sm">
+                    ТП
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Чат с агентом</h2>
+                    <div className="flex items-center gap-1 text-sm text-green-600">
+                      <Circle className="w-2 h-2 fill-current" />
+                      Онлайн
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <MessageCircle className="w-6 h-6 text-blue-600" />
+            </div>
+          </CardHeader>
 
           {/* Список сообщений */}
-          <Box
-            sx={{
-              flex: 1,
-              overflowY: "auto",
-              p: 2,
-              backgroundColor: "#f9f9f9",
-            }}
-          >
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent:
-                      msg.senderRole === "support" ? "flex-end" : "flex-start",
-                    mb: 1,
-                  }}
-                >
-                  <Paper
-                    sx={{
-                      p: 1.5,
-                      maxWidth: "70%",
-                      bgcolor:
-                        msg.senderRole === "support" ? "#1976d2" : "#e0e0e0",
-                      color: msg.senderRole === "support" ? "#fff" : "#000",
-                    }}
-                  >
-                    <Typography variant="body1">{msg.text}</Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ display: "block", textAlign: "right" }}
+          <CardContent className="flex-1 overflow-hidden p-0">
+            <div className="h-full flex flex-col">
+              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
+                {messages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Начните переписку с агентом</p>
+                  </div>
+                ) : (
+                  messages.map((msg) => (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className={`flex ${msg.senderRole === "support" ? "justify-end" : "justify-start"}`}
                     >
-                      {msg.timestamp?.toDate().toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </Typography>
-                  </Paper>
-                </Box>
-              </motion.div>
-            ))}
-            <div ref={scrollRef} />
-          </Box>
+                      <div 
+                        className={`max-w-[70%] rounded-lg px-4 py-3 ${
+                          msg.senderRole === "support" 
+                            ? "bg-blue-600 text-white rounded-br-sm" 
+                            : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm"
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed">{msg.text}</p>
+                        <div className={`text-xs mt-2 ${msg.senderRole === "support" ? "text-blue-100" : "text-gray-500"}`}>
+                          {msg.timestamp?.toDate().toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+                <div ref={scrollRef} />
+              </div>
 
-          {/* Ввод сообщения */}
-          <Box
-            sx={{
-              p: 2,
-              display: "flex",
-              alignItems: "center",
-              borderTop: "1px solid #ddd",
-            }}
-          >
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Введите сообщение..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            />
-            <IconButton color="primary" onClick={sendMessage}>
-              <SendIcon />
-            </IconButton>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+              {/* Ввод сообщения */}
+              <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white">
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Введите сообщение..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      className="resize-none"
+                    />
+                  </div>
+                  <Button 
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                    size="sm"
+                    className="px-3"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

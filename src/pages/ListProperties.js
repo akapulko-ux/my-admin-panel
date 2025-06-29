@@ -43,7 +43,6 @@ function ListProperties() {
   const [filterDistrict, setFilterDistrict] = useState("");
   const [filterBuildingType, setFilterBuildingType] = useState("");
   const [filterBedrooms, setFilterBedrooms] = useState("");
-  const [filterClassRating, setFilterClassRating] = useState("");
   const [filterOwnershipForm, setFilterOwnershipForm] = useState("");
   const [filterLandStatus, setFilterLandStatus] = useState("");
   const [filterPool, setFilterPool] = useState("");
@@ -72,7 +71,6 @@ function ListProperties() {
   const [massEditDistrict, setMassEditDistrict] = useState("");
   const [massEditBuildingType, setMassEditBuildingType] = useState("");
   const [massEditBedrooms, setMassEditBedrooms] = useState("");
-  const [massEditClassRating, setMassEditClassRating] = useState("");
   const [massEditOwnershipForm, setMassEditOwnershipForm] = useState("");
   const [massEditLandStatus, setMassEditLandStatus] = useState("");
   const [massEditPool, setMassEditPool] = useState("");
@@ -216,11 +214,7 @@ function ListProperties() {
         String(p.bedrooms ?? "").includes(filterBedrooms.trim())
       );
     }
-    if (filterClassRating.trim() !== "") {
-      result = result.filter((p) =>
-        p.classRating?.toLowerCase().includes(filterClassRating.toLowerCase())
-      );
-    }
+
     if (filterOwnershipForm.trim() !== "") {
       result = result.filter((p) =>
         p.ownershipForm?.toLowerCase().includes(filterOwnershipForm.toLowerCase())
@@ -351,9 +345,7 @@ function ListProperties() {
         if (massEditBedrooms.trim() !== "") {
           newData.bedrooms = massEditBedrooms;
         }
-        if (massEditClassRating.trim() !== "") {
-          newData.classRating = massEditClassRating;
-        }
+
         if (massEditOwnershipForm.trim() !== "") {
           newData.ownershipForm = massEditOwnershipForm;
         }
@@ -486,12 +478,7 @@ function ListProperties() {
                 value={filterBedrooms}
                 onChange={(e) => setFilterBedrooms(e.target.value)}
               />
-              <TextField
-                label="Класс (classRating)"
-                size="small"
-                value={filterClassRating}
-                onChange={(e) => setFilterClassRating(e.target.value)}
-              />
+
               <TextField
                 label="Форма собств. (ownershipForm)"
                 size="small"
@@ -626,7 +613,6 @@ function ListProperties() {
               <TextField label="Район (district)" variant="outlined" size="small" value={massEditDistrict} onChange={(e) => setMassEditDistrict(e.target.value)} />
               <TextField label="Тип постройки (buildingType)" variant="outlined" size="small" value={massEditBuildingType} onChange={(e) => setMassEditBuildingType(e.target.value)} />
               <TextField label="Спальни (bedrooms)" variant="outlined" size="small" value={massEditBedrooms} onChange={(e) => setMassEditBedrooms(e.target.value)} />
-              <TextField label="Класс (classRating)" variant="outlined" size="small" value={massEditClassRating} onChange={(e) => setMassEditClassRating(e.target.value)} />
               <TextField label="Форма собств. (ownershipForm)" variant="outlined" size="small" value={massEditOwnershipForm} onChange={(e) => setMassEditOwnershipForm(e.target.value)} />
               <TextField label="Статус земли (landStatus)" variant="outlined" size="small" value={massEditLandStatus} onChange={(e) => setMassEditLandStatus(e.target.value)} />
               <TextField label="Бассейн (pool)" variant="outlined" size="small" value={massEditPool} onChange={(e) => setMassEditPool(e.target.value)} />

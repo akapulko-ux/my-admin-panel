@@ -46,7 +46,8 @@ const ROUTE_ACCESS = {
     '/property/*',
     '/chessboard',
     '/chessboard/*',
-    '/roi-calculator'
+    '/roi-calculator',
+    '/client-fixations'
   ],
   user: [
     '/gallery/*'
@@ -189,7 +190,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
+        {['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
           <NavItem to="/client-fixations" icon={UserCheck}>
             Фиксации клиентов
           </NavItem>

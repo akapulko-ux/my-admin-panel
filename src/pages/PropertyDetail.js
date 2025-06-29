@@ -204,7 +204,7 @@ function PropertyDetail() {
   };
 
   // Список неизменяемых полей
-  const nonEditableFields = ['classRating', 'district', 'landStatus', 'developer', 'complex'];
+  const nonEditableFields = ['district', 'landStatus', 'developer', 'complex'];
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -536,12 +536,7 @@ function PropertyDetail() {
       icon: Layers,
       type: "number"
     },
-    {
-      label: "Класс",
-      value: safeDisplay(property.classRating),
-      field: "classRating",
-      icon: Star,
-    },
+
     {
       label: "Район",
       value: safeDisplay(property.district),

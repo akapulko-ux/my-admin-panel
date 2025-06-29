@@ -45,7 +45,6 @@ function EditProperty() {
   const [district, setDistrict] = useState("");
   const [buildingType, setBuildingType] = useState("");
   const [bedrooms, setBedrooms] = useState("");
-  const [classRating, setClassRating] = useState("");
   const [ownershipForm, setOwnershipForm] = useState("");
   const [landStatus, setLandStatus] = useState("");
   const [pool, setPool] = useState("");
@@ -117,7 +116,7 @@ function EditProperty() {
           setProvince("Bali");
           setCity(data.city || "");
           setRdtr(data.rdtr || "");
-          setClassRating(data.classRating || "");
+
           setManagementCompany(data.managementCompany || "");
           setOwnershipForm(data.ownershipForm || "");
           setLandStatus(data.landStatus || "");
@@ -286,7 +285,6 @@ function EditProperty() {
         province,
         city,
         rdtr,
-        classRating,
         managementCompany,
         ownershipForm,
         landStatus,
@@ -451,16 +449,7 @@ function EditProperty() {
                   <MenuItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</MenuItem>
                 </Select>
               </FormControl>
-              <FormControl>
-                <InputLabel id="classRating-label">Класс</InputLabel>
-                <Select labelId="classRating-label" label="Класс" value={classRating} onChange={(e) => setClassRating(e.target.value)}>
-                  <MenuItem value="Эконом (C)">Эконом (C)</MenuItem>
-                  <MenuItem value="Комфорт (B)">Комфорт (B)</MenuItem>
-                  <MenuItem value="Комфорт плюс (B+)">Комфорт плюс (B+)</MenuItem>
-                  <MenuItem value="Премиум (A)">Премиум (A)</MenuItem>
-                  <MenuItem value="Лакшери (A++)">Лакшери (A++)</MenuItem>
-                </Select>
-              </FormControl>
+
               <TextField label="Управляющая компания" value={managementCompany} onChange={(e) => setManagementCompany(e.target.value)} />
               <FormControl>
                 <InputLabel id="ownershipForm-label">Форма собственности</InputLabel>

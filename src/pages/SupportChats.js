@@ -14,22 +14,11 @@ import {
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import SupportChatDetail from "./SupportChatDetail";
-import {
-  Container,
-  Paper,
-  AppBar,
-  Toolbar,
-  Typography,
-  TextField,
-  List,
-  ListItem,
-  ListItemAvatar,
-  Avatar,
-  ListItemText,
-  Badge,
-  Box,
-} from "@mui/material";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import { motion } from "framer-motion";
+import { MessageCircle, Search, User } from "lucide-react";
 
 const db = getFirestore();
 
@@ -162,106 +151,105 @@ export default function SupportChats() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Paper sx={{ borderRadius: 2, overflow: "hidden", boxShadow: 3 }}>
-        <AppBar position="static" color="primary">
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Чаты техподдержки
-            </Typography>
-          </Toolbar>
-        </AppBar>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <MessageCircle className="w-8 h-8 text-blue-600" />
+            <div>
+              <CardTitle className="text-2xl">Чаты техподдержки</CardTitle>
+              <p className="text-gray-600 mt-1">Управление обращениями пользователей</p>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {/* Поиск */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Поиск по имени или email..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
-        <Box sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="🔍 Поиск по имени или email..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-        </Box>
-
-        <List sx={{ maxHeight: "600px", overflowY: "auto" }}>
-          {filteredChats.length > 0 ? (
-            filteredChats.map((chat) => (
-              <motion.div
-                key={chat.agentId}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ListItem
-                  button
-                  onClick={() => setSelectedAgentId(chat.agentId)}
-                  alignItems="flex-start"
+          {/* Список чатов */}
+          <div className="space-y-2 max-h-[600px] overflow-y-auto">
+            {filteredChats.length > 0 ? (
+              filteredChats.map((chat) => (
+                <motion.div
+                  key={chat.agentId}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <ListItemAvatar>
-                    {chat.avatarURL ? (
-                      <Avatar alt={chat.userName} src={chat.avatarURL} />
-                    ) : (
-                      <Avatar sx={{ bgcolor: "primary.main" }}>
-                        {chat.userName.charAt(0).toUpperCase()}
-                      </Avatar>
-                    )}
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                          <Typography
-                            variant="subtitle1"
-                            sx={{ fontWeight: chat.unreadCount > 0 ? "bold" : "normal" }}
-                          >
-                            {chat.userName}
-                          </Typography>
-                          {chat.userTimestamp ? (
-                            <Typography variant="caption" color="text.secondary">
-                              {format(chat.userTimestamp, "dd.MM.yy, HH:mm", { locale: ru })}
-                            </Typography>
-                          ) : (
-                            chat.timestamp && (
-                              <Typography variant="caption" color="text.secondary">
-                                {format(chat.timestamp, "dd.MM.yy, HH:mm", { locale: ru })}
-                              </Typography>
-                            )
+                  <div
+                    onClick={() => setSelectedAgentId(chat.agentId)}
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer transition-all duration-200"
+                  >
+                    {/* Аватар */}
+                    <div className="flex-shrink-0">
+                      {chat.avatarURL ? (
+                        <img
+                          src={chat.avatarURL}
+                          alt={chat.userName}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-lg">
+                          {chat.userName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Контент чата */}
+                    <div className="flex-grow min-w-0">
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className={`font-medium truncate ${chat.unreadCount > 0 ? 'font-bold' : ''}`}>
+                          {chat.userName}
+                        </h3>
+                        <div className="flex items-center gap-2 ml-2">
+                          {chat.unreadCount > 0 && (
+                            <Badge variant="default" className="bg-blue-600">
+                              {chat.unreadCount}
+                            </Badge>
                           )}
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                          {chat.userEmail}
-                        </Typography>
-                      </Box>
-                    }
-                    secondary={
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        noWrap
-                        sx={{ fontWeight: chat.unreadCount > 0 ? "bold" : "normal" }}
-                      >
+                          {(chat.userTimestamp || chat.timestamp) && (
+                            <span className="text-xs text-gray-500 whitespace-nowrap">
+                              {format(
+                                chat.userTimestamp || chat.timestamp, 
+                                "dd.MM.yy, HH:mm", 
+                                { locale: ru }
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 mb-2">
+                        {chat.userEmail}
+                      </p>
+                      
+                      <p className={`text-sm text-gray-800 truncate ${chat.unreadCount > 0 ? 'font-medium' : ''}`}>
                         {chat.userLastMessage || chat.lastMessage || "Нет сообщений"}
-                      </Typography>
-                    }
-                  />
-                  {chat.unreadCount > 0 && (
-                    <Badge
-                      badgeContent={chat.unreadCount}
-                      color="primary"
-                      sx={{ mr: 2 }}
-                    />
-                  )}
-                </ListItem>
-              </motion.div>
-            ))
-          ) : (
-            <Box sx={{ textAlign: "center", py: 3 }}>
-              <Typography variant="body2" color="text.secondary">
-                Чаты не найдены
-              </Typography>
-            </Box>
-          )}
-        </List>
-      </Paper>
-    </Container>
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">
+                  {searchText ? "Чаты не найдены" : "Нет активных чатов"}
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

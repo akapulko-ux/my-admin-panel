@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, getDocs, updateDoc, doc, Timestamp, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, updateDoc, doc, Timestamp, addDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { Card } from '../components/ui/card';
@@ -304,8 +304,37 @@ const ClientFixations = () => {
           collection(db, 'clientFixations'),
           orderBy('dateTime', 'desc')
         );
+      } else if (userRole === 'застройщик') {
+        // Застройщики видят фиксации только своих объектов
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userRef);
+        const developerId = userDoc.data()?.developerId;
+
+        if (!developerId) {
+          setError('Ошибка: не назначен застройщик для пользователя');
+          setIsLoading(false);
+          return;
+        }
+
+        // Получаем данные застройщика
+        const developerRef = doc(db, 'developers', developerId);
+        const developerDoc = await getDoc(developerRef);
+        
+        if (!developerDoc.exists()) {
+          setError('Ошибка: не найден застройщик');
+          setIsLoading(false);
+          return;
+        }
+
+        const developerName = developerDoc.data().name;
+
+        fixationsQuery = query(
+          collection(db, 'clientFixations'),
+          where('developerName', '==', developerName),
+          orderBy('dateTime', 'desc')
+        );
       } else {
-        // Остальные видят только свои фиксации
+        // Агенты видят только свои фиксации
         fixationsQuery = query(
           collection(db, 'clientFixations'),
           where('agentId', '==', currentUser.uid),
@@ -439,7 +468,7 @@ const ClientFixations = () => {
             </div>
             <div className="flex justify-between mt-4">
               <div>
-                {fixation.status === 'На согласовании' && userRole === 'admin' && (
+                {fixation.status === 'На согласовании' && (userRole === 'admin' || userRole === 'застройщик') && (
                   <div className="space-x-2">
                     <Button
                       onClick={() => openApproveDialog(fixation)}
