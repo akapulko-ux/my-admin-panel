@@ -45,6 +45,9 @@ import ChessboardOverview from "./pages/ChessboardOverview";
 // Калькулятор ROI
 import RoiCalculator from "./pages/RoiCalculator";
 
+// Фиксации клиентов
+import ClientFixations from "./pages/ClientFixations";
+
 // Прочее
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
@@ -222,6 +225,13 @@ function App() {
                   <Route path="/users/manage" element={
                     <ProtectedRoute>
                       <UserManagement />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Фиксации клиентов */}
+                  <Route path="/client-fixations" element={
+                    <ProtectedRoute>
+                      <ClientFixations />
                     </ProtectedRoute>
                   } />
 

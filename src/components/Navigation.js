@@ -13,7 +13,8 @@ import {
   Menu,
   ChevronRight,
   LayoutGrid,
-  Calculator
+  Calculator,
+  UserCheck
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -25,17 +26,20 @@ const ROUTE_ACCESS = {
     '/developers/*',
     '/landmark/*',
     '/gallery/*',
-    '/support/*'
+    '/support/*',
+    '/client-fixations'
   ],
   'премиум агент': [
     '/property/*',
     '/gallery/*',
-    '/support/*'
+    '/support/*',
+    '/client-fixations'
   ],
   agent: [
     '/property/*',
     '/gallery/*',
-    '/support/*'
+    '/support/*',
+    '/client-fixations'
   ],
   застройщик: [
     '/property/gallery',
@@ -182,6 +186,12 @@ const Navigation = () => {
         {['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
           <NavItem to="/roi-calculator" icon={Calculator}>
             Калькулятор ROI
+          </NavItem>
+        )}
+
+        {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
+          <NavItem to="/client-fixations" icon={UserCheck}>
+            Фиксации клиентов
           </NavItem>
         )}
 
