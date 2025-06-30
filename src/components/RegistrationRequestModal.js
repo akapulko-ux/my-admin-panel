@@ -6,8 +6,9 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { showError } from '../utils/notifications';
 import toast from 'react-hot-toast';
+import { landingTranslations } from '../lib/landingTranslations';
 
-const RegistrationRequestModal = ({ open, onClose }) => {
+const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
@@ -15,26 +16,27 @@ const RegistrationRequestModal = ({ open, onClose }) => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const t = landingTranslations[language];
 
   const validateForm = () => {
     const newErrors = {};
     
     // Валидация названия компании
     if (!formData.companyName.trim()) {
-      newErrors.companyName = 'Введите название компании';
+      newErrors.companyName = t.required.companyName;
     }
 
     // Валидация email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      newErrors.email = 'Введите email';
+      newErrors.email = t.required.email;
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Введите корректный email';
+      newErrors.email = t.required.emailFormat;
     }
 
     // Валидация телефона - только проверка на заполненность
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Введите номер телефона';
+      newErrors.phone = t.required.phone;
     }
 
     setErrors(newErrors);
@@ -60,7 +62,7 @@ const RegistrationRequestModal = ({ open, onClose }) => {
 
       await addDoc(collection(db, 'registrationRequests'), requestData);
       
-      toast.success('Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
+      toast.success(t.requestSent);
       
       // Очищаем форму
       setFormData({
@@ -73,7 +75,7 @@ const RegistrationRequestModal = ({ open, onClose }) => {
       onClose();
     } catch (error) {
       console.error('Ошибка при отправке заявки:', error);
-      showError('Не удалось отправить заявку. Пожалуйста, проверьте подключение к интернету и попробуйте снова.');
+      showError(t.requestError);
     } finally {
       setIsLoading(false);
     }
@@ -84,16 +86,16 @@ const RegistrationRequestModal = ({ open, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-background rounded-lg p-6 w-full max-w-md mx-4">
-        <h2 className="text-2xl font-semibold mb-6">Заявка на регистрацию</h2>
+        <h2 className="text-2xl font-semibold mb-6">{t.registrationRequestTitle}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="companyName">Название компании</Label>
+            <Label htmlFor="companyName">{t.companyName}</Label>
             <Input
               id="companyName"
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-              placeholder="ООО Строительная компания"
+              placeholder={t.companyNamePlaceholder}
               error={errors.companyName}
               disabled={isLoading}
             />
@@ -109,7 +111,7 @@ const RegistrationRequestModal = ({ open, onClose }) => {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="company@example.com"
+              placeholder={t.emailPlaceholder}
               error={errors.email}
               disabled={isLoading}
             />
@@ -119,13 +121,13 @@ const RegistrationRequestModal = ({ open, onClose }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="phone">Телефон</Label>
+            <Label htmlFor="phone">{t.phone}</Label>
             <Input
               id="phone"
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="+7 (999) 999-99-99"
+              placeholder={t.phonePlaceholder}
               error={errors.phone}
               disabled={isLoading}
             />
@@ -141,13 +143,13 @@ const RegistrationRequestModal = ({ open, onClose }) => {
               onClick={onClose}
               disabled={isLoading}
             >
-              Отмена
+              {t.cancel}
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
             >
-              {isLoading ? 'Отправка...' : 'Отправить заявку'}
+              {isLoading ? t.sending : t.submitRequest}
             </Button>
           </div>
         </form>

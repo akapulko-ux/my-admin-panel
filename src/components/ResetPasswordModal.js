@@ -1,22 +1,25 @@
 import React, { useState } from 'react';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Box,
-  Typography
-} from '@mui/material';
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "./ui/dialog";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
+import { landingTranslations } from '../lib/landingTranslations';
 
-function ResetPasswordModal({ open, onClose }) {
+function ResetPasswordModal({ open, onClose, language = 'ru' }) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const t = landingTranslations[language];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,11 +34,11 @@ function ResetPasswordModal({ open, onClose }) {
     } catch (err) {
       console.error('Ошибка сброса пароля:', err);
       if (err.code === 'auth/invalid-email') {
-        setError('Неверный формат email адреса');
+        setError(t.invalidEmail);
       } else if (err.code === 'auth/user-not-found') {
-        setError('Пользователь с таким email не найден');
+        setError(t.userNotFound);
       } else {
-        setError('Ошибка при отправке email для сброса пароля: ' + err.message);
+        setError(t.resetError + err.message);
       }
     } finally {
       setLoading(false);
@@ -50,49 +53,60 @@ function ResetPasswordModal({ open, onClose }) {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Восстановление пароля</DialogTitle>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+        <DialogHeader>
+          <DialogTitle>{t.resetPasswordTitle}</DialogTitle>
           {success ? (
-            <Typography color="success.main" sx={{ mb: 2 }}>
-              Инструкции по сбросу пароля отправлены на ваш email
-            </Typography>
+            <DialogDescription className="text-green-600">
+              {t.resetPasswordSuccess}
+            </DialogDescription>
           ) : (
-            <>
-              <Typography sx={{ mb: 2 }}>
-                Введите ваш email, и мы отправим вам инструкции по сбросу пароля
-              </Typography>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="Email"
+            <DialogDescription>
+              {t.resetPasswordDescription}
+            </DialogDescription>
+          )}
+        </DialogHeader>
+
+        {!success && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
                 type="email"
-                fullWidth
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                error={!!error}
-                helperText={error}
+                placeholder={t.emailPlaceholder}
                 disabled={loading}
               />
-            </>
-          )}
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
-          {success ? 'Закрыть' : 'Отмена'}
-        </Button>
-        {!success && (
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained" 
-            disabled={loading || !email}
-          >
-            {loading ? 'Отправка...' : 'Отправить'}
-          </Button>
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+            </div>
+          </form>
         )}
-      </DialogActions>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            disabled={loading}
+          >
+            {success ? t.close : t.cancel}
+          </Button>
+          {!success && (
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={loading || !email}
+            >
+              {loading ? t.sending : t.send}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }

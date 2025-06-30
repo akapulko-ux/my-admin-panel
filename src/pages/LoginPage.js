@@ -7,54 +7,76 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { showError } from '../utils/notifications';
 import { ArrowLeft } from 'lucide-react';
+import { landingTranslations } from '../lib/landingTranslations';
+import { useLanguage } from '../lib/LanguageContext';
 
 // Маршруты по умолчанию для разных ролей
 const DEFAULT_ROUTES = {
-  admin: '/complex/list',
-  модератор: '/complex/list',
-  'премиум агент': '/property/list',
+  admin: '/property/gallery',
+  модератор: '/property/gallery',
+  'премиум агент': '/property/gallery',
   agent: '/property/gallery',
-  застройщик: '/chessboard',
-  user: '/property/gallery'
+  застройщик: '/property/gallery',
+  user: '/gallery'
 };
 
-function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [resetModalOpen, setResetModalOpen] = useState(false);
-  const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
+const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
+  const { language, changeLanguage } = useLanguage();
+  const t = landingTranslations[language];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
       const { role } = await login(email, password);
-      const defaultRoute = DEFAULT_ROUTES[role] || '/dashboard';
+      const defaultRoute = DEFAULT_ROUTES[role] || '/property/gallery';
       navigate(defaultRoute);
-    } catch (err) {
-      showError("Ошибка входа: " + err.message);
+    } catch (error) {
+      console.error("Ошибка входа:", error);
+      showError(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <div className="w-full max-w-sm">
-        <Link 
-          to="/" 
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Вернуться на главную
-        </Link>
-        
-        <Card>
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            {t.backToHome}
+          </Link>
+          <Select value={language} onValueChange={changeLanguage}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue>
+                {language === 'ru' ? 'Русский' : language === 'en' ? 'English' : 'Bahasa'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ru">Русский</SelectItem>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="id">Bahasa</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </header>
+
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl font-semibold text-center">
-              Вход в систему
-            </CardTitle>
+            <CardTitle>{t.loginTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,61 +87,69 @@ function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="example@mail.com"
+                  placeholder={t.emailPlaceholder}
+                  disabled={isLoading}
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="password">Пароль</Label>
+                <Label htmlFor="password">{t.password}</Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
+                  disabled={isLoading}
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Войти
-              </Button>
+
               <Button
                 type="button"
                 variant="link"
-                onClick={() => setResetModalOpen(true)}
-                className="w-full"
+                className="p-0 h-auto font-normal"
+                onClick={() => setIsResetModalOpen(true)}
               >
-                Забыли пароль?
+                {t.forgotPassword}
               </Button>
-            </form>
 
-            <div className="mt-8 pt-6 border-t text-center">
-              <p className="text-sm text-muted-foreground mb-4">
-                Вы застройщик и всё ещё не с нами?
-              </p>
               <Button
-                type="button"
-                variant="outline"
-                onClick={() => setRegistrationModalOpen(true)}
+                type="submit"
                 className="w-full"
+                disabled={isLoading}
               >
-                Оставить заявку на регистрацию
+                {isLoading ? t.sending : t.login}
               </Button>
-            </div>
+
+              <div className="text-center mt-6">
+                <p className="text-sm text-muted-foreground mb-2">
+                  {t.developerQuestion}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsRegistrationModalOpen(true)}
+                >
+                  {t.registrationRequest}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>
 
-      <ResetPasswordModal 
-        open={resetModalOpen} 
-        onClose={() => setResetModalOpen(false)} 
+      <ResetPasswordModal
+        open={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        language={language}
       />
 
       <RegistrationRequestModal
-        open={registrationModalOpen}
-        onClose={() => setRegistrationModalOpen(false)}
+        open={isRegistrationModalOpen}
+        onClose={() => setIsRegistrationModalOpen(false)}
+        language={language}
       />
     </div>
   );
-}
+};
 
 export default LoginPage;

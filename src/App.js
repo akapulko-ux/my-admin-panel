@@ -12,6 +12,7 @@ import ProtectedRoute from "./pages/ProtectedRoute";
 import { Toaster } from 'react-hot-toast';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
+import { LanguageProvider } from './lib/LanguageContext';
 
 // Лендинг
 import LandingPage from "./pages/LandingPage";
@@ -49,6 +50,7 @@ import ChessboardOverview from "./pages/ChessboardOverview";
 
 // Калькулятор ROI
 import RoiCalculator from "./pages/RoiCalculator";
+import PublicRoiPage from "./pages/PublicRoiPage";
 
 // Фиксации клиентов
 import ClientFixations from "./pages/ClientFixations";
@@ -141,163 +143,166 @@ const AdminLayout = ({ children }) => {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <CacheProvider>
-          <Toaster />
-          <Routes>
-            {/* Публичные маршруты - без оболочки админ-панели */}
-            <Route path="/public/:publicId" element={<PublicChessboard />} />
-            <Route path="/public-chessboard/:publicId" element={<PublicChessboard />} />
-            <Route path="/chessboard-overview/:publicId" element={<ChessboardOverview />} />
-            <Route path="/login" element={<LoginPage />} />
+      <LanguageProvider>
+        <AuthProvider>
+          <CacheProvider>
+            <Toaster />
+            <Routes>
+              {/* Публичные маршруты - без оболочки админ-панели */}
+              <Route path="/public/:publicId" element={<PublicChessboard />} />
+              <Route path="/public-chessboard/:publicId" element={<PublicChessboard />} />
+              <Route path="/chessboard-overview/:publicId" element={<ChessboardOverview />} />
+              <Route path="/public-roi/:id" element={<PublicRoiPage />} />
+              <Route path="/login" element={<LoginPage />} />
 
-            {/* Лендинг для неавторизованных пользователей */}
-            <Route path="/" element={
-              <ProtectedRoute isPublic>
-                <LandingPage />
-              </ProtectedRoute>
-            } />
+              {/* Лендинг для неавторизованных пользователей */}
+              <Route path="/" element={
+                <ProtectedRoute isPublic>
+                  <LandingPage />
+                </ProtectedRoute>
+              } />
 
-            {/* Административные маршруты - с оболочкой админ-панели */}
-            <Route path="*" element={
-              <AdminLayout>
-                <Routes>
-                  <Route path="/chessboard" element={
-                    <ProtectedRoute>
-                      <ListChessboards />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/chessboard/:id" element={
-                    <ProtectedRoute>
-                      <Chessboard />
-                    </ProtectedRoute>
-                  } />
+              {/* Административные маршруты - с оболочкой админ-панели */}
+              <Route path="*" element={
+                <AdminLayout>
+                  <Routes>
+                    <Route path="/chessboard" element={
+                      <ProtectedRoute>
+                        <ListChessboards />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/chessboard/:id" element={
+                      <ProtectedRoute>
+                        <Chessboard />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Калькулятор ROI */}
-                  <Route path="/roi-calculator" element={
-                    <ProtectedRoute>
-                      <RoiCalculator />
-                    </ProtectedRoute>
-                  } />
+                    {/* Калькулятор ROI */}
+                    <Route path="/roi-calculator" element={
+                      <ProtectedRoute>
+                        <RoiCalculator />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Комплексы */}
-                  <Route path="/complex/new" element={
-                    <ProtectedRoute>
-                      <CreateComplex />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/complex/edit/:id" element={
-                    <ProtectedRoute>
-                      <EditComplex />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/complex/list" element={
-                    <ProtectedRoute>
-                      <ListComplexes />
-                    </ProtectedRoute>
-                  } />
+                    {/* Комплексы */}
+                    <Route path="/complex/new" element={
+                      <ProtectedRoute>
+                        <CreateComplex />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/complex/edit/:id" element={
+                      <ProtectedRoute>
+                        <EditComplex />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/complex/list" element={
+                      <ProtectedRoute>
+                        <ListComplexes />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Объекты */}
-                  <Route path="/property/new" element={
-                    <ProtectedRoute>
-                      <CreateProperty />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/property/edit/:id" element={
-                    <ProtectedRoute>
-                      <EditProperty />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/property/list" element={
-                    <ProtectedRoute>
-                      <ListProperties />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/property/gallery" element={
-                    <ProtectedRoute>
-                      <PropertiesGallery />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/property/:id" element={
-                    <ProtectedRoute>
-                      <PropertyDetail />
-                    </ProtectedRoute>
-                  } />
+                    {/* Объекты */}
+                    <Route path="/property/new" element={
+                      <ProtectedRoute>
+                        <CreateProperty />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/property/edit/:id" element={
+                      <ProtectedRoute>
+                        <EditProperty />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/property/list" element={
+                      <ProtectedRoute>
+                        <ListProperties />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/property/gallery" element={
+                      <ProtectedRoute>
+                        <PropertiesGallery />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/property/:id" element={
+                      <ProtectedRoute>
+                        <PropertyDetail />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Достопримечательности */}
-                  <Route path="/landmark/new" element={
-                    <ProtectedRoute>
-                      <CreateLandmark />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/landmark/edit/:id" element={
-                    <ProtectedRoute>
-                      <EditLandmark />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/landmark/list" element={
-                    <ProtectedRoute>
-                      <ListLandmarks />
-                    </ProtectedRoute>
-                  } />
+                    {/* Достопримечательности */}
+                    <Route path="/landmark/new" element={
+                      <ProtectedRoute>
+                        <CreateLandmark />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/landmark/edit/:id" element={
+                      <ProtectedRoute>
+                        <EditLandmark />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/landmark/list" element={
+                      <ProtectedRoute>
+                        <ListLandmarks />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Застройщики */}
-                  <Route path="/developers/list" element={
-                    <ProtectedRoute>
-                      <ListDevelopers />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/developers/edit/:id" element={
-                    <ProtectedRoute>
-                      <EditDeveloper />
-                    </ProtectedRoute>
-                  } />
+                    {/* Застройщики */}
+                    <Route path="/developers/list" element={
+                      <ProtectedRoute>
+                        <ListDevelopers />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/developers/edit/:id" element={
+                      <ProtectedRoute>
+                        <EditDeveloper />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Поддержка */}
-                  <Route path="/support/chats" element={
-                    <ProtectedRoute>
-                      <SupportChats />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/support/chats/:id" element={
-                    <ProtectedRoute>
-                      <SupportChatDetail />
-                    </ProtectedRoute>
-                  } />
+                    {/* Поддержка */}
+                    <Route path="/support/chats" element={
+                      <ProtectedRoute>
+                        <SupportChats />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/support/chats/:id" element={
+                      <ProtectedRoute>
+                        <SupportChatDetail />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Управление пользователями */}
-                  <Route path="/users/manage" element={
-                    <ProtectedRoute>
-                      <UserManagement />
-                    </ProtectedRoute>
-                  } />
+                    {/* Управление пользователями */}
+                    <Route path="/users/manage" element={
+                      <ProtectedRoute>
+                        <UserManagement />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Фиксации клиентов */}
-                  <Route path="/client-fixations" element={
-                    <ProtectedRoute>
-                      <ClientFixations />
-                    </ProtectedRoute>
-                  } />
+                    {/* Фиксации клиентов */}
+                    <Route path="/client-fixations" element={
+                      <ProtectedRoute>
+                        <ClientFixations />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Заявки на регистрацию (только для админа) */}
-                  <Route path="/registration-requests" element={
-                    <ProtectedRoute>
-                      <RegistrationRequests />
-                    </ProtectedRoute>
-                  } />
+                    {/* Заявки на регистрацию (только для админа) */}
+                    <Route path="/registration-requests" element={
+                      <ProtectedRoute>
+                        <RegistrationRequests />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Главная страница для авторизованных пользователей */}
-                  <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                      <PropertiesGallery />
-                    </ProtectedRoute>
-                  } />
-                </Routes>
-              </AdminLayout>
-            } />
-          </Routes>
-        </CacheProvider>
-      </AuthProvider>
+                    {/* Главная страница для авторизованных пользователей */}
+                    <Route path="/dashboard" element={
+                      <ProtectedRoute>
+                        <PropertiesGallery />
+                      </ProtectedRoute>
+                    } />
+                  </Routes>
+                </AdminLayout>
+              } />
+            </Routes>
+          </CacheProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </Router>
   );
 }

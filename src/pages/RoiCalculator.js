@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
-import { Calculator, Download, Save, FolderOpen } from 'lucide-react';
+import { Calculator, Download, Save, FolderOpen, Share2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -119,24 +119,27 @@ const RoiCalculator = () => {
 
   // Состояния для всех входных данных
   const [costData, setCostData] = useState({
-    purchasePrice: '',
-    renovationCosts: '',
-    legalFees: '',
-    additionalExpenses: '',
-    investmentPeriod: '',
+    purchasePrice: '127500',
+    renovationCosts: '15000',
+    legalFees: '5000',
+    additionalExpenses: '7500',
+    investmentPeriod: '5',
   });
 
   const [rentalData, setRentalData] = useState({
-    dailyRate: '',
-    occupancyRate: '',
+    dailyRate: '85',
+    occupancyRate: '75',
     daysPerYear: '365',
-    otaCommission: '',
+    otaCommission: '15',
   });
 
   const [expensesData, setExpensesData] = useState({
-    maintenanceFees: '',
-    utilityBills: '',
-    annualTax: '',
+    maintenanceFees: '3500',
+    utilityBills: '2400',
+    annualTax: '1500',
+    propertyManagementFee: '18',
+    annualAppreciation: '5',
+    rentGrowthRate: '1',
   });
 
   const [scenario, setScenario] = useState('base');
@@ -194,14 +197,43 @@ const RoiCalculator = () => {
     localStorage.setItem('roiCalculations', JSON.stringify(updatedCalculations));
   };
 
+  // Функция создания публичной страницы
+  const generatePublicPage = () => {
+    if (!calculationResults) return;
+
+    const publicData = {
+      id: Date.now(),
+      data: {
+        unitPrice: calculationResults.unitPrice,
+        averageROI: calculationResults.averageROI,
+        rentGrowthRate: calculationResults.rentGrowthRate,
+        propertyManagementFee: calculationResults.propertyManagementFee,
+        totalProjectedReturn: calculationResults.totalProjectedReturn,
+        totalCashFlow: calculationResults.totalCashFlow,
+        totalAppreciation: calculationResults.totalAppreciation,
+        detailedProjection: calculationResults.detailedProjection,
+        graphData: calculationResults.graphData,
+        investmentPeriod: calculationResults.investmentPeriod,
+        inputs: { costData, rentalData, expensesData }
+      }
+    };
+
+    // Сохраняем данные для публичной страницы в localStorage
+    localStorage.setItem(`publicROI_${publicData.id}`, JSON.stringify(publicData));
+    
+    // Открываем публичную страницу в новой вкладке
+    const url = `/public-roi/${publicData.id}`;
+    window.open(url, '_blank');
+  };
+
   // Функция для расчета всех показателей
-  const calculateInvestment = () => {
+  const calculateInvestment = useCallback(() => {
     // Преобразуем все входные данные в числа и добавляем отладочные логи
     const purchasePrice = Number(costData.purchasePrice) || 0;
     const renovationCosts = Number(costData.renovationCosts) || 0;
     const legalFees = Number(costData.legalFees) || 0;
     const additionalExpenses = Number(costData.additionalExpenses) || 0;
-    const investmentPeriod = Number(costData.investmentPeriod) || 30;
+    const investmentPeriod = Number(costData.investmentPeriod) || 5; // Изменил на 5 лет по умолчанию
     
     console.log('Input values:', {
       purchasePrice,
@@ -226,55 +258,121 @@ const RoiCalculator = () => {
     const maintenanceFees = Number(expensesData.maintenanceFees) || 0;
     const utilityBills = Number(expensesData.utilityBills) || 0;
     const annualTax = Number(expensesData.annualTax) || 0;
+    const propertyManagementFee = Number(expensesData.propertyManagementFee) || 0;
+    const annualAppreciation = Number(expensesData.annualAppreciation) || 0;
+    const rentGrowthRate = Number(expensesData.rentGrowthRate) || 0;
 
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
-    const annualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
-    const annualExpenses = maintenanceFees + utilityBills + annualTax;
-    const annualNetProfit = annualRentalIncome - annualExpenses;
+    const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
+    const initialAnnualExpenses = maintenanceFees + utilityBills + annualTax;
+    const initialNetProfit = initialAnnualRentalIncome - initialAnnualExpenses;
     
     console.log('Base calculations:', {
       totalInvestment,
-      annualRentalIncome,
-      annualExpenses,
-      annualNetProfit
+      initialAnnualRentalIncome,
+      initialAnnualExpenses,
+      initialNetProfit
     });
 
-    // Генерация данных для графика
+    // Генерация данных для графика и детального анализа
     const graphData = [];
-    let accumulatedProfit = -totalInvestment; // Начинаем с отрицательного значения (первоначальные инвестиции)
+    const detailedProjection = [];
+    let accumulatedProfit = -totalInvestment;
+    let currentPropertyValue = totalInvestment;
+    let totalSpend = totalInvestment;
+    let cumulativeIncome = 0;
+    let cumulativeCashflow = -totalInvestment;
     
     for (let year = 1; year <= investmentPeriod; year++) {
-      let yearlyProfit = annualNetProfit;
+      // Расчет дохода с учетом роста
+      const yearlyRentalIncome = initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1);
       
-      // Применяем модификаторы в зависимости от сценария
-      if (scenario === 'optimistic') {
-        yearlyProfit *= (1 + 0.05 * year); // 5% рост каждый год
-      } else if (scenario === 'pessimistic') {
-        yearlyProfit *= (1 - 0.02 * year); // 2% падение каждый год
-      }
+      // Расчет расходов (включая комиссию управления)
+      const yearlyExpenses = initialAnnualExpenses + (yearlyRentalIncome * propertyManagementFee / 100);
       
-      accumulatedProfit += yearlyProfit;
+      // Чистый доход
+      const yearlyNetProfit = yearlyRentalIncome - yearlyExpenses;
+      
+      // Прирост стоимости недвижимости
+      currentPropertyValue *= (1 + annualAppreciation / 100);
+      const yearlyAppreciation = currentPropertyValue - (year === 1 ? totalInvestment : graphData[year - 2]?.propertyValue || totalInvestment);
+      
+      // Общий возврат (денежный поток + прирост стоимости)
+      const totalReturn = yearlyNetProfit + yearlyAppreciation;
+      
+      // Накопленные значения
+      accumulatedProfit += totalReturn;
+      cumulativeIncome += yearlyRentalIncome;
+      totalSpend += yearlyExpenses;
+      cumulativeCashflow += yearlyNetProfit;
+      
+      const yearData = {
+        year: year,
+        yearLabel: `${2025 + year}`,
+        income: Math.round(yearlyRentalIncome),
+        cumulativeIncome: Math.round(cumulativeIncome),
+        spend: Math.round(yearlyExpenses),
+        cumulativeSpend: Math.round(totalSpend),
+        cashflow: Math.round(yearlyNetProfit),
+        cumulativeCashflow: Math.round(cumulativeCashflow),
+        appreciation: Math.round(yearlyAppreciation),
+        totalReturn: Math.round(totalReturn),
+        accumulatedReturn: Math.round(accumulatedProfit),
+        propertyValue: Math.round(currentPropertyValue)
+      };
       
       graphData.push({
-        year: `Год ${year}`,
-        profit: Math.round(yearlyProfit),
+        year: `${2025 + year}`,
+        profit: Math.round(yearlyNetProfit),
         accumulatedProfit: Math.round(accumulatedProfit),
+        cashFlow: Math.round(yearlyNetProfit),
+        appreciation: Math.round(yearlyAppreciation),
+        totalReturns: Math.round(totalReturn)
       });
+      
+      detailedProjection.push(yearData);
     }
 
     console.log('Graph data:', graphData);
 
+    // Расчет средних значений для инвестиционных показателей
+    const averageROI = detailedProjection.length > 0 
+      ? detailedProjection.reduce((sum, year) => sum + (year.totalReturn / totalInvestment * 100), 0) / detailedProjection.length 
+      : 0;
+    
+    const finalCumulativeCashflow = detailedProjection[detailedProjection.length - 1]?.cumulativeCashflow || 0;
+    const finalPropertyValue = detailedProjection[detailedProjection.length - 1]?.propertyValue || totalInvestment;
+    const totalProjectedReturn = finalCumulativeCashflow + (finalPropertyValue - totalInvestment);
+
     setCalculationResults({
+      // Оригинальные данные
       totalInvestment,
-      annualRentalIncome,
-      annualExpenses,
-      annualNetProfit,
-      roi: (annualNetProfit / totalInvestment) * 100,
-      paybackPeriod: totalInvestment / annualNetProfit,
+      annualRentalIncome: initialAnnualRentalIncome,
+      annualExpenses: initialAnnualExpenses,
+      annualNetProfit: initialNetProfit,
+      roi: (initialNetProfit / totalInvestment) * 100,
+      paybackPeriod: totalInvestment / initialNetProfit,
       graphData,
+      
+      // Новые данные для публичной страницы
+      unitPrice: totalInvestment,
+      averageROI: averageROI,
+      rentGrowthRate: rentGrowthRate,
+      propertyManagementFee: propertyManagementFee,
+      detailedProjection,
+      totalProjectedReturn,
+      finalPropertyValue,
+      totalCashFlow: finalCumulativeCashflow,
+      totalAppreciation: finalPropertyValue - totalInvestment,
+      investmentPeriod
     });
-  };
+  }, [costData, rentalData, expensesData, scenario]);
+
+  // Автоматический расчет при изменении данных
+  useEffect(() => {
+    calculateInvestment();
+  }, [calculateInvestment]);
 
   // Добавляем эффект для отслеживания изменений в calculationResults
   useEffect(() => {
@@ -471,6 +569,36 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="propertyManagementFee">Комиссия управления (%)</Label>
+            <Input
+              id="propertyManagementFee"
+              type="number"
+              value={expensesData.propertyManagementFee}
+              onChange={(e) => setExpensesData({...expensesData, propertyManagementFee: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="annualAppreciation">Годовой рост стоимости (%)</Label>
+            <Input
+              id="annualAppreciation"
+              type="number"
+              value={expensesData.annualAppreciation}
+              onChange={(e) => setExpensesData({...expensesData, annualAppreciation: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="rentGrowthRate">Годовой рост аренды (%)</Label>
+            <Input
+              id="rentGrowthRate"
+              type="number"
+              value={expensesData.rentGrowthRate}
+              onChange={(e) => setExpensesData({...expensesData, rentGrowthRate: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="scenario">Сценарий расчета</Label>
             <Select value={scenario} onValueChange={setScenario}>
               <SelectTrigger>
@@ -523,6 +651,14 @@ const RoiCalculator = () => {
                 size="sm"
               >
                 <Download className="mr-2 h-4 w-4" /> Экспорт в CSV
+              </Button>
+
+              <Button 
+                onClick={generatePublicPage}
+                variant="outline"
+                size="sm"
+              >
+                <Share2 className="mr-2 h-4 w-4" /> Публичная страница
               </Button>
 
               <div className="flex items-center gap-2">

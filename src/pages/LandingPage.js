@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -11,6 +11,10 @@ import {
   UserCheck,
   ArrowRight
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { landingTranslations } from '../lib/landingTranslations';
+import { useLanguage } from '../lib/LanguageContext';
+import RegistrationRequestModal from '../components/RegistrationRequestModal';
 
 const FeatureCard = ({ icon: Icon, title, description }) => (
   <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300">
@@ -25,36 +29,40 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
 );
 
 const LandingPage = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { language, changeLanguage } = useLanguage();
+  const t = landingTranslations[language];
+
   const features = [
     {
       icon: Building2,
-      title: "Управление объектами",
-      description: "Удобный интерфейс для управления вашими объектами недвижимости"
+      title: t.features.propertyManagement.title,
+      description: t.features.propertyManagement.description
     },
     {
       icon: LayoutGrid,
-      title: "Шахматка проекта",
-      description: "Интерактивная шахматка для визуализации и управления статусами юнитов"
+      title: t.features.projectChessboard.title,
+      description: t.features.projectChessboard.description
     },
     {
       icon: Calculator,
-      title: "ROI Калькулятор",
-      description: "Автоматический расчет окупаемости и прибыльности инвестиций"
+      title: t.features.roiCalculator.title,
+      description: t.features.roiCalculator.description
     },
     {
       icon: Users2,
-      title: "Фиксация клиентов",
-      description: "Система учета и управления обращениями агентов"
+      title: t.features.clientFixation.title,
+      description: t.features.clientFixation.description
     },
     {
       icon: MessageSquare,
-      title: "Поддержка 24/7",
-      description: "Круглосуточная поддержка и консультации по всем вопросам"
+      title: t.features.support.title,
+      description: t.features.support.description
     },
     {
       icon: UserCheck,
-      title: "Личный кабинет",
-      description: "Персональный доступ к статистике и управлению проектами"
+      title: t.features.personalAccount.title,
+      description: t.features.personalAccount.description
     }
   ];
 
@@ -66,31 +74,39 @@ const LandingPage = () => {
           <Link to="/" className="text-xl font-semibold">
             IT Agent Admin Panel
           </Link>
-          <Link to="/login">
-            <Button variant="default">
-              Войти
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Select value={language} onValueChange={changeLanguage}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue>
+                  {language === 'ru' ? 'Русский' : language === 'en' ? 'English' : 'Bahasa'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ru">Русский</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="id">Bahasa</SelectItem>
+              </SelectContent>
+            </Select>
+            <Link to="/login">
+              <Button variant="ghost">{t.login}</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 text-transparent bg-clip-text">
-            Система управления недвижимостью для застройщиков
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 text-transparent bg-clip-text leading-normal md:leading-relaxed">
+            {t.heroTitle}
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Современное решение для эффективного управления объектами недвижимости, 
-            контроля продаж и взаимодействия с клиентами
+            {t.heroDescription}
           </p>
-          <Link to="/login">
-            <Button size="lg" className="px-8">
-              Начать работу
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <Button onClick={() => setIsModalOpen(true)} size="lg" className="gap-2">
+            {t.getStarted}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       </section>
 
@@ -98,7 +114,7 @@ const LandingPage = () => {
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">
-            Преимущества платформы
+            {t.platformBenefits}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
@@ -113,17 +129,14 @@ const LandingPage = () => {
         <div className="container mx-auto text-center">
           <div className="bg-primary/5 rounded-2xl p-8 md:p-12 max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold mb-4">
-              Готовы улучшить управление вашими проектами?
+              {t.ctaTitle}
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Присоединяйтесь к ведущим застройщикам, которые уже используют нашу платформу
+              {t.ctaDescription}
             </p>
-            <Link to="/login">
-              <Button size="lg" variant="default" className="px-8">
-                Используйте бесплатно
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button onClick={() => setIsModalOpen(true)} size="lg">
+              {t.useFree}
+            </Button>
           </div>
         </div>
       </section>
@@ -131,9 +144,16 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="border-t py-8 px-4">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>© 2025 IT Agent Admin Panel. Все права защищены.</p>
+          <p>{t.footerText}</p>
         </div>
       </footer>
+
+      {/* Registration Request Modal */}
+      <RegistrationRequestModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        language={language}
+      />
     </div>
   );
 };

@@ -1,0 +1,36 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Фон -->
+  <rect width="192" height="192" rx="32" fill="#1f2937"/>
+  
+  <!-- Основное здание -->
+  <rect x="36" y="72" width="72" height="96" fill="#f3f4f6" rx="6"/>
+  
+  <!-- Крыша основного здания -->
+  <path d="M30 72 L72 36 L114 72 Z" fill="#3b82f6"/>
+  
+  <!-- Пристройка -->
+  <rect x="108" y="96" width="48" height="72" fill="#f3f4f6" rx="6"/>
+  
+  <!-- Крыша пристройки -->
+  <path d="M102 96 L132 66 L162 96 Z" fill="#6366f1"/>
+  
+  <!-- Окна основного здания -->
+  <rect x="48" y="90" width="15" height="18" fill="#1f2937" rx="3"/>
+  <rect x="81" y="90" width="15" height="18" fill="#1f2937" rx="3"/>
+  <rect x="48" y="120" width="15" height="18" fill="#1f2937" rx="3"/>
+  <rect x="81" y="120" width="15" height="18" fill="#1f2937" rx="3"/>
+  
+  <!-- Окна пристройки -->
+  <rect x="120" y="114" width="12" height="15" fill="#1f2937" rx="3"/>
+  <rect x="138" y="114" width="12" height="15" fill="#1f2937" rx="3"/>
+  <rect x="120" y="138" width="12" height="15" fill="#1f2937" rx="3"/>
+  <rect x="138" y="138" width="12" height="15" fill="#1f2937" rx="3"/>
+  
+  <!-- Дверь -->
+  <rect x="66" y="150" width="12" height="18" fill="#1f2937" rx="3"/>
+  <circle cx="76.8" cy="159" r="1.8" fill="#f3f4f6"/>
+  
+  <!-- Логотип IT -->
+  <rect x="24" y="24" width="36" height="24" rx="6" fill="#3b82f6"/>
+  <text x="42" y="41" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">IT</text>
+</svg> 
