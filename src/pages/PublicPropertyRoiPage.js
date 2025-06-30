@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { AdaptiveTooltip } from '../components/ui/tooltip';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import {
@@ -306,16 +307,16 @@ const PublicPropertyRoiPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden touch-none">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8 overflow-x-hidden">
         {/* Language Switcher */}
-        <div className="flex justify-end mb-4 sm:mb-6 overflow-x-auto">
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+        <div className="flex justify-end mb-4 sm:mb-6 -mx-2 sm:mx-0 overflow-x-hidden">
+          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm w-full sm:w-auto justify-center">
             <Button
               variant={language === 'en' ? 'default' : 'ghost'}
               onClick={() => handleLanguageChange('en')}
               size="sm"
-              className="px-2 sm:px-3 text-xs sm:text-sm"
+              className="flex-1 sm:flex-none px-2 sm:px-3 text-[10px] xs:text-xs sm:text-sm min-w-0"
             >
               English
             </Button>
@@ -323,7 +324,7 @@ const PublicPropertyRoiPage = () => {
               variant={language === 'ru' ? 'default' : 'ghost'}
               onClick={() => handleLanguageChange('ru')}
               size="sm"
-              className="px-2 sm:px-3 text-xs sm:text-sm"
+              className="flex-1 sm:flex-none px-2 sm:px-3 text-[10px] xs:text-xs sm:text-sm min-w-0"
             >
               Русский
             </Button>
@@ -331,7 +332,7 @@ const PublicPropertyRoiPage = () => {
               variant={language === 'id' ? 'default' : 'ghost'}
               onClick={() => handleLanguageChange('id')}
               size="sm"
-              className="px-2 sm:px-3 text-xs sm:text-sm"
+              className="flex-1 sm:flex-none px-2 sm:px-3 text-[10px] xs:text-xs sm:text-sm min-w-0"
             >
               Indonesia
             </Button>
@@ -339,43 +340,46 @@ const PublicPropertyRoiPage = () => {
         </div>
         
         {/* Investor Highlights */}
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t.investorHighlights}</h1>
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-4 sm:mb-8">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t.investorHighlights}</h1>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
             <div>
-              <div className="text-sm text-gray-500 mb-1">{t.unitPrice}</div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
+                {t.unitPrice}
+                <AdaptiveTooltip content={t.tooltipUnitPrice} />
+              </div>
+              <div className="text-base sm:text-2xl font-bold text-gray-900">
                 {formatCurrency(currentData.unitPrice)}
               </div>
             </div>
             
             <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
                 {t.averageROI}
-                <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-300"></span>
+                <AdaptiveTooltip content={t.tooltipAverageROI} />
               </div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-base sm:text-2xl font-bold text-gray-900">
                 {formatPercentage(currentData.averageROI)}
               </div>
             </div>
             
             <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
                 {t.annualRentExpenseGrowth}
-                <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-300"></span>
+                <AdaptiveTooltip content={t.tooltipAnnualGrowth} />
               </div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-base sm:text-2xl font-bold text-gray-900">
                 +{formatPercentage(currentData.rentGrowthRate)}
               </div>
             </div>
             
             <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
                 {t.propertyManagementFee}
-                <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-300"></span>
+                <AdaptiveTooltip content={t.tooltipManagementFee} />
               </div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-base sm:text-2xl font-bold text-gray-900">
                 {formatPercentage(currentData.propertyManagementFee)}
               </div>
             </div>
@@ -383,15 +387,15 @@ const PublicPropertyRoiPage = () => {
         </div>
 
         {/* Chart Section */}
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-4 sm:mb-8">
+          <div className="flex flex-col gap-4 mb-6">
             {/* Chart Type Buttons - Scrollable on mobile */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
               <Button 
                 variant={chartView === 'totalReturns' ? 'default' : 'ghost'}
                 onClick={() => setChartView('totalReturns')}
                 size="sm"
-                className="whitespace-nowrap text-xs sm:text-sm"
+                className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
               >
                 {t.totalReturns}
               </Button>
@@ -399,7 +403,7 @@ const PublicPropertyRoiPage = () => {
                 variant={chartView === 'cashFlow' ? 'default' : 'ghost'}
                 onClick={() => setChartView('cashFlow')}
                 size="sm"
-                className="whitespace-nowrap text-xs sm:text-sm"
+                className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
               >
                 {t.cashFlow}
               </Button>
@@ -407,33 +411,33 @@ const PublicPropertyRoiPage = () => {
                 variant={chartView === 'appreciation' ? 'default' : 'ghost'}
                 onClick={() => setChartView('appreciation')}
                 size="sm"
-                className="whitespace-nowrap text-xs sm:text-sm"
+                className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
               >
                 {t.appreciation}
               </Button>
             </div>
             
             {/* Scenario and Period Selection */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex flex-col gap-4">
               {/* Scenarios */}
-              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
                 <Badge 
                   variant={scenario === 'pessimistic' ? 'default' : 'outline'}
-                  className="cursor-pointer whitespace-nowrap text-xs sm:text-sm"
+                  className="cursor-pointer whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   onClick={() => setScenario('pessimistic')}
                 >
                   {t.pessimistic}
                 </Badge>
                 <Badge 
                   variant={scenario === 'realistic' ? 'default' : 'outline'}
-                  className="cursor-pointer whitespace-nowrap text-xs sm:text-sm"
+                  className="cursor-pointer whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   onClick={() => setScenario('realistic')}
                 >
                   {t.realistic}
                 </Badge>
                 <Badge 
                   variant={scenario === 'optimistic' ? 'default' : 'outline'}
-                  className="cursor-pointer whitespace-nowrap text-xs sm:text-sm"
+                  className="cursor-pointer whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   onClick={() => setScenario('optimistic')}
                 >
                   {t.optimistic}
@@ -441,14 +445,14 @@ const PublicPropertyRoiPage = () => {
               </div>
               
               {/* Time Periods */}
-              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
                 {['5 Years', '10 Years', '20 Years', '30 Years'].map((period) => (
                   <Button
                     key={period}
                     variant={timeframe === period ? 'default' : 'ghost'}
                     onClick={() => setTimeframe(period)}
                     size="sm"
-                    className="whitespace-nowrap text-xs sm:text-sm"
+                    className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   >
                     {period}
                   </Button>
@@ -501,107 +505,89 @@ const PublicPropertyRoiPage = () => {
         </div>
 
         {/* Projected Cumulative Return */}
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-8">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-4 sm:mb-8">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
             {t.projectedCumulativeReturn.replace('{years}', currentData.investmentPeriod)}
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+            <Card className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm text-gray-600">Общая доходность</h3>
-                <div className="relative group">
-                  <div className="cursor-help">ⓘ</div>
-                  <div className="hidden group-hover:block absolute z-10 w-64 p-2 bg-white border rounded-lg shadow-lg -translate-x-1/2 left-1/2">
-                    Сумма денежного потока и удорожания объекта
-                  </div>
-                </div>
+                <h3 className="text-xs sm:text-sm text-gray-600">{t.totalReturns}</h3>
+                <AdaptiveTooltip content={t.tooltipTotalReturns} />
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(currentData.totalProjectedReturn)}</p>
-              <p className={`text-sm ${currentData.averageROI >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.totalProjectedReturn)}</p>
+              <p className={`text-xs sm:text-sm ${currentData.averageROI >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatPercentage(currentData.averageROI)}
               </p>
             </Card>
 
-            <Card className="p-4">
+            <Card className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm text-gray-600">Денежный поток</h3>
-                <div className="relative group">
-                  <div className="cursor-help">ⓘ</div>
-                  <div className="hidden group-hover:block absolute z-10 w-64 p-2 bg-white border rounded-lg shadow-lg -translate-x-1/2 left-1/2">
-                    Накопленный доход от аренды за вычетом расходов
-                  </div>
-                </div>
+                <h3 className="text-xs sm:text-sm text-gray-600">{t.cashFlow}</h3>
+                <AdaptiveTooltip content={t.tooltipCashFlow} />
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(currentData.totalCashFlow)}</p>
-              <p className={`text-sm ${currentData.totalCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.totalCashFlow)}</p>
+              <p className={`text-xs sm:text-sm ${currentData.totalCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatPercentage(currentData.totalCashFlow / currentData.unitPrice * 100)} ROI
               </p>
             </Card>
 
-            <Card className="p-4">
+            <Card className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm text-gray-600">Удорожание ({currentData.rentGrowthRate}% в год)</h3>
-                <div className="relative group">
-                  <div className="cursor-help">ⓘ</div>
-                  <div className="hidden group-hover:block absolute z-10 w-64 p-2 bg-white border rounded-lg shadow-lg -translate-x-1/2 left-1/2">
-                    Прирост стоимости объекта за счет роста рынка
-                  </div>
-                </div>
+                <h3 className="text-xs sm:text-sm text-gray-600">{t.appreciationYoY.replace('{rate}', currentData.rentGrowthRate)}</h3>
+                <AdaptiveTooltip content={t.tooltipAppreciation} />
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(currentData.totalAppreciation)}</p>
-              <p className={`text-sm ${currentData.totalAppreciation >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.totalAppreciation)}</p>
+              <p className={`text-xs sm:text-sm ${currentData.totalAppreciation >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatPercentage(currentData.totalAppreciation / currentData.unitPrice * 100)}
               </p>
             </Card>
 
-            <Card className="p-4">
+            <Card className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm text-gray-600">Приблизительная стоимость объекта</h3>
-                <div className="relative group">
-                  <div className="cursor-help">ⓘ</div>
-                  <div className="hidden group-hover:block absolute z-10 w-64 p-2 bg-white border rounded-lg shadow-lg -translate-x-1/2 left-1/2">
-                    Прогнозируемая стоимость объекта через {currentData.investmentPeriod} лет
-                  </div>
-                </div>
+                <h3 className="text-xs sm:text-sm text-gray-600">{t.approximateUnitCost}</h3>
+                <AdaptiveTooltip content={t.tooltipApproximateUnitCost.replace('{years}', currentData.investmentPeriod)} />
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(currentData.unitPrice + currentData.totalAppreciation)}</p>
-              <p className={`text-sm ${currentData.totalAppreciation >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.unitPrice + currentData.totalAppreciation)}</p>
+              <p className={`text-xs sm:text-sm ${currentData.totalAppreciation >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 +{formatPercentage(currentData.totalAppreciation / currentData.unitPrice * 100)}
               </p>
             </Card>
           </div>
 
           {/* Детальная таблица */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">Год</th>
-                  <th className="text-left py-2">Год</th>
-                  <th className="text-right py-2">Доход</th>
-                  <th className="text-right py-2">Накопленный доход</th>
-                  <th className="text-right py-2">Общие расходы</th>
-                  <th className="text-right py-2">Накопленные расходы</th>
-                  <th className="text-right py-2">Денежный поток</th>
-                  <th className="text-right py-2">Накопленный денежный поток</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentData.detailedProjection.map((row) => (
-                  <tr key={row.year} className="border-b">
-                    <td className="py-2">{row.year}</td>
-                    <td className="py-2">{row.yearLabel}</td>
-                    <td className="text-right py-2">{formatCurrency(row.income)}</td>
-                    <td className="text-right py-2">{formatCurrency(row.cumulativeIncome)}</td>
-                    <td className="text-right py-2">{formatCurrency(row.spend)}</td>
-                    <td className="text-right py-2">{formatCurrency(row.cumulativeSpend)}</td>
-                    <td className="text-right py-2">{formatCurrency(row.cashflow)}</td>
-                    <td className="text-right py-2">{formatCurrency(row.cumulativeCashflow)}</td>
+          <div className="-mx-3 sm:mx-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-3 sm:px-2">{t.yearNumber}</th>
+                    <th className="text-left py-2 px-3 sm:px-2">{t.yearCalendar}</th>
+                    <th className="text-right py-2 px-3 sm:px-2">{t.income}</th>
+                    <th className="text-right py-2 px-3 sm:px-2">{t.cumulativeIncome}</th>
+                    <th className="text-right py-2 px-3 sm:px-2">{t.expenses}</th>
+                    <th className="text-right py-2 px-3 sm:px-2">{t.cumulativeExpenses}</th>
+                    <th className="text-right py-2 px-3 sm:px-2">{t.cashFlow}</th>
+                    <th className="text-right py-2 px-3 sm:px-2">{t.cumulativeCashFlow}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {currentData.detailedProjection.map((row) => (
+                    <tr key={row.year} className="border-b">
+                      <td className="py-2 px-3 sm:px-2">{row.year}</td>
+                      <td className="py-2 px-3 sm:px-2">{row.yearLabel}</td>
+                      <td className="text-right py-2 px-3 sm:px-2">{formatCurrency(row.income)}</td>
+                      <td className="text-right py-2 px-3 sm:px-2">{formatCurrency(row.cumulativeIncome)}</td>
+                      <td className="text-right py-2 px-3 sm:px-2">{formatCurrency(row.spend)}</td>
+                      <td className="text-right py-2 px-3 sm:px-2">{formatCurrency(row.cumulativeSpend)}</td>
+                      <td className="text-right py-2 px-3 sm:px-2">{formatCurrency(row.cashflow)}</td>
+                      <td className="text-right py-2 px-3 sm:px-2">{formatCurrency(row.cumulativeCashflow)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

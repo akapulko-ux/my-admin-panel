@@ -62,6 +62,20 @@ export const translations = {
     pessimistic: 'Pessimistic',
     realistic: 'Realistic',
     optimistic: 'Optimistic',
+    tooltipTotalReturns: 'Sum of cash flow and property appreciation',
+    tooltipCashFlow: 'Accumulated rental income minus expenses',
+    tooltipAppreciation: 'Property value increase due to market growth',
+    tooltipApproximateUnitCost: 'Projected property value after {years} years',
+    yearNumber: 'Year',
+    yearCalendar: 'Calendar Year',
+    expenses: 'Expenses',
+    cumulativeExpenses: 'Cumulative Expenses',
+    cumulativeCashFlow: 'Cumulative Cash Flow',
+    // Tooltips for Investor Highlights
+    tooltipUnitPrice: 'Current property price including all initial costs',
+    tooltipAverageROI: 'Average annual return on investment over the selected period',
+    tooltipAnnualGrowth: 'Annual growth rate for rental income and expenses',
+    tooltipManagementFee: 'Property management company commission from rental income',
   },
   ru: {
     // Page 1: Summary
@@ -126,6 +140,20 @@ export const translations = {
     pessimistic: 'Пессимистичный',
     realistic: 'Реалистичный',
     optimistic: 'Оптимистичный',
+    tooltipTotalReturns: 'Сумма денежного потока и удорожания объекта',
+    tooltipCashFlow: 'Накопленный доход от аренды за вычетом расходов',
+    tooltipAppreciation: 'Прирост стоимости объекта за счет роста рынка',
+    tooltipApproximateUnitCost: 'Прогнозируемая стоимость объекта через {years} лет',
+    yearNumber: 'Год',
+    yearCalendar: 'Календарный год',
+    expenses: 'Расходы',
+    cumulativeExpenses: 'Накопленные расходы',
+    cumulativeCashFlow: 'Накопленный денежный поток',
+    // Tooltips for Investor Highlights
+    tooltipUnitPrice: 'Текущая стоимость объекта, включая все начальные расходы',
+    tooltipAverageROI: 'Средняя годовая доходность за выбранный период',
+    tooltipAnnualGrowth: 'Ежегодный рост арендного дохода и расходов',
+    tooltipManagementFee: 'Комиссия управляющей компании от арендного дохода',
   },
   id: {
     // Page 1: Summary
@@ -190,5 +218,19 @@ export const translations = {
     pessimistic: 'Pesimis',
     realistic: 'Realistis',
     optimistic: 'Optimis',
+    tooltipTotalReturns: 'Jumlah arus kas dan apresiasi properti',
+    tooltipCashFlow: 'Pendapatan sewa akumulatif dikurangi biaya',
+    tooltipAppreciation: 'Peningkatan nilai properti karena pertumbuhan pasar',
+    tooltipApproximateUnitCost: 'Proyeksi nilai properti setelah {years} tahun',
+    yearNumber: 'Tahun',
+    yearCalendar: 'Tahun Kalender',
+    expenses: 'Pengeluaran',
+    cumulativeExpenses: 'Pengeluaran Kumulatif',
+    cumulativeCashFlow: 'Arus Kas Kumulatif',
+    // Tooltips for Investor Highlights
+    tooltipUnitPrice: 'Harga properti saat ini termasuk semua biaya awal',
+    tooltipAverageROI: 'Rata-rata pengembalian investasi tahunan selama periode yang dipilih',
+    tooltipAnnualGrowth: 'Tingkat pertumbuhan tahunan untuk pendapatan dan biaya sewa',
+    tooltipManagementFee: 'Komisi perusahaan manajemen properti dari pendapatan sewa',
   }
 }; 
