@@ -8,6 +8,8 @@ import { translations } from '../lib/translations';
 import {
   LineChart,
   Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -24,6 +26,48 @@ const formatCurrency = (number) => {
 const formatPercentage = (number) => {
   if (!number && number !== 0) return '0%';
   return `${number.toFixed(1)}%`;
+};
+
+// Функция для расчета оптимального масштаба графика
+const calculateOptimalDomain = (data, dataKey, padding = 0.15) => {
+  if (!data || data.length === 0) return ['auto', 'auto'];
+  
+  const values = data.map(item => Number(item[dataKey]) || 0).filter(val => !isNaN(val));
+  if (values.length === 0) return ['auto', 'auto'];
+  
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  
+  // Обработка случая, когда все значения равны нулю
+  if (minValue === 0 && maxValue === 0) {
+    return [-1000, 1000];
+  }
+  
+  // Если все значения одинаковые или очень близкие
+  if (maxValue - minValue < Math.abs(maxValue) * 0.05) {
+    const center = maxValue || 0;
+    const range = Math.max(Math.abs(center) * 0.4, 1000);
+    return [center - range, center + range];
+  }
+  
+  const range = maxValue - minValue;
+  const paddingValue = range * padding;
+  
+  let domainMin = minValue - paddingValue;
+  let domainMax = maxValue + paddingValue;
+  
+  // Убеждаемся, что диапазон достаточно широкий для хорошей визуализации
+  const finalRange = domainMax - domainMin;
+  const minDesiredRange = Math.max(Math.abs(maxValue) * 0.5, 2000);
+  
+  if (finalRange < minDesiredRange) {
+    const center = (domainMin + domainMax) / 2;
+    const expansion = (minDesiredRange - finalRange) / 2;
+    domainMin = center - minDesiredRange / 2;
+    domainMax = center + minDesiredRange / 2;
+  }
+  
+  return [Math.floor(domainMin), Math.ceil(domainMax)];
 };
 
 const PublicRoiPage = () => {
@@ -412,7 +456,21 @@ const PublicRoiPage = () => {
           {/* Chart */}
           <div className="h-60 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={getChartData()} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+              <AreaChart data={getChartData()} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+                <defs>
+                  <linearGradient id="totalReturnsGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.1}/>
+                  </linearGradient>
+                  <linearGradient id="cashFlowGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1}/>
+                  </linearGradient>
+                  <linearGradient id="appreciationGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis 
                   dataKey="year" 
@@ -426,6 +484,7 @@ const PublicRoiPage = () => {
                   tickLine={false}
                   tick={{ fontSize: 10, fill: '#6b7280' }}
                   tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                  domain={calculateOptimalDomain(getChartData(), getCurrentLineKey())}
                   width={45}
                 />
                 <Tooltip 
@@ -439,15 +498,16 @@ const PublicRoiPage = () => {
                     fontSize: '12px'
                   }}
                 />
-                <Line
+                <Area
                   type="monotone"
                   dataKey={getCurrentLineKey()}
                   stroke={getCurrentLineColor()}
                   strokeWidth={2}
+                  fill={`url(#${chartView}Gradient)`}
                   dot={false}
                   activeDot={{ r: 4, fill: getCurrentLineColor() }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>

@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { Link } from "react-router-dom";
-import { Building2, Search, X, Filter, ChevronDown } from "lucide-react";
+import { Building2, Search, X, Filter, ChevronDown, Edit2, Check, X as XIcon } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
+import { showSuccess, showError } from "../utils/notifications";
 
 // Импорт компонентов shadcn
 import { Input } from "../components/ui/input";
@@ -26,6 +27,8 @@ function PropertiesGallery() {
   const { currentUser, role } = useAuth();
   const { getPropertiesList, propertiesCache } = useCache();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [editingPrice, setEditingPrice] = useState(null);
+  const [newPrice, setNewPrice] = useState("");
 
   // Состояния для поиска и фильтрации
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,6 +57,12 @@ function PropertiesGallery() {
     
     return options;
   }, [properties]);
+
+  // Проверка доступа к редактированию
+  const hasEditAccess = useMemo(() => {
+    // Разрешаем редактирование только админам, модераторам и застройщикам
+    return ['admin', 'moderator', 'застройщик'].includes(role);
+  }, [role]);
 
   // Безопасное отображение любых типов значений
   const safeDisplay = (value) => {
@@ -228,6 +237,41 @@ function PropertiesGallery() {
     if (filters.type !== "all") count++;
     return count;
   }, [filters]);
+
+  // Функция для обновления цены объекта
+  const handlePriceUpdate = async (propertyId, newPriceValue) => {
+    // Дополнительная проверка доступа
+    if (!hasEditAccess) {
+      showError("У вас нет прав на редактирование цены");
+      return;
+    }
+
+    try {
+      const price = parseFloat(newPriceValue);
+      if (isNaN(price) || price < 0) {
+        showError("Пожалуйста, введите корректную цену");
+        return;
+      }
+
+      await updateDoc(doc(db, "properties", propertyId), {
+        price: price
+      });
+
+      // Обновляем локальное состояние
+      setProperties(prevProperties =>
+        prevProperties.map(p =>
+          p.id === propertyId ? { ...p, price: price } : p
+        )
+      );
+
+      setEditingPrice(null);
+      setNewPrice("");
+      showSuccess("Цена успешно обновлена");
+    } catch (error) {
+      console.error("Ошибка при обновлении цены:", error);
+      showError("Не удалось обновить цену");
+    }
+  };
 
   if (loading) {
     return (
@@ -438,9 +482,61 @@ function PropertiesGallery() {
                     {safeDisplay(p.complexName || p.complex)}
                   </span>
                 )}
-                <span className="text-lg font-semibold leading-none">
-                  {formatPrice(p.price)}
-                </span>
+
+                {/* Цена с возможностью редактирования */}
+                <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
+                  {editingPrice === p.id && hasEditAccess ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        value={newPrice}
+                        onChange={(e) => setNewPrice(e.target.value)}
+                        className="w-32 h-8"
+                        placeholder="Новая цена"
+                        autoFocus
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => handlePriceUpdate(p.id, newPrice)}
+                      >
+                        <Check className="h-4 w-4 text-green-600" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setEditingPrice(null);
+                          setNewPrice("");
+                        }}
+                      >
+                        <XIcon className="h-4 w-4 text-red-600" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-lg font-semibold leading-none">
+                        {formatPrice(p.price)}
+                      </span>
+                      {hasEditAccess && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setEditingPrice(p.id);
+                            setNewPrice(p.price?.toString() || "");
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4 text-gray-500" />
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+
                 {p.type && <span className="text-sm">{safeDisplay(p.type)}</span>}
                 {p.area && <span className="text-sm">{safeDisplay(p.area)} м²</span>}
                 {p.bedrooms !== undefined && p.bedrooms !== null && (

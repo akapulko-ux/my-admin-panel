@@ -14,6 +14,8 @@ import {
 import {
   LineChart,
   Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -63,6 +65,48 @@ const CustomTooltip = ({ active, payload, label }) => {
       ))}
     </div>
   );
+};
+
+// Функция для расчета оптимального масштаба графика
+const calculateOptimalDomain = (data, dataKey, padding = 0.15) => {
+  if (!data || data.length === 0) return ['auto', 'auto'];
+  
+  const values = data.map(item => Number(item[dataKey]) || 0).filter(val => !isNaN(val));
+  if (values.length === 0) return ['auto', 'auto'];
+  
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  
+  // Обработка случая, когда все значения равны нулю
+  if (minValue === 0 && maxValue === 0) {
+    return [-1000, 1000];
+  }
+  
+  // Если все значения одинаковые или очень близкие
+  if (maxValue - minValue < Math.abs(maxValue) * 0.05) {
+    const center = maxValue || 0;
+    const range = Math.max(Math.abs(center) * 0.4, 1000);
+    return [center - range, center + range];
+  }
+  
+  const range = maxValue - minValue;
+  const paddingValue = range * padding;
+  
+  let domainMin = minValue - paddingValue;
+  let domainMax = maxValue + paddingValue;
+  
+  // Убеждаемся, что диапазон достаточно широкий для хорошей визуализации
+  const finalRange = domainMax - domainMin;
+  const minDesiredRange = Math.max(Math.abs(maxValue) * 0.5, 2000);
+  
+  if (finalRange < minDesiredRange) {
+    const center = (domainMin + domainMax) / 2;
+    const expansion = (minDesiredRange - finalRange) / 2;
+    domainMin = center - minDesiredRange / 2;
+    domainMax = center + minDesiredRange / 2;
+  }
+  
+  return [Math.floor(domainMin), Math.ceil(domainMax)];
 };
 
 // Функция для экспорта данных в CSV
@@ -677,13 +721,23 @@ const RoiCalculator = () => {
           <div className="h-96 bg-gray-50 p-4 rounded-lg">
             <ResponsiveContainer width="100%" height="100%">
               {calculationResults?.graphData && calculationResults.graphData.length > 0 ? (
-                <LineChart
+                <AreaChart
                   isAnimationActive={false}
                   data={calculationResults.graphData}
                   margin={{
                     top: 20, right: 30, left: 20, bottom: 5,
                   }}
                 >
+                  <defs>
+                    <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="accumulatedGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis
                     dataKey="year"
@@ -696,7 +750,7 @@ const RoiCalculator = () => {
                     yAxisId="left"
                     tickFormatter={formatLargeNumber}
                     tick={{ fontSize: 12 }}
-                    domain={['auto', 'auto']}
+                    domain={calculateOptimalDomain(calculationResults.graphData, 'profit')}
                     width={80}
                   />
                   <YAxis
@@ -704,7 +758,7 @@ const RoiCalculator = () => {
                     orientation="right"
                     tickFormatter={formatLargeNumber}
                     tick={{ fontSize: 12 }}
-                    domain={['auto', 'auto']}
+                    domain={calculateOptimalDomain(calculationResults.graphData, 'accumulatedProfit')}
                     width={90}
                   />
                   <Tooltip
@@ -717,27 +771,29 @@ const RoiCalculator = () => {
                     iconType="circle"
                     iconSize={10}
                   />
-                  <Line
+                  <Area
                     yAxisId="left"
                     type="monotone"
                     dataKey="profit"
                     name="Прибыль за год"
                     stroke="#8884d8"
                     strokeWidth={2}
+                    fill="url(#profitGradient)"
                     dot={{ r: 4, fill: '#8884d8' }}
                     activeDot={{ r: 6, fill: '#8884d8' }}
                   />
-                  <Line
+                  <Area
                     yAxisId="right"
                     type="monotone"
                     dataKey="accumulatedProfit"
                     name="Накопленная прибыль"
                     stroke="#82ca9d"
                     strokeWidth={2}
+                    fill="url(#accumulatedGradient)"
                     dot={{ r: 4, fill: '#82ca9d' }}
                     activeDot={{ r: 6, fill: '#82ca9d' }}
                   />
-                </LineChart>
+                </AreaChart>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
                   Нет данных для отображения графика

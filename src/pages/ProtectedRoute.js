@@ -15,23 +15,16 @@ const ROUTE_ACCESS = {
     '/client-fixations'
   ],
   'премиум агент': [
-    '/property/*',
-    '/support/*',
-    '/roi-calculator',
-    '/client-fixations'
+    '/property/gallery'
   ],
   agent: [
-    '/property/*',
-    '/support/*',
-    '/roi-calculator',
-    '/client-fixations'
+    '/property/gallery'
   ],
   застройщик: [
     '/property/gallery',
     '/property/*',
     '/chessboard',
     '/chessboard/*',
-    '/roi-calculator',
     '/client-fixations',
     '/dashboard'
   ],
@@ -45,7 +38,7 @@ const ROUTE_ACCESS = {
 const DEFAULT_ROUTES = {
   admin: '/complex/list',
   модератор: '/complex/list',
-  'премиум агент': '/property/list',
+  'премиум агент': '/property/gallery',
   agent: '/property/gallery',
   застройщик: '/chessboard',
   user: '/property/gallery'

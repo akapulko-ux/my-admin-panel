@@ -31,23 +31,16 @@ const ROUTE_ACCESS = {
     '/client-fixations'
   ],
   'премиум агент': [
-    '/property/*',
-    '/gallery/*',
-    '/support/*',
-    '/client-fixations'
+    '/property/gallery'
   ],
   agent: [
-    '/property/*',
-    '/gallery/*',
-    '/support/*',
-    '/client-fixations'
+    '/property/gallery'
   ],
   застройщик: [
     '/property/gallery',
     '/property/*',
     '/chessboard',
     '/chessboard/*',
-    '/roi-calculator',
     '/client-fixations'
   ],
   user: [
@@ -128,7 +121,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
+        {['admin', 'модератор'].includes(role) && (
           <>
             <NavItem to="/property/list" icon={Building}>
               Объекты
@@ -164,19 +157,19 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'премиум агент', 'agent'].includes(role) && (
+        {['admin', 'модератор'].includes(role) && (
           <NavItem to="/support/chats" icon={MessageSquare}>
             Поддержка
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
+        {['admin', 'модератор'].includes(role) && (
           <NavItem to="/roi-calculator" icon={Calculator}>
             Калькулятор ROI
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
+        {['admin', 'модератор', 'застройщик'].includes(role) && (
           <NavItem to="/client-fixations" icon={UserCheck}>
             Фиксации клиентов
           </NavItem>
