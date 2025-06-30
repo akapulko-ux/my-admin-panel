@@ -119,31 +119,34 @@ const exportToCSV = (data, filename) => {
 const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
   // Состояния для всех входных данных
   const [costData, setCostData] = useState({
-    purchasePrice: propertyData?.price?.toString() || '127500',
-    renovationCosts: '15000',
-    legalFees: '5000',
-    additionalExpenses: '7500',
-    investmentPeriod: '5',
+    purchasePrice: propertyData?.price?.toString() || '',
+    renovationCosts: '',
+    legalFees: '',
+    additionalExpenses: '',
+    investmentPeriod: '',
   });
 
   const [rentalData, setRentalData] = useState({
-    dailyRate: '85',
-    occupancyRate: '75',
-    daysPerYear: '365',
-    otaCommission: '15',
-    rentGrowthRate: '1',
+    dailyRate: '',
+    occupancyRate: '',
+    daysPerYear: '',
+    otaCommission: '',
+    rentGrowthRate: '',
   });
 
   const [expensesData, setExpensesData] = useState({
-    maintenanceFees: '3500',
-    utilityBills: '2400',
-    annualTax: '1500',
-    propertyManagementFee: '18',
+    maintenanceFees: '',
+    utilityBills: '',
+    annualTax: '',
+    propertyManagementFee: '',
+    appreciationRate: '',
   });
 
   const [scenario, setScenario] = useState('base');
   const [calculationResults, setCalculationResults] = useState(null);
   const [pdfLanguage, setPdfLanguage] = useState('en');
+  const [hasSavedData, setHasSavedData] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // Загрузка сохраненных данных при монтировании
   useEffect(() => {
@@ -157,14 +160,28 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
           setExpensesData(data.expensesData);
           setScenario(data.scenario);
           setCalculationResults(data.results);
+          setHasSavedData(true);
+        } else {
+          // Если сохраненных данных нет, оставляем только цену недвижимости
+          setCostData(prev => ({
+            ...prev,
+            purchasePrice: propertyData?.price?.toString() || ''
+          }));
+          setHasSavedData(false);
         }
       } catch (error) {
         console.error("Ошибка при загрузке расчета:", error);
+        // В случае ошибки также оставляем только цену недвижимости
+        setCostData(prev => ({
+          ...prev,
+          purchasePrice: propertyData?.price?.toString() || ''
+        }));
+        setHasSavedData(false);
       }
     };
 
     loadSavedCalculation();
-  }, [propertyId]);
+  }, [propertyId, propertyData?.price]);
 
   // Функция сохранения расчета
   const saveCalculation = async () => {
@@ -181,8 +198,14 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       };
 
       await setDoc(doc(db, "properties", propertyId, "calculations", "roi"), calculationData);
+      setHasSavedData(true);
+      // Уведомление об успешном сохранении
+      setNotification({ type: 'success', message: 'Расчет успешно сохранен!' });
+      setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       console.error("Ошибка при сохранении расчета:", error);
+      setNotification({ type: 'error', message: 'Ошибка при сохранении расчета' });
+      setTimeout(() => setNotification(null), 3000);
     }
   };
 
@@ -197,6 +220,12 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
 
   // Функция для расчета всех показателей
   const calculateInvestment = useCallback(() => {
+    // Проверяем, заполнены ли основные поля для расчета
+    if (!costData.purchasePrice || !rentalData.dailyRate || !rentalData.occupancyRate) {
+      setCalculationResults(null);
+      return;
+    }
+
     // Преобразуем все входные данные в числа
     const purchasePrice = Number(costData.purchasePrice) || 0;
     const renovationCosts = Number(costData.renovationCosts) || 0;
@@ -214,6 +243,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     const utilityBills = Number(expensesData.utilityBills) || 0;
     const annualTax = Number(expensesData.annualTax) || 0;
     const propertyManagementFee = Number(expensesData.propertyManagementFee) || 0;
+    const appreciationRate = Number(expensesData.appreciationRate) || 0;
 
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
@@ -238,6 +268,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     let graphData = [];
     let totalProfit = 0;
     let accumulatedProfit = 0;
+    let currentPropertyValue = totalInvestment;
 
     for (let year = 1; year <= investmentPeriod; year++) {
       const rentalIncome = initialAnnualRentalIncome * 
@@ -247,21 +278,28 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       const expenses = maintenanceFees + utilityBills + annualTax +
         (rentalIncome * propertyManagementFee / 100);
       
+      // Учитываем удорожание проекта
+      currentPropertyValue = currentPropertyValue * Math.pow(1 + appreciationRate / 100, 1);
+      
       const yearlyProfit = rentalIncome - expenses;
       accumulatedProfit += yearlyProfit;
 
       graphData.push({
         year: `Год ${year}`,
         profit: Math.round(yearlyProfit),
-        accumulatedProfit: Math.round(accumulatedProfit)
+        accumulatedProfit: Math.round(accumulatedProfit),
+        propertyValue: Math.round(currentPropertyValue)
       });
 
       totalProfit += yearlyProfit;
     }
 
-    // Расчет ROI и срока окупаемости
+    // Расчет ROI и срока окупаемости с учетом удорожания
     const annualNetProfit = (totalProfit / investmentPeriod);
+    const totalAppreciation = currentPropertyValue - totalInvestment;
+    const totalReturnWithAppreciation = accumulatedProfit + totalAppreciation;
     const roi = (annualNetProfit / totalInvestment) * 100;
+    const totalRoi = (totalReturnWithAppreciation / totalInvestment) * 100;
     const paybackPeriod = totalInvestment / annualNetProfit;
 
     setCalculationResults({
@@ -270,8 +308,13 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       annualExpenses: initialAnnualExpenses,
       annualNetProfit,
       roi,
+      totalRoi,
       paybackPeriod,
-      graphData
+      graphData,
+      finalPropertyValue: currentPropertyValue,
+      totalAppreciation,
+      totalReturnWithAppreciation,
+      appreciationRate
     });
   }, [costData, rentalData, expensesData, scenario]);
 
@@ -282,6 +325,17 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {/* Уведомление */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-[60] p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          notification.type === 'success' 
+            ? 'bg-green-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          {notification.message}
+        </div>
+      )}
+      
       <div className="bg-white rounded-lg p-6 max-w-7xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
@@ -410,9 +464,9 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
           </Card>
 
-          {/* Блок операционных расходов */}
+          {/* Блок операционных показателей */}
           <Card className="p-4 space-y-4">
-            <h2 className="text-xl font-semibold">Операционные расходы</h2>
+            <h2 className="text-xl font-semibold">Операционные показатели</h2>
             
             <div className="space-y-2">
               <Label htmlFor="maintenanceFees">Обслуживание в год ($)</Label>
@@ -455,6 +509,17 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="appreciationRate">Удорожание проекта в год (%)</Label>
+              <Input
+                id="appreciationRate"
+                type="number"
+                value={expensesData.appreciationRate}
+                onChange={(e) => setExpensesData({...expensesData, appreciationRate: e.target.value})}
+                placeholder="Например: 5"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label>Сценарий расчета</Label>
               <Select value={scenario} onValueChange={setScenario}>
                 <SelectTrigger>
@@ -470,6 +535,23 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
           </Card>
         </div>
 
+        {/* Информационное сообщение если поля не заполнены */}
+        {!calculationResults && (
+          <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="text-lg font-semibold text-blue-800 mb-2">
+              Для выполнения расчета заполните следующие обязательные поля:
+            </h3>
+            <ul className="text-blue-700 space-y-1">
+              <li>• Стоимость недвижимости</li>
+              <li>• Дневная ставка аренды</li>
+              <li>• Процент заполняемости</li>
+            </ul>
+            <p className="text-sm text-blue-600 mt-2">
+              Остальные поля заполняются по желанию для более точного расчета.
+            </p>
+          </div>
+        )}
+
         {calculationResults && (
           <div className="mt-8 p-6 bg-white rounded-2xl shadow-lg">
             <div className="flex justify-between items-start mb-6">
@@ -477,8 +559,8 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 Результаты расчета
               </h2>
               <div className="flex items-center gap-4">
-                <Button onClick={saveCalculation} className="bg-blue-600 hover:bg-blue-700">
-                  Сохранить расчет
+                <Button onClick={saveCalculation} className="bg-green-600 hover:bg-green-700">
+                  {hasSavedData ? 'Обновить расчет' : 'Сохранить расчет'}
                 </Button>
 
                 <Button 
@@ -550,6 +632,27 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 <p className="text-sm text-muted-foreground">Срок окупаемости</p>
                 <p className="text-lg font-semibold">{calculationResults.paybackPeriod.toFixed(1)} лет</p>
               </Card>
+              
+              {calculationResults.totalRoi && (
+                <Card className="p-4">
+                  <p className="text-sm text-muted-foreground">Общий ROI (с удорожанием)</p>
+                  <p className="text-lg font-semibold">{calculationResults.totalRoi.toFixed(2)}%</p>
+                </Card>
+              )}
+              
+              {calculationResults.totalAppreciation && calculationResults.appreciationRate > 0 && (
+                <Card className="p-4">
+                  <p className="text-sm text-muted-foreground">Удорожание недвижимости</p>
+                  <p className="text-lg font-semibold">${calculationResults.totalAppreciation.toLocaleString()}</p>
+                </Card>
+              )}
+              
+              {calculationResults.finalPropertyValue && calculationResults.appreciationRate > 0 && (
+                <Card className="p-4">
+                  <p className="text-sm text-muted-foreground">Финальная стоимость недвижимости</p>
+                  <p className="text-lg font-semibold">${calculationResults.finalPropertyValue.toLocaleString()}</p>
+                </Card>
+              )}
             </div>
 
             {/* Chart */}
@@ -615,6 +718,18 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                       dot={{ r: 4, fill: '#82ca9d' }}
                       activeDot={{ r: 6, fill: '#82ca9d' }}
                     />
+                    {calculationResults.appreciationRate > 0 && (
+                      <Line
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="propertyValue"
+                        name="Стоимость недвижимости"
+                        stroke="#ff7300"
+                        strokeWidth={2}
+                        dot={{ r: 4, fill: '#ff7300' }}
+                        activeDot={{ r: 6, fill: '#ff7300' }}
+                      />
+                    )}
                   </LineChart>
                 ) : (
                   <div className="h-full flex items-center justify-center text-muted-foreground">

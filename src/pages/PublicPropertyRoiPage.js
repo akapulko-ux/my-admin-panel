@@ -101,7 +101,7 @@ const PublicPropertyRoiPage = () => {
                     utilityBills: 0,
                     annualTax: 0,
                     propertyManagementFee: 0,
-                    annualAppreciation: 0,
+                    appreciationRate: 0,
                   }
                 },
                 investmentPeriod: roiData.costData?.investmentPeriod || 5
@@ -156,12 +156,12 @@ const PublicPropertyRoiPage = () => {
       const utilityBills = Number(expensesData.utilityBills) || 0;
       const annualTax = Number(expensesData.annualTax) || 0;
       const propertyManagementFee = Number(expensesData.propertyManagementFee) || 0;
-      const baseAnnualAppreciation = Number(expensesData.annualAppreciation) || 0;
+      const baseAppreciationRate = Number(expensesData.appreciationRate) || 0;
       const baseRentGrowthRate = Number(rentalData.rentGrowthRate) || 0;
 
       // Применяем множители сценария
       const occupancyRate = baseOccupancyRate * scenarioMultipliers[scenario].occupancyRate;
-      const annualAppreciation = baseAnnualAppreciation * scenarioMultipliers[scenario].annualAppreciation;
+      const appreciationRate = baseAppreciationRate * scenarioMultipliers[scenario].annualAppreciation;
       const rentGrowthRate = baseRentGrowthRate * scenarioMultipliers[scenario].rentGrowthRate;
 
       // Базовые расчеты
@@ -189,8 +189,9 @@ const PublicPropertyRoiPage = () => {
         const yearlyNetProfit = yearlyRentalIncome - yearlyExpenses;
         
         // Прирост стоимости недвижимости
-        currentPropertyValue *= (1 + annualAppreciation / 100);
-        const yearlyAppreciation = currentPropertyValue - (year === 1 ? totalInvestment : detailedProjection[year - 2]?.propertyValue || totalInvestment);
+        const previousPropertyValue = currentPropertyValue;
+        currentPropertyValue *= (1 + appreciationRate / 100);
+        const yearlyAppreciation = currentPropertyValue - previousPropertyValue;
         
         // Общий возврат (денежный поток + прирост стоимости)
         const totalReturn = yearlyNetProfit + yearlyAppreciation;
@@ -248,7 +249,8 @@ const PublicPropertyRoiPage = () => {
         investmentPeriod: years,
         unitPrice: totalInvestment,
         rentGrowthRate: baseRentGrowthRate,
-        propertyManagementFee: propertyManagementFee
+        propertyManagementFee: propertyManagementFee,
+        appreciationRate: baseAppreciationRate
       };
     };
 
@@ -535,7 +537,7 @@ const PublicPropertyRoiPage = () => {
 
             <Card className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-xs sm:text-sm text-gray-600">{t.appreciationYoY.replace('{rate}', currentData.rentGrowthRate)}</h3>
+                <h3 className="text-xs sm:text-sm text-gray-600">{t.appreciationYoY ? t.appreciationYoY.replace('{rate}', currentData.appreciationRate || 0) : `Удорожание (${currentData.appreciationRate || 0}% в год)`}</h3>
                 <AdaptiveTooltip content={t.tooltipAppreciation} />
               </div>
               <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.totalAppreciation)}</p>
