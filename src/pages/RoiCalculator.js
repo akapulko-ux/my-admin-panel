@@ -131,6 +131,7 @@ const RoiCalculator = () => {
     occupancyRate: '75',
     daysPerYear: '365',
     otaCommission: '15',
+    rentGrowthRate: '1',
   });
 
   const [expensesData, setExpensesData] = useState({
@@ -138,8 +139,6 @@ const RoiCalculator = () => {
     utilityBills: '2400',
     annualTax: '1500',
     propertyManagementFee: '18',
-    annualAppreciation: '5',
-    rentGrowthRate: '1',
   });
 
   const [scenario, setScenario] = useState('base');
@@ -233,53 +232,29 @@ const RoiCalculator = () => {
     const renovationCosts = Number(costData.renovationCosts) || 0;
     const legalFees = Number(costData.legalFees) || 0;
     const additionalExpenses = Number(costData.additionalExpenses) || 0;
-    const investmentPeriod = Number(costData.investmentPeriod) || 5; // Изменил на 5 лет по умолчанию
-    
-    console.log('Input values:', {
-      purchasePrice,
-      renovationCosts,
-      legalFees,
-      additionalExpenses,
-      investmentPeriod
-    });
+    const investmentPeriod = Number(costData.investmentPeriod) || 5;
     
     const dailyRate = Number(rentalData.dailyRate) || 0;
     const occupancyRate = Number(rentalData.occupancyRate) || 0;
     const daysPerYear = Number(rentalData.daysPerYear) || 365;
     const otaCommission = Number(rentalData.otaCommission) || 0;
+    const rentGrowthRate = Number(rentalData.rentGrowthRate) || 0;
     
-    console.log('Rental data:', {
-      dailyRate,
-      occupancyRate,
-      daysPerYear,
-      otaCommission
-    });
-
     const maintenanceFees = Number(expensesData.maintenanceFees) || 0;
     const utilityBills = Number(expensesData.utilityBills) || 0;
     const annualTax = Number(expensesData.annualTax) || 0;
     const propertyManagementFee = Number(expensesData.propertyManagementFee) || 0;
-    const annualAppreciation = Number(expensesData.annualAppreciation) || 0;
-    const rentGrowthRate = Number(expensesData.rentGrowthRate) || 0;
 
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
     const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
     const initialAnnualExpenses = maintenanceFees + utilityBills + annualTax;
     const initialNetProfit = initialAnnualRentalIncome - initialAnnualExpenses;
-    
-    console.log('Base calculations:', {
-      totalInvestment,
-      initialAnnualRentalIncome,
-      initialAnnualExpenses,
-      initialNetProfit
-    });
 
     // Генерация данных для графика и детального анализа
     const graphData = [];
     const detailedProjection = [];
     let accumulatedProfit = -totalInvestment;
-    let currentPropertyValue = totalInvestment;
     let totalSpend = totalInvestment;
     let cumulativeIncome = 0;
     let cumulativeCashflow = -totalInvestment;
@@ -294,15 +269,8 @@ const RoiCalculator = () => {
       // Чистый доход
       const yearlyNetProfit = yearlyRentalIncome - yearlyExpenses;
       
-      // Прирост стоимости недвижимости
-      currentPropertyValue *= (1 + annualAppreciation / 100);
-      const yearlyAppreciation = currentPropertyValue - (year === 1 ? totalInvestment : graphData[year - 2]?.propertyValue || totalInvestment);
-      
-      // Общий возврат (денежный поток + прирост стоимости)
-      const totalReturn = yearlyNetProfit + yearlyAppreciation;
-      
       // Накопленные значения
-      accumulatedProfit += totalReturn;
+      accumulatedProfit += yearlyNetProfit;
       cumulativeIncome += yearlyRentalIncome;
       totalSpend += yearlyExpenses;
       cumulativeCashflow += yearlyNetProfit;
@@ -316,10 +284,9 @@ const RoiCalculator = () => {
         cumulativeSpend: Math.round(totalSpend),
         cashflow: Math.round(yearlyNetProfit),
         cumulativeCashflow: Math.round(cumulativeCashflow),
-        appreciation: Math.round(yearlyAppreciation),
-        totalReturn: Math.round(totalReturn),
+        totalReturn: Math.round(yearlyNetProfit),
         accumulatedReturn: Math.round(accumulatedProfit),
-        propertyValue: Math.round(currentPropertyValue)
+        propertyValue: Math.round(totalInvestment)
       };
       
       graphData.push({
@@ -327,14 +294,11 @@ const RoiCalculator = () => {
         profit: Math.round(yearlyNetProfit),
         accumulatedProfit: Math.round(accumulatedProfit),
         cashFlow: Math.round(yearlyNetProfit),
-        appreciation: Math.round(yearlyAppreciation),
-        totalReturns: Math.round(totalReturn)
+        totalReturns: Math.round(yearlyNetProfit)
       });
       
       detailedProjection.push(yearData);
     }
-
-    console.log('Graph data:', graphData);
 
     // Расчет средних значений для инвестиционных показателей
     const averageROI = detailedProjection.length > 0 
@@ -342,11 +306,8 @@ const RoiCalculator = () => {
       : 0;
     
     const finalCumulativeCashflow = detailedProjection[detailedProjection.length - 1]?.cumulativeCashflow || 0;
-    const finalPropertyValue = detailedProjection[detailedProjection.length - 1]?.propertyValue || totalInvestment;
-    const totalProjectedReturn = finalCumulativeCashflow + (finalPropertyValue - totalInvestment);
-
+    
     setCalculationResults({
-      // Оригинальные данные
       totalInvestment,
       annualRentalIncome: initialAnnualRentalIncome,
       annualExpenses: initialAnnualExpenses,
@@ -354,17 +315,14 @@ const RoiCalculator = () => {
       roi: (initialNetProfit / totalInvestment) * 100,
       paybackPeriod: totalInvestment / initialNetProfit,
       graphData,
-      
-      // Новые данные для публичной страницы
       unitPrice: totalInvestment,
       averageROI: averageROI,
       rentGrowthRate: rentGrowthRate,
       propertyManagementFee: propertyManagementFee,
       detailedProjection,
-      totalProjectedReturn,
-      finalPropertyValue,
-      totalCashFlow: finalCumulativeCashflow,
-      totalAppreciation: finalPropertyValue - totalInvestment,
+      totalProjectedReturn: accumulatedProfit + totalInvestment,
+      finalPropertyValue: totalInvestment,
+      totalCashFlow: cumulativeCashflow,
       investmentPeriod
     });
   }, [costData, rentalData, expensesData, scenario]);
@@ -532,6 +490,16 @@ const RoiCalculator = () => {
               onChange={(e) => setRentalData({...rentalData, otaCommission: e.target.value})}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="rentGrowthRate">Годовой рост аренды (%)</Label>
+            <Input
+              id="rentGrowthRate"
+              type="number"
+              value={rentalData.rentGrowthRate}
+              onChange={(e) => setRentalData({...rentalData, rentGrowthRate: e.target.value})}
+            />
+          </div>
         </Card>
 
         {/* Блок операционных расходов */}
@@ -575,26 +543,6 @@ const RoiCalculator = () => {
               type="number"
               value={expensesData.propertyManagementFee}
               onChange={(e) => setExpensesData({...expensesData, propertyManagementFee: e.target.value})}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="annualAppreciation">Годовой рост стоимости (%)</Label>
-            <Input
-              id="annualAppreciation"
-              type="number"
-              value={expensesData.annualAppreciation}
-              onChange={(e) => setExpensesData({...expensesData, annualAppreciation: e.target.value})}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="rentGrowthRate">Годовой рост аренды (%)</Label>
-            <Input
-              id="rentGrowthRate"
-              type="number"
-              value={expensesData.rentGrowthRate}
-              onChange={(e) => setExpensesData({...expensesData, rentGrowthRate: e.target.value})}
             />
           </div>
 
@@ -746,13 +694,6 @@ const RoiCalculator = () => {
                   />
                   <YAxis
                     yAxisId="left"
-                    label={{
-                      value: 'Прибыль за год ($)',
-                      angle: -90,
-                      position: 'insideLeft',
-                      offset: -20,
-                      style: { textAnchor: 'middle' }
-                    }}
                     tickFormatter={formatLargeNumber}
                     tick={{ fontSize: 12 }}
                     domain={['auto', 'auto']}
@@ -761,13 +702,6 @@ const RoiCalculator = () => {
                   <YAxis
                     yAxisId="right"
                     orientation="right"
-                    label={{
-                      value: 'Накопленная прибыль ($)',
-                      angle: 90,
-                      position: 'outside',
-                      offset: 25,
-                      style: { textAnchor: 'middle' }
-                    }}
                     tickFormatter={formatLargeNumber}
                     tick={{ fontSize: 12 }}
                     domain={['auto', 'auto']}
