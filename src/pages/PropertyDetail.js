@@ -18,9 +18,11 @@ import {
   Map as MapIcon,
   Layers,
   Bath,
+  Calculator,
 } from "lucide-react";
 import { showError } from '../utils/notifications';
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
+import PropertyRoiCalculator from "../components/PropertyRoiCalculator";
 
 function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
@@ -41,6 +43,9 @@ function PropertyDetail() {
   
   // Состояния для загрузки файлов
   const [uploading, setUploading] = useState({});
+
+  // Добавляем состояние для модального окна
+  const [showRoiCalculator, setShowRoiCalculator] = useState(false);
 
   // Функция для проверки, может ли пользователь редактировать объект
   const canEdit = () => {
@@ -709,6 +714,29 @@ function PropertyDetail() {
           </div>
         ))}
       </div>
+
+      {/* Добавляем кнопку "Расчет ROI" после характеристик объекта */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-4">Характеристики объекта</h2>
+        <div className="mt-6">
+          <button
+            onClick={() => setShowRoiCalculator(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Calculator className="w-5 h-5" />
+            Расчет ROI
+          </button>
+        </div>
+      </div>
+
+      {/* Модальное окно с калькулятором ROI */}
+      {showRoiCalculator && (
+        <PropertyRoiCalculator
+          propertyId={id}
+          propertyData={property}
+          onClose={() => setShowRoiCalculator(false)}
+        />
+      )}
 
       {/* Секция Документы */}
       <div className="mt-8">

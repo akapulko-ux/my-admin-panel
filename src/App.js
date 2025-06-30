@@ -51,6 +51,7 @@ import ChessboardOverview from "./pages/ChessboardOverview";
 // Калькулятор ROI
 import RoiCalculator from "./pages/RoiCalculator";
 import PublicRoiPage from "./pages/PublicRoiPage";
+import PublicPropertyRoiPage from "./pages/PublicPropertyRoiPage";
 
 // Фиксации клиентов
 import ClientFixations from "./pages/ClientFixations";
@@ -153,6 +154,7 @@ function App() {
               <Route path="/public-chessboard/:publicId" element={<PublicChessboard />} />
               <Route path="/chessboard-overview/:publicId" element={<ChessboardOverview />} />
               <Route path="/public-roi/:id" element={<PublicRoiPage />} />
+              <Route path="/public-roi/property/:propertyId" element={<PublicPropertyRoiPage />} />
               <Route path="/login" element={<LoginPage />} />
 
               {/* Лендинг для неавторизованных пользователей */}
