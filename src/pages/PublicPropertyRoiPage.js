@@ -316,7 +316,7 @@ const PublicPropertyRoiPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t.dataNotFound || 'Данные не найдены'}</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t.dataNotFound || 'Данные не загружены'}</h2>
           <p className="text-gray-600">{t.publicRoiNotAvailable || 'Публичная страница ROI недоступна'}</p>
         </div>
       </div>
