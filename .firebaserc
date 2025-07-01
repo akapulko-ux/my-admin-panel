@@ -4,7 +4,11 @@
   },
   "targets": {
     "bali-estate-1130f": {
-      "hosting": {}
+      "hosting": {
+        "admin-panel-bali": [
+          "admin-panel-bali"
+        ]
+      }
     }
   },
   "etags": {}

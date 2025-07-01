@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Building, Home, MapPin, ArrowLeft, DollarSign } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { useLanguage } from '../lib/LanguageContext';
+import { chessboardTranslations } from '../lib/chessboardTranslations';
 
 // Утилиты для форматирования
 const formatPrice = (priceIDR) => {
@@ -27,14 +30,14 @@ const formatPriceUSD = (priceUSD) => {
 };
 
 // Компонент статуса
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, t) => {
   switch (status) {
     case 'free':
-      return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg">✓ Свободно</Badge>;
+      return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg">✓ {t.status.free}</Badge>;
     case 'booked':
-      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg">⏳ Забронировано</Badge>;
+      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg">⏳ {t.status.booked}</Badge>;
     case 'sold':
-      return <Badge className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-lg">✖ Продано</Badge>;
+      return <Badge className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-lg">✖ {t.status.sold}</Badge>;
     default:
       return <Badge className="bg-gray-500 text-white">❓ Неизвестно</Badge>;
   }
@@ -57,12 +60,23 @@ const getStatusColor = (status) => {
 const ChessboardOverview = () => {
   const { publicId } = useParams();
   const navigate = useNavigate();
+  const { language, changeLanguage } = useLanguage();
+  const t = chessboardTranslations[language];
   const [chessboard, setChessboard] = useState(null);
   const [complex, setComplex] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [scale, setScale] = useState(1);
   const contentRef = useRef(null);
+
+  // Считываем язык из URL при загрузке компонента
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const langFromUrl = urlParams.get('lang');
+    if (langFromUrl && ['ru', 'en', 'id'].includes(langFromUrl) && langFromUrl !== language) {
+      changeLanguage(langFromUrl);
+    }
+  }, [changeLanguage, language]);
 
   useEffect(() => {
     async function fetchChessboard() {
@@ -72,7 +86,7 @@ const ChessboardOverview = () => {
         const querySnapshot = await getDocs(query(q, where("publicUrl", "==", publicId)));
         
         if (querySnapshot.empty) {
-          setError("Шахматка не найдена");
+          setError(t.error.notFound);
           return;
         }
 
@@ -91,13 +105,13 @@ const ChessboardOverview = () => {
         }
       } catch (error) {
         console.error("Ошибка загрузки:", error);
-        setError("Ошибка при загрузке шахматки");
+        setError(t.error.loading);
       } finally {
         setLoading(false);
       }
     }
     fetchChessboard();
-  }, [publicId]);
+  }, [publicId, t.error.notFound, t.error.loading]);
 
   // Функция для расчета масштаба
   const calculateScale = () => {
@@ -106,15 +120,10 @@ const ChessboardOverview = () => {
       const contentWidth = content.scrollWidth;
       const contentHeight = content.scrollHeight;
       const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight - 64; // Высота минус высота шапки
+      const viewportHeight = window.innerHeight;
 
-      // Учитываем отступы (меньше на мобильных)
-      const padding = window.innerWidth <= 768 ? 16 : 32; // 8px с каждой стороны на мобильных, 16px на десктопе
-      const availableWidth = viewportWidth - padding;
-      const availableHeight = viewportHeight - padding;
-
-      const scaleX = availableWidth / contentWidth;
-      const scaleY = availableHeight / contentHeight;
+      const scaleX = viewportWidth / contentWidth;
+      const scaleY = viewportHeight / contentHeight;
       
       // Используем минимальный масштаб, но не больше 1
       const newScale = Math.min(scaleX, scaleY, 1);
@@ -170,7 +179,7 @@ const ChessboardOverview = () => {
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Building className="w-16 h-16 text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-200 mb-2">{error}</h3>
-            <p className="text-gray-400">Проверьте правильность ссылки</p>
+            <p className="text-gray-400">{t.error.checkLink}</p>
           </CardContent>
         </Card>
       </div>
@@ -181,58 +190,33 @@ const ChessboardOverview = () => {
 
   return (
     <div className="fixed inset-0 bg-[#0f1117] overflow-hidden">
-      {/* Верхняя панель */}
-      <div className="absolute top-0 left-0 right-0 bg-[#1a1d24] h-16 shadow-lg z-50 flex items-center px-4">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(`/public/${publicId}`)}
-          className="text-white hover:bg-[#2a2e36]"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Вернуться к шахматке
-        </Button>
-        <h1 className="text-xl font-semibold text-white truncate ml-4">
-          {chessboard.name || "Без названия"}
-        </h1>
-      </div>
-
       {/* Основной контент */}
-      <div className="absolute inset-0 top-16 bg-[#0f1117] overflow-auto" style={{ touchAction: 'pan-x pan-y pinch-zoom' }}>
+      <div className="absolute inset-0 bg-[#0f1117] overflow-auto" style={{ touchAction: 'pan-x pan-y pinch-zoom' }}>
         <div 
-          className="min-w-fit transform-gpu"
+          ref={contentRef}
+          className="min-h-full flex items-start justify-start"
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
-            padding: '16px',
-            minHeight: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start'
+            transition: 'transform 0.3s ease'
           }}
         >
-          <div ref={contentRef} className="w-fit">
+          <div className="w-fit">
             {/* Информация о комплексе */}
             {complex && (
               <Card className="mb-6 bg-white/5 border-white/10">
                 <CardHeader>
                   <div className="flex items-center gap-3">
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => navigate(`/public-chessboard/${publicId}?lang=${language}`)}
+                      className="text-white hover:bg-[#2a2e36] p-6"
+                    >
+                      <ArrowLeft className="w-24 h-24" />
+                    </Button>
                     <Building className="w-8 h-8 text-blue-400" />
                     <div className="flex-1">
                       <h2 className="text-2xl text-white">{complex.name}</h2>
-                      <div className="flex flex-col gap-2 mt-4">
-                        {complex.district && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-300">{complex.district}</span>
-                          </div>
-                        )}
-                        {complex.developer && (
-                          <div className="flex items-center gap-2">
-                            <Building className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-300">{complex.developer}</span>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </CardHeader>
@@ -260,7 +244,7 @@ const ChessboardOverview = () => {
                                floor.floor !== undefined && 
                                floor.floor !== '' && 
                                !isNaN(floor.floor) && (
-                                <span className="font-semibold text-white">{floor.floor} этаж</span>
+                                <span className="font-semibold text-white">{floor.floor} {t.unit.floor}</span>
                               )}
                             </div>
 
@@ -274,45 +258,50 @@ const ChessboardOverview = () => {
                                   <CardHeader className="p-3">
                                     <div className="flex items-center justify-between">
                                       <span className="font-bold">{unit.id}</span>
-                                      <span className="font-bold">{unit.propertyType || 'Апартаменты'}</span>
+                                      <span className="font-bold">
+                                        {unit.propertyType === 'Апартаменты' && t.unit.propertyTypes.apartments}
+                                        {unit.propertyType === 'Вилла' && t.unit.propertyTypes.villa}
+                                        {unit.propertyType === 'Апарт-вилла' && t.unit.propertyTypes.apartVilla}
+                                        {unit.propertyType === 'Таунхаус' && t.unit.propertyTypes.townhouse}
+                                        {!unit.propertyType && t.unit.propertyTypes.apartments}
+                                      </span>
                                     </div>
                                   </CardHeader>
                                   <CardContent className="p-3 pt-0 space-y-2 text-sm">
                                     <div className="grid grid-cols-2 gap-2">
                                       <div className="flex items-center gap-1">
                                         <span className="font-semibold text-white">
-                                          {unit.floors === '1' && '1 этаж'}
-                                          {unit.floors === '2' && '2 этажа'}
-                                          {unit.floors === '3' && '3 этажа'}
+                                          {unit.floors === '1' && t.unit.floors.one}
+                                          {unit.floors === '2' && t.unit.floors.two}
+                                          {unit.floors === '3' && t.unit.floors.three}
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-1">
-                                        <span className="text-white/90">Площадь:</span>
-                                        <span className="font-semibold text-white">{unit.area} м²</span>
+                                        <span className="text-white/90">{t.unit.area}:</span>
+                                        <span className="font-semibold text-white">{unit.area} {t.unit.areaUnit}</span>
                                       </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
                                       <div className="flex items-center gap-1">
                                         <span className="font-semibold text-white">
-                                          {unit.rooms === 'Студия' && 'Студия'}
-                                          {unit.rooms === '1' && '1 спальня'}
-                                          {unit.rooms === '2' && '2 спальни'}
-                                          {unit.rooms === '3' && '3 спальни'}
-                                          {unit.rooms === '4' && '4 спальни'}
-                                          {unit.rooms === '5' && '5 спален'}
-                                          {unit.rooms === '6' && '6 спален'}
+                                          {unit.rooms === 'Студия' && t.unit.rooms.studio}
+                                          {unit.rooms === '1' && t.unit.rooms.one}
+                                          {unit.rooms === '2' && t.unit.rooms.two}
+                                          {unit.rooms === '3' && t.unit.rooms.three}
+                                          {unit.rooms === '4' && t.unit.rooms.four}
+                                          {unit.rooms === '5' && t.unit.rooms.five}
+                                          {unit.rooms === '6' && t.unit.rooms.six}
                                         </span>
                                       </div>
                                       {unit.view && (
                                         <div className="flex items-center gap-1">
-                                          <span className="text-white/90">Вид</span>
                                           <span className="font-semibold text-white">
-                                            {unit.view === 'Море' && 'на море'}
-                                            {unit.view === 'Лес' && 'на лес'}
-                                            {unit.view === 'Бассейн' && 'на бассейн'}
-                                            {unit.view === 'Река' && 'на реку'}
-                                            {unit.view === 'Двор' && 'во двор'}
+                                            {unit.view === 'Море' && t.unit.views.sea}
+                                            {unit.view === 'Лес' && t.unit.views.forest}
+                                            {unit.view === 'Бассейн' && t.unit.views.pool}
+                                            {unit.view === 'Река' && t.unit.views.river}
+                                            {unit.view === 'Двор' && t.unit.views.yard}
                                           </span>
                                         </div>
                                       )}
@@ -321,19 +310,19 @@ const ChessboardOverview = () => {
                                     <div className="grid grid-cols-2 gap-2">
                                       <div className="flex items-center gap-1">
                                         <span className="font-semibold text-white">
-                                          {(unit.bathrooms || '1') === '1' && '1 санузел'}
-                                          {unit.bathrooms === '2' && '2 санузла'}
-                                          {unit.bathrooms === '3' && '3 санузла'}
-                                          {unit.bathrooms === '4' && '4 санузла'}
-                                          {unit.bathrooms === '5' && '5 санузлов'}
-                                          {unit.bathrooms === '6' && '6 санузлов'}
+                                          {(unit.bathrooms || '1') === '1' && t.unit.bathrooms.one}
+                                          {unit.bathrooms === '2' && t.unit.bathrooms.two}
+                                          {unit.bathrooms === '3' && t.unit.bathrooms.three}
+                                          {unit.bathrooms === '4' && t.unit.bathrooms.four}
+                                          {unit.bathrooms === '5' && t.unit.bathrooms.five}
+                                          {unit.bathrooms === '6' && t.unit.bathrooms.six}
                                         </span>
                                       </div>
                                       {unit.side && (
                                         <div className="flex items-center gap-1">
                                           <span className="font-semibold text-white">
-                                            {unit.side === 'Рассветная' && 'Рассветная сторона'}
-                                            {unit.side === 'Закатная' && 'Закатная сторона'}
+                                            {unit.side === 'Рассветная' && t.unit.sides.sunrise}
+                                            {unit.side === 'Закатная' && t.unit.sides.sunset}
                                           </span>
                                         </div>
                                       )}
@@ -356,7 +345,7 @@ const ChessboardOverview = () => {
 
                                     {/* Статус в правом нижнем углу */}
                                     <div className="absolute bottom-3 right-3 z-10">
-                                      {getStatusBadge(unit.status)}
+                                      {getStatusBadge(unit.status, t)}
                                     </div>
                                   </CardContent>
                                 </Card>

@@ -7,6 +7,9 @@ import { Badge } from "../components/ui/badge";
 import { Building, Home, MapPin, Eye, Link as LinkIcon } from "lucide-react";
 import ChessboardOverview from './ChessboardOverview';
 import { Button } from "../components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { useLanguage } from '../lib/LanguageContext';
+import { chessboardTranslations } from '../lib/chessboardTranslations';
 
 // Утилиты для форматирования
 const formatPrice = (priceIDR) => {
@@ -31,13 +34,13 @@ const formatPriceUSD = (priceUSD) => {
 const getStatusBadge = (status) => {
   switch (status) {
     case 'free':
-      return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg">✓ Свободно</Badge>;
+      return <Badge className="bg-emerald-500">Свободно</Badge>;
     case 'booked':
-      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg">⏳ Забронировано</Badge>;
+      return <Badge className="bg-amber-500">Забронировано</Badge>;
     case 'sold':
-      return <Badge className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-lg">✖ Продано</Badge>;
+      return <Badge className="bg-rose-500">Продано</Badge>;
     default:
-      return <Badge className="bg-gray-500 text-white">❓ Неизвестно</Badge>;
+      return <Badge className="bg-gray-500">Неизвестно</Badge>;
   }
 };
 
@@ -59,6 +62,8 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
   const navigate = useNavigate();
   const { publicId: urlPublicId } = useParams();
   const publicId = propPublicId || urlPublicId;
+  const { language, changeLanguage } = useLanguage();
+  const t = chessboardTranslations[language];
   
   const [chessboard, setChessboard] = useState(null);
   const [complex, setComplex] = useState(null);
@@ -75,7 +80,7 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
         const querySnapshot = await getDocs(query(q, where("publicUrl", "==", publicId)));
         
         if (querySnapshot.empty) {
-          setError("Шахматка не найдена");
+          setError(t.error.notFound);
           return;
         }
 
@@ -94,13 +99,13 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
         }
       } catch (error) {
         console.error("Ошибка загрузки:", error);
-        setError("Ошибка при загрузке шахматки");
+        setError(t.error.loading);
       } finally {
         setLoading(false);
       }
     }
     fetchChessboard();
-  }, [publicId]);
+  }, [publicId, t.error.notFound, t.error.loading]);
 
   if (loading) {
     return (
@@ -117,7 +122,7 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Building className="w-16 h-16 text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-600 mb-2">{error}</h3>
-            <p className="text-gray-500">Проверьте правильность ссылки</p>
+            <p className="text-gray-500">{t.error.checkLink}</p>
           </CardContent>
         </Card>
       </div>
@@ -129,48 +134,34 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
   return (
     <>
       <div className="container mx-auto px-4 py-8">
+        {/* Языковой переключатель */}
+        <div className="flex justify-end mb-4">
+          <Select value={language} onValueChange={changeLanguage}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue>
+                {language === 'ru' ? 'Русский' : language === 'en' ? 'English' : 'Bahasa'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ru">Русский</SelectItem>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="id">Bahasa</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Кнопка общего обзора */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">{chessboard?.name || "Шахматка"}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{chessboard?.name || t.chessboard}</h1>
           <Button
-            onClick={() => navigate(`/chessboard-overview/${publicId}`)}
+            onClick={() => navigate(`/chessboard-overview/${publicId}?lang=${language}`)}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Eye className="w-5 h-5 mr-2" />
-            Общий обзор
+            {t.overview}
           </Button>
         </div>
-        
-        {/* Информация о комплексе и шахматке */}
-        <div className="space-y-6 mb-6">
-          {/* Карточка комплекса */}
-          {complex && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <Building className="w-8 h-8 text-blue-600" />
-                  <div>
-                    <CardTitle className="text-2xl">{complex.name}</CardTitle>
-                    <div className="flex flex-col gap-2 mt-4">
-                      {complex.district && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-600">{complex.district}</span>
-                        </div>
-                      )}
-                      {complex.developer && (
-                        <div className="flex items-center gap-2">
-                          <Building className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-600">{complex.developer}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          )}
-        </div>
+
 
         {/* Секции */}
         <div className="space-y-6">
@@ -193,7 +184,7 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                            floor.floor !== undefined && 
                            floor.floor !== '' && 
                            !isNaN(floor.floor) && (
-                            <span className="font-semibold">{floor.floor} этаж</span>
+                            <span className="font-semibold">{floor.floor} {t.unit.floor}</span>
                           )}
                         </div>
 
@@ -204,45 +195,50 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                                 <CardHeader className="p-3">
                                   <div className="flex items-center justify-between">
                                     <span className="font-bold">{unit.id}</span>
-                                    <span className="font-bold">{unit.propertyType || 'Апартаменты'}</span>
+                                    <span className="font-bold">
+                                      {unit.propertyType === 'Апартаменты' && t.unit.propertyTypes.apartments}
+                                      {unit.propertyType === 'Вилла' && t.unit.propertyTypes.villa}
+                                      {unit.propertyType === 'Апарт-вилла' && t.unit.propertyTypes.apartVilla}
+                                      {unit.propertyType === 'Таунхаус' && t.unit.propertyTypes.townhouse}
+                                      {!unit.propertyType && t.unit.propertyTypes.apartments}
+                                    </span>
                                   </div>
                                 </CardHeader>
                                 <CardContent className="p-3 pt-0 space-y-2 text-sm">
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="flex items-center gap-1">
                                       <span className="font-semibold text-white">
-                                        {unit.floors === '1' && '1 этаж'}
-                                        {unit.floors === '2' && '2 этажа'}
-                                        {unit.floors === '3' && '3 этажа'}
+                                        {unit.floors === '1' && t.unit.floors.one}
+                                        {unit.floors === '2' && t.unit.floors.two}
+                                        {unit.floors === '3' && t.unit.floors.three}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <span className="text-white/90">Площадь:</span>
-                                      <span className="font-semibold text-white">{unit.area} м²</span>
+                                      <span className="text-white/90">{t.unit.area}:</span>
+                                      <span className="font-semibold text-white">{unit.area} {t.unit.areaUnit}</span>
                                     </div>
                                   </div>
 
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="flex items-center gap-1">
                                       <span className="font-semibold text-white">
-                                        {unit.rooms === 'Студия' && 'Студия'}
-                                        {unit.rooms === '1' && '1 спальня'}
-                                        {unit.rooms === '2' && '2 спальни'}
-                                        {unit.rooms === '3' && '3 спальни'}
-                                        {unit.rooms === '4' && '4 спальни'}
-                                        {unit.rooms === '5' && '5 спален'}
-                                        {unit.rooms === '6' && '6 спален'}
+                                        {unit.rooms === 'Студия' && t.unit.rooms.studio}
+                                        {unit.rooms === '1' && t.unit.rooms.one}
+                                        {unit.rooms === '2' && t.unit.rooms.two}
+                                        {unit.rooms === '3' && t.unit.rooms.three}
+                                        {unit.rooms === '4' && t.unit.rooms.four}
+                                        {unit.rooms === '5' && t.unit.rooms.five}
+                                        {unit.rooms === '6' && t.unit.rooms.six}
                                       </span>
                                     </div>
                                     {unit.view && (
                                       <div className="flex items-center gap-1">
-                                        <span className="text-white/90">Вид</span>
                                         <span className="font-semibold text-white">
-                                          {unit.view === 'Море' && 'на море'}
-                                          {unit.view === 'Лес' && 'на лес'}
-                                          {unit.view === 'Бассейн' && 'на бассейн'}
-                                          {unit.view === 'Река' && 'на реку'}
-                                          {unit.view === 'Двор' && 'во двор'}
+                                          {unit.view === 'Море' && t.unit.views.sea}
+                                          {unit.view === 'Лес' && t.unit.views.forest}
+                                          {unit.view === 'Бассейн' && t.unit.views.pool}
+                                          {unit.view === 'Река' && t.unit.views.river}
+                                          {unit.view === 'Двор' && t.unit.views.yard}
                                         </span>
                                       </div>
                                     )}
@@ -251,19 +247,19 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="flex items-center gap-1">
                                       <span className="font-semibold text-white">
-                                        {(unit.bathrooms || '1') === '1' && '1 санузел'}
-                                        {unit.bathrooms === '2' && '2 санузла'}
-                                        {unit.bathrooms === '3' && '3 санузла'}
-                                        {unit.bathrooms === '4' && '4 санузла'}
-                                        {unit.bathrooms === '5' && '5 санузлов'}
-                                        {unit.bathrooms === '6' && '6 санузлов'}
+                                        {(unit.bathrooms || '1') === '1' && t.unit.bathrooms.one}
+                                        {unit.bathrooms === '2' && t.unit.bathrooms.two}
+                                        {unit.bathrooms === '3' && t.unit.bathrooms.three}
+                                        {unit.bathrooms === '4' && t.unit.bathrooms.four}
+                                        {unit.bathrooms === '5' && t.unit.bathrooms.five}
+                                        {unit.bathrooms === '6' && t.unit.bathrooms.six}
                                       </span>
                                     </div>
                                     {unit.side && (
                                       <div className="flex items-center gap-1">
                                         <span className="font-semibold text-white">
-                                          {unit.side === 'Рассветная' && 'Рассветная сторона'}
-                                          {unit.side === 'Закатная' && 'Закатная сторона'}
+                                          {unit.side === 'Рассветная' && t.unit.sides.sunrise}
+                                          {unit.side === 'Закатная' && t.unit.sides.sunset}
                                         </span>
                                       </div>
                                     )}
@@ -286,7 +282,15 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
 
                                   {/* Статус в правом нижнем углу */}
                                   <div className="absolute bottom-3 right-3">
-                                    {getStatusBadge(unit.status)}
+                                    <Badge className={`
+                                      ${unit.status === 'free' ? 'bg-emerald-500' : 
+                                        unit.status === 'booked' ? 'bg-amber-500' : 
+                                        unit.status === 'sold' ? 'bg-rose-500' : 'bg-gray-500'}
+                                    `}>
+                                      {unit.status === 'free' && t.status.free}
+                                      {unit.status === 'booked' && t.status.booked}
+                                      {unit.status === 'sold' && t.status.sold}
+                                    </Badge>
                                   </div>
                                 </CardContent>
                               </Card>
