@@ -93,10 +93,21 @@ const ClientFixations = () => {
   // Функция для получения статуса с правильным цветом
   const getStatusBadge = (status) => {
     const statusColors = {
+      // Русский
       'На согласовании': 'bg-yellow-500',
       'Зафиксирован': 'bg-green-500',
       'Срок истек': 'bg-red-500',
-      'Отклонен': 'bg-red-500'
+      'Отклонен': 'bg-red-500',
+      // Английский
+      'Pending Approval': 'bg-yellow-500',
+      'Fixed': 'bg-green-500',
+      'Expired': 'bg-red-500',
+      'Rejected': 'bg-red-500',
+      // Индонезийский
+      'Menunggu Persetujuan': 'bg-yellow-500',
+      'Diperbaiki': 'bg-green-500',
+      'Kedaluwarsa': 'bg-red-500',
+      'Ditolak': 'bg-red-500'
     };
 
     return (
@@ -153,13 +164,31 @@ const ClientFixations = () => {
     }
   };
 
+  // Функция для получения правильного статуса в зависимости от языка исходного статуса
+  const getLocalizedStatus = (currentStatus, targetStatus) => {
+    // Определяем язык по текущему статусу
+    if (currentStatus === 'Pending Approval') {
+      // Английский
+      return targetStatus === 'approved' ? 'Fixed' : 'Rejected';
+    } else if (currentStatus === 'Menunggu Persetujuan') {
+      // Индонезийский
+      return targetStatus === 'approved' ? 'Diperbaiki' : 'Ditolak';
+    } else {
+      // Русский (по умолчанию)
+      return targetStatus === 'approved' ? 'Зафиксирован' : 'Отклонен';
+    }
+  };
+
   // Функция для подтверждения фиксации с выбранной датой
   const handleApproveFixation = async () => {
     if (!selectedFixation || !validUntilDate) return;
     
     try {
+      // Получаем правильный статус на нужном языке
+      const approvedStatus = getLocalizedStatus(selectedFixation.status, 'approved');
+      
       // Обновляем статус фиксации
-      await updateFixationStatus(selectedFixation.id, 'Зафиксирован', validUntilDate);
+      await updateFixationStatus(selectedFixation.id, approvedStatus, validUntilDate);
       
       // Отправляем системное сообщение в чат фиксации
       const validUntilFormatted = new Date(validUntilDate).toLocaleDateString('ru-RU');
@@ -195,8 +224,11 @@ const ClientFixations = () => {
     if (!selectedFixation || rejectComment.length < 10) return;
     
     try {
+      // Получаем правильный статус на нужном языке
+      const rejectedStatus = getLocalizedStatus(selectedFixation.status, 'rejected');
+      
       // Обновляем статус фиксации
-      await updateFixationStatus(selectedFixation.id, 'Отклонен', null, rejectComment);
+      await updateFixationStatus(selectedFixation.id, rejectedStatus, null, rejectComment);
       
       // Отправляем системное сообщение в чат фиксации
       const systemMessage = `Ваша заявка на фиксацию клиента ${selectedFixation.clientName} ${selectedFixation.clientPhone} у застройщика ${selectedFixation.developerName} отклонена. Причина отклонения: ${rejectComment}`;
@@ -269,19 +301,32 @@ const ClientFixations = () => {
     const currentDate = new Date();
     
     for (const fixation of fixationsData) {
+      // Проверяем статус "зафиксирован" на всех языках
+      const isFixed = fixation.status === 'Зафиксирован' || 
+                     fixation.status === 'Fixed' || 
+                     fixation.status === 'Diperbaiki';
+                     
       if (
-        fixation.status === 'Зафиксирован' &&
+        isFixed &&
         fixation.validUntil &&
         currentDate > new Date(fixation.validUntil.seconds * 1000)
       ) {
         try {
+          // Устанавливаем статус "истек" в том же языке, что и исходный статус
+          let expiredStatus = 'Срок истек'; // по умолчанию русский
+          if (fixation.status === 'Fixed') {
+            expiredStatus = 'Expired';
+          } else if (fixation.status === 'Diperbaiki') {
+            expiredStatus = 'Kedaluwarsa';
+          }
+          
           await updateDoc(doc(db, 'clientFixations', fixation.id), {
-            status: 'Срок истек'
+            status: expiredStatus
           });
           
           // Обновляем локальное состояние
           setFixations(prev => prev.map(f => 
-            f.id === fixation.id ? { ...f, status: 'Срок истек' } : f
+            f.id === fixation.id ? { ...f, status: expiredStatus } : f
           ));
         } catch (error) {
           console.error('Ошибка при обновлении статуса:', error);
@@ -468,7 +513,11 @@ const ClientFixations = () => {
             </div>
             <div className="flex justify-between mt-4">
               <div>
-                {fixation.status === 'На согласовании' && (userRole === 'admin' || userRole === 'застройщик') && (
+                {/* Проверяем статус "на согласовании" на всех языках */}
+                {(fixation.status === 'На согласовании' || 
+                  fixation.status === 'Pending Approval' || 
+                  fixation.status === 'Menunggu Persetujuan') && 
+                  (userRole === 'admin' || userRole === 'застройщик') && (
                   <div className="space-x-2">
                     <Button
                       onClick={() => openApproveDialog(fixation)}
