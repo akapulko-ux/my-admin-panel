@@ -17,7 +17,7 @@ import { useLanguage } from '../lib/LanguageContext';
 const DEFAULT_ROUTES = {
   admin: '/property/gallery',
   модератор: '/property/gallery',
-  'премиум агент': '/property/gallery',
+  'premium agent': '/property/gallery',
   agent: '/property/gallery',
   застройщик: '/property/gallery',
   user: '/gallery'

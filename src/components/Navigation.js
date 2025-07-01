@@ -28,20 +28,24 @@ const ROUTE_ACCESS = {
     '/landmark/*',
     '/gallery/*',
     '/support/*',
-    '/client-fixations'
+    '/client-fixations',
+    '/building-progress/*'
   ],
-  'премиум агент': [
-    '/property/gallery'
+  'premium agent': [
+    '/property/gallery',
+    '/building-progress/*'
   ],
   agent: [
-    '/property/gallery'
+    '/property/gallery',
+    '/building-progress/*'
   ],
   застройщик: [
     '/property/gallery',
     '/property/*',
     '/chessboard',
     '/chessboard/*',
-    '/client-fixations'
+    '/client-fixations',
+    '/building-progress/*'
   ],
   user: [
     '/gallery/*'
@@ -115,7 +119,7 @@ const Navigation = () => {
       </div>
 
       <nav className="space-y-1">
-        {['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
+        {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
           <NavItem to="/property/gallery" icon={Home}>
             Галерея объектов
           </NavItem>

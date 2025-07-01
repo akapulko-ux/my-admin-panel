@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
@@ -19,6 +19,7 @@ import {
   Layers,
   Bath,
   Calculator,
+  BarChart3,
 } from "lucide-react";
 import { showError } from '../utils/notifications';
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
@@ -28,6 +29,7 @@ function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
   const { id } = useParams();
   console.log('PropertyDetail: Got id from params:', id);
+  const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
@@ -715,11 +717,11 @@ function PropertyDetail() {
         ))}
       </div>
 
-      {/* Добавляем кнопку "Расчет ROI" после характеристик объекта */}
-      {['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
+      {/* Добавляем кнопки "Расчет ROI" и "Прогресс строительства" после характеристик объекта */}
+      {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Характеристики объекта</h2>
-          <div className="mt-6">
+          <div className="mt-6 flex gap-4">
             <button
               onClick={() => setShowRoiCalculator(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -727,12 +729,19 @@ function PropertyDetail() {
               <Calculator className="w-5 h-5" />
               Расчет ROI
             </button>
+            <button
+              onClick={() => navigate(`/building-progress/${id}`)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <BarChart3 className="w-5 h-5" />
+              Прогресс строительства
+            </button>
           </div>
         </div>
       )}
 
       {/* Модальное окно с калькулятором ROI */}
-      {showRoiCalculator && ['admin', 'модератор', 'премиум агент', 'agent', 'застройщик'].includes(role) && (
+      {showRoiCalculator && ['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
         <PropertyRoiCalculator
           propertyId={id}
           propertyData={property}

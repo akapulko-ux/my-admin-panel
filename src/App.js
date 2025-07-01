@@ -28,6 +28,10 @@ import EditProperty from "./pages/EditProperty";
 import ListProperties from "./pages/ListProperties";
 import PropertiesGallery from "./pages/PropertiesGallery";
 import PropertyDetail from "./pages/PropertyDetail";
+import BuildingProgress from "./pages/BuildingProgress";
+import BuildingProgressDetail from "./pages/BuildingProgressDetail";
+import PublicBuildingProgress from "./pages/PublicBuildingProgress";
+import PublicBuildingProgressDetail from "./pages/PublicBuildingProgressDetail";
 
 // Достопримечательности
 import CreateLandmark from "./pages/CreateLandmark";
@@ -155,6 +159,8 @@ function App() {
               <Route path="/chessboard-overview/:publicId" element={<ChessboardOverview />} />
               <Route path="/public-roi/:id" element={<PublicRoiPage />} />
               <Route path="/public-roi/property/:propertyId" element={<PublicPropertyRoiPage />} />
+              <Route path="/public-building-progress/:id" element={<PublicBuildingProgress />} />
+              <Route path="/public-building-progress/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
               <Route path="/login" element={<LoginPage />} />
 
               {/* Лендинг для неавторизованных пользователей */}
@@ -227,6 +233,18 @@ function App() {
                     <Route path="/property/:id" element={
                       <ProtectedRoute>
                         <PropertyDetail />
+                      </ProtectedRoute>
+                    } />
+                    
+                    {/* Прогресс строительства */}
+                    <Route path="/building-progress/:id" element={
+                      <ProtectedRoute>
+                        <BuildingProgress />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/building-progress/:id/:monthKey" element={
+                      <ProtectedRoute>
+                        <BuildingProgressDetail />
                       </ProtectedRoute>
                     } />
 

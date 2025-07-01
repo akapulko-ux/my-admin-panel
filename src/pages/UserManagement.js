@@ -1,66 +1,65 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow,
-  Select,
-  MenuItem,
-  CircularProgress,
-  Alert,
-  Chip
-} from '@mui/material';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
-import StarIcon from '@mui/icons-material/Star';
-import PersonIcon from '@mui/icons-material/Person';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import BusinessIcon from '@mui/icons-material/Business';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '../components/ui/select';
+import { 
+  Shield, 
+  ShieldCheck, 
+  Star, 
+  User, 
+  UserCircle, 
+  Building,
+  Users,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
 
 // Определение ролей и их отображения
 const ROLES = {
   admin: {
     value: 'admin',
     label: 'Администратор',
-    icon: AdminPanelSettingsIcon,
-    color: 'error'
+    icon: Shield,
+    color: 'bg-red-500'
   },
   moderator: {
     value: 'moderator',
     label: 'Модератор',
-    icon: SupervisorAccountIcon,
-    color: 'warning'
+    icon: ShieldCheck,
+    color: 'bg-yellow-500'
   },
-  'премиум агент': {
-    value: 'премиум агент',
+  'premium agent': {
+    value: 'premium agent',
     label: 'Премиум агент',
-    icon: StarIcon,
-    color: 'success'
+    icon: Star,
+    color: 'bg-purple-500'
   },
   agent: {
     value: 'agent',
     label: 'Агент',
-    icon: PersonIcon,
-    color: 'primary'
+    icon: User,
+    color: 'bg-blue-500'
   },
   user: {
     value: 'user',
     label: 'Пользователь',
-    icon: AccountCircleIcon,
-    color: 'default'
+    icon: UserCircle,
+    color: 'bg-gray-500'
   },
   'застройщик': {
     value: 'застройщик',
     label: 'Застройщик',
-    icon: BusinessIcon,
-    color: 'success'
+    icon: Building,
+    color: 'bg-green-500'
   }
 };
 
@@ -135,12 +134,13 @@ const UserManagement = () => {
   const handleDeveloperChange = async (userId, developerId) => {
     try {
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, { developerId });
+      const finalDeveloperId = developerId === 'unselected' ? null : developerId;
+      await updateDoc(userRef, { developerId: finalDeveloperId });
       
       // Обновляем локальное состояние
       setUsers(users.map(user => {
         if (user.id === userId) {
-          return { ...user, developerId };
+          return { ...user, developerId: finalDeveloperId };
         }
         return user;
       }));
@@ -151,22 +151,19 @@ const UserManagement = () => {
     }
   };
 
-  const getRoleChip = (roleValue) => {
+  const getRoleBadge = (roleValue) => {
     const role = ROLES[roleValue] || {
       value: roleValue,
       label: roleValue,
-      icon: AccountCircleIcon,
-      color: 'default'
+      icon: UserCircle,
+      color: 'bg-gray-500'
     };
     const Icon = role.icon;
     return (
-      <Chip
-        icon={<Icon />}
-        label={role.label}
-        color={role.color}
-        size="small"
-        sx={{ minWidth: 150 }}
-      />
+      <Badge className={`${role.color} text-white hover:${role.color}/80 flex items-center gap-1 min-w-[120px] justify-center`}>
+        <Icon className="w-3 h-3" />
+        {role.label}
+      </Badge>
     );
   };
 
@@ -181,99 +178,135 @@ const UserManagement = () => {
 
   if (loading) {
     return (
-      <Container sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-        <CircularProgress />
-      </Container>
+      <div className="p-6 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Загрузка...</span>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Управление пользователями
-      </Typography>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Users className="w-8 h-8 text-blue-600" />
+        <h1 className="text-2xl font-bold">Управление пользователями</h1>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertCircle className="w-4 h-4" />
+              <span>{error}</span>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Email</TableCell>
-              <TableCell>Роль</TableCell>
-              <TableCell>Застройщик</TableCell>
-              <TableCell>Текущий застройщик</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} align="center">
-                  <Typography variant="body1" color="textSecondary">
-                    Пользователи не найдены
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <Select
-                        value={user.role || 'user'}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                        size="small"
-                        sx={{ minWidth: 200 }}
-                      >
+      {users.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-lg text-gray-600">Пользователи не найдены</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {users.map((user) => (
+            <Card key={user.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
+                  {/* Имя пользователя */}
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-500">Имя пользователя</p>
+                    <p className="font-semibold text-gray-900">
+                      {user.displayName || 'Не указано'}
+                    </p>
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <p className="text-gray-900">{user.email}</p>
+                  </div>
+
+                  {/* Роль */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-500">Роль</p>
+                    <Select 
+                      value={user.role || 'user'} 
+                      onValueChange={(value) => handleRoleChange(user.id, value)}
+                    >
+                      <SelectTrigger className="min-w-[160px]">
+                        <SelectValue>
+                          {getRoleBadge(user.role || 'user')}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
                         {getAvailableRoles().map((role) => (
-                          <MenuItem key={role.value} value={role.value}>
-                            {getRoleChip(role.value)}
-                          </MenuItem>
+                          <SelectItem key={role.value} value={role.value}>
+                            <div className="flex items-center gap-2">
+                              <role.icon className="w-4 h-4" />
+                              {role.label}
+                            </div>
+                          </SelectItem>
                         ))}
-                      </Select>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {user.role === 'застройщик' && (
-                      <Select
-                        value={user.developerId || ''}
-                        onChange={(e) => handleDeveloperChange(user.id, e.target.value)}
-                        size="small"
-                        sx={{ minWidth: 200 }}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Застройщик */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-500">Застройщик</p>
+                    {user.role === 'застройщик' ? (
+                      <Select 
+                        value={user.developerId || 'unselected'} 
+                        onValueChange={(value) => handleDeveloperChange(user.id, value)}
                       >
-                        <MenuItem value="">
-                          <em>Выберите застройщика</em>
-                        </MenuItem>
-                        {developers.map(developer => (
-                          <MenuItem key={developer.id} value={developer.id}>
-                            {developer.name}
-                          </MenuItem>
-                        ))}
+                        <SelectTrigger className="min-w-[180px]">
+                          <SelectValue placeholder="Не выбран" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unselected">
+                            <em>Сбросить выбор</em>
+                          </SelectItem>
+                          {developers.map(developer => (
+                            <SelectItem key={developer.id} value={developer.id}>
+                              {developer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
+                    ) : (
+                      <div className="h-10 flex items-center text-gray-400">
+                        Недоступно
+                      </div>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    {user.role === 'застройщик' && user.developerId && (
-                      <Chip
-                        icon={<BusinessIcon />}
-                        label={getDeveloperName(user.developerId)}
-                        color="info"
-                        variant="outlined"
-                      />
+                  </div>
+
+                  {/* Текущий застройщик */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-500">Текущий застройщик</p>
+                    {user.role === 'застройщик' && user.developerId ? (
+                      <Badge className="bg-green-500 text-white flex items-center gap-1 w-fit">
+                        <Building className="w-3 h-3" />
+                        {getDeveloperName(user.developerId)}
+                      </Badge>
+                    ) : (
+                      <div className="h-10 flex items-center text-gray-400">
+                        Не назначен
+                      </div>
                     )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Container>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

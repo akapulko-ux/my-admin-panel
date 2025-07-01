@@ -12,13 +12,16 @@ const ROUTE_ACCESS = {
     '/landmark/*',
     '/support/*',
     '/roi-calculator',
-    '/client-fixations'
+    '/client-fixations',
+    '/building-progress/*'
   ],
-  'премиум агент': [
-    '/property/gallery'
+  'premium agent': [
+    '/property/gallery',
+    '/building-progress/*'
   ],
   agent: [
-    '/property/gallery'
+    '/property/gallery',
+    '/building-progress/*'
   ],
   застройщик: [
     '/property/gallery',
@@ -26,7 +29,8 @@ const ROUTE_ACCESS = {
     '/chessboard',
     '/chessboard/*',
     '/client-fixations',
-    '/dashboard'
+    '/dashboard',
+    '/building-progress/*'
   ],
   user: [
     '/property/gallery',
@@ -38,7 +42,7 @@ const ROUTE_ACCESS = {
 const DEFAULT_ROUTES = {
   admin: '/complex/list',
   модератор: '/complex/list',
-  'премиум агент': '/property/gallery',
+  'premium agent': '/property/gallery',
   agent: '/property/gallery',
   застройщик: '/chessboard',
   user: '/property/gallery'
