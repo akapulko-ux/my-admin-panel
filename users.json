@@ -16,7 +16,7 @@
   "emailVerified": false,
   "passwordHash": "Bne7DEfAGgLbD+yBB/7xboYrOzNv5KA1TWuTvREd+4+aZtb44Qz9+MPZ3MEoj6AIJLe76D6dVQI92y+Wqw0qcw==",
   "salt": "yyJCYUk0yPYDoQ==",
-  "lastSignedInAt": "1750830005674",
+  "lastSignedInAt": "1750837234308",
   "createdAt": "1739885409602",
   "customAttributes": "{\"role\":\"premium agent\"}",
   "providerUserInfo": []
@@ -25,9 +25,9 @@
   "localId": "7fsG9ofvm2NtBj4mXgHtm9GnKqw1",
   "email": "akapulko@inbox.ru",
   "emailVerified": true,
-  "passwordHash": "bufrU7YmMMGiI6Lix6EU4qfD427Cb0Jv0UElLJGEFXVDLquYn9jyklJo7GfPuoGMMe18SAlorY9AlsAXUbhrUg==",
-  "salt": "Ggmm8H2rJdmPAw==",
-  "lastSignedInAt": "1750833569627",
+  "passwordHash": "4C5UuNsEb9yvdYvE4kvXie5SesJAttp+MYbw5UgOs4cDXKL3D9aQvPOgqGUXe2S4hvt/yu65Vr5YFejZKLvDmw==",
+  "salt": "mtoJYDiiqYrHug==",
+  "lastSignedInAt": "1751382081040",
   "createdAt": "1740142633370",
   "customAttributes": "{\"role\":\"admin\"}",
   "providerUserInfo": []
@@ -93,9 +93,9 @@
   "emailVerified": false,
   "passwordHash": "QWSdfsyOPgfp4rKFKNj6vJfrShGRqeKdB5kxzHNW1qFO524C9INOD0oyGeZvEBxf3GttenqNBuhsTlmgZ5pHkw==",
   "salt": "KoaJPnNqaPJyNA==",
-  "lastSignedInAt": "1750752730418",
+  "lastSignedInAt": "1751389030911",
   "createdAt": "1750329613698",
-  "customAttributes": "{\"role\":\"agent\"}",
+  "customAttributes": "{\"role\":\"застройщик\",\"developerId\":\"PVBQmL8Ui1wQh7NXPE4y\"}",
   "providerUserInfo": []
 },
 {
@@ -192,9 +192,9 @@
   "emailVerified": false,
   "passwordHash": "BU3PD8sTJODY2A6Rn07XIueAZELRXocIU1SlGLtwdxgCwcoTL2JpCaXEhn6Hf5ktKpmVDtrg46dqBtCxuazCBQ==",
   "salt": "OGqnNNWqwrbdkg==",
-  "lastSignedInAt": "1750830251371",
+  "lastSignedInAt": "1751352514950",
   "createdAt": "1750663151162",
-  "customAttributes": "{\"role\":\"agent\"}",
+  "customAttributes": "{\"role\":\"premium agent\"}",
   "providerUserInfo": []
 },
 {
@@ -205,6 +205,17 @@
   "salt": "n4gUl0BKvJqi+w==",
   "lastSignedInAt": "1750703149740",
   "createdAt": "1750703149740",
+  "customAttributes": "{\"role\":\"agent\"}",
+  "providerUserInfo": []
+},
+{
+  "localId": "jhymxgt83KPLbcQBMP0RCip0nUX2",
+  "email": "kotvzeekler@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "5L8XYl+xyYR3UPPrvN409URq4KLz0Ox/vkKVKzSCBmbRSUAViSHcBbNKh381bkOMiIy2f0AQzvWCHivxG6km0w==",
+  "salt": "wRIFDdArMiOzbA==",
+  "lastSignedInAt": "1751019887489",
+  "createdAt": "1751019887489",
   "customAttributes": "{\"role\":\"agent\"}",
   "providerUserInfo": []
 },
@@ -232,12 +243,12 @@
 },
 {
   "localId": "wcSOyeMysWVDl8FqJ4usQrtgCtd2",
-  "email": "goverment8888@gmaill.com",
+  "email": "goverment8888@gmail.com",
   "emailVerified": false,
   "passwordHash": "6AyIstrgc8OWapqjuImv1KMK51D34DJp1an7I9SrULw0jB4isEZueYz9u9zEJoNXl8ZhhDK3ANHt1MXyJfZb7Q==",
   "salt": "A/A2viRKM2w4jw==",
   "lastSignedInAt": "1750487596098",
   "createdAt": "1750487596098",
-  "customAttributes": "{\"role\":\"agent\"}",
+  "customAttributes": "{\"role\":\"застройщик\",\"developerId\":\"PVBQmL8Ui1wQh7NXPE4y\"}",
   "providerUserInfo": []
 }]}
