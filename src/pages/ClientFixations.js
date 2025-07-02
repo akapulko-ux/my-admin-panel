@@ -34,6 +34,9 @@ const formatDateForInput = (date) => {
 
 const ClientFixations = () => {
   const [fixations, setFixations] = useState([]);
+  const [filteredFixations, setFilteredFixations] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const { currentUser, role: userRole } = useAuth();
@@ -142,7 +145,7 @@ const ClientFixations = () => {
       await updateDoc(fixationRef, updateData);
 
       // Обновляем локальное состояние
-      setFixations(prev => prev.map(f => 
+      const updatedFixations = fixations.map(f => 
         f.id === fixationId 
           ? { 
               ...f, 
@@ -153,7 +156,9 @@ const ClientFixations = () => {
               rejectedBy: updateData.rejectedBy || f.rejectedBy
             } 
           : f
-      ));
+      );
+      setFixations(updatedFixations);
+      filterFixations(searchQuery);
 
       toast.success(`Статус фиксации успешно обновлен на "${newStatus}"`);
       closeApproveDialog();
@@ -286,7 +291,22 @@ const ClientFixations = () => {
       await batch.commit();
 
       // Обновляем локальное состояние
-      setFixations(prev => prev.filter(f => f.id !== selectedFixation.id));
+      const updatedFixations = fixations.filter(f => f.id !== selectedFixation.id);
+      setFixations(updatedFixations);
+      setFilteredFixations(updatedFixations.filter(f => {
+        if (!searchQuery.trim()) return true;
+        const searchTerms = searchQuery.toLowerCase().split(' ');
+        const searchableText = [
+          f.clientName || '',
+          f.clientPhone || '',
+          f.agentName || '',
+          f.complexName || '',
+          f.developerName || '',
+          f.propertyType || '',
+          f.status || ''
+        ].join(' ').toLowerCase();
+        return searchTerms.every(term => searchableText.includes(term));
+      }));
 
       toast.success('Фиксация и чат успешно удалены');
       closeDeleteDialog();
@@ -400,6 +420,7 @@ const ClientFixations = () => {
       });
 
       setFixations(fixationsData);
+      setFilteredFixations(fixationsData);
       checkAndUpdateExpiredFixations(fixationsData);
     } catch (err) {
       setError('Ошибка при загрузке фиксаций: ' + err.message);
@@ -422,11 +443,126 @@ const ClientFixations = () => {
     setSelectedAgentId(null);
   };
 
+  // Функция для фильтрации фиксаций по поисковому запросу и статусу
+  const filterFixations = (query = searchQuery, statusFilter = selectedStatusFilter) => {
+    let filtered = fixations;
+
+    // Фильтр по тексту
+    if (query && query.trim()) {
+      const searchTerms = query.toLowerCase().split(' ');
+      filtered = filtered.filter((fixation) => {
+        const searchableText = [
+          fixation.clientName || '',
+          fixation.clientPhone || '',
+          fixation.agentName || '',
+          fixation.complexName || '',
+          fixation.developerName || '',
+          fixation.propertyType || '',
+          fixation.status || ''
+        ].join(' ').toLowerCase();
+
+        return searchTerms.every(term => searchableText.includes(term));
+      });
+    }
+
+    // Фильтр по статусу
+    if (statusFilter) {
+      filtered = filtered.filter(fixation => {
+        const statusType = getStatusType(fixation.status);
+        return statusType === statusFilter;
+      });
+    }
+
+    setFilteredFixations(filtered);
+  };
+
+  // Обработчик изменения поискового запроса
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    filterFixations(query, selectedStatusFilter);
+  };
+
+  // Обработчик клика на бейдж статуса
+  const handleStatusFilterClick = (statusType) => {
+    const newStatusFilter = selectedStatusFilter === statusType ? null : statusType;
+    setSelectedStatusFilter(newStatusFilter);
+    filterFixations(searchQuery, newStatusFilter);
+  };
+
+  // Функция для группировки статусов по типу (игнорируя язык)
+  const getStatusType = (status) => {
+    if (['На согласовании', 'Pending Approval', 'Menunggu Persetujuan'].includes(status)) {
+      return 'pending';
+    }
+    if (['Зафиксирован', 'Fixed', 'Diperbaiki'].includes(status)) {
+      return 'approved';
+    }
+    if (['Срок истек', 'Expired', 'Kedaluwarsa'].includes(status)) {
+      return 'expired';
+    }
+    if (['Отклонен', 'Rejected', 'Ditolak'].includes(status)) {
+      return 'rejected';
+    }
+    return 'unknown';
+  };
+
+  // Функция для получения отображаемого названия статуса
+  const getStatusDisplayName = (statusType) => {
+    const names = {
+      pending: 'На согласовании',
+      approved: 'Зафиксированы',
+      expired: 'Срок истек',
+      rejected: 'Отклонены'
+    };
+    return names[statusType] || 'Неизвестно';
+  };
+
+  // Функция для получения цвета статуса
+  const getStatusColor = (statusType) => {
+    const colors = {
+      pending: 'bg-yellow-500',
+      approved: 'bg-green-500',
+      expired: 'bg-red-500',
+      rejected: 'bg-red-500'
+    };
+    return colors[statusType] || 'bg-gray-500';
+  };
+
+  // Функция для подсчета статусов
+  const getStatusCounts = () => {
+    const counts = {
+      pending: 0,
+      approved: 0,
+      expired: 0,
+      rejected: 0
+    };
+
+    // Считаем от полного списка fixations, а не от отфильтрованного
+    fixations.forEach(fixation => {
+      const statusType = getStatusType(fixation.status);
+      if (counts.hasOwnProperty(statusType)) {
+        counts[statusType]++;
+      }
+    });
+
+    return counts;
+  };
+
   useEffect(() => {
     if (currentUser) {
       fetchFixations();
     }
   }, [currentUser, userRole]);
+
+  // useEffect для обновления фильтрованных фиксаций при изменении основного списка
+  useEffect(() => {
+    if (!searchQuery.trim() && !selectedStatusFilter) {
+      setFilteredFixations(fixations);
+    } else {
+      filterFixations(searchQuery, selectedStatusFilter);
+    }
+  }, [fixations, searchQuery, selectedStatusFilter]);
 
   if (isLoading) {
     return (
@@ -468,12 +604,119 @@ const ClientFixations = () => {
         </Button>
       </div>
       
-      <div className="grid gap-4">
-        {fixations.map((fixation) => (
+      {/* Поле поиска */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Input
+            type="text"
+            placeholder="Поиск по имени, телефону, агенту, комплексу..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="pl-10 pr-4"
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                filterFixations('', selectedStatusFilter);
+              }}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg className="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="text-sm text-gray-500 mt-2">
+            Найдено: {filteredFixations.length} из {fixations.length} фиксаций
+          </p>
+                 )}
+       </div>
+
+       {/* Бейджи со счетчиками статусов */}
+       {fixations.length > 0 && (
+         <div className="mb-6">
+           <div className="flex flex-wrap gap-3">
+             {Object.entries(getStatusCounts()).map(([statusType, count]) => (
+               <button
+                 key={statusType}
+                 onClick={() => handleStatusFilterClick(statusType)}
+                 className={`inline-flex items-center px-3 py-2 rounded-full text-white text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                   selectedStatusFilter === statusType 
+                     ? `${getStatusColor(statusType)} ring-2 ring-offset-2 ring-gray-300 shadow-lg scale-105` 
+                     : getStatusColor(statusType)
+                 }`}
+               >
+                 <span className="mr-2">{getStatusDisplayName(statusType)}</span>
+                 <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-bold">
+                   {count}
+                 </span>
+               </button>
+             ))}
+             <button
+               onClick={() => {
+                 setSelectedStatusFilter(null);
+                 setSearchQuery('');
+                 setFilteredFixations(fixations);
+               }}
+               className={`inline-flex items-center px-3 py-2 rounded-full text-white text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                 !selectedStatusFilter && !searchQuery
+                   ? 'bg-gray-600 ring-2 ring-offset-2 ring-gray-300 shadow-lg scale-105'
+                   : 'bg-gray-500'
+               }`}
+             >
+               <span className="mr-2">Всего</span>
+               <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-bold">
+                 {fixations.length}
+               </span>
+             </button>
+           </div>
+           {(searchQuery || selectedStatusFilter) && (
+             <p className="text-xs text-gray-500 mt-2">
+               * Применены фильтры: 
+               {searchQuery && ` поиск "${searchQuery}"`}
+               {searchQuery && selectedStatusFilter && ', '}
+               {selectedStatusFilter && ` статус "${getStatusDisplayName(selectedStatusFilter)}"`}
+             </p>
+           )}
+         </div>
+       )}
+       
+       {filteredFixations.length === 0 && fixations.length > 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+          <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <p>По вашему запросу ничего не найдено</p>
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              setFilteredFixations(fixations);
+            }}
+            className="mt-2 text-blue-600 hover:text-blue-800 underline"
+          >
+            Очистить поиск
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {filteredFixations.map((fixation) => (
           <Card key={fixation.id} className="p-4">
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-semibold">{fixation.clientName}</h3>
+                {fixation.clientPhone && (
+                  <p className="text-sm text-gray-600 font-medium">
+                    Телефон: {fixation.clientPhone}
+                  </p>
+                )}
                 <p className="text-sm text-gray-600">
                   Агент: {fixation.agentName}
                 </p>
@@ -557,8 +800,9 @@ const ClientFixations = () => {
               </div>
             </div>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Диалог подтверждения фиксации */}
       <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>

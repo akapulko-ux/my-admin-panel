@@ -125,18 +125,22 @@ const getPropertyTypeBadge = (propertyType) => {
 
 const getViewBadge = (view) => {
   switch (view) {
-    case 'Море':
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 Море</Badge>;
+    case 'Океан':
+      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 Океан</Badge>;
     case 'Река':
       return <Badge className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs">🌊 Река</Badge>;
-    case 'Лес':
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">🌳 Лес</Badge>;
+    case 'Джунгли':
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">🌳 Джунгли</Badge>;
     case 'Бассейн':
       return <Badge className="bg-sky-500 hover:bg-sky-600 text-white text-xs">🏊‍♂️ Бассейн</Badge>;
     case 'Двор':
       return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs">🏡 Двор</Badge>;
+    case 'Вулкан':
+      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">🌋 Вулкан</Badge>;
+    case 'Рисовые террасы':
+      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">🌾 Рисовые террасы</Badge>;
     default:
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 Море</Badge>;
+      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 Океан</Badge>;
   }
 };
 
@@ -526,11 +530,13 @@ const SortableUnit = ({
                     className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                   >
                     <option value="">Не указан</option>
-                    <option value="Море">Море</option>
+                    <option value="Океан">Океан</option>
                     <option value="Река">Река</option>
-                    <option value="Лес">Лес</option>
+                    <option value="Джунгли">Джунгли</option>
                     <option value="Бассейн">Бассейн</option>
                     <option value="Двор">Двор</option>
+                    <option value="Вулкан">Вулкан</option>
+                    <option value="Рисовые террасы">Рисовые террасы</option>
                   </select>
               </div>
               <div>

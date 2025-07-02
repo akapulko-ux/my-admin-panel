@@ -22,11 +22,13 @@ export const chessboardTranslations = {
       areaUnit: 'm²',
       view: 'View',
       views: {
-        sea: 'sea view',
-        forest: 'forest view',
+        ocean: 'ocean view',
+        jungle: 'jungle view',
         pool: 'pool view',
         river: 'river view',
-        yard: 'yard view'
+        yard: 'yard view',
+        volcano: 'volcano view',
+        riceTerraces: 'rice terraces view'
       },
       rooms: {
         studio: 'Studio',
@@ -83,11 +85,13 @@ export const chessboardTranslations = {
       areaUnit: 'м²',
       view: 'Вид',
       views: {
-        sea: 'на море',
-        forest: 'на лес',
+        ocean: 'на океан',
+        jungle: 'на джунгли',
         pool: 'на бассейн',
         river: 'на реку',
-        yard: 'во двор'
+        yard: 'во двор',
+        volcano: 'на вулкан',
+        riceTerraces: 'на рисовые террасы'
       },
       rooms: {
         studio: 'Студия',
@@ -144,11 +148,13 @@ export const chessboardTranslations = {
       areaUnit: 'm²',
       view: 'Pemandangan',
       views: {
-        sea: 'laut',
-        forest: 'hutan',
+        ocean: 'samudra',
+        jungle: 'hutan rimba',
         pool: 'kolam renang',
         river: 'sungai',
-        yard: 'halaman'
+        yard: 'halaman',
+        volcano: 'gunung berapi',
+        riceTerraces: 'terasering padi'
       },
       rooms: {
         studio: 'Studio',

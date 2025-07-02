@@ -296,13 +296,15 @@ const ChessboardOverview = () => {
                                       </div>
                                       {unit.view && (
                                         <div className="flex items-center gap-1">
-                                          <span className="font-semibold text-white">
-                                            {unit.view === 'Море' && t.unit.views.sea}
-                                            {unit.view === 'Лес' && t.unit.views.forest}
-                                            {unit.view === 'Бассейн' && t.unit.views.pool}
-                                            {unit.view === 'Река' && t.unit.views.river}
-                                            {unit.view === 'Двор' && t.unit.views.yard}
-                                          </span>
+                                                                                  <span className="font-semibold text-white">
+                                          {unit.view === 'Океан' && t.unit.views.ocean}
+                                          {unit.view === 'Джунгли' && t.unit.views.jungle}
+                                          {unit.view === 'Бассейн' && t.unit.views.pool}
+                                          {unit.view === 'Река' && t.unit.views.river}
+                                          {unit.view === 'Двор' && t.unit.views.yard}
+                                          {unit.view === 'Вулкан' && t.unit.views.volcano}
+                                          {unit.view === 'Рисовые террасы' && t.unit.views.riceTerraces}
+                                        </span>
                                         </div>
                                       )}
                                     </div>
