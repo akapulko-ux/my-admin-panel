@@ -38,7 +38,6 @@ export async function uploadToFirebaseStorageInFolder(file, folder = "uploads") 
 
 /**
  * Удаляет файл из Firebase Storage по его публичному URL.
- * Эта версия использует объект URL для извлечения пути файла.
  * @param {string} fileUrl - Публичный URL файла.
  * @returns {Promise<void>}
  */
@@ -46,22 +45,46 @@ export async function deleteFileFromFirebaseStorage(fileUrl) {
   if (!fileUrl) throw new Error("URL не передан");
 
   try {
-    const urlObj = new URL(fileUrl);
-    const pathname = urlObj.pathname; // например: /v0/b/bali-estate-1130f.firebasestorage.app/o/landmarks%2F1743665251256-image_1.jpg
-    const idx = pathname.indexOf("/o/");
-    if (idx === -1) {
+    console.log("Начинаем удаление файла:", fileUrl);
+    
+    // Firebase Storage URL имеет формат:
+    // https://firebasestorage.googleapis.com/v0/b/[project-id].appspot.com/o/[path]?alt=media&token=[token]
+    const url = new URL(fileUrl);
+    console.log("Разобранный URL:", {
+      href: url.href,
+      pathname: url.pathname,
+      search: url.search
+    });
+    
+    // Извлекаем путь файла из pathname
+    const parts = url.pathname.split('/o/');
+    if (parts.length !== 2) {
+      throw new Error("Некорректный формат URL Firebase Storage");
+    }
+    
+    // Декодируем путь файла
+    const filePath = decodeURIComponent(parts[1]);
+    console.log("Извлеченный путь файла:", filePath);
+    
+    if (!filePath) {
       throw new Error("Не удалось извлечь путь файла из URL");
     }
-    const filePathEncoded = pathname.substring(idx + 3); // после "/o/"
-    const filePath = decodeURIComponent(filePathEncoded); // получим "landmarks/1743665251256-image_1.jpg"
-    
+
     const app = getApp();
     const storage = getStorage(app, "gs://bali-estate-1130f.firebasestorage.app");
     const fileRef = ref(storage, filePath);
+    console.log("Создана ссылка на файл:", fileRef.fullPath);
+    
     await deleteObject(fileRef);
     console.log(`Файл ${filePath} успешно удалён из Storage`);
   } catch (error) {
-    console.error("Ошибка удаления файла из Firebase Storage:", error);
-    throw error;
+    console.error("Подробная информация об ошибке удаления файла:", {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack,
+      url: fileUrl
+    });
+    throw new Error(`Не удалось удалить файл: ${error.message}`);
   }
 }

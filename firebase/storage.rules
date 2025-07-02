@@ -2,6 +2,27 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    // Функция для проверки роли пользователя
+    function hasRole(role) {
+      return request.auth != null && request.auth.token.role == role;
+    }
+    
+    function isAdmin() {
+      return hasRole('admin');
+    }
+    
+    function isModerator() {
+      return hasRole('модератор');
+    }
+    
+    function isDeveloper() {
+      return hasRole('застройщик');
+    }
+    
+    function hasRequiredRole() {
+      return isAdmin() || isModerator() || isDeveloper();
+    }
+
     // === Правила для фото профиля пользователей (из iOS) ===
     match /profile_images/{fileName} {
       allow read: if true; // Любой может читать фото профиля
@@ -13,6 +34,17 @@ service firebase.storage {
                        fileName == request.auth.uid + '.webp')
                    && request.resource.size < 5 * 1024 * 1024 // Максимум 5MB
                    && request.resource.contentType.matches('image/.*'); // Только изображения
+    }
+
+    // === Правила для фотографий комплексов (оба варианта путей) ===
+    match /complexes/{fileName} {
+      allow read: if true;
+      allow write, delete: if hasRequiredRole();
+    }
+    
+    match /complexes/images/{fileName} {
+      allow read: if true;
+      allow write, delete: if hasRequiredRole();
     }
 
     // === Правила для изображений (из админки, увеличены лимиты) ===

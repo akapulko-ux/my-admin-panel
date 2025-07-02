@@ -125,6 +125,12 @@ const Navigation = () => {
           </NavItem>
         )}
 
+        {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+          <NavItem to="/complex/gallery" icon={Building2}>
+            Галерея комплексов
+          </NavItem>
+        )}
+
         {['admin', 'модератор'].includes(role) && (
           <>
             <NavItem to="/property/list" icon={Building}>

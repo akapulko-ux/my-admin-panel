@@ -21,6 +21,8 @@ import LandingPage from "./pages/LandingPage";
 import CreateComplex from "./pages/CreateComplex";
 import EditComplex from "./pages/EditComplex";
 import ListComplexes from "./pages/ListComplexes";
+import ComplexesGallery from "./pages/ComplexesGallery";
+import ComplexDetail from "./pages/ComplexDetail";
 
 // Объекты
 import CreateProperty from "./pages/CreateProperty";
@@ -159,8 +161,8 @@ function App() {
               <Route path="/chessboard-overview/:publicId" element={<ChessboardOverview />} />
               <Route path="/public-roi/:id" element={<PublicRoiPage />} />
               <Route path="/public-roi/property/:propertyId" element={<PublicPropertyRoiPage />} />
-              <Route path="/public-building-progress/:id" element={<PublicBuildingProgress />} />
-              <Route path="/public-building-progress/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
+              <Route path="/public-building-progress/:type/:id" element={<PublicBuildingProgress />} />
+              <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
               <Route path="/login" element={<LoginPage />} />
 
               {/* Лендинг для неавторизованных пользователей */}
@@ -208,6 +210,16 @@ function App() {
                         <ListComplexes />
                       </ProtectedRoute>
                     } />
+                    <Route path="/complex/gallery" element={
+                      <ProtectedRoute>
+                        <ComplexesGallery />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/complex/:id" element={
+                      <ProtectedRoute>
+                        <ComplexDetail />
+                      </ProtectedRoute>
+                    } />
 
                     {/* Объекты */}
                     <Route path="/property/new" element={
@@ -237,16 +249,18 @@ function App() {
                     } />
                     
                     {/* Прогресс строительства */}
-                    <Route path="/building-progress/:id" element={
+                    <Route path="/building-progress/complex/:id" element={
                       <ProtectedRoute>
-                        <BuildingProgress />
+                        <BuildingProgress type="complex" />
                       </ProtectedRoute>
                     } />
-                    <Route path="/building-progress/:id/:monthKey" element={
+                    <Route path="/building-progress/:type/:id/:monthKey" element={
                       <ProtectedRoute>
                         <BuildingProgressDetail />
                       </ProtectedRoute>
                     } />
+                    <Route path="/public-building-progress/:type/:id" element={<PublicBuildingProgress />} />
+                    <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
 
                     {/* Достопримечательности */}
                     <Route path="/landmark/new" element={

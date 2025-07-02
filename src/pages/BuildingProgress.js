@@ -20,41 +20,42 @@ function BuildingProgress() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role } = useAuth();
-  const [property, setProperty] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [progressData, setProgressData] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [additionalMonths, setAdditionalMonths] = useState(0); // Количество дополнительных 4-месячных периодов
-  const initialMonthsCount = 12; // Изначальное количество месяцев
+  const [additionalMonths, setAdditionalMonths] = useState(0);
+  const initialMonthsCount = 12;
 
   // Проверка прав доступа
   const canEdit = () => {
     return ['admin', 'модератор', 'застройщик'].includes(role);
   };
 
-  // Загрузка данных объекта
+  // Загрузка данных комплекса
   useEffect(() => {
-    const fetchPropertyData = async () => {
+    const fetchData = async () => {
       try {
-        const propertyDoc = await getDoc(doc(db, 'properties', id));
-        if (propertyDoc.exists()) {
-          const propertyData = propertyDoc.data();
-          setProperty(propertyData);
-          setProgressData(propertyData.buildingProgress || []);
-          // Устанавливаем количество дополнительных месяцев из сохраненных данных
-          setAdditionalMonths(propertyData.additionalMonths || 0);
+        const docRef = doc(db, 'complexes', id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const fetchedData = docSnap.data();
+          setData(fetchedData);
+          setProgressData(fetchedData.buildingProgress || []);
+          setAdditionalMonths(fetchedData.additionalMonths || 0);
         }
       } catch (error) {
         console.error('Ошибка загрузки данных:', error);
-        showError('Ошибка загрузки данных объекта');
+        showError('Ошибка загрузки данных');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPropertyData();
+    fetchData();
   }, [id]);
 
   // Генерация списка месяцев
@@ -69,15 +70,12 @@ function BuildingProgress() {
     
     const monthsData = [];
     
-    // Вычисляем общее количество месяцев для отображения
     const extraMonths = additionalMonths * 4;
     const totalMonthsToShow = initialMonthsCount + extraMonths;
     
-    // Начинаем с текущего месяца - 2 и добавляем нужное количество месяцев
     let startMonth = currentMonth - 2;
     let startYear = currentYear;
     
-    // Корректируем начальный месяц и год, если нужно
     if (startMonth < 0) {
       startMonth += 12;
       startYear--;
@@ -88,10 +86,8 @@ function BuildingProgress() {
     
     for (let year = startYear; year <= startYear + yearsToAdd; year++) {
       for (let month = 0; month < 12; month++) {
-        // В первый год начинаем с корректного месяца
         if (year === startYear && month < startMonth) continue;
         
-        // Останавливаемся, когда добавили нужное количество месяцев
         if (monthsData.length >= totalMonthsToShow) break;
         
         const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
@@ -121,7 +117,7 @@ function BuildingProgress() {
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
         const isVideo = file.type.startsWith('video/');
-        const folder = `building-progress/${id}/${monthKey}/${isVideo ? 'videos' : 'photos'}`;
+        const folder = `building-progress/complex/${id}/${monthKey}/${isVideo ? 'videos' : 'photos'}`;
         const url = await uploadToFirebaseStorageInFolder(file, folder);
         
         return {
@@ -161,7 +157,7 @@ function BuildingProgress() {
       setProgressData(updatedProgressData);
 
       // Сохраняем в базу данных
-      await updateDoc(doc(db, 'properties', id), {
+      await updateDoc(doc(db, 'complexes', id), {
         buildingProgress: updatedProgressData
       });
 
@@ -196,7 +192,7 @@ function BuildingProgress() {
 
       setProgressData(updatedProgressData);
 
-      await updateDoc(doc(db, 'properties', id), {
+      await updateDoc(doc(db, 'complexes', id), {
         buildingProgress: updatedProgressData
       });
 
@@ -223,7 +219,7 @@ function BuildingProgress() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate(`/complex/${id}`)}
               className="p-2 hover:bg-gray-200 rounded-full transition-colors"
             >
               <ChevronLeft className="w-6 h-6" />
@@ -232,16 +228,17 @@ function BuildingProgress() {
           </div>
           
           <div className="flex items-center gap-4">
-            {property && (
+            {data && (
               <div className="text-right">
-                <h2 className="text-xl font-semibold text-gray-800">{property.title}</h2>
-                <p className="text-gray-600">{property.location}</p>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {data.name}
+                </h2>
               </div>
             )}
             
             <button
               onClick={() => {
-                const url = `${window.location.origin}/public-building-progress/${id}`;
+                const url = `${window.location.origin}/public-building-progress/complex/${id}`;
                 navigator.clipboard.writeText(url);
                 showSuccess('Публичная ссылка скопирована в буфер обмена');
               }}
@@ -251,7 +248,7 @@ function BuildingProgress() {
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
               </svg>
-              Публичная ссылка
+              Скопировать публичную ссылку
             </button>
           </div>
         </div>
@@ -308,7 +305,7 @@ function BuildingProgress() {
                     {hasContent ? (
                       <div className="space-y-2">
                         <button
-                          onClick={() => navigate(`/building-progress/${id}/${monthData.monthKey}`)}
+                          onClick={() => navigate(`/building-progress/complex/${id}/${monthData.monthKey}`)}
                           className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
                         >
                           Просмотр
@@ -360,7 +357,7 @@ function BuildingProgress() {
                 const newValue = additionalMonths + 1;
                 setAdditionalMonths(newValue);
                 // Сохраняем новое значение в Firebase
-                await updateDoc(doc(db, 'properties', id), {
+                await updateDoc(doc(db, 'complexes', id), {
                   additionalMonths: newValue
                 });
               }}
