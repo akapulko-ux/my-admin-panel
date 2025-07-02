@@ -26,6 +26,7 @@ const ROUTE_ACCESS = {
   застройщик: [
     '/property/gallery',
     '/property/*',
+    '/complex/*',
     '/chessboard',
     '/chessboard/*',
     '/client-fixations',

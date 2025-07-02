@@ -525,7 +525,7 @@ function ComplexDetail() {
                 alt={`Фото ${idx + 1}`} 
                 className="w-full h-full object-cover cursor-pointer" 
               />
-              {canEdit() && (
+              {isEditing && canEdit() && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -555,7 +555,7 @@ function ComplexDetail() {
               className="w-full h-full object-cover cursor-pointer"
               onClick={() => setLightbox(true)}
             />
-            {canEdit() && (
+            {isEditing && canEdit() && (
               <button
                 onClick={() => handleImageDelete(currentImg)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition opacity-0 group-hover:opacity-100"
@@ -684,17 +684,7 @@ function ComplexDetail() {
               <div className="space-y-1">
                 <Label className="text-sm font-medium text-gray-600">Вознаграждение</Label>
                 <div className="text-lg font-bold text-green-600">
-                  {isEditing && canEdit() ? (
-                    <Input
-                      type="text"
-                      value={editedValues.commission !== undefined ? editedValues.commission : complex.commission}
-                      onChange={(e) => handleValueChange('commission', e.target.value)}
-                      className="text-lg font-bold"
-                      placeholder="Вознаграждение в %"
-                    />
-                  ) : (
-                    <span>{safeDisplay(complex.commission)}%</span>
-                  )}
+                  <span>{safeDisplay(complex.commission)}%</span>
                 </div>
               </div>
             </div>

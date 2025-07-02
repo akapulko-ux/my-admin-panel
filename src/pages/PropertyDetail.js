@@ -20,8 +20,10 @@ import {
   Bath,
   Calculator,
   BarChart3,
+  Camera,
+  X,
 } from "lucide-react";
-import { showError } from '../utils/notifications';
+import { showError, showSuccess } from '../utils/notifications';
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
 import PropertyRoiCalculator from "../components/PropertyRoiCalculator";
 
@@ -45,6 +47,7 @@ function PropertyDetail() {
   
   // Состояния для загрузки файлов
   const [uploading, setUploading] = useState({});
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   // Добавляем состояние для модального окна
   const [showRoiCalculator, setShowRoiCalculator] = useState(false);
@@ -100,6 +103,124 @@ function PropertyDetail() {
     setEditedValues({});
     setHasChanges(false);
     setIsEditing(false);
+  };
+
+  // Функция для загрузки новых фотографий
+  const handleImageUpload = async () => {
+    if (!canEdit()) {
+      showError("У вас нет прав для редактирования объекта");
+      return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*';
+    input.onchange = async (event) => {
+      const files = Array.from(event.target.files);
+      if (!files.length) return;
+
+      setUploadingImages(true);
+      
+      try {
+        const uploadPromises = files.map(file => 
+          uploadToFirebaseStorageInFolder(file, 'properties/images')
+        );
+
+        const urls = await Promise.all(uploadPromises);
+        
+        // Обновляем объект в базе данных
+        const propertyRef = doc(db, "properties", id);
+        const currentImages = property.images || [];
+        await updateDoc(propertyRef, { 
+          images: [...currentImages, ...urls],
+          updatedAt: Timestamp.now()
+        });
+        
+        // Обновляем локальное состояние
+        setProperty(prev => ({
+          ...prev,
+          images: [...(prev.images || []), ...urls]
+        }));
+        
+        showSuccess("Фотографии успешно загружены");
+      } catch (error) {
+        console.error("Ошибка загрузки фотографий:", error);
+        showError("Произошла ошибка при загрузке фотографий");
+      } finally {
+        setUploadingImages(false);
+      }
+    };
+    input.click();
+  };
+
+  // Функция для удаления фотографии
+  const handleImageDelete = async (index) => {
+    if (!canEdit()) {
+      showError("У вас нет прав для редактирования объекта");
+      return;
+    }
+
+    if (!property.images?.[index]) {
+      showError("Фотография не найдена");
+      return;
+    }
+
+    try {
+      const imageUrl = property.images[index];
+      console.log("Начинаем процесс удаления фотографии:", imageUrl);
+      
+      // Создаем обновленный массив изображений
+      const newImages = [...property.images];
+      newImages.splice(index, 1);
+
+      // Сначала обновляем базу данных
+      const propertyRef = doc(db, "properties", id);
+      await updateDoc(propertyRef, { 
+        images: newImages,
+        updatedAt: Timestamp.now()
+      });
+      console.log("База данных успешно обновлена");
+      
+      // Обновляем локальное состояние
+      setProperty(prev => ({
+        ...prev,
+        images: newImages
+      }));
+      
+      // Если удалили текущую фотографию, переключаемся на предыдущую
+      if (currentImg >= newImages.length) {
+        setCurrentImg(Math.max(0, newImages.length - 1));
+      }
+
+      // Затем пытаемся удалить файл из хранилища (не критично, если не получится)
+      try {
+        await deleteFileFromFirebaseStorage(imageUrl);
+        console.log("Файл успешно удален из хранилища");
+      } catch (storageError) {
+        console.warn("Не удалось удалить файл из хранилища:", storageError);
+        // Не показываем ошибку пользователю, так как основная задача выполнена
+      }
+
+      showSuccess("Фотография успешно удалена");
+    } catch (error) {
+      console.error("Ошибка при удалении фотографии:", error);
+      showError(`Произошла ошибка при удалении фотографии: ${error.message}`);
+      
+      // Перезагружаем данные объекта в случае ошибки
+      try {
+        const propertyRef = doc(db, "properties", id);
+        const propertySnap = await getDoc(propertyRef);
+        if (propertySnap.exists()) {
+          setProperty(prev => ({
+            ...prev,
+            ...propertySnap.data()
+          }));
+        }
+      } catch (reloadError) {
+        console.error("Ошибка перезагрузки данных:", reloadError);
+      }
+    }
   };
 
   // Функция для загрузки нового файла
@@ -599,16 +720,47 @@ function PropertyDetail() {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
+      {/* Кнопка добавления фотографий */}
+      {canEdit() && (
+        <div className="mb-4">
+          <button
+            onClick={handleImageUpload}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            disabled={uploadingImages}
+          >
+            {uploadingImages ? (
+              "Загрузка..."
+            ) : (
+              <>
+                <Camera className="h-4 w-4" />
+                Добавить фотографии
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Мобильная горизонтальная галерея */}
       {property.images?.length ? (
         <div className="md:hidden overflow-x-auto flex pb-4 -mx-4 px-4 mb-4 snap-x snap-mandatory">
           {property.images.map((url, idx) => (
             <div
               key={idx}
-              className="flex-none w-full h-56 rounded-xl overflow-hidden bg-gray-200 snap-center mr-4 last:mr-0"
+              className="relative flex-none w-full h-56 rounded-xl overflow-hidden bg-gray-200 snap-center mr-4 last:mr-0"
               style={{ scrollSnapAlign: "center" }}
             >
               <img onClick={() => { setCurrentImg(idx); setLightbox(true); }} src={url} alt={`Фото ${idx + 1}`} className="w-full h-full object-cover cursor-pointer" />
+              {isEditing && canEdit() && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleImageDelete(idx);
+                  }}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -628,6 +780,14 @@ function PropertyDetail() {
               className="w-full h-full object-cover cursor-pointer"
               onClick={() => setLightbox(true)}
             />
+            {isEditing && canEdit() && (
+              <button
+                onClick={() => handleImageDelete(currentImg)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition opacity-0 group-hover:opacity-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           {/* Prev */}
           {currentImg > 0 && (
