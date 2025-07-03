@@ -176,6 +176,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     daysPerYear: '',
     otaCommission: '',
     rentGrowthRate: '',
+    operationStartYear: '',
   });
 
   const [expensesData, setExpensesData] = useState({
@@ -183,7 +184,9 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     utilityBills: '',
     annualTax: '',
     propertyManagementFee: '',
-    appreciationRate: '',
+    appreciationYear1: '',
+    appreciationYear2: '',
+    appreciationYear3: '',
   });
 
   const [scenario, setScenario] = useState('base');
@@ -282,12 +285,15 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     const daysPerYear = Number(rentalData.daysPerYear) || 365;
     const otaCommission = Number(rentalData.otaCommission) || 0;
     const rentGrowthRate = Number(rentalData.rentGrowthRate) || 0;
+    const operationStartYear = Number(rentalData.operationStartYear) || 0;
     
     const maintenanceFees = Number(expensesData.maintenanceFees) || 0;
     const utilityBills = Number(expensesData.utilityBills) || 0;
     const annualTax = Number(expensesData.annualTax) || 0;
     const propertyManagementFee = Number(expensesData.propertyManagementFee) || 0;
-    const appreciationRate = Number(expensesData.appreciationRate) || 0;
+    const appreciationYear1 = Number(expensesData.appreciationYear1) || 0;
+    const appreciationYear2 = Number(expensesData.appreciationYear2) || 0;
+    const appreciationYear3 = Number(expensesData.appreciationYear3) || 0;
 
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
@@ -314,14 +320,23 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     let currentPropertyValue = totalInvestment;
 
     for (let year = 1; year <= investmentPeriod; year++) {
-      const rentalIncome = initialAnnualRentalIncome * 
-        Math.pow(1 + rentGrowthRate / 100, year - 1) * 
+      const rentalIncome = year <= operationStartYear ? 0 : 
+        initialAnnualRentalIncome * 
+        Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear) * 
         scenarioMultiplier;
       
       const expenses = rentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
       
-      // Учитываем удорожание проекта
-      currentPropertyValue = currentPropertyValue * Math.pow(1 + appreciationRate / 100, 1);
+      // Учитываем удорожание проекта только в первые 3 года
+      let yearlyAppreciationRate = 0;
+      if (year === 1) {
+        yearlyAppreciationRate = appreciationYear1;
+      } else if (year === 2) {
+        yearlyAppreciationRate = appreciationYear2;
+      } else if (year === 3) {
+        yearlyAppreciationRate = appreciationYear3;
+      }
+      currentPropertyValue = currentPropertyValue * (1 + yearlyAppreciationRate / 100);
       
       const yearlyProfit = rentalIncome - expenses;
       accumulatedProfit += yearlyProfit;
@@ -356,7 +371,9 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       finalPropertyValue: currentPropertyValue,
       totalAppreciation,
       totalReturnWithAppreciation,
-      appreciationRate
+      appreciationYear1,
+      appreciationYear2,
+      appreciationYear3
     });
   }, [costData, rentalData, expensesData, scenario]);
 
@@ -504,6 +521,17 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 onChange={(e) => setRentalData({...rentalData, rentGrowthRate: e.target.value})}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="operationStartYear">Начало эксплуатации через (год)</Label>
+              <Input
+                id="operationStartYear"
+                type="number"
+                min="0"
+                value={rentalData.operationStartYear}
+                onChange={(e) => setRentalData({...rentalData, operationStartYear: e.target.value})}
+              />
+            </div>
           </Card>
 
           {/* Блок операционных показателей */}
@@ -551,13 +579,35 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appreciationRate">Удорожание проекта в год (%)</Label>
+              <Label htmlFor="appreciationYear1">Удорожание объекта в первый год (%)</Label>
               <Input
-                id="appreciationRate"
+                id="appreciationYear1"
                 type="number"
-                value={expensesData.appreciationRate}
-                onChange={(e) => setExpensesData({...expensesData, appreciationRate: e.target.value})}
+                value={expensesData.appreciationYear1}
+                onChange={(e) => setExpensesData({...expensesData, appreciationYear1: e.target.value})}
                 placeholder="Например: 5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appreciationYear2">Удорожание объекта во второй год (%)</Label>
+              <Input
+                id="appreciationYear2"
+                type="number"
+                value={expensesData.appreciationYear2}
+                onChange={(e) => setExpensesData({...expensesData, appreciationYear2: e.target.value})}
+                placeholder="Например: 3"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appreciationYear3">Удорожание объекта в третий год (%)</Label>
+              <Input
+                id="appreciationYear3"
+                type="number"
+                value={expensesData.appreciationYear3}
+                onChange={(e) => setExpensesData({...expensesData, appreciationYear3: e.target.value})}
+                placeholder="Например: 2"
               />
             </div>
 
@@ -682,14 +732,14 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 </Card>
               )}
               
-              {calculationResults.totalAppreciation && calculationResults.appreciationRate > 0 && (
+                              {calculationResults.totalAppreciation && (calculationResults.appreciationYear1 > 0 || calculationResults.appreciationYear2 > 0 || calculationResults.appreciationYear3 > 0) && (
                 <Card className="p-4">
                   <p className="text-sm text-muted-foreground">Удорожание недвижимости</p>
                   <p className="text-lg font-semibold">${calculationResults.totalAppreciation.toLocaleString()}</p>
                 </Card>
               )}
               
-              {calculationResults.finalPropertyValue && calculationResults.appreciationRate > 0 && (
+                              {calculationResults.finalPropertyValue && (calculationResults.appreciationYear1 > 0 || calculationResults.appreciationYear2 > 0 || calculationResults.appreciationYear3 > 0) && (
                 <Card className="p-4">
                   <p className="text-sm text-muted-foreground">Финальная стоимость недвижимости</p>
                   <p className="text-lg font-semibold">${calculationResults.finalPropertyValue.toLocaleString()}</p>
@@ -746,7 +796,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                         const rightAxisData = [];
                         calculationResults.graphData.forEach(item => {
                           rightAxisData.push(item.accumulatedProfit);
-                          if (calculationResults.appreciationRate > 0 && item.propertyValue) {
+                          if ((calculationResults.appreciationYear1 > 0 || calculationResults.appreciationYear2 > 0 || calculationResults.appreciationYear3 > 0) && item.propertyValue) {
                             rightAxisData.push(item.propertyValue);
                           }
                         });
@@ -794,7 +844,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                       dot={{ r: 4, fill: '#82ca9d' }}
                       activeDot={{ r: 6, fill: '#82ca9d' }}
                     />
-                    {calculationResults.appreciationRate > 0 && (
+                    {(calculationResults.appreciationYear1 > 0 || calculationResults.appreciationYear2 > 0 || calculationResults.appreciationYear3 > 0) && (
                       <Area
                         yAxisId="right"
                         type="monotone"

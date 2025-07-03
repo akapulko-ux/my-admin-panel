@@ -200,12 +200,17 @@ const PublicPropertyRoiPage = () => {
       const utilityBills = Number(expensesData.utilityBills) || 0;
       const annualTax = Number(expensesData.annualTax) || 0;
       const propertyManagementFee = Number(expensesData.propertyManagementFee) || 0;
-      const baseAppreciationRate = Number(expensesData.appreciationRate) || 0;
+      const baseAppreciationYear1 = Number(expensesData.appreciationYear1) || 0;
+      const baseAppreciationYear2 = Number(expensesData.appreciationYear2) || 0;
+      const baseAppreciationYear3 = Number(expensesData.appreciationYear3) || 0;
       const baseRentGrowthRate = Number(rentalData.rentGrowthRate) || 0;
+      const operationStartYear = Number(rentalData.operationStartYear) || 0;
 
       // Применяем множители сценария
       const occupancyRate = baseOccupancyRate * scenarioMultipliers[scenario].occupancyRate;
-      const appreciationRate = baseAppreciationRate * scenarioMultipliers[scenario].annualAppreciation;
+      const appreciationYear1 = baseAppreciationYear1 * scenarioMultipliers[scenario].annualAppreciation;
+      const appreciationYear2 = baseAppreciationYear2 * scenarioMultipliers[scenario].annualAppreciation;
+      const appreciationYear3 = baseAppreciationYear3 * scenarioMultipliers[scenario].annualAppreciation;
       const rentGrowthRate = baseRentGrowthRate * scenarioMultipliers[scenario].rentGrowthRate;
 
       // Базовые расчеты
@@ -218,54 +223,59 @@ const PublicPropertyRoiPage = () => {
       const detailedProjection = [];
       let accumulatedProfit = -totalInvestment;
       let currentPropertyValue = totalInvestment;
-      let totalSpend = totalInvestment;
       let cumulativeIncome = 0;
+      let totalSpend = totalInvestment;
       let cumulativeCashflow = -totalInvestment;
+      let cumulativeAppreciation = 0;
       
       for (let year = 1; year <= years; year++) {
-        // Расчет дохода с учетом роста
-        const yearlyRentalIncome = initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1);
-        
-        // Расчет расходов (включая комиссию управления)
-        const yearlyExpenses = yearlyRentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
-        
-        // Чистый доход
-        const yearlyNetProfit = yearlyRentalIncome - yearlyExpenses;
-        
-        // Прирост стоимости недвижимости
+        // Расчет удорожания для текущего года
+        let yearlyAppreciationRate = 0;
+        if (year === 1) {
+          yearlyAppreciationRate = appreciationYear1;
+        } else if (year === 2) {
+          yearlyAppreciationRate = appreciationYear2;
+        } else if (year === 3) {
+          yearlyAppreciationRate = appreciationYear3;
+        }
+
+        // Расчет стоимости недвижимости с учетом удорожания
         const previousPropertyValue = currentPropertyValue;
-        currentPropertyValue *= (1 + appreciationRate / 100);
+        currentPropertyValue = currentPropertyValue * (1 + yearlyAppreciationRate / 100);
         const yearlyAppreciation = currentPropertyValue - previousPropertyValue;
+        cumulativeAppreciation += yearlyAppreciation;
+
+        // Расчет дохода от аренды
+        const rentalIncome = year <= operationStartYear ? 0 :
+          initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear);
         
-        // Общий возврат (денежный поток + прирост стоимости)
-        const totalReturn = yearlyNetProfit + yearlyAppreciation;
+        const expenses = rentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
+        const totalReturn = rentalIncome - expenses + yearlyAppreciation;
         
-        // Накопленные значения
         accumulatedProfit += totalReturn;
-        cumulativeIncome += yearlyRentalIncome;
-        totalSpend += yearlyExpenses;
-        cumulativeCashflow += yearlyNetProfit;
+        cumulativeIncome += rentalIncome;
+        totalSpend += expenses;
+        cumulativeCashflow += (rentalIncome - expenses);
         
         const yearData = {
           year: year,
           yearLabel: `${2025 + year}`,
-          income: Math.round(yearlyRentalIncome),
-          cumulativeIncome: Math.round(cumulativeIncome),
-          spend: Math.round(yearlyExpenses),
+          income: Math.round(rentalIncome),
+          cumulativeIncome: Math.round(cumulativeIncome + cumulativeAppreciation),
+          spend: Math.round(expenses),
           cumulativeSpend: Math.round(totalSpend),
-          cashflow: Math.round(yearlyNetProfit),
+          cashflow: Math.round(rentalIncome - expenses),
           cumulativeCashflow: Math.round(cumulativeCashflow),
           appreciation: Math.round(yearlyAppreciation),
-          totalReturn: Math.round(totalReturn),
-          accumulatedReturn: Math.round(accumulatedProfit),
-          propertyValue: Math.round(currentPropertyValue)
+          propertyValue: Math.round(currentPropertyValue),
+          accumulatedReturn: Math.round(accumulatedProfit)
         };
         
         graphData.push({
           year: `${2025 + year}`,
-          profit: Math.round(yearlyNetProfit),
+          profit: Math.round(rentalIncome - expenses),
           accumulatedProfit: Math.round(accumulatedProfit),
-          cashFlow: Math.round(yearlyNetProfit),
+          cashFlow: Math.round(rentalIncome - expenses),
           appreciation: Math.round(yearlyAppreciation),
           totalReturns: Math.round(totalReturn)
         });
@@ -294,7 +304,9 @@ const PublicPropertyRoiPage = () => {
         unitPrice: totalInvestment,
         rentGrowthRate: baseRentGrowthRate,
         propertyManagementFee: propertyManagementFee,
-        appreciationRate: baseAppreciationRate
+        appreciationYear1: baseAppreciationYear1,
+        appreciationYear2: baseAppreciationYear2,
+        appreciationYear3: baseAppreciationYear3
       };
     };
 
@@ -597,7 +609,7 @@ const PublicPropertyRoiPage = () => {
 
             <Card className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-xs sm:text-sm text-gray-600">{t.appreciationYoY ? t.appreciationYoY.replace('{rate}', currentData.appreciationRate || 0) : `Удорожание (${currentData.appreciationRate || 0}% в год)`}</h3>
+                <h3 className="text-xs sm:text-sm text-gray-600">{t.appreciationYoY || 'Удорожание объекта'}</h3>
                 <AdaptiveTooltip content={t.tooltipAppreciation} />
               </div>
               <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.totalAppreciation)}</p>
@@ -609,7 +621,7 @@ const PublicPropertyRoiPage = () => {
             <Card className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
                 <h3 className="text-xs sm:text-sm text-gray-600">{t.approximateUnitCost}</h3>
-                <AdaptiveTooltip content={t.tooltipApproximateUnitCost.replace('{years}', currentData.investmentPeriod)} />
+                <AdaptiveTooltip content={t.tooltipApproximateUnitCost} />
               </div>
               <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.unitPrice + currentData.totalAppreciation)}</p>
               <p className={`text-xs sm:text-sm ${currentData.totalAppreciation >= 0 ? 'text-green-600' : 'text-red-600'}`}>

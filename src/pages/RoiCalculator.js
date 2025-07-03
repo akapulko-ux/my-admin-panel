@@ -176,6 +176,7 @@ const RoiCalculator = () => {
     daysPerYear: '365',
     otaCommission: '15',
     rentGrowthRate: '1',
+    operationStartYear: '0',
   });
 
   const [expensesData, setExpensesData] = useState({
@@ -283,6 +284,7 @@ const RoiCalculator = () => {
     const daysPerYear = Number(rentalData.daysPerYear) || 365;
     const otaCommission = Number(rentalData.otaCommission) || 0;
     const rentGrowthRate = Number(rentalData.rentGrowthRate) || 0;
+    const operationStartYear = Number(rentalData.operationStartYear) || 0;
     
     const maintenanceFees = Number(expensesData.maintenanceFees) || 0;
     const utilityBills = Number(expensesData.utilityBills) || 0;
@@ -304,8 +306,9 @@ const RoiCalculator = () => {
     let cumulativeCashflow = -totalInvestment;
     
     for (let year = 1; year <= investmentPeriod; year++) {
-      // Расчет дохода с учетом роста
-      const yearlyRentalIncome = initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1);
+      // Расчет дохода с учетом роста и периода начала эксплуатации
+      const yearlyRentalIncome = year <= operationStartYear ? 0 : 
+        initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear);
       
       // Расчет расходов (включая комиссию управления)
       const yearlyExpenses = yearlyRentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
@@ -542,6 +545,17 @@ const RoiCalculator = () => {
               type="number"
               value={rentalData.rentGrowthRate}
               onChange={(e) => setRentalData({...rentalData, rentGrowthRate: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="operationStartYear">Начало эксплуатации через (год)</Label>
+            <Input
+              id="operationStartYear"
+              type="number"
+              min="0"
+              value={rentalData.operationStartYear}
+              onChange={(e) => setRentalData({...rentalData, operationStartYear: e.target.value})}
             />
           </div>
         </Card>
