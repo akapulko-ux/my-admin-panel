@@ -292,8 +292,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
     const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
-    const initialAnnualExpenses = maintenanceFees + utilityBills + annualTax + 
-      (initialAnnualRentalIncome * propertyManagementFee / 100);
+    const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
 
     // Применяем сценарий
     let scenarioMultiplier = 1;
@@ -319,8 +318,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
         Math.pow(1 + rentGrowthRate / 100, year - 1) * 
         scenarioMultiplier;
       
-      const expenses = maintenanceFees + utilityBills + annualTax +
-        (rentalIncome * propertyManagementFee / 100);
+      const expenses = rentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
       
       // Учитываем удорожание проекта
       currentPropertyValue = currentPropertyValue * Math.pow(1 + appreciationRate / 100, 1);
@@ -513,7 +511,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             <h2 className="text-xl font-semibold">Операционные показатели</h2>
             
             <div className="space-y-2">
-              <Label htmlFor="maintenanceFees">Обслуживание в год ($)</Label>
+              <Label htmlFor="maintenanceFees">Обслуживание в год (%)</Label>
               <Input
                 id="maintenanceFees"
                 type="number"
@@ -523,7 +521,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="utilityBills">Коммунальные платежи в год ($)</Label>
+              <Label htmlFor="utilityBills">Коммунальные платежи в год (%)</Label>
               <Input
                 id="utilityBills"
                 type="number"
@@ -533,7 +531,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="annualTax">Налоги в год ($)</Label>
+              <Label htmlFor="annualTax">Налоги в год (%)</Label>
               <Input
                 id="annualTax"
                 type="number"

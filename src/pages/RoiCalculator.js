@@ -179,9 +179,9 @@ const RoiCalculator = () => {
   });
 
   const [expensesData, setExpensesData] = useState({
-    maintenanceFees: '3500',
-    utilityBills: '2400',
-    annualTax: '1500',
+    maintenanceFees: '8',
+    utilityBills: '6',
+    annualTax: '4',
     propertyManagementFee: '18',
   });
 
@@ -292,7 +292,7 @@ const RoiCalculator = () => {
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
     const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
-    const initialAnnualExpenses = maintenanceFees + utilityBills + annualTax;
+    const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax) / 100;
     const initialNetProfit = initialAnnualRentalIncome - initialAnnualExpenses;
 
     // Генерация данных для графика и детального анализа
@@ -308,7 +308,7 @@ const RoiCalculator = () => {
       const yearlyRentalIncome = initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1);
       
       // Расчет расходов (включая комиссию управления)
-      const yearlyExpenses = initialAnnualExpenses + (yearlyRentalIncome * propertyManagementFee / 100);
+      const yearlyExpenses = yearlyRentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
       
       // Чистый доход
       const yearlyNetProfit = yearlyRentalIncome - yearlyExpenses;
@@ -551,7 +551,7 @@ const RoiCalculator = () => {
           <h2 className="text-xl font-semibold">Операционные расходы</h2>
           
           <div className="space-y-2">
-            <Label htmlFor="maintenanceFees">Обслуживание в год ($)</Label>
+            <Label htmlFor="maintenanceFees">Обслуживание в год (%)</Label>
             <Input
               id="maintenanceFees"
               type="number"
@@ -561,7 +561,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="utilityBills">Коммунальные платежи в год ($)</Label>
+            <Label htmlFor="utilityBills">Коммунальные платежи в год (%)</Label>
             <Input
               id="utilityBills"
               type="number"
@@ -571,7 +571,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="annualTax">Налоги в год ($)</Label>
+            <Label htmlFor="annualTax">Налоги в год (%)</Label>
             <Input
               id="annualTax"
               type="number"

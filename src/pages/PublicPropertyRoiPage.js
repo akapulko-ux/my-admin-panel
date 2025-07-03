@@ -211,7 +211,7 @@ const PublicPropertyRoiPage = () => {
       // Базовые расчеты
       const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
       const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
-      const initialAnnualExpenses = maintenanceFees + utilityBills + annualTax;
+      const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax) / 100;
 
       // Пересчет для выбранного периода
       const graphData = [];
@@ -227,7 +227,7 @@ const PublicPropertyRoiPage = () => {
         const yearlyRentalIncome = initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1);
         
         // Расчет расходов (включая комиссию управления)
-        const yearlyExpenses = initialAnnualExpenses + (yearlyRentalIncome * propertyManagementFee / 100);
+        const yearlyExpenses = yearlyRentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
         
         // Чистый доход
         const yearlyNetProfit = yearlyRentalIncome - yearlyExpenses;
