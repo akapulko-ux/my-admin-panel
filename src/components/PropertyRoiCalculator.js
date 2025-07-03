@@ -174,7 +174,6 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     dailyRate: '',
     occupancyRate: '',
     daysPerYear: '',
-    otaCommission: '',
     rentGrowthRate: '',
     operationStartYear: '',
   });
@@ -283,7 +282,6 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     const dailyRate = Number(rentalData.dailyRate) || 0;
     const occupancyRate = Number(rentalData.occupancyRate) || 0;
     const daysPerYear = Number(rentalData.daysPerYear) || 365;
-    const otaCommission = Number(rentalData.otaCommission) || 0;
     const rentGrowthRate = Number(rentalData.rentGrowthRate) || 0;
     const operationStartYear = Number(rentalData.operationStartYear) || 0;
     
@@ -297,7 +295,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
 
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
-    const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
+    const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100);
     const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
 
     // Применяем сценарий
@@ -373,7 +371,8 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       totalReturnWithAppreciation,
       appreciationYear1,
       appreciationYear2,
-      appreciationYear3
+      appreciationYear3,
+      maxInvestmentPeriod: investmentPeriod
     });
   }, [costData, rentalData, expensesData, scenario]);
 
@@ -502,15 +501,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="otaCommission">Комиссия OTA (%)</Label>
-              <Input
-                id="otaCommission"
-                type="number"
-                value={rentalData.otaCommission}
-                onChange={(e) => setRentalData({...rentalData, otaCommission: e.target.value})}
-              />
-            </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="rentGrowthRate">Рост арендной платы в год (%)</Label>
@@ -727,7 +718,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
               
               {calculationResults.totalRoi && (
                 <Card className="p-4">
-                  <p className="text-sm text-muted-foreground">Общий ROI (с удорожанием)</p>
+                  <p className="text-sm text-muted-foreground">Общий ROI за период</p>
                   <p className="text-lg font-semibold">{calculationResults.totalRoi.toFixed(2)}%</p>
                 </Card>
               )}

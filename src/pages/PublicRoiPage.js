@@ -77,6 +77,7 @@ const PublicRoiPage = () => {
   const [chartView, setChartView] = useState('totalReturns');
   const [timeframe, setTimeframe] = useState('5 Years');
   const [scenario, setScenario] = useState('realistic');
+  const [maxPeriod, setMaxPeriod] = useState(30);
 
   // Получаем переводы для текущего языка
   const t = useMemo(() => translations[language] || translations.en, [language]);
@@ -119,9 +120,11 @@ const PublicRoiPage = () => {
         const parsedData = JSON.parse(savedData);
         setData(parsedData);
         
-        // Устанавливаем период по умолчанию на основе исходных данных
-        if (parsedData.data.investmentPeriod) {
-          setTimeframe(`${parsedData.data.investmentPeriod} Years`);
+        // Устанавливаем максимальный период из результатов расчета
+        if (parsedData.results?.maxInvestmentPeriod) {
+          setMaxPeriod(Number(parsedData.results.maxInvestmentPeriod));
+          // Устанавливаем начальный период не больше максимального
+          setTimeframe(`${Math.min(5, parsedData.results.maxInvestmentPeriod)} Years`);
         }
       }
     }
@@ -148,7 +151,6 @@ const PublicRoiPage = () => {
       const dailyRate = Number(rentalData.dailyRate) || 0;
       const baseOccupancyRate = Number(rentalData.occupancyRate) || 0;
       const daysPerYear = Number(rentalData.daysPerYear) || 365;
-      const otaCommission = Number(rentalData.otaCommission) || 0;
 
       const maintenanceFees = Number(expensesData.maintenanceFees) || 0;
       const utilityBills = Number(expensesData.utilityBills) || 0;
@@ -165,7 +167,7 @@ const PublicRoiPage = () => {
 
       // Базовые расчеты
       const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
-      const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
+      const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100);
       const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax) / 100;
 
       // Пересчет для выбранного периода
@@ -218,7 +220,8 @@ const PublicRoiPage = () => {
           cumulativeCashflow: Math.round(cumulativeCashflow),
           appreciation: Math.round(yearlyAppreciation),
           propertyValue: Math.round(currentPropertyValue),
-          accumulatedReturn: Math.round(accumulatedProfit)
+          accumulatedReturn: Math.round(accumulatedProfit),
+          totalReturn: Math.round(totalReturn)
         };
         
         graphData.push({
@@ -235,7 +238,7 @@ const PublicRoiPage = () => {
 
       // Расчет средних значений для инвестиционных показателей
       const averageROI = detailedProjection.length > 0 
-        ? detailedProjection.reduce((sum, year) => sum + (year.totalReturn / totalInvestment * 100), 0) / detailedProjection.length 
+        ? (detailedProjection.reduce((sum, year) => sum + year.totalReturn, 0) / detailedProjection.length) / totalInvestment * 100
         : 0;
       
       const finalCumulativeCashflow = detailedProjection[detailedProjection.length - 1]?.cumulativeCashflow || 0;
@@ -250,7 +253,13 @@ const PublicRoiPage = () => {
         totalProjectedReturn,
         totalCashFlow: finalCumulativeCashflow,
         totalAppreciation: finalPropertyValue - totalInvestment,
-        investmentPeriod: years
+        investmentPeriod: years,
+        unitPrice: totalInvestment,
+        rentGrowthRate: baseRentGrowthRate,
+        propertyManagementFee: propertyManagementFee + maintenanceFees + utilityBills + annualTax,
+        appreciationYear1: baseAnnualAppreciation,
+        appreciationYear2: baseAnnualAppreciation,
+        appreciationYear3: baseAnnualAppreciation
       };
     };
 
@@ -267,6 +276,12 @@ const PublicRoiPage = () => {
 
     return recalculateDataForPeriod(getYearsFromTimeframe(timeframe));
   }, [data, timeframe, scenario]);
+
+  // Функция для получения доступных периодов
+  const getAvailablePeriods = () => {
+    const allPeriods = [5, 10, 20, 30];
+    return allPeriods.filter(period => period <= maxPeriod);
+  };
 
   if (!data || !data.data || !currentData) {
     return (
@@ -445,15 +460,13 @@ const PublicRoiPage = () => {
               
               {/* Time Periods */}
               <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-                {['5 Years', '10 Years', '20 Years', '30 Years'].map((period) => (
+                {getAvailablePeriods().map(period => (
                   <Button
                     key={period}
-                    variant={timeframe === period ? 'default' : 'ghost'}
-                    onClick={() => setTimeframe(period)}
-                    size="sm"
-                    className="whitespace-nowrap text-xs sm:text-sm"
+                    variant={timeframe === `${period} Years` ? 'default' : 'outline'}
+                    onClick={() => setTimeframe(`${period} Years`)}
                   >
-                    {period}
+                    {period} Years
                   </Button>
                 ))}
               </div>
@@ -534,8 +547,8 @@ const PublicRoiPage = () => {
               <div className="text-lg sm:text-2xl font-bold text-gray-900">
                 {formatCurrency(currentData.totalProjectedReturn)}
               </div>
-              <div className="text-xs sm:text-sm text-green-600 font-medium">
-                ↗ {formatPercentage((currentData.totalProjectedReturn / currentData.unitPrice) * 100)}
+              <div className={`text-xs sm:text-sm font-medium ${currentData.totalProjectedReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatPercentage((currentData.totalProjectedReturn / currentData.unitPrice) * 100)}
               </div>
             </div>
             
@@ -544,8 +557,8 @@ const PublicRoiPage = () => {
               <div className="text-lg sm:text-2xl font-bold text-gray-900">
                 {formatCurrency(currentData.totalCashFlow)}
               </div>
-              <div className="text-xs sm:text-sm text-green-600 font-medium">
-                {formatPercentage((currentData.totalCashFlow / currentData.unitPrice) * 100)} ROI
+              <div className={`text-xs sm:text-sm font-medium ${currentData.totalCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatPercentage((currentData.totalCashFlow / currentData.unitPrice) * 100)}
               </div>
             </div>
             

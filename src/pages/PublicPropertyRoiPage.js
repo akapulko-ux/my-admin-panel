@@ -80,6 +80,7 @@ const PublicPropertyRoiPage = () => {
   const [chartView, setChartView] = useState('totalReturns');
   const [timeframe, setTimeframe] = useState('5 Years');
   const [scenario, setScenario] = useState('realistic');
+  const [maxPeriod, setMaxPeriod] = useState(30);
 
   // Получаем переводы для текущего языка
   const t = useMemo(() => translations[language] || translations.en, [language]);
@@ -123,6 +124,14 @@ const PublicPropertyRoiPage = () => {
           if (roiDoc.exists()) {
             const roiData = roiDoc.data();
             console.log('Raw ROI data from Firestore:', roiData);
+            
+            // Устанавливаем максимальный период из результатов расчета
+            if (roiData.results?.maxInvestmentPeriod) {
+              setMaxPeriod(Number(roiData.results.maxInvestmentPeriod));
+              // Устанавливаем начальный период не больше максимального
+              setTimeframe(`${Math.min(5, roiData.results.maxInvestmentPeriod)} Years`);
+            }
+
             // Преобразуем данные в формат, который ожидает компонент
             const transformedData = {
               data: {
@@ -137,7 +146,6 @@ const PublicPropertyRoiPage = () => {
                     dailyRate: 0,
                     occupancyRate: 0,
                     daysPerYear: 365,
-                    otaCommission: 0,
                     rentGrowthRate: 0,
                   },
                   expensesData: roiData.expensesData || {
@@ -153,11 +161,6 @@ const PublicPropertyRoiPage = () => {
             };
             
             setData(transformedData);
-            
-            // Устанавливаем период по умолчанию
-            if (roiData.costData?.investmentPeriod) {
-              setTimeframe(`${roiData.costData.investmentPeriod} Years`);
-            }
 
             // Для отладки
             console.log('Transformed ROI data:', transformedData);
@@ -194,7 +197,6 @@ const PublicPropertyRoiPage = () => {
       const dailyRate = Number(rentalData.dailyRate) || 0;
       const baseOccupancyRate = Number(rentalData.occupancyRate) || 0;
       const daysPerYear = Number(rentalData.daysPerYear) || 365;
-      const otaCommission = Number(rentalData.otaCommission) || 0;
 
       const maintenanceFees = Number(expensesData.maintenanceFees) || 0;
       const utilityBills = Number(expensesData.utilityBills) || 0;
@@ -215,7 +217,7 @@ const PublicPropertyRoiPage = () => {
 
       // Базовые расчеты
       const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
-      const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
+      const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100);
       const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax) / 100;
 
       // Пересчет для выбранного периода
@@ -261,14 +263,15 @@ const PublicPropertyRoiPage = () => {
           year: year,
           yearLabel: `${2025 + year}`,
           income: Math.round(rentalIncome),
-          cumulativeIncome: Math.round(cumulativeIncome + cumulativeAppreciation),
+          cumulativeIncome: Math.round(cumulativeIncome),
           spend: Math.round(expenses),
           cumulativeSpend: Math.round(totalSpend),
           cashflow: Math.round(rentalIncome - expenses),
           cumulativeCashflow: Math.round(cumulativeCashflow),
           appreciation: Math.round(yearlyAppreciation),
           propertyValue: Math.round(currentPropertyValue),
-          accumulatedReturn: Math.round(accumulatedProfit)
+          accumulatedReturn: Math.round(accumulatedProfit),
+          totalReturn: Math.round(totalReturn)
         };
         
         graphData.push({
@@ -285,7 +288,7 @@ const PublicPropertyRoiPage = () => {
 
       // Расчет средних значений для инвестиционных показателей
       const averageROI = detailedProjection.length > 0 
-        ? detailedProjection.reduce((sum, year) => sum + (year.totalReturn / totalInvestment * 100), 0) / detailedProjection.length 
+        ? (detailedProjection.reduce((sum, year) => sum + year.totalReturn, 0) / detailedProjection.length) / totalInvestment * 100
         : 0;
       
       const finalCumulativeCashflow = detailedProjection[detailedProjection.length - 1]?.cumulativeCashflow || 0;
@@ -303,7 +306,7 @@ const PublicPropertyRoiPage = () => {
         investmentPeriod: years,
         unitPrice: totalInvestment,
         rentGrowthRate: baseRentGrowthRate,
-        propertyManagementFee: propertyManagementFee,
+        propertyManagementFee: propertyManagementFee + maintenanceFees + utilityBills + annualTax,
         appreciationYear1: baseAppreciationYear1,
         appreciationYear2: baseAppreciationYear2,
         appreciationYear3: baseAppreciationYear3
@@ -323,6 +326,12 @@ const PublicPropertyRoiPage = () => {
 
     return recalculateDataForPeriod(getYearsFromTimeframe(timeframe));
   }, [data, timeframe, scenario]);
+
+  // Функция для получения доступных периодов
+  const getAvailablePeriods = () => {
+    const allPeriods = [5, 10, 20, 30];
+    return allPeriods.filter(period => period <= maxPeriod);
+  };
 
   if (!data || !data.data || !currentData) {
     return (
@@ -504,15 +513,15 @@ const PublicPropertyRoiPage = () => {
               
               {/* Time Periods */}
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
-                {['5 Years', '10 Years', '20 Years', '30 Years'].map((period) => (
+                {getAvailablePeriods().map(period => (
                   <Button
                     key={period}
-                    variant={timeframe === period ? 'default' : 'ghost'}
-                    onClick={() => setTimeframe(period)}
+                    variant={timeframe === `${period} Years` ? 'default' : 'ghost'}
+                    onClick={() => setTimeframe(`${period} Years`)}
                     size="sm"
                     className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   >
-                    {period}
+                    {period} Years
                   </Button>
                 ))}
               </div>
@@ -591,8 +600,8 @@ const PublicPropertyRoiPage = () => {
                 <AdaptiveTooltip content={t.tooltipTotalReturns} />
               </div>
               <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.totalProjectedReturn)}</p>
-              <p className={`text-xs sm:text-sm ${currentData.averageROI >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatPercentage(currentData.averageROI)}
+              <p className={`text-xs sm:text-sm ${currentData.totalProjectedReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatPercentage(currentData.totalProjectedReturn / currentData.unitPrice * 100)}
               </p>
             </Card>
 
@@ -603,7 +612,7 @@ const PublicPropertyRoiPage = () => {
               </div>
               <p className="text-base sm:text-2xl font-bold">{formatCurrency(currentData.totalCashFlow)}</p>
               <p className={`text-xs sm:text-sm ${currentData.totalCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatPercentage(currentData.totalCashFlow / currentData.unitPrice * 100)} ROI
+                {formatPercentage(currentData.totalCashFlow / currentData.unitPrice * 100)}
               </p>
             </Card>
 

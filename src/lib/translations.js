@@ -46,8 +46,8 @@ export const translations = {
     investorHighlights: 'Investor Highlights',
     unitPrice: 'Unit Price',
     averageROI: 'Average ROI',
-    annualRentExpenseGrowth: 'Annual Rent & Expense Growth',
-    propertyManagementFee: 'Property Management Fee',
+    annualRentExpenseGrowth: 'Projected Rental Growth',
+    propertyManagementFee: 'Operating Expenses',
     totalReturns: 'Total Returns',
     cashFlow: 'Cash Flow',
     appreciation: 'Appreciation',
@@ -74,8 +74,8 @@ export const translations = {
     // Tooltips for Investor Highlights
     tooltipUnitPrice: 'Current property price including all initial costs',
     tooltipAverageROI: 'Average annual return on investment over the selected period',
-    tooltipAnnualGrowth: 'Annual growth rate for rental income and expenses',
-    tooltipManagementFee: 'Property management company commission from rental income',
+    tooltipAnnualGrowth: 'Annual growth rate for property rental price',
+    tooltipManagementFee: 'Property management, maintenance, utilities and tax expenses',
   },
   ru: {
     // Page 1: Summary
@@ -124,8 +124,8 @@ export const translations = {
     investorHighlights: 'Основные показатели',
     unitPrice: 'Стоимость объекта',
     averageROI: 'Средняя доходность',
-    annualRentExpenseGrowth: 'Годовой рост аренды и расходов',
-    propertyManagementFee: 'Комиссия управляющей компании',
+    annualRentExpenseGrowth: 'Расчетный рост аренды',
+    propertyManagementFee: 'Операционные затраты',
     totalReturns: 'Общая доходность',
     cashFlow: 'Денежный поток',
     appreciation: 'Удорожание',
@@ -152,8 +152,8 @@ export const translations = {
     // Tooltips for Investor Highlights
     tooltipUnitPrice: 'Текущая стоимость объекта, включая все начальные расходы',
     tooltipAverageROI: 'Средняя годовая доходность за выбранный период',
-    tooltipAnnualGrowth: 'Ежегодный рост арендного дохода и расходов',
-    tooltipManagementFee: 'Комиссия управляющей компании от арендного дохода',
+    tooltipAnnualGrowth: 'Ежегодный рост стоимости аренды объекта',
+    tooltipManagementFee: 'Затраты на управление недвижимостью, налоги, коммунальные платежи, обслуживание',
   },
   id: {
     // Page 1: Summary
@@ -202,8 +202,8 @@ export const translations = {
     investorHighlights: 'Sorotan Investor',
     unitPrice: 'Harga Unit',
     averageROI: 'ROI Rata-rata',
-    annualRentExpenseGrowth: 'Pertumbuhan Sewa & Biaya Tahunan',
-    propertyManagementFee: 'Biaya Manajemen Properti',
+    annualRentExpenseGrowth: 'Pertumbuhan Sewa yang Diproyeksikan',
+    propertyManagementFee: 'Biaya Operasional',
     totalReturns: 'Total Pengembalian',
     cashFlow: 'Arus Kas',
     appreciation: 'Apresiasi',
@@ -229,8 +229,8 @@ export const translations = {
     cumulativeCashFlow: 'Arus Kas Kumulatif',
     // Tooltips for Investor Highlights
     tooltipUnitPrice: 'Harga properti saat ini termasuk semua biaya awal',
-    tooltipAverageROI: 'Rata-rata pengembalian investasi tahunan selama periode yang dipilih',
-    tooltipAnnualGrowth: 'Tingkat pertumbuhan tahunan untuk pendapatan dan biaya sewa',
-    tooltipManagementFee: 'Komisi perusahaan manajemen properti dari pendapatan sewa',
+    tooltipAverageROI: 'Pengembalian investasi tahunan rata-rata selama periode yang dipilih',
+    tooltipAnnualGrowth: 'Tingkat pertumbuhan tahunan untuk harga sewa properti',
+    tooltipManagementFee: 'Biaya pengelolaan properti, pemeliharaan, utilitas dan pajak',
   }
 }; 
