@@ -72,6 +72,18 @@ import RegistrationRequests from "./pages/RegistrationRequests";
 const AdminLayout = ({ children }) => {
   const { currentUser, logout, role } = useAuth();
   const [developerName, setDeveloperName] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   useEffect(() => {
     const fetchDeveloperName = async () => {
@@ -109,19 +121,34 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="flex h-screen">
-      <Navigation />
-      <div className="flex-1 flex flex-col">
-        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex h-14 items-center px-6 justify-between">
+      {/* Десктопная навигация */}
+      {!isMobile && <Navigation />}
+      
+      {/* Мобильная навигация */}
+      {isMobile && <Navigation />}
+      
+      <div className={cn(
+        "flex-1 flex flex-col",
+        isMobile ? "w-full" : "min-w-0"
+      )}>
+        <header className={cn(
+          "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+          isMobile && "pl-16" // Добавляем отступ слева для мобильной кнопки меню
+        )}>
+          <div className={cn(
+            "flex h-14 items-center justify-between",
+            isMobile ? "px-4" : "px-6"
+          )}>
             <Link 
               to="/" 
               className={cn(
                 "text-lg font-semibold transition-colors hover:text-primary",
-                "flex items-center gap-2"
+                "flex items-center gap-2",
+                isMobile && "text-base truncate" // Уменьшаем размер на мобильных
               )}
             >
-              IT Agent Admin Panel
-              {role === 'застройщик' && developerName && (
+              {isMobile ? "IT Agent" : "IT Agent Admin Panel"}
+              {role === 'застройщик' && developerName && !isMobile && (
                 <span className="text-gray-500">({developerName})</span>
               )}
             </Link>
@@ -129,17 +156,20 @@ const AdminLayout = ({ children }) => {
             {currentUser && (
               <Button
                 variant="ghost"
-                size="sm"
+                size={isMobile ? "sm" : "sm"}
                 onClick={handleLogout}
                 className="gap-2"
               >
                 <LogOut className="h-4 w-4" />
-                <span>Выйти</span>
+                {!isMobile && <span>Выйти</span>}
               </Button>
             )}
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-6">
+        <main className={cn(
+          "flex-1 overflow-auto",
+          isMobile ? "p-4" : "p-6"
+        )}>
           {children}
         </main>
       </div>

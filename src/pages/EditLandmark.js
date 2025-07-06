@@ -37,6 +37,20 @@ function EditLandmark() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Мобильная детекция
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Состояния для загрузки данных и сохранения
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -228,12 +242,12 @@ function EditLandmark() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className={`container mx-auto py-${isMobile ? '4' : '8'} px-4`}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Landmark className="h-6 w-6" />
-            Редактировать Достопримечательность
+          <CardTitle className={`flex items-center gap-2 text-${isMobile ? 'lg' : 'xl'}`}>
+            <Landmark className={`h-${isMobile ? '5' : '6'} w-${isMobile ? '5' : '6'}`} />
+            {isMobile ? 'Редактировать Достопримечательность' : 'Редактировать Достопримечательность'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -274,7 +288,7 @@ function EditLandmark() {
             <div className="space-y-4">
               <Label>Фотографии (Drag & Drop)</Label>
               <DndProvider backend={HTML5Backend}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-4`}>
                   {images.map((item, idx) => (
                     <div key={item.id} className="relative">
                       <DraggablePreviewItem
@@ -288,13 +302,13 @@ function EditLandmark() {
                 </div>
               </DndProvider>
 
-              <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-4 ${isMobile ? 'flex-col' : ''}`}>
                 <Button
                   type="button"
                   variant="outline"
                   disabled={isUploading}
                   onClick={() => document.getElementById('file-upload').click()}
-                  className="relative"
+                  className={`relative ${isMobile ? 'w-full h-12' : ''}`}
                 >
                   {isUploading ? (
                     <div className="flex items-center gap-2">
@@ -319,12 +333,12 @@ function EditLandmark() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'justify-between items-center'}`}>
               <Button
                 type="button"
                 variant="destructive"
                 onClick={handleDelete}
-                className="min-w-[150px]"
+                className={`${isMobile ? 'w-full h-12' : 'min-w-[150px]'}`}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Удалить
@@ -333,7 +347,7 @@ function EditLandmark() {
               <Button
                 type="submit"
                 disabled={isSaving}
-                className="min-w-[150px]"
+                className={`${isMobile ? 'w-full h-12' : 'min-w-[150px]'}`}
               >
                 {isSaving ? (
                   <div className="flex items-center gap-2">

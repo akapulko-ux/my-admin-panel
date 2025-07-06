@@ -41,6 +41,20 @@ function EditProperty() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Мобильная детекция
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Состояния для загрузки/сохранения
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -316,10 +330,10 @@ function EditProperty() {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-5xl">
+    <div className={`container mx-auto py-${isMobile ? '4' : '6'} px-4 max-w-5xl`}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+          <CardTitle className={`text-${isMobile ? 'xl' : '2xl'} font-bold flex ${isMobile ? 'flex-col space-y-2' : 'items-center'} gap-2`}>
             Редактировать объект
             <Badge variant="secondary" className="text-sm font-normal">
               ID: {id}
@@ -330,7 +344,7 @@ function EditProperty() {
         <CardContent>
           <form onSubmit={handleSave} className="space-y-6">
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4`}>
                 <div className="space-y-2">
                   <Label htmlFor="price">Цена (USD)</Label>
                   <Input
@@ -593,7 +607,7 @@ function EditProperty() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4`}>
                 <div className="space-y-2">
                   <Label htmlFor="shgb">Сертификат права на землю (SHGB)</Label>
                   <Input
@@ -648,7 +662,7 @@ function EditProperty() {
               <div className="space-y-4">
                 <Label>Фотографии</Label>
                 <DndProvider backend={HTML5Backend}>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} gap-4`}>
                     {images.map((item, idx) => (
                       <DraggablePreviewItem
                         key={item.id}
@@ -661,13 +675,13 @@ function EditProperty() {
                   </div>
                 </DndProvider>
 
-                <div className="flex items-center gap-4">
+                <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center'} gap-4`}>
                   <Button
                     type="button"
                     variant="secondary"
                     onClick={() => document.getElementById('file-upload').click()}
                     disabled={isUploading}
-                    className="flex items-center gap-2"
+                    className={`flex items-center gap-2 ${isMobile ? 'w-full h-12' : ''}`}
                   >
                     <Upload className="w-4 h-4" />
                     Загрузить фото
@@ -688,22 +702,22 @@ function EditProperty() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-6 border-t">
+              <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'} pt-6 border-t`}>
                 <Button
                   type="button"
                   variant="destructive"
                   onClick={handleDelete}
-                  className="flex items-center gap-2"
+                  className={`flex items-center gap-2 ${isMobile ? 'w-full h-12' : ''}`}
                 >
                   <Trash2 className="w-4 h-4" />
                   Удалить объект
                 </Button>
 
-                <div className="flex items-center gap-4">
+                <div className={`flex items-center gap-4 ${isMobile ? 'w-full' : ''}`}>
                   <Button
                     type="submit"
                     disabled={isSaving}
-                    className="flex items-center gap-2"
+                    className={`flex items-center gap-2 ${isMobile ? 'w-full h-12' : ''}`}
                   >
                     {isSaving ? (
                       <>

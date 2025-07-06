@@ -1,24 +1,17 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { db } from "../firebaseConfig";
-import { collection, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Building2, Search, X, Filter, ChevronDown } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
-import { showError } from "../utils/notifications";
-
-// Импорт компонентов shadcn
+import { db } from "../firebaseConfig";
+import { collection, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
+import { Building2, Search, X, Filter, ChevronDown } from "lucide-react";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
-import { CustomSelect } from "../components/ui/custom-select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../components/ui/collapsible";
 import { Badge } from "../components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../components/ui/collapsible";
+import { CustomSelect } from "../components/ui/custom-select";
 
 function ComplexesGallery() {
   const [complexes, setComplexes] = useState([]);
@@ -28,6 +21,19 @@ function ComplexesGallery() {
   const { currentUser, role } = useAuth();
   const { getPropertiesList, propertiesCache } = useCache();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Проверка размера экрана
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Состояния для поиска и фильтрации
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,8 +64,6 @@ function ComplexesGallery() {
     
     return options;
   }, [complexes]);
-
-
 
   // Безопасное отображение любых типов значений
   const safeDisplay = (value) => {
@@ -256,8 +260,6 @@ function ComplexesGallery() {
     return count;
   }, [filters]);
 
-
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -267,11 +269,11 @@ function ComplexesGallery() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto space-y-6 p-4 md:p-6">
       {/* Заголовок */}
       <div className="flex items-center gap-2">
         <Building2 className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">
+        <h1 className={`font-bold ${isMobile ? 'text-xl' : 'text-2xl'}`}>
           Галерея комплексов
           {developerName && ` - ${developerName}`}
         </h1>
@@ -325,7 +327,7 @@ function ComplexesGallery() {
 
           <CollapsibleContent className="space-y-4 mt-4">
             <Card className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
                 {/* Цена */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Цена (USD)</Label>
@@ -424,13 +426,8 @@ function ComplexesGallery() {
         </div>
       </div>
 
-      {/* Результаты поиска */}
-      <div className="text-sm text-gray-500 mb-4">
-        Найдено комплексов: {filteredComplexes.length}
-      </div>
-
-      {/* Список компактных карточек */}
-      <div className="divide-y max-w-4xl mx-auto">
+      {/* Список карточек */}
+      <div className={`divide-y ${isMobile ? 'max-w-full' : 'max-w-4xl mx-auto'}`}>
         {filteredComplexes.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             {complexes.length === 0 
@@ -444,10 +441,18 @@ function ComplexesGallery() {
             <Link
               key={complex.id}
               to={`/complex/${complex.id}`}
-              className="flex items-stretch gap-4 p-4 cursor-pointer hover:bg-gray-50"
+              className={`flex items-stretch cursor-pointer hover:bg-gray-50 transition-colors ${
+                isMobile 
+                  ? 'flex-col gap-3 p-3' 
+                  : 'gap-4 p-4'
+              }`}
             >
-              {/* Изображение комплекса (заглушка) */}
-              <div className="relative w-48 h-32 min-w-48 flex-shrink-0 rounded-md overflow-hidden bg-gray-200">
+              {/* Изображение комплекса */}
+              <div className={`relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 ${
+                isMobile 
+                  ? 'w-full h-40' 
+                  : 'w-48 h-32 min-w-48'
+              }`}>
                 {complex.images?.length ? (
                   <img
                     src={complex.images[0]}
@@ -463,7 +468,9 @@ function ComplexesGallery() {
 
               {/* Текстовая информация */}
               <div className="flex flex-col text-gray-900 space-y-0.5">
-                <span className="text-lg font-semibold leading-none text-black">
+                <span className={`font-semibold leading-none text-black ${
+                  isMobile ? 'text-base' : 'text-lg'
+                }`}>
                   {complex.name || "Без названия"}
                 </span>
 
@@ -477,11 +484,15 @@ function ComplexesGallery() {
                 {(() => {
                   const minPrice = getMinPriceForComplex(complex.name);
                   return minPrice ? (
-                    <span className="text-lg font-semibold leading-none">
+                    <span className={`font-semibold leading-none ${
+                      isMobile ? 'text-base' : 'text-lg'
+                    }`}>
                       от {formatPrice(minPrice)}
                     </span>
                   ) : complex.priceFrom ? (
-                    <span className="text-lg font-semibold leading-none">
+                    <span className={`font-semibold leading-none ${
+                      isMobile ? 'text-base' : 'text-lg'
+                    }`}>
                       от {formatPrice(complex.priceFrom)}
                     </span>
                   ) : null;

@@ -24,6 +24,19 @@ const statusLabels = {
 const RegistrationRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   useEffect(() => {
     const q = query(collection(db, 'registrationRequests'), orderBy('createdAt', 'desc'));
@@ -59,7 +72,7 @@ const RegistrationRequests = () => {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold mb-6">Заявки на регистрацию</h1>
+      <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-6`}>Заявки на регистрацию</h1>
       
       {requests.length === 0 ? (
         <Card className="p-4 text-center text-muted-foreground">
@@ -69,57 +82,62 @@ const RegistrationRequests = () => {
         <div className="grid gap-4">
           {requests.map((request) => (
             <Card key={request.id} className="p-6">
-              <div className="flex items-start justify-between">
+              <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-start justify-between'}`}>
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">{request.companyName}</h3>
+                  <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>{request.companyName}</h3>
                   <div className="text-sm text-muted-foreground">
                     <p>Email: {request.email}</p>
                     <p>Телефон: {request.phone}</p>
                     <p>Дата заявки: {format(request.createdAt, 'dd.MM.yyyy HH:mm')}</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-end space-y-2">
+                <div className={`${isMobile ? 'flex flex-col space-y-2' : 'flex flex-col items-end space-y-2'}`}>
                   <Badge className={statusColors[request.status]}>
                     {statusLabels[request.status]}
                   </Badge>
                   {request.status === 'new' && (
-                    <div className="flex gap-2">
+                    <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
                       <Button
-                        size="sm"
+                        size={isMobile ? "default" : "sm"}
                         variant="outline"
                         onClick={() => updateStatus(request.id, 'processing')}
+                        className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
                         Взять в работу
                       </Button>
                       <Button
-                        size="sm"
+                        size={isMobile ? "default" : "sm"}
                         variant="default"
                         onClick={() => updateStatus(request.id, 'approved')}
+                        className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
                         Одобрить
                       </Button>
                       <Button
-                        size="sm"
+                        size={isMobile ? "default" : "sm"}
                         variant="destructive"
                         onClick={() => updateStatus(request.id, 'rejected')}
+                        className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
                         Отклонить
                       </Button>
                     </div>
                   )}
                   {request.status === 'processing' && (
-                    <div className="flex gap-2">
+                    <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
                       <Button
-                        size="sm"
+                        size={isMobile ? "default" : "sm"}
                         variant="default"
                         onClick={() => updateStatus(request.id, 'approved')}
+                        className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
                         Одобрить
                       </Button>
                       <Button
-                        size="sm"
+                        size={isMobile ? "default" : "sm"}
                         variant="destructive"
                         onClick={() => updateStatus(request.id, 'rejected')}
+                        className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
                         Отклонить
                       </Button>

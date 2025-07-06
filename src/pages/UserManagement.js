@@ -68,6 +68,19 @@ const UserManagement = () => {
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -191,7 +204,7 @@ const UserManagement = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
         <Users className="w-8 h-8 text-blue-600" />
-        <h1 className="text-2xl font-bold">Управление пользователями</h1>
+        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Управление пользователями</h1>
       </div>
 
       {error && (
@@ -217,7 +230,7 @@ const UserManagement = () => {
           {users.map((user) => (
             <Card key={user.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
+                <div className={`${isMobile ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-5 gap-4 items-center'}`}>
                   {/* Имя пользователя */}
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-gray-500">Имя пользователя</p>
@@ -239,7 +252,7 @@ const UserManagement = () => {
                       value={user.role || 'user'} 
                       onValueChange={(value) => handleRoleChange(user.id, value)}
                     >
-                      <SelectTrigger className="min-w-[160px]">
+                      <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'min-w-[160px]'}`}>
                         <SelectValue>
                           {getRoleBadge(user.role || 'user')}
                         </SelectValue>
@@ -265,7 +278,7 @@ const UserManagement = () => {
                         value={user.developerId || 'unselected'} 
                         onValueChange={(value) => handleDeveloperChange(user.id, value)}
                       >
-                        <SelectTrigger className="min-w-[180px]">
+                        <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'min-w-[180px]'}`}>
                           <SelectValue placeholder="Не выбран" />
                         </SelectTrigger>
                         <SelectContent>

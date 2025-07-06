@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 // Заменяем импорт функции загрузки с Cloudinary на Firebase Storage
@@ -20,6 +20,20 @@ import { Textarea } from "../components/ui/textarea";
 import imageCompression from "browser-image-compression";
 
 function CreateLandmark() {
+  // Мобильная детекция
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Поля формы
   const [name, setName] = useState("");
   const [coordinates, setCoordinates] = useState("");
@@ -125,12 +139,12 @@ function CreateLandmark() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className={`container mx-auto py-${isMobile ? '4' : '8'} px-4`}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Landmark className="h-6 w-6" />
-            Добавить Достопримечательность
+          <CardTitle className={`flex items-center gap-2 text-${isMobile ? 'lg' : 'xl'}`}>
+            <Landmark className={`h-${isMobile ? '5' : '6'} w-${isMobile ? '5' : '6'}`} />
+            {isMobile ? 'Добавить Достопримечательность' : 'Добавить Достопримечательность'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -170,13 +184,13 @@ function CreateLandmark() {
 
             <div className="space-y-4">
               <Label>Фотографии</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-4`}>
                 {images.map((img) => (
                   <div key={img.id} className="relative group">
                     <img
                       src={img.url}
                       alt="preview"
-                      className="w-full h-48 object-cover rounded-lg"
+                      className={`w-full ${isMobile ? 'h-32' : 'h-48'} object-cover rounded-lg`}
                     />
                     <Button
                       type="button"
@@ -191,13 +205,13 @@ function CreateLandmark() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-4 ${isMobile ? 'flex-col' : ''}`}>
                 <Button
                   type="button"
                   variant="outline"
                   disabled={isUploading}
                   onClick={() => document.getElementById('file-upload').click()}
-                  className="relative"
+                  className={`relative ${isMobile ? 'w-full h-12' : ''}`}
                 >
                   {isUploading ? (
                     <div className="flex items-center gap-2">
@@ -221,11 +235,11 @@ function CreateLandmark() {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className={`flex ${isMobile ? 'justify-center' : 'justify-end'}`}>
               <Button
                 type="submit"
                 disabled={isSaving}
-                className="min-w-[150px]"
+                className={`${isMobile ? 'w-full h-12' : 'min-w-[150px]'}`}
               >
                 {isSaving ? (
                   <div className="flex items-center gap-2">

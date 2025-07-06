@@ -237,7 +237,8 @@ const SortableSection = ({
   onMoveUp,
   onMoveDown,
   canMoveUp,
-  canMoveDown
+  canMoveDown,
+  isMobile
 }) => {
   const {
     attributes,
@@ -269,33 +270,44 @@ const SortableSection = ({
               style={{ width: `${Math.max(section.name.length * 0.6, 8)}ch` }}
             />
           </div>
-          <div className="flex gap-2">
-            <div className="flex gap-1">
+          <div className={`${isMobile ? 'flex flex-col w-full max-w-[120px] gap-2' : 'flex gap-2'}`}>
+            <div className={`${isMobile ? 'flex gap-2 w-full' : 'flex gap-2'}`}>
               <Button 
-                size="sm" 
+                size={isMobile ? "default" : "sm"} 
                 variant="outline" 
                 onClick={onMoveUp}
                 disabled={!canMoveUp}
                 title="Переместить секцию вверх"
+                className={isMobile ? 'h-10 flex-1 px-2' : ''}
               >
                 <ChevronUp className="w-4 h-4" />
               </Button>
               <Button 
-                size="sm" 
+                size={isMobile ? "default" : "sm"} 
                 variant="outline" 
                 onClick={onMoveDown}
                 disabled={!canMoveDown}
                 title="Переместить секцию вниз"
+                className={isMobile ? 'h-10 flex-1 px-2' : ''}
               >
                 <ChevronDown className="w-4 h-4" />
               </Button>
             </div>
-            <Button size="sm" onClick={onAddFloor} className="bg-green-600 hover:bg-green-700">
+            <Button 
+              size={isMobile ? "default" : "sm"} 
+              onClick={onAddFloor} 
+              className={`bg-green-600 hover:bg-green-700 ${isMobile ? 'h-10 w-full' : ''}`}
+            >
               <Plus className="w-4 h-4 mr-1" />
-              Этаж
+              {isMobile ? '' : 'Этаж'}
             </Button>
             {canRemoveSection && (
-              <Button size="sm" variant="destructive" onClick={onRemoveSection}>
+              <Button 
+                size={isMobile ? "default" : "sm"} 
+                variant="destructive" 
+                onClick={onRemoveSection}
+                className={isMobile ? 'h-10 w-full px-2' : ''}
+              >
                 <Trash2 className="w-4 h-4" />
               </Button>
             )}
@@ -316,7 +328,8 @@ const SortableFloor = ({
   onFloorChange,
   onAddUnit,
   onRemoveFloor,
-  canRemoveFloor
+  canRemoveFloor,
+  isMobile
 }) => {
   const {
     attributes,
@@ -333,7 +346,7 @@ const SortableFloor = ({
 
   return (
     <div ref={setNodeRef} style={style} className="border rounded-lg p-4 bg-gray-50">
-      <div className="flex items-center justify-between mb-4">
+      <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'} mb-4`}>
         <div className="flex items-center gap-2">
           <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
             <GripVertical className="w-5 h-5 text-gray-400" />
@@ -348,13 +361,23 @@ const SortableFloor = ({
           />
           <span className="font-semibold">этаж</span>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={onAddUnit}>
+        <div className={`${isMobile ? 'flex gap-2 w-full' : 'flex gap-2'}`}>
+          <Button 
+            size={isMobile ? "default" : "sm"} 
+            variant="outline" 
+            onClick={onAddUnit}
+            className={isMobile ? 'h-10 flex-1' : ''}
+          >
             <Plus className="w-4 h-4 mr-1" />
-            Юнит
+            {isMobile ? '' : 'Юнит'}
           </Button>
           {canRemoveFloor && (
-            <Button size="sm" variant="destructive" onClick={onRemoveFloor}>
+            <Button 
+              size={isMobile ? "default" : "sm"} 
+              variant="destructive" 
+              onClick={onRemoveFloor}
+              className={isMobile ? 'h-10 flex-1' : ''}
+            >
               <Trash2 className="w-4 h-4" />
             </Button>
           )}
@@ -379,7 +402,8 @@ const SortableUnit = ({
   exchangeRate,
   formatPrice,
   formatPriceUSD,
-  onExchangeRateChange
+  onExchangeRateChange,
+  isMobile
 }) => {
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [tempRate, setTempRate] = useState(exchangeRate);
@@ -403,237 +427,236 @@ const SortableUnit = ({
     setIsEditingRate(false);
   };
 
+  const statusColor = getStatusColor(unit.status);
+
   return (
-    <Card 
+    <div 
       ref={setNodeRef} 
-      style={style}
-      id={`unit-${sectionIdx}-${floorIdx}-${unitIdx}`}
-      className={`${getStatusColor(unit.status)} hover:shadow-lg hover:scale-105 transition-all duration-200 w-[300px]`}
+      style={style} 
+      className={`rounded-lg p-4 ${statusColor}`}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-              <GripVertical className="w-4 h-4 text-white/60" />
-            </div>
-            <Edit3 className="w-4 h-4 text-gray-600" />
-            <input
-              type="text"
-              value={unit.id}
-              onChange={(e) => onUnitChange('id', e.target.value)}
-              className="font-mono text-sm font-bold bg-white/90 text-gray-900 border border-white/50 rounded px-2 py-1 focus:border-white focus:ring-2 focus:ring-white/50 outline-none w-20"
-            />
+      <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>
+        <div className="flex items-center gap-2">
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+            <GripVertical className="w-4 h-4 text-white/60" />
           </div>
-          <div className="flex gap-1">
+          <Edit3 className="w-4 h-4 text-gray-600" />
+          <input
+            type="text"
+            value={unit.id}
+            onChange={(e) => onUnitChange('id', e.target.value)}
+            className="font-mono text-sm font-bold bg-white/90 text-gray-900 border border-white/50 rounded px-2 py-1 focus:border-white focus:ring-2 focus:ring-white/50 outline-none w-20"
+          />
+        </div>
+        <div className={`${isMobile ? 'flex gap-2 w-full' : 'flex gap-1'}`}>
+          <Button 
+            size={isMobile ? "default" : "sm"} 
+            variant="ghost" 
+            onClick={onCopyUnit}
+            className={`hover:bg-white/20 ${isMobile ? 'h-10 flex-1' : ''}`}
+          >
+            <Copy className="w-3 h-3" />
+          </Button>
+          {canRemoveUnit && (
             <Button 
-              size="sm" 
+              size={isMobile ? "default" : "sm"} 
               variant="ghost" 
-              onClick={onCopyUnit}
-              className="hover:bg-white/20"
+              onClick={onRemoveUnit}
+              className={`hover:bg-white/20 ${isMobile ? 'h-10 flex-1' : ''}`}
             >
-              <Copy className="w-3 h-3" />
+              <Trash2 className="w-3 h-3" />
             </Button>
-            {canRemoveUnit && (
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={onRemoveUnit}
-                className="hover:bg-white/20"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            )}
-          </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="space-y-3">
+        <div>
+          <select
+            value={unit.propertyType || 'Апартаменты'}
+            onChange={(e) => onUnitChange('propertyType', e.target.value)}
+            className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold mb-3"
+          >
+            <option value="Апартаменты">Апартаменты</option>
+            <option value="Вилла">Вилла</option>
+            <option value="Апарт-вилла">Апарт-вилла</option>
+            <option value="Таунхаус">Таунхаус</option>
+          </select>
         </div>
         
         <div className="space-y-3">
-          <div>
-            <select
-              value={unit.propertyType || 'Апартаменты'}
-              onChange={(e) => onUnitChange('propertyType', e.target.value)}
-              className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold mb-3"
-            >
-              <option value="Апартаменты">Апартаменты</option>
-              <option value="Вилла">Вилла</option>
-              <option value="Апарт-вилла">Апарт-вилла</option>
-              <option value="Таунхаус">Таунхаус</option>
-            </select>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <label className="block text-xs text-white/90 font-semibold mb-1">Этажность</label>
+              <select
+                value={unit.floors || '1'} 
+                onChange={(e) => onUnitChange('floors', e.target.value)}
+                className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
+              >
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-white/90 font-semibold mb-1">Площадь м²</label>
+              <input
+                type="number"
+                step="0.1"
+                value={unit.area === null ? '' : unit.area}
+                onChange={(e) => onUnitChange('area', e.target.value)}
+                className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white"
+                placeholder="0.0"
+              />
+            </div>
           </div>
           
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <label className="block text-xs text-white/90 font-semibold mb-1">Этажность</label>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <label className="block text-xs text-white/90 font-semibold mb-1">Спальни</label>
                 <select
-                  value={unit.floors || '1'} 
-                  onChange={(e) => onUnitChange('floors', e.target.value)}
+                  value={unit.rooms} 
+                  onChange={(e) => onUnitChange('rooms', e.target.value)}
+                  className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
+                >
+                  <option value="Студия">Студия</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                </select>
+            </div>
+            <div>
+              <label className="block text-xs text-white/90 font-semibold mb-1">Санузлы</label>
+                <select
+                  value={unit.bathrooms || '1'} 
+                  onChange={(e) => onUnitChange('bathrooms', e.target.value)}
                   className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                 >
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
                 </select>
-              </div>
-              <div>
-                <label className="block text-xs text-white/90 font-semibold mb-1">Площадь м²</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={unit.area === null ? '' : unit.area}
-                  onChange={(e) => onUnitChange('area', e.target.value)}
-                  className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white"
-                  placeholder="0.0"
-                />
-              </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <label className="block text-xs text-white/90 font-semibold mb-1">Спальни</label>
-                  <select
-                    value={unit.rooms} 
-                    onChange={(e) => onUnitChange('rooms', e.target.value)}
-                    className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
-                  >
-                    <option value="Студия">Студия</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                  </select>
-              </div>
-              <div>
-                <label className="block text-xs text-white/90 font-semibold mb-1">Санузлы</label>
-                  <select
-                    value={unit.bathrooms || '1'} 
-                    onChange={(e) => onUnitChange('bathrooms', e.target.value)}
-                    className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
-                  >
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                  </select>
-              </div>
-            </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <label className="block text-xs text-white/90 font-semibold mb-1">Вид из окна</label>
-                  <select
-                    value={unit.view || ''} 
-                    onChange={(e) => onUnitChange('view', e.target.value)}
-                    className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
-                  >
-                    <option value="">Не указан</option>
-                    <option value="Океан">Океан</option>
-                    <option value="Река">Река</option>
-                    <option value="Джунгли">Джунгли</option>
-                    <option value="Бассейн">Бассейн</option>
-                    <option value="Двор">Двор</option>
-                    <option value="Вулкан">Вулкан</option>
-                    <option value="Рисовые террасы">Рисовые террасы</option>
-                  </select>
-              </div>
-              <div>
-                <label className="block text-xs text-white/90 font-semibold mb-1">Сторона</label>
-                  <select
-                    value={unit.side || ''} 
-                    onChange={(e) => onUnitChange('side', e.target.value)}
-                    className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
-                  >
-                    <option value="">Не указана</option>
-                    <option value="Рассветная">Рассветная</option>
-                    <option value="Закатная">Закатная</option>
-                  </select>
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-xs text-white/90 font-semibold mb-1">
-              Цена (USD → IDR) 
-              {isEditingRate ? (
-                <form onSubmit={handleRateSubmit} className="inline-flex items-center ml-1">
-                  <span className="text-yellow-200 font-bold">1:</span>
-                  <input
-                    type="number"
-                    value={tempRate}
-                    onChange={(e) => setTempRate(parseFloat(e.target.value) || 0)}
-                    onBlur={handleRateSubmit}
-                    autoFocus
-                    className="w-20 px-1 py-0.5 bg-white/20 text-yellow-200 font-bold border border-yellow-200/50 rounded focus:outline-none focus:ring-1 focus:ring-yellow-200"
-                  />
-                </form>
-              ) : (
-                <button
-                  onClick={() => setIsEditingRate(true)}
-                  className="text-yellow-200 font-bold hover:text-yellow-300 cursor-pointer ml-1"
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <label className="block text-xs text-white/90 font-semibold mb-1">Вид из окна</label>
+                <select
+                  value={unit.view || ''} 
+                  onChange={(e) => onUnitChange('view', e.target.value)}
+                  className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                 >
-                  1:{exchangeRate.toLocaleString()}
-                </button>
-              )}
-            </label>
-            
-            {/* Ввод в долларах */}
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-green-600" />
-              <input
-                type="number"
-                value={unit.priceUSD === null ? '' : unit.priceUSD}
-                onChange={(e) => {
-                  const priceUSD = parseFloat(e.target.value) || 0;
-                  onUnitChange('priceUSD', priceUSD);
-                  onUnitChange('priceIDR', priceUSD * exchangeRate);
-                }}
-                className="flex-1 px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white"
-                placeholder="0"
-              />
+                  <option value="">Не указан</option>
+                  <option value="Океан">Океан</option>
+                  <option value="Река">Река</option>
+                  <option value="Джунгли">Джунгли</option>
+                  <option value="Бассейн">Бассейн</option>
+                  <option value="Двор">Двор</option>
+                  <option value="Вулкан">Вулкан</option>
+                  <option value="Рисовые террасы">Рисовые террасы</option>
+                </select>
             </div>
-            
-            {/* Отображение в рупиях */}
-            {unit.priceUSD > 0 && (
-              <div className="space-y-1">
-                <p className="text-xs text-white/95 font-semibold">
-                  <strong>USD:</strong> {formatPriceUSD(unit.priceUSD)}
-                </p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-yellow-200 font-bold">
-                    <strong>IDR:</strong> {formatPrice(unit.priceIDR)}
-                  </p>
-                  <label className="flex items-center gap-1 text-xs text-white/90">
-                    <input
-                      type="checkbox"
-                      checked={unit.showPriceIDR}
-                      onChange={(e) => onUnitChange('showPriceIDR', e.target.checked)}
-                      className="w-3 h-3 rounded border-white/50 focus:ring-2 focus:ring-white/50"
-                    />
-                    Показывать
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div>
-            <label className="block text-xs text-white/90 font-semibold mb-1">Статус</label>
-            <select
-              value={unit.status}
-              onChange={(e) => onUnitChange('status', e.target.value)}
-              className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
-            >
-              <option value="free" className="text-emerald-800">✓ Свободно</option>
-              <option value="booked" className="text-amber-800">⏳ Забронировано</option>
-              <option value="sold" className="text-rose-800">✖ Продано</option>
-            </select>
+            <div>
+              <label className="block text-xs text-white/90 font-semibold mb-1">Сторона</label>
+                <select
+                  value={unit.side || ''} 
+                  onChange={(e) => onUnitChange('side', e.target.value)}
+                  className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
+                >
+                  <option value="">Не указана</option>
+                  <option value="Рассветная">Рассветная</option>
+                  <option value="Закатная">Закатная</option>
+                </select>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        
+        <div>
+          <label className="block text-xs text-white/90 font-semibold mb-1">
+            Цена (USD → IDR) 
+            {isEditingRate ? (
+              <form onSubmit={handleRateSubmit} className="inline-flex items-center ml-1">
+                <span className="text-yellow-200 font-bold">1:</span>
+                <input
+                  type="number"
+                  value={tempRate}
+                  onChange={(e) => setTempRate(parseFloat(e.target.value) || 0)}
+                  onBlur={handleRateSubmit}
+                  autoFocus
+                  className="w-20 px-1 py-0.5 bg-white/20 text-yellow-200 font-bold border border-yellow-200/50 rounded focus:outline-none focus:ring-1 focus:ring-yellow-200"
+                />
+              </form>
+            ) : (
+              <button
+                onClick={() => setIsEditingRate(true)}
+                className="text-yellow-200 font-bold hover:text-yellow-300 cursor-pointer ml-1"
+              >
+                1:{exchangeRate.toLocaleString()}
+              </button>
+            )}
+          </label>
+          
+          {/* Ввод в долларах */}
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="w-4 h-4 text-green-600" />
+            <input
+              type="number"
+              value={unit.priceUSD === null ? '' : unit.priceUSD}
+              onChange={(e) => {
+                const priceUSD = parseFloat(e.target.value) || 0;
+                onUnitChange('priceUSD', priceUSD);
+                onUnitChange('priceIDR', priceUSD * exchangeRate);
+              }}
+              className="flex-1 px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white"
+              placeholder="0"
+            />
+          </div>
+          
+          {/* Отображение в рупиях */}
+          {unit.priceUSD > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs text-white/95 font-semibold">
+                <strong>USD:</strong> {formatPriceUSD(unit.priceUSD)}
+              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-yellow-200 font-bold">
+                  <strong>IDR:</strong> {formatPrice(unit.priceIDR)}
+                </p>
+                <label className="flex items-center gap-1 text-xs text-white/90">
+                  <input
+                    type="checkbox"
+                    checked={unit.showPriceIDR}
+                    onChange={(e) => onUnitChange('showPriceIDR', e.target.checked)}
+                    className="w-3 h-3 rounded border-white/50 focus:ring-2 focus:ring-white/50"
+                  />
+                  Показывать
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div>
+          <label className="block text-xs text-white/90 font-semibold mb-1">Статус</label>
+          <select
+            value={unit.status}
+            onChange={(e) => onUnitChange('status', e.target.value)}
+            className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
+          >
+            <option value="free" className="text-emerald-800">✓ Свободно</option>
+            <option value="booked" className="text-amber-800">⏳ Забронировано</option>
+            <option value="sold" className="text-rose-800">✖ Продано</option>
+          </select>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -653,6 +676,19 @@ const Chessboard = () => {
   const [complexes, setComplexes] = useState([]);
   const [selectedComplexId, setSelectedComplexId] = useState('');
   const [complexError, setComplexError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Оборачиваем объекты в useMemo
   const defaultUnit = useMemo(() => ({
@@ -1236,20 +1272,17 @@ const Chessboard = () => {
       {/* Заголовок */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Building className="w-8 h-8 text-blue-600" />
-              <div>
-                <CardTitle className="text-2xl">
-                  {!id || id === "new" ? "Новая шахматка" : "Редактирование шахматки"}
-                </CardTitle>
-                <p className="text-gray-600 mt-1">Управление планировкой объекта</p>
-              </div>
+          <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex items-center justify-between'}`}>
+            <div className="flex items-center gap-2">
+              <Building className="w-6 h-6 text-blue-600" />
+              <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>
+                {id && id !== "new" ? "Редактирование шахматки" : "Создание шахматки"}
+              </h2>
             </div>
-            <div className="flex gap-2">
+            <div className={`${isMobile ? 'flex flex-col w-full gap-2' : 'flex gap-4'}`}>
               <Button 
                 onClick={handleSave} 
-                className="bg-blue-600 hover:bg-blue-700"
+                className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full h-12 order-1' : ''}`}
                 disabled={isSaving}
               >
                 {isSaving ? (
@@ -1267,7 +1300,12 @@ const Chessboard = () => {
                   </>
                 )}
               </Button>
-              <Button variant="outline" onClick={() => navigate("/chessboard")} disabled={isSaving}>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/chessboard")} 
+                disabled={isSaving}
+                className={`${isMobile ? 'w-full h-12 order-2' : ''}`}
+              >
                 К списку
               </Button>
             </div>
@@ -1373,6 +1411,7 @@ const Chessboard = () => {
                 onMoveDown={() => moveSectionDown(sectionIdx)}
                 canMoveUp={sectionIdx > 0}
                 canMoveDown={sectionIdx < sections.length - 1}
+                isMobile={isMobile}
               >
                 <CardContent>
                   <div className="space-y-4">
@@ -1410,6 +1449,7 @@ const Chessboard = () => {
                               });
                             }}
                             canRemoveFloor={section.floors.length > 1}
+                            isMobile={isMobile}
                           >
                             <div className="overflow-x-auto pb-4">
                               <SortableContext
@@ -1450,6 +1490,7 @@ const Chessboard = () => {
                                       formatPrice={formatPrice}
                                       formatPriceUSD={formatPriceUSD}
                                       onExchangeRateChange={updateExchangeRate}
+                                      isMobile={isMobile}
                                     />
                                   ))}
                                 </div>
@@ -1469,7 +1510,11 @@ const Chessboard = () => {
       {/* Добавить секцию */}
       <Card className="border-dashed border-2 border-gray-300">
         <CardContent className="flex items-center justify-center py-12">
-          <Button onClick={addSection} size="lg" className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            onClick={addSection} 
+            size={isMobile ? "default" : "lg"} 
+            className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
+          >
             <Plus className="w-5 h-5 mr-2" />
             Добавить секцию
           </Button>

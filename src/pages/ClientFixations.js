@@ -49,6 +49,19 @@ const ClientFixations = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [selectedAgentId, setSelectedAgentId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Функция для открытия диалога подтверждения
   const openApproveDialog = (fixation) => {
@@ -597,9 +610,12 @@ const ClientFixations = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Фиксации клиентов</h1>
-        <Button onClick={fetchFixations}>
+      <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-6`}>
+        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Фиксации клиентов</h1>
+        <Button 
+          onClick={fetchFixations}
+          className={`${isMobile ? 'w-full h-12' : ''}`}
+        >
           Обновить
         </Button>
       </div>
@@ -643,7 +659,7 @@ const ClientFixations = () => {
        {/* Бейджи со счетчиками статусов */}
        {fixations.length > 0 && (
          <div className="mb-6">
-           <div className="flex flex-wrap gap-3">
+           <div className={`${isMobile ? 'grid grid-cols-2 gap-3' : 'flex flex-wrap gap-3'}`}>
              {Object.entries(getStatusCounts()).map(([statusType, count]) => (
                <button
                  key={statusType}
@@ -652,7 +668,7 @@ const ClientFixations = () => {
                    selectedStatusFilter === statusType 
                      ? `${getStatusColor(statusType)} ring-2 ring-offset-2 ring-gray-300 shadow-lg scale-105` 
                      : getStatusColor(statusType)
-                 }`}
+                 } ${isMobile ? 'h-12 justify-center' : ''}`}
                >
                  <span className="mr-2">{getStatusDisplayName(statusType)}</span>
                  <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-bold">
@@ -670,7 +686,7 @@ const ClientFixations = () => {
                  !selectedStatusFilter && !searchQuery
                    ? 'bg-gray-600 ring-2 ring-offset-2 ring-gray-300 shadow-lg scale-105'
                    : 'bg-gray-500'
-               }`}
+               } ${isMobile ? 'h-12 justify-center col-span-2' : ''}`}
              >
                <span className="mr-2">Всего</span>
                <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-bold">
@@ -754,34 +770,35 @@ const ClientFixations = () => {
                 )}
               </div>
             </div>
-            <div className="flex justify-between mt-4">
+            <div className={`${isMobile ? 'space-y-4' : 'flex justify-between'} mt-4`}>
               <div>
                 {/* Проверяем статус "на согласовании" на всех языках */}
                 {(fixation.status === 'На согласовании' || 
                   fixation.status === 'Pending Approval' || 
                   fixation.status === 'Menunggu Persetujuan') && 
                   (userRole === 'admin' || userRole === 'застройщик') && (
-                  <div className="space-x-2">
+                  <div className={`${isMobile ? 'flex flex-col gap-2' : 'space-x-2'}`}>
                     <Button
                       onClick={() => openApproveDialog(fixation)}
-                      className="bg-green-500 hover:bg-green-600 text-white"
+                      className={`bg-green-500 hover:bg-green-600 text-white ${isMobile ? 'w-full h-12' : ''}`}
                     >
                       Принять
                     </Button>
                     <Button
                       onClick={() => openRejectDialog(fixation)}
-                      className="bg-red-500 hover:bg-red-600 text-white"
+                      className={`bg-red-500 hover:bg-red-600 text-white ${isMobile ? 'w-full h-12' : ''}`}
                     >
                       Отклонить
                     </Button>
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                 <Button
                   onClick={() => openChat(fixation)}
                   variant="outline"
-                  size="sm"
+                  size={isMobile ? "default" : "sm"}
+                  className={`${isMobile ? 'w-full h-12' : ''}`}
                 >
                   Чат с агентом
                 </Button>
@@ -789,8 +806,8 @@ const ClientFixations = () => {
                   <Button
                     onClick={() => openDeleteDialog(fixation)}
                     variant="outline"
-                    size="sm"
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    size={isMobile ? "default" : "sm"}
+                    className={`text-red-500 hover:text-red-700 hover:bg-red-50 ${isMobile ? 'w-full h-12' : ''}`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -822,16 +839,17 @@ const ClientFixations = () => {
               className="w-full"
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className={`${isMobile ? 'flex-col gap-2' : 'flex-row gap-2'}`}>
             <Button
               variant="outline"
               onClick={closeApproveDialog}
+              className={`${isMobile ? 'w-full h-12' : ''}`}
             >
               Отмена
             </Button>
             <Button
               onClick={handleApproveFixation}
-              className="bg-green-500 hover:bg-green-600 text-white ml-2"
+              className={`bg-green-500 hover:bg-green-600 text-white ${isMobile ? 'w-full h-12' : 'ml-2'}`}
             >
               Принять
             </Button>
@@ -864,16 +882,17 @@ const ClientFixations = () => {
               </p>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className={`${isMobile ? 'flex-col gap-2' : 'flex-row gap-2'}`}>
             <Button
               variant="outline"
               onClick={closeRejectDialog}
+              className={`${isMobile ? 'w-full h-12' : ''}`}
             >
               Отмена
             </Button>
             <Button
               onClick={handleRejectFixation}
-              className="bg-red-500 hover:bg-red-600 text-white ml-2"
+              className={`bg-red-500 hover:bg-red-600 text-white ${isMobile ? 'w-full h-12' : 'ml-2'}`}
               disabled={rejectComment.length < 10}
             >
               Отклонить
@@ -896,16 +915,17 @@ const ClientFixations = () => {
               Это действие нельзя отменить. Будут удалены фиксация и все связанные с ней сообщения в чате.
             </p>
           </div>
-          <DialogFooter>
+          <DialogFooter className={`${isMobile ? 'flex-col gap-2' : 'flex-row gap-2'}`}>
             <Button
               variant="outline"
               onClick={closeDeleteDialog}
+              className={`${isMobile ? 'w-full h-12' : ''}`}
             >
               Отмена
             </Button>
             <Button
               onClick={handleDeleteFixation}
-              className="bg-red-500 hover:bg-red-600 text-white ml-2"
+              className={`bg-red-500 hover:bg-red-600 text-white ${isMobile ? 'w-full h-12' : 'ml-2'}`}
             >
               Удалить
             </Button>

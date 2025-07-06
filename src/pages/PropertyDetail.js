@@ -52,6 +52,21 @@ function PropertyDetail() {
   // Добавляем состояние для модального окна
   const [showRoiCalculator, setShowRoiCalculator] = useState(false);
 
+  // Мобильное обнаружение
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
   // Функция для проверки, может ли пользователь редактировать объект
   const canEdit = () => {
     console.log('canEdit check:', {
@@ -880,11 +895,11 @@ function PropertyDetail() {
       {/* Добавляем кнопки "Расчет ROI" после характеристик объекта */}
       {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
         <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Характеристики объекта</h2>
+          <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-4`}>Характеристики объекта</h2>
           <div className="mt-6 flex gap-4">
             <button
               onClick={() => setShowRoiCalculator(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ${isMobile ? 'w-full h-12 justify-center' : ''}`}
             >
               <Calculator className="w-5 h-5" />
               Расчет ROI
@@ -951,7 +966,7 @@ function PropertyDetail() {
                 <>
                   <button 
                     onClick={() => window.open(property.layoutFileURL, '_blank')}
-                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
                   >
                     Просмотреть
                   </button>
@@ -963,7 +978,7 @@ function PropertyDetail() {
                         uploading.layoutFileURL 
                           ? 'bg-gray-400 cursor-not-allowed' 
                           : 'bg-gray-600 hover:bg-gray-700'
-                      } text-white`}
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
                       {uploading.layoutFileURL ? 'Загрузка...' : 'Обновить'}
                     </button>
@@ -980,7 +995,7 @@ function PropertyDetail() {
                         uploading.layoutFileURL 
                           ? 'bg-gray-400 cursor-not-allowed' 
                           : 'bg-green-600 hover:bg-green-700'
-                      } text-white`}
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
                       {uploading.layoutFileURL ? 'Загрузка...' : 'Загрузить'}
                     </button>
@@ -997,7 +1012,7 @@ function PropertyDetail() {
                 <>
                   <button 
                     onClick={() => window.open(property.pkkprFileURL, '_blank')}
-                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
                   >
                     Просмотреть
                   </button>
@@ -1009,7 +1024,7 @@ function PropertyDetail() {
                         uploading.pkkprFileURL 
                           ? 'bg-gray-400 cursor-not-allowed' 
                           : 'bg-gray-600 hover:bg-gray-700'
-                      } text-white`}
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
                       {uploading.pkkprFileURL ? 'Загрузка...' : 'Обновить'}
                     </button>
@@ -1026,7 +1041,7 @@ function PropertyDetail() {
                         uploading.pkkprFileURL 
                           ? 'bg-gray-400 cursor-not-allowed' 
                           : 'bg-green-600 hover:bg-green-700'
-                      } text-white`}
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
                       {uploading.pkkprFileURL ? 'Загрузка...' : 'Загрузить'}
                     </button>
@@ -1043,7 +1058,7 @@ function PropertyDetail() {
                 <>
                   <button 
                     onClick={() => window.open(property.roiFileURL, '_blank')}
-                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
                   >
                     Просмотреть
                   </button>
@@ -1055,7 +1070,7 @@ function PropertyDetail() {
                         uploading.roiFileURL 
                           ? 'bg-gray-400 cursor-not-allowed' 
                           : 'bg-gray-600 hover:bg-gray-700'
-                      } text-white`}
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
                       {uploading.roiFileURL ? 'Загрузка...' : 'Обновить'}
                     </button>
@@ -1072,7 +1087,7 @@ function PropertyDetail() {
                         uploading.roiFileURL 
                           ? 'bg-gray-400 cursor-not-allowed' 
                           : 'bg-green-600 hover:bg-green-700'
-                      } text-white`}
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
                       {uploading.roiFileURL ? 'Загрузка...' : 'Загрузить'}
                     </button>
@@ -1086,12 +1101,12 @@ function PropertyDetail() {
 
       {/* Кнопки редактирования */}
       {canEdit() && (
-        <div className="mt-8 flex justify-end gap-4">
+        <div className={`mt-8 ${isMobile ? 'flex flex-col gap-4' : 'flex justify-end gap-4'}`}>
           {isEditing ? (
             <>
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className={`px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 ${isMobile ? 'w-full h-12' : ''}`}
               >
                 Отменить
               </button>
@@ -1102,7 +1117,7 @@ function PropertyDetail() {
                   hasChanges
                     ? "bg-blue-600 hover:bg-blue-700"
                     : "bg-gray-400 cursor-not-allowed"
-                }`}
+                } ${isMobile ? 'w-full h-12' : ''}`}
               >
                 Сохранить
               </button>
@@ -1110,7 +1125,7 @@ function PropertyDetail() {
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
             >
               Редактировать
             </button>

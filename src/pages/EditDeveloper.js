@@ -24,6 +24,20 @@ function EditDeveloper() {
   const navigate = useNavigate();
   const { id } = useParams(); // либо "new", либо реальный docId
 
+  // Мобильная детекция
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -139,11 +153,11 @@ function EditDeveloper() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
+    <div className={`container max-w-2xl mx-auto py-${isMobile ? '4' : '8'} px-4`}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-6 w-6" />
+          <CardTitle className={`flex items-center gap-2 text-${isMobile ? 'lg' : 'xl'}`}>
+            <Building2 className={`h-${isMobile ? '5' : '6'} w-${isMobile ? '5' : '6'}`} />
             {id === "new" ? "Добавить Застройщика" : "Редактировать Застройщика"}
           </CardTitle>
         </CardHeader>
@@ -174,7 +188,7 @@ function EditDeveloper() {
             {logoPreview && (
               <div className="space-y-2">
                 <Label>Текущий логотип</Label>
-                <div className="relative w-40 h-40 rounded-lg overflow-hidden border">
+                <div className={`relative ${isMobile ? 'w-32 h-32' : 'w-40 h-40'} rounded-lg overflow-hidden border`}>
                   <img
                     src={logoPreview}
                     alt="Logo preview"
@@ -186,11 +200,12 @@ function EditDeveloper() {
 
             <div className="space-y-2">
               <Label htmlFor="logo">Логотип</Label>
-              <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-4 ${isMobile ? 'flex-col' : ''}`}>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => document.getElementById('logo').click()}
+                  className={`${isMobile ? 'w-full h-12' : ''}`}
                 >
                   <Upload className="mr-2 h-4 w-4" />
                   Загрузить логотип
@@ -205,8 +220,8 @@ function EditDeveloper() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-4">
-              <Button type="submit" disabled={isSaving}>
+            <div className={`flex ${isMobile ? 'justify-center' : 'justify-end'} pt-4`}>
+              <Button type="submit" disabled={isSaving} className={`${isMobile ? 'w-full h-12' : ''}`}>
                 {isSaving ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

@@ -19,6 +19,19 @@ function ListDevelopers() {
 
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   useEffect(() => {
     async function loadDevelopers() {
@@ -58,9 +71,12 @@ function ListDevelopers() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Список Застройщиков</h1>
-        <Button onClick={() => navigate("/developers/edit/new")}>
+      <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-8`}>
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>Список Застройщиков</h1>
+        <Button 
+          onClick={() => navigate("/developers/edit/new")}
+          className={`${isMobile ? 'w-full h-12' : ''}`}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Добавить Застройщика
         </Button>
@@ -107,7 +123,7 @@ function ListDevelopers() {
               <CardFooter>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className={`w-full ${isMobile ? 'h-12' : ''}`}
                   onClick={() => navigate(`/developers/edit/${dev.id}`)}
                 >
                   <Pencil className="mr-2 h-4 w-4" />

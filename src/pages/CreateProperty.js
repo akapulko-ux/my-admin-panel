@@ -32,6 +32,20 @@ import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
 
 function CreateProperty() {
+  // Мобильная детекция
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Цена (USD) — обязательное поле
   const [price, setPrice] = useState("");
 
@@ -356,14 +370,16 @@ function CreateProperty() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className={`max-w-4xl mx-auto p-4 ${isMobile ? 'px-2' : ''}`}>
       <Card>
         <CardHeader>
-          <CardTitle>Создать Объект</CardTitle>
+          <CardTitle className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>
+            Создать Объект
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4`}>
               {/* Цена (USD) */}
               <div className="space-y-2">
                 <Label htmlFor="price">Цена (USD)</Label>
@@ -750,7 +766,7 @@ function CreateProperty() {
               </p>
               
               <DndProvider backend={HTML5Backend}>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'} gap-4`}>
                   {dndItems.map((item, idx) => (
                     <div key={item.id} className="relative">
                       <DraggablePreviewItem
@@ -765,10 +781,10 @@ function CreateProperty() {
                 </div>
               </DndProvider>
 
-              <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 ${isMobile ? 'flex-col' : ''}`}>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className={`w-full ${isMobile ? 'h-12' : ''}`}
                   disabled={isUploading}
                   asChild
                 >
@@ -794,7 +810,7 @@ function CreateProperty() {
                   <span className="text-sm">Сохраняем...</span>
                 </div>
               ) : (
-                <Button type="submit" className="w-full">
+                <Button type="submit" className={`w-full ${isMobile ? 'h-12' : ''}`}>
                   Создать
                 </Button>
               )}

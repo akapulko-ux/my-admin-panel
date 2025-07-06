@@ -42,6 +42,19 @@ function ListLandmarks() {
   const [progress, setProgress] = useState(0);
   const [downloadedImages, setDownloadedImages] = useState(0);
   const [totalImages, setTotalImages] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   useEffect(() => {
     async function fetchLandmarks() {
@@ -134,14 +147,22 @@ function ListLandmarks() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Список Достопримечательностей</h1>
-        <div className="flex gap-2">
-          <Button onClick={() => navigate("/landmark/new")}>
+      <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-8`}>
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>Список Достопримечательностей</h1>
+        <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
+          <Button 
+            onClick={() => navigate("/landmark/new")}
+            className={`${isMobile ? 'w-full h-12' : ''}`}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Добавить достопримечательность
           </Button>
-          <Button variant="outline" onClick={handleDownloadAllPhotos} disabled={downloading}>
+          <Button 
+            variant="outline" 
+            onClick={handleDownloadAllPhotos} 
+            disabled={downloading}
+            className={`${isMobile ? 'w-full h-12' : ''}`}
+          >
             <Download className="mr-2 h-4 w-4" />
             Скачать все фотографии
           </Button>
@@ -212,7 +233,7 @@ function ListLandmarks() {
               <CardFooter>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className={`w-full ${isMobile ? 'h-12' : ''}`}
                   onClick={() => navigate(`/landmark/edit/${landmark.id}`)}
                 >
                   <Pencil className="mr-2 h-4 w-4" />

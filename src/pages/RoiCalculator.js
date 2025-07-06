@@ -192,6 +192,19 @@ const RoiCalculator = () => {
   const [savedCalculations, setSavedCalculations] = useState([]);
   const [calculationName, setCalculationName] = useState('');
   const [pdfLanguage, setPdfLanguage] = useState('en');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Загрузка сохраненных расчетов при монтировании
   useEffect(() => {
@@ -387,10 +400,10 @@ const RoiCalculator = () => {
   }, [calculationResults]);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className={`container mx-auto ${isMobile ? 'p-4' : 'p-6'} space-y-6`}>
       <div className="flex items-center gap-2 mb-6">
         <Calculator className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">Калькулятор ROI</h1>
+        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Калькулятор ROI</h1>
       </div>
 
       {/* Блок сохраненных расчетов */}
@@ -408,18 +421,20 @@ const RoiCalculator = () => {
                     <p className="font-medium">{calc.name}</p>
                     <p className="text-sm text-muted-foreground">{calc.date}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size={isMobile ? "default" : "sm"}
                       onClick={() => loadCalculation(calc)}
+                      className={isMobile ? 'h-12 w-full' : ''}
                     >
                       <FolderOpen className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size={isMobile ? "default" : "sm"}
                       onClick={() => deleteCalculation(calc.id)}
+                      className={isMobile ? 'h-12 w-full' : ''}
                     >
                       ✕
                     </Button>
@@ -433,7 +448,7 @@ const RoiCalculator = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-6`}>
         {/* Блок затрат и инвестиций */}
         <Card className="p-4 space-y-4">
           <h2 className="text-xl font-semibold">Затраты и инвестиции</h2>
@@ -618,8 +633,11 @@ const RoiCalculator = () => {
             </Select>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <Button onClick={calculateInvestment} className="bg-blue-600 hover:bg-blue-700">
+          <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex flex-wrap items-center gap-4'}`}>
+            <Button 
+              onClick={calculateInvestment} 
+              className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
+            >
               <Calculator className="mr-2 h-4 w-4" /> Рассчитать
             </Button>
           </div>
@@ -628,25 +646,30 @@ const RoiCalculator = () => {
 
       {calculationResults && (
         <div className="mt-8 p-6 bg-white rounded-2xl shadow-lg">
-          <div className="flex justify-between items-start mb-6">
+          <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-start'} mb-6`}>
             <div>
-              <h2 className="text-3xl font-bold text-gray-800">
+              <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-800`}>
                 Результаты расчета
               </h2>
               <p className="text-gray-500">
                 На основе введенных данных и сценария "{scenario}"
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+            <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex items-center gap-4'}`}>
+              <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                 <Input
                   type="text"
                   placeholder="Название расчета"
                   value={calculationName}
                   onChange={(e) => setCalculationName(e.target.value)}
-                  className="w-48"
+                  className={`${isMobile ? 'w-full' : 'w-48'}`}
                 />
-                <Button onClick={saveCalculation} size="sm" disabled={!calculationName.trim()}>
+                <Button 
+                  onClick={saveCalculation} 
+                  size={isMobile ? "default" : "sm"} 
+                  disabled={!calculationName.trim()}
+                  className={isMobile ? 'h-12 w-full' : ''}
+                >
                   <Save className="h-4 w-4" />
                 </Button>
               </div>
@@ -654,7 +677,8 @@ const RoiCalculator = () => {
               <Button 
                 onClick={() => exportToCSV({ ...calculationResults, graphData: calculationResults.graphData }, 'roi-analysis.csv')}
                 variant="outline"
-                size="sm"
+                size={isMobile ? "default" : "sm"}
+                className={isMobile ? 'h-12 w-full' : ''}
               >
                 <Download className="mr-2 h-4 w-4" /> Экспорт в CSV
               </Button>
@@ -662,14 +686,15 @@ const RoiCalculator = () => {
               <Button 
                 onClick={generatePublicPage}
                 variant="outline"
-                size="sm"
+                size={isMobile ? "default" : "sm"}
+                className={isMobile ? 'h-12 w-full' : ''}
               >
                 <Share2 className="mr-2 h-4 w-4" /> Публичная страница
               </Button>
 
-              <div className="flex items-center gap-2">
+              <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                 <Select value={pdfLanguage} onValueChange={setPdfLanguage}>
-                  <SelectTrigger className="w-[120px]">
+                  <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'w-[120px]'}`}>
                     <SelectValue placeholder="Language" />
                   </SelectTrigger>
                   <SelectContent>
@@ -688,7 +713,12 @@ const RoiCalculator = () => {
                   style={{ textDecoration: 'none' }}
                 >
                   {({ loading }) => (
-                    <Button variant="outline" size="sm" disabled={loading}>
+                    <Button 
+                      variant="outline" 
+                      size={isMobile ? "default" : "sm"} 
+                      disabled={loading}
+                      className={isMobile ? 'h-12 w-full' : ''}
+                    >
                       <Download className="mr-2 h-4 w-4" />
                       {loading ? '...' : 'PDF'}
                     </Button>
@@ -699,46 +729,47 @@ const RoiCalculator = () => {
           </div>
 
           {/* Investment Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div>
+          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'} gap-6 mb-8`}>
+            <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
               <p className="text-sm text-muted-foreground">Общие инвестиции</p>
               <p className="text-lg font-semibold">${calculationResults.totalInvestment.toLocaleString()}</p>
             </div>
             
-            <div>
+            <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
               <p className="text-sm text-muted-foreground">Годовой доход от аренды</p>
               <p className="text-lg font-semibold">${calculationResults.annualRentalIncome.toLocaleString()}</p>
             </div>
             
-            <div>
+            <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
               <p className="text-sm text-muted-foreground">Годовые расходы</p>
               <p className="text-lg font-semibold">${calculationResults.annualExpenses.toLocaleString()}</p>
             </div>
             
-            <div>
+            <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
               <p className="text-sm text-muted-foreground">Чистая прибыль в год</p>
               <p className="text-lg font-semibold">${calculationResults.annualNetProfit.toLocaleString()}</p>
             </div>
             
-            <div>
+            <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
               <p className="text-sm text-muted-foreground">ROI</p>
               <p className="text-lg font-semibold">{calculationResults.roi.toFixed(2)}%</p>
             </div>
             
-            <div>
+            <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
               <p className="text-sm text-muted-foreground">Срок окупаемости</p>
               <p className="text-lg font-semibold">{calculationResults.paybackPeriod.toFixed(1)} лет</p>
             </div>
           </div>
 
-          {/* Chart */}
-          <div className="h-96 bg-gray-50 p-4 rounded-lg">
+          {/* График */}
+          <div className={`${isMobile ? 'h-[400px]' : 'h-96'} bg-gray-50 p-4 rounded-lg mt-8`}>
             <ResponsiveContainer width="100%" height="100%">
-              {calculationResults?.graphData && calculationResults.graphData.length > 0 ? (
+              {calculationResults.graphData && calculationResults.graphData.length > 0 ? (
                 <AreaChart
-                  isAnimationActive={false}
                   data={calculationResults.graphData}
-                  margin={{
+                  margin={isMobile ? {
+                    top: 20, right: 15, left: 0, bottom: 60,
+                  } : {
                     top: 20, right: 30, left: 20, bottom: 5,
                   }}
                 >
@@ -755,35 +786,58 @@ const RoiCalculator = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis
                     dataKey="year"
-                    label={{ value: 'Период', position: 'bottom', offset: 20 }}
-                    tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }}
-                    interval={3}
-                    height={60}
+                    label={isMobile ? null : { value: 'Период', position: 'bottom', offset: 20 }}
+                    tick={{ 
+                      fontSize: isMobile ? 10 : 12, 
+                      angle: isMobile ? -45 : 0, 
+                      textAnchor: isMobile ? 'end' : 'middle',
+                      dy: isMobile ? 10 : 0
+                    }}
+                    interval={isMobile ? 0 : 3}
+                    height={isMobile ? 80 : 60}
                   />
                   <YAxis
                     yAxisId="left"
                     tickFormatter={formatLargeNumber}
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
                     domain={calculateOptimalDomain(calculationResults.graphData, 'profit')}
-                    width={80}
+                    width={isMobile ? 60 : 80}
                   />
                   <YAxis
                     yAxisId="right"
                     orientation="right"
                     tickFormatter={formatLargeNumber}
-                    tick={{ fontSize: 12 }}
-                    domain={calculateOptimalDomain(calculationResults.graphData, 'accumulatedProfit')}
-                    width={90}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    domain={(() => {
+                      const rightAxisData = [];
+                      calculationResults.graphData.forEach(item => {
+                        rightAxisData.push(item.accumulatedProfit);
+                        if (item.propertyValue) {
+                          rightAxisData.push(item.propertyValue);
+                        }
+                      });
+                      
+                      if (rightAxisData.length === 0) return ['auto', 'auto'];
+                      
+                      const minValue = Math.min(...rightAxisData);
+                      const maxValue = Math.max(...rightAxisData);
+                      const range = maxValue - minValue;
+                      const padding = range * 0.15;
+                      
+                      return [Math.floor(minValue - padding), Math.ceil(maxValue + padding)];
+                    })()}
+                    width={isMobile ? 70 : 90}
                   />
                   <Tooltip
                     content={<CustomTooltip />}
                     wrapperStyle={{ outline: 'none' }}
                   />
                   <Legend
-                    verticalAlign="top"
-                    height={36}
+                    verticalAlign={isMobile ? "bottom" : "top"}
+                    height={isMobile ? 48 : 36}
                     iconType="circle"
-                    iconSize={10}
+                    iconSize={isMobile ? 8 : 10}
+                    wrapperStyle={isMobile ? { fontSize: '10px', paddingTop: '10px' } : undefined}
                   />
                   <Area
                     yAxisId="left"
@@ -791,10 +845,10 @@ const RoiCalculator = () => {
                     dataKey="profit"
                     name="Прибыль за год"
                     stroke="#8884d8"
-                    strokeWidth={2}
+                    strokeWidth={isMobile ? 1.5 : 2}
                     fill="url(#profitGradient)"
-                    dot={{ r: 4, fill: '#8884d8' }}
-                    activeDot={{ r: 6, fill: '#8884d8' }}
+                    dot={{ r: isMobile ? 3 : 4, fill: '#8884d8' }}
+                    activeDot={{ r: isMobile ? 5 : 6, fill: '#8884d8' }}
                   />
                   <Area
                     yAxisId="right"
@@ -802,10 +856,10 @@ const RoiCalculator = () => {
                     dataKey="accumulatedProfit"
                     name="Накопленная прибыль"
                     stroke="#82ca9d"
-                    strokeWidth={2}
+                    strokeWidth={isMobile ? 1.5 : 2}
                     fill="url(#accumulatedGradient)"
-                    dot={{ r: 4, fill: '#82ca9d' }}
-                    activeDot={{ r: 6, fill: '#82ca9d' }}
+                    dot={{ r: isMobile ? 3 : 4, fill: '#82ca9d' }}
+                    activeDot={{ r: isMobile ? 5 : 6, fill: '#82ca9d' }}
                   />
                 </AreaChart>
               ) : (

@@ -38,34 +38,18 @@ const FilterSection = ({
   setFilters, 
   onApplyFilter,
   isExpanded,
-  setIsExpanded
+  setIsExpanded,
+  isMobile
 }) => {
   const filterFields = [
     { key: 'price', label: 'Цена', placeholder: 'Введите цену...' },
     { key: 'type', label: 'Тип', placeholder: 'Тип недвижимости...' },
-    { key: 'coordinates', label: 'Координаты', placeholder: 'Координаты...' },
-    { key: 'status', label: 'Статус', placeholder: 'Статус...' },
     { key: 'district', label: 'Район', placeholder: 'Район...' },
     { key: 'buildingType', label: 'Тип постройки', placeholder: 'Тип постройки...' },
     { key: 'bedrooms', label: 'Спальни', placeholder: 'Количество спален...' },
-    { key: 'ownershipForm', label: 'Форма собств.', placeholder: 'Форма собственности...' },
-    { key: 'landStatus', label: 'Статус земли', placeholder: 'Статус земли...' },
-    { key: 'pool', label: 'Бассейн', placeholder: 'Наличие бассейна...' },
-    { key: 'description', label: 'Описание', placeholder: 'Описание...' },
     { key: 'developer', label: 'Застройщик', placeholder: 'Застройщик...' },
     { key: 'complex', label: 'Комплекс', placeholder: 'Комплекс...' },
     { key: 'area', label: 'Площадь', placeholder: 'Площадь...' },
-    { key: 'province', label: 'Провинция', placeholder: 'Провинция...' },
-    { key: 'city', label: 'Город', placeholder: 'Город...' },
-    { key: 'rdtr', label: 'RDTR', placeholder: 'RDTR...' },
-    { key: 'managementCompany', label: 'Упр. компания', placeholder: 'Управляющая компания...' },
-    { key: 'completionDate', label: 'Дата заверш.', placeholder: 'Дата завершения...' },
-    { key: 'leaseYears', label: 'Лет', placeholder: 'Срок аренды...' },
-    { key: 'shgb', label: 'SHGB', placeholder: 'SHGB...' },
-    { key: 'pbg', label: 'PBG', placeholder: 'PBG...' },
-    { key: 'slf', label: 'SLF', placeholder: 'SLF...' },
-    { key: 'legalCompanyName', label: 'Юр. название', placeholder: 'Юридическое название...' },
-    { key: 'commission', label: 'Вознаграждение', placeholder: 'Вознаграждение...' }
   ];
 
   const handleFilterChange = (key, value) => {
@@ -79,7 +63,9 @@ const FilterSection = ({
           <div className="flex items-center gap-3">
             <Filter className="w-6 h-6 text-blue-600" />
             <div>
-              <CardTitle className="text-lg">Фильтр объектов</CardTitle>
+              <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>
+                Фильтр объектов
+              </CardTitle>
               <p className="text-sm text-gray-600 mt-1">Настройте критерии поиска</p>
             </div>
           </div>
@@ -97,7 +83,7 @@ const FilterSection = ({
       
       {isExpanded && (
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
             {filterFields.map(({ key, label, placeholder }) => (
               <div key={key} className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">{label}</label>
@@ -111,7 +97,7 @@ const FilterSection = ({
             ))}
           </div>
           
-          <div className="flex gap-3 pt-4 border-t">
+          <div className={`flex gap-3 pt-4 border-t ${isMobile ? 'flex-col' : 'flex-row'}`}>
             <Button onClick={onApplyFilter} className="flex items-center gap-2">
               <Filter className="w-4 h-4" />
               Применить фильтр
@@ -141,34 +127,16 @@ const MassEditSection = ({
   onMassEdit,
   isExpanded,
   setIsExpanded,
-  filteredCount
+  filteredCount,
+  isMobile
 }) => {
   const editFields = [
     { key: 'price', label: 'Цена', placeholder: 'Новая цена...' },
     { key: 'type', label: 'Тип', placeholder: 'Новый тип...' },
-    { key: 'coordinates', label: 'Координаты', placeholder: 'Новые координаты...' },
-    { key: 'status', label: 'Статус', placeholder: 'Новый статус...' },
     { key: 'district', label: 'Район', placeholder: 'Новый район...' },
-    { key: 'buildingType', label: 'Тип постройки', placeholder: 'Новый тип постройки...' },
-    { key: 'bedrooms', label: 'Спальни', placeholder: 'Количество спален...' },
-    { key: 'ownershipForm', label: 'Форма собств.', placeholder: 'Новая форма собственности...' },
-    { key: 'landStatus', label: 'Статус земли', placeholder: 'Новый статус земли...' },
-    { key: 'pool', label: 'Бассейн', placeholder: 'Наличие бассейна...' },
-    { key: 'description', label: 'Описание', placeholder: 'Новое описание...' },
     { key: 'developer', label: 'Застройщик', placeholder: 'Новый застройщик...' },
     { key: 'complex', label: 'Комплекс', placeholder: 'Новый комплекс...' },
     { key: 'area', label: 'Площадь', placeholder: 'Новая площадь...' },
-    { key: 'province', label: 'Провинция', placeholder: 'Новая провинция...' },
-    { key: 'city', label: 'Город', placeholder: 'Новый город...' },
-    { key: 'rdtr', label: 'RDTR', placeholder: 'Новый RDTR...' },
-    { key: 'managementCompany', label: 'Упр. компания', placeholder: 'Новая управляющая компания...' },
-    { key: 'completionDate', label: 'Дата заверш.', placeholder: 'Новая дата завершения...' },
-    { key: 'leaseYears', label: 'Лет', placeholder: 'Новый срок аренды...' },
-    { key: 'shgb', label: 'SHGB', placeholder: 'Новый SHGB...' },
-    { key: 'pbg', label: 'PBG', placeholder: 'Новый PBG...' },
-    { key: 'slf', label: 'SLF', placeholder: 'Новый SLF...' },
-    { key: 'legalCompanyName', label: 'Юр. название', placeholder: 'Новое юридическое название...' },
-    { key: 'commission', label: 'Вознаграждение', placeholder: 'Новое вознаграждение...' }
   ];
 
   const handleMassEditChange = (key, value) => {
@@ -182,7 +150,9 @@ const MassEditSection = ({
           <div className="flex items-center gap-3">
             <Edit className="w-6 h-6 text-orange-600" />
             <div>
-              <CardTitle className="text-lg">Массовое редактирование</CardTitle>
+              <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>
+                Массовое редактирование
+              </CardTitle>
               <p className="text-sm text-gray-600 mt-1">
                 Изменить {filteredCount} отфильтрованных объектов
               </p>
@@ -202,7 +172,7 @@ const MassEditSection = ({
       
       {isExpanded && (
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
             {editFields.map(({ key, label, placeholder }) => (
               <div key={key} className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">{label}</label>
@@ -216,7 +186,7 @@ const MassEditSection = ({
             ))}
           </div>
           
-          <div className="flex gap-3 pt-4 border-t">
+          <div className={`flex gap-3 pt-4 border-t ${isMobile ? 'flex-col' : 'flex-row'}`}>
             <Button 
               onClick={onMassEdit}
               variant="destructive"
@@ -231,7 +201,7 @@ const MassEditSection = ({
               className="flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
-              Очистить поля
+              Очистить
             </Button>
           </div>
         </CardContent>
@@ -241,104 +211,106 @@ const MassEditSection = ({
 };
 
 // Компонент карточки объекта
-const PropertyCard = ({ property, onDuplicate }) => {
-  const priceValue = parseFloat(property.price) || 0;
-  const formattedPrice = priceValue.toLocaleString("ru-RU");
+const PropertyCard = ({ property, onDuplicate, isMobile }) => {
+  const safeDisplay = (value) => {
+    if (value === null || value === undefined) return "";
+    if (value instanceof Timestamp) return value.toDate().toLocaleDateString("ru-RU");
+    if (typeof value === "object") return JSON.stringify(value);
+    return String(value);
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return "";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      {/* Изображение объекта */}
       {property.images && property.images.length > 0 && (
-        <div className="relative h-48 overflow-hidden">
+        <div className="aspect-video relative overflow-hidden">
           <img
             src={property.images[0]}
-            alt="Property Photo"
+            alt={safeDisplay(property.type)}
             className="w-full h-full object-cover"
           />
-          <div className="absolute top-3 right-3">
-            <Badge className="bg-green-600">
-              {property.status || 'Активен'}
-            </Badge>
-          </div>
         </div>
       )}
       
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-green-600" />
-            <span className="text-xl font-bold text-gray-900">
-              {formattedPrice} $
-            </span>
-          </div>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'} line-clamp-2`}>
+            {safeDisplay(property.type) || "Объект недвижимости"}
+          </CardTitle>
+          {property.price && (
+            <Badge variant="secondary" className="ml-2 flex-shrink-0">
+              {formatPrice(property.price)}
+            </Badge>
+          )}
         </div>
-
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <Home className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-700">
-              <span className="font-medium">Тип:</span> {property.type || 'Не указан'}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-700">
-              <span className="font-medium">Район:</span> {property.district || 'Не указан'}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Building className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-700">
-              <span className="font-medium">Застройщик:</span> {property.developer || 'Не указан'}
-            </span>
-          </div>
-
+      </CardHeader>
+      
+      <CardContent className="pt-0">
+        <div className="space-y-2">
           {property.complex && (
-            <div className="text-gray-700">
-              <span className="font-medium">Комплекс:</span> {property.complex}
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Building className="w-4 h-4" />
+              <span>{safeDisplay(property.complex)}</span>
             </div>
           )}
 
-          {property.bedrooms && (
-            <div className="text-gray-700">
-              <span className="font-medium">Спальни:</span> {property.bedrooms}
+          {property.district && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MapPin className="w-4 h-4" />
+              <span>{safeDisplay(property.district)}</span>
             </div>
           )}
 
           {property.area && (
-            <div className="text-gray-700">
-              <span className="font-medium">Площадь:</span> {property.area} м²
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Home className="w-4 h-4" />
+              <span>{safeDisplay(property.area)} м²</span>
+            </div>
+          )}
+          
+          {property.bedrooms !== undefined && property.bedrooms !== null && (
+            <div className="text-sm text-gray-600">
+              Спален: {safeDisplay(property.bedrooms)}
             </div>
           )}
 
-          {property.commission !== undefined && (
-            <div className="text-gray-700">
-              <span className="font-medium">Вознаграждение:</span> {property.commission}
+          {property.developer && (
+            <div className="text-sm text-gray-600">
+              Застройщик: {safeDisplay(property.developer)}
             </div>
           )}
         </div>
 
-        <div className="flex gap-2 pt-3 border-t">
-          <Button
-            asChild
-            size="sm"
-            className="flex-1"
-          >
-            <Link to={`/property/edit/${property.id}`} className="flex items-center gap-2">
-              <Edit className="w-4 h-4" />
-              Редактировать
-            </Link>
-          </Button>
-          
+        <div className={`flex gap-2 mt-4 ${isMobile ? 'flex-col' : 'flex-row'}`}>
           <Button
             variant="outline"
-            size="icon"
+            size="sm"
             onClick={() => onDuplicate(property.id)}
-            className="w-9 h-9"
+            className={`flex items-center gap-2 ${isMobile ? 'w-full' : 'flex-1'}`}
           >
             <Copy className="w-4 h-4" />
+            Дублировать
           </Button>
+          <Link to={`/property/edit/${property.id}`} className={isMobile ? 'w-full' : 'flex-1'}>
+            <Button 
+              variant="default" 
+              size="sm"
+              className={`flex items-center gap-2 ${isMobile ? 'w-full' : 'w-full'}`}
+            >
+              <Edit className="w-4 h-4" />
+              Редактировать
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>
@@ -349,16 +321,25 @@ function ListProperties() {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Состояния для фильтров и массового редактирования
+  const [filterExpanded, setFilterExpanded] = useState(false);
+  const [massEditExpanded, setMassEditExpanded] = useState(false);
   const [filters, setFilters] = useState({});
   const [massEdit, setMassEdit] = useState({});
-  
-  // Состояния для раскрытия секций
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [isMassEditExpanded, setIsMassEditExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // --- Загрузка данных из Firestore ---
+  // Проверка размера экрана
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Загрузка объектов
   const fetchProperties = async () => {
     try {
       const colRef = collection(db, "properties");
@@ -368,95 +349,80 @@ function ListProperties() {
         ...docSnap.data(),
       }));
 
-      // Сортируем по createdAt (Timestamp) от новых к старым
+      // Сортировка по дате создания (новые сверху)
       data.sort((a, b) => {
-        const timeA =
-          a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
-        const timeB =
-          b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0;
-        return timeB - timeA;
+        const timestampA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
+        const timestampB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0;
+        return timestampB - timestampA;
       });
 
       setProperties(data);
       setFilteredProperties(data);
     } catch (error) {
       console.error("Ошибка загрузки объектов:", error);
-      showError("Ошибка загрузки объектов");
+      showError("Ошибка при загрузке объектов");
     } finally {
       setLoading(false);
     }
   };
 
-  // При монтировании
   useEffect(() => {
     fetchProperties();
   }, []);
 
-  // --- Функция «Дублировать» ---
+  // Дублирование объекта
   const handleDuplicate = async (docId) => {
     try {
-      const ref = doc(db, "properties", docId);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        showError("Документ не найден.");
+      const original = properties.find(p => p.id === docId);
+      if (!original) {
+        showError("Объект не найден");
         return;
       }
-      const data = snap.data();
 
-      // Копируем данные, исключая createdAt
-      const { createdAt, ...rest } = data;
+      const { id, createdAt, ...dataWithoutId } = original;
       
-      // Если в объекте есть фотографии, для каждого фото выполняем загрузку заново в Firebase Storage,
-      // чтобы получить новый URL (уникальную копию)
-      let newImages = [];
-      if (Array.isArray(rest.images)) {
-        newImages = await Promise.all(
-          rest.images.map(async (imgUrl) => {
+      const newProperty = {
+        ...dataWithoutId,
+        createdAt: Timestamp.now(),
+      };
+      
+      // Дублируем изображения если есть
+      if (original.images && original.images.length > 0) {
+        const duplicatedImages = [];
+        for (const imageUrl of original.images) {
             try {
-              const response = await fetch(imgUrl);
-              if (response.ok) {
+            const response = await fetch(imageUrl);
                 const blob = await response.blob();
-                const newUrl = await uploadToFirebaseStorageInFolder(blob, "property");
-                return newUrl;
-              } else {
-                console.error(`Ошибка загрузки изображения ${imgUrl}: ${response.statusText}`);
-                return imgUrl;
-              }
-            } catch (error) {
-              console.error("Ошибка при обработке изображения:", error);
-              return imgUrl;
+            const file = new File([blob], `duplicated_${Date.now()}.jpg`, { type: blob.type });
+            const uploadedUrl = await uploadToFirebaseStorageInFolder(file, "properties");
+            duplicatedImages.push(uploadedUrl);
+          } catch (imgError) {
+            console.error("Ошибка дублирования изображения:", imgError);
             }
-          })
-        );
+        }
+        newProperty.images = duplicatedImages;
       }
 
-      const newData = {
-        ...rest,
-        images: newImages,
-        createdAt: new Date()
-      };
-
-      await addDoc(collection(db, "properties"), newData);
-      showSuccess("Дубликат создан!");
-      fetchProperties();
+      await addDoc(collection(db, "properties"), newProperty);
+      showSuccess("Объект успешно дублирован");
+      await fetchProperties(); // Перезагружаем список
     } catch (error) {
-      console.error("Ошибка при дублировании объекта:", error);
+      console.error("Ошибка дублирования:", error);
       showError("Ошибка при дублировании объекта");
     }
   };
 
-  // --- Фильтрация по всем полям ---
+  // Применение фильтров
   const handleFilter = () => {
     let result = [...properties];
 
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value && value.trim() !== "") {
-        result = result.filter((p) => {
-          const fieldValue = p[key];
-          if (key === 'price' || key === 'area' || key === 'commission') {
-            return String(fieldValue ?? "").includes(value.trim());
-          }
-          return String(fieldValue ?? "").toLowerCase().includes(value.toLowerCase());
+    Object.keys(filters).forEach(key => {
+      const filterValue = filters[key];
+      if (filterValue && filterValue.trim() !== "") {
+        result = result.filter(property => {
+          const propertyValue = property[key];
+          if (propertyValue === null || propertyValue === undefined) return false;
+          return String(propertyValue).toLowerCase().includes(filterValue.toLowerCase());
         });
       }
     });
@@ -464,59 +430,52 @@ function ListProperties() {
     setFilteredProperties(result);
   };
 
-  // --- Массовое редактирование ---
+  // Массовое редактирование
   const handleMassEdit = async () => {
-    if (
-      !window.confirm(
-        `Вы действительно хотите массово изменить ${filteredProperties.length} отфильтрованных объектов?`
-      )
-    ) {
+    const hasChanges = Object.values(massEdit).some(value => value && value.trim() !== "");
+    
+    if (!hasChanges) {
+      showError("Заполните хотя бы одно поле для редактирования");
       return;
     }
 
     try {
-      for (let item of filteredProperties) {
-        const ref = doc(db, "properties", item.id);
-        const newData = {};
-
-        Object.entries(massEdit).forEach(([key, value]) => {
+      const updateData = {};
+      Object.keys(massEdit).forEach(key => {
+        const value = massEdit[key];
           if (value && value.trim() !== "") {
-            if (key === 'price' || key === 'area' || key === 'commission') {
-              newData[key] = parseFloat(value) || 0;
-            } else {
-              newData[key] = value;
-            }
-          }
-        });
-
-        if (Object.keys(newData).length > 0) {
-          await updateDoc(ref, newData);
+          updateData[key] = value.trim();
         }
-      }
+      });
 
-      showSuccess("Массовое редактирование выполнено!");
-      fetchProperties();
-    } catch (err) {
-      console.error("Ошибка массового редактирования:", err);
-      showError("Ошибка: " + err.message);
+      const promises = filteredProperties.map(property => 
+        updateDoc(doc(db, "properties", property.id), updateData)
+      );
+
+      await Promise.all(promises);
+      showSuccess(`Успешно обновлено ${filteredProperties.length} объектов`);
+      setMassEdit({});
+      await fetchProperties();
+    } catch (error) {
+      console.error("Ошибка массового редактирования:", error);
+      showError("Ошибка при массовом редактировании");
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-3">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          <span className="text-lg text-gray-600">Загрузка объектов...</span>
-        </div>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Список Объектов</h1>
+    <div className={`container mx-auto py-8 ${isMobile ? 'px-2' : 'px-4'}`}>
+      <div className={`flex items-center mb-6 ${isMobile ? 'flex-col gap-4' : 'justify-between'}`}>
+        <h1 className={`font-bold ${isMobile ? 'text-xl text-center' : 'text-3xl'}`}>
+          Список Объектов
+        </h1>
         <Link to="/property/new">
           <Button className="flex items-center gap-2">
             <Home className="h-4 w-4" />
@@ -525,38 +484,51 @@ function ListProperties() {
         </Link>
       </div>
 
+      {/* Фильтры */}
       <FilterSection
         filters={filters}
         setFilters={setFilters}
         onApplyFilter={handleFilter}
-        isExpanded={isFilterExpanded}
-        setIsExpanded={setIsFilterExpanded}
+        isExpanded={filterExpanded}
+        setIsExpanded={setFilterExpanded}
+        isMobile={isMobile}
       />
 
+      {/* Массовое редактирование */}
       <MassEditSection
         massEdit={massEdit}
         setMassEdit={setMassEdit}
         onMassEdit={handleMassEdit}
-        isExpanded={isMassEditExpanded}
-        setIsExpanded={setIsMassEditExpanded}
+        isExpanded={massEditExpanded}
+        setIsExpanded={setMassEditExpanded}
         filteredCount={filteredProperties.length}
+        isMobile={isMobile}
       />
 
-      {loading ? (
-        <div className="flex justify-center items-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {/* Результаты */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          Найдено объектов: {filteredProperties.length} из {properties.length}
+        </p>
+      </div>
+
+      {/* Список объектов */}
+      <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+        {filteredProperties.length === 0 ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-gray-500">Объекты не найдены</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map((property) => (
+          filteredProperties.map((property) => (
             <PropertyCard
               key={property.id}
               property={property}
-              onDuplicate={() => handleDuplicate(property.id)}
+              onDuplicate={handleDuplicate}
+              isMobile={isMobile}
             />
-          ))}
+          ))
+        )}
         </div>
-      )}
     </div>
   );
 }

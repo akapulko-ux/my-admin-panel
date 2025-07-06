@@ -48,6 +48,21 @@ function ComplexDetail() {
   const [hasChanges, setHasChanges] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Мобильное обнаружение
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
   // Функция для проверки, может ли пользователь редактировать комплекс
   const canEdit = () => {
     if (role === 'admin' || role === 'модератор') return true;
@@ -441,7 +456,7 @@ function ComplexDetail() {
   return (
     <div className="max-w-7xl mx-auto p-4">
       {/* Кнопка возврата и заголовок */}
-      <div className="flex items-center justify-between mb-6">
+      <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex items-center justify-between'} mb-6`}>
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -450,25 +465,25 @@ function ComplexDetail() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-bold">
+          <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>
             {complex?.name || "Загрузка..."}
           </h1>
         </div>
         {canEdit() && (
-          <div className="flex gap-2">
+          <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
             {isEditing ? (
               <>
                 <Button
                   variant="outline"
                   onClick={handleCancel}
-                  className="gap-2"
+                  className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
                 >
                   <X className="h-4 w-4" />
                   Отменить
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="gap-2"
+                  className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
                   disabled={!hasChanges}
                 >
                   <Save className="h-4 w-4" />
@@ -479,7 +494,7 @@ function ComplexDetail() {
               <Button
                 onClick={() => setIsEditing(true)}
                 variant="outline"
-                className="gap-2"
+                className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
               >
                 <Edit2 className="h-4 w-4" />
                 Редактировать
@@ -495,7 +510,7 @@ function ComplexDetail() {
           <Button
             onClick={handleImageUpload}
             variant="outline"
-            className="gap-2"
+            className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
             disabled={uploading}
           >
             {uploading ? (
@@ -691,30 +706,30 @@ function ComplexDetail() {
           )}
 
           {/* Остальные поля в одну линию */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-4 gap-4'}`}>
             {/* Застройщик */}
-            <div className="col-span-1">
+            <div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium text-gray-600">Застройщик</Label>
-                <div className="text-sm">{safeDisplay(complex.developer)}</div>
+                <div className="text-sm break-words">{safeDisplay(complex.developer)}</div>
               </div>
             </div>
 
             {/* Район */}
-            <div className="col-span-1">
+            <div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium text-gray-600">Район</Label>
-                <div className="text-sm">{safeDisplay(complex.district)}</div>
+                <div className="text-sm break-words">{safeDisplay(complex.district)}</div>
               </div>
             </div>
 
             {/* Дата сдачи */}
-            <div className="col-span-1">
+            <div>
               {renderEditableValue('completionDate', complex.completionDate, 'text', 'Дата сдачи')}
             </div>
 
             {/* Координаты */}
-            <div className="col-span-1">
+            <div>
               {renderEditableValue('coordinates', complex.coordinates, 'text', 'Координаты')}
             </div>
           </div>
@@ -767,7 +782,7 @@ function ComplexDetail() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full"
+                className={`w-full ${isMobile ? 'h-12' : ''}`}
                 asChild={!!complex.videoLink}
                 disabled={!complex.videoLink}
               >
@@ -801,7 +816,7 @@ function ComplexDetail() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full"
+                className={`w-full ${isMobile ? 'h-12' : ''}`}
                 asChild={!!complex.threeDTour}
                 disabled={!complex.threeDTour}
               >
@@ -826,7 +841,7 @@ function ComplexDetail() {
           <div className="mt-6">
             <Button
               onClick={() => navigate(`/building-progress/complex/${id}`)}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              className={`w-full bg-green-600 hover:bg-green-700 text-white ${isMobile ? 'h-12' : ''}`}
             >
               <BarChart3 className="h-4 w-4 mr-2" />
               Прогресс строительства

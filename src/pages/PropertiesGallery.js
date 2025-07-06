@@ -29,6 +29,19 @@ function PropertiesGallery() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [editingPrice, setEditingPrice] = useState(null);
   const [newPrice, setNewPrice] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Проверка размера экрана
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Состояния для поиска и фильтрации
   const [searchQuery, setSearchQuery] = useState("");
@@ -284,19 +297,19 @@ function PropertiesGallery() {
   return (
     <div className="bg-white min-h-screen">
       {/* Заголовок и поиск */}
-      <div className="max-w-4xl mx-auto p-4 space-y-4">
+      <div className={`mx-auto space-y-4 p-4 ${isMobile ? 'max-w-full' : 'max-w-4xl'}`}>
         {role === 'застройщик' && developerName ? (
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className={`font-bold text-gray-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
             Объекты застройщика: {developerName}
           </h1>
         ) : (
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className={`font-bold text-gray-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
             Галерея объектов
           </h1>
         )}
 
         {/* Поиск и кнопка фильтров */}
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${isMobile ? 'flex-col' : 'flex-row'}`}>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
             <Input
@@ -332,7 +345,7 @@ function PropertiesGallery() {
             <Card className="p-4 mt-2">
               <div className="space-y-4">
                 {/* Фильтры */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
                   {/* Цена */}
                   <div className="space-y-2">
                     <Label>Цена (USD)</Label>
@@ -443,8 +456,8 @@ function PropertiesGallery() {
         </div>
       </div>
 
-      {/* Список компактных карточек */}
-      <div className="divide-y max-w-4xl mx-auto">
+      {/* Список карточек */}
+      <div className={`divide-y ${isMobile ? 'max-w-full' : 'max-w-4xl mx-auto'}`}>
         {filteredProperties.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             {properties.length === 0 
@@ -458,10 +471,18 @@ function PropertiesGallery() {
             <Link
               key={p.id}
               to={`/property/${p.id}`}
-              className="flex items-stretch gap-4 p-4 cursor-pointer hover:bg-gray-50"
+              className={`flex items-stretch cursor-pointer hover:bg-gray-50 transition-colors ${
+                isMobile 
+                  ? 'flex-col gap-3 p-3' 
+                  : 'gap-4 p-4'
+              }`}
             >
               {/* Изображение */}
-              <div className="relative w-48 h-32 min-w-48 flex-shrink-0 rounded-md overflow-hidden bg-gray-200">
+              <div className={`relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 ${
+                isMobile 
+                  ? 'w-full h-40' 
+                  : 'w-48 h-32 min-w-48'
+              }`}>
                 {p.images?.length ? (
                   <img
                     src={p.images[0]}
@@ -478,7 +499,9 @@ function PropertiesGallery() {
               {/* Текстовая информация */}
               <div className="flex flex-col text-gray-900 space-y-0.5">
                 {(p.complexName || p.complex) && (
-                  <span className="text-lg font-semibold leading-none text-black">
+                  <span className={`font-semibold leading-none text-black ${
+                    isMobile ? 'text-base' : 'text-lg'
+                  }`}>
                     {safeDisplay(p.complexName || p.complex)}
                   </span>
                 )}
@@ -517,7 +540,9 @@ function PropertiesGallery() {
                     </div>
                   ) : (
                     <>
-                      <span className="text-lg font-semibold leading-none">
+                      <span className={`font-semibold leading-none ${
+                        isMobile ? 'text-base' : 'text-lg'
+                      }`}>
                         {formatPrice(p.price)}
                       </span>
                       {hasEditAccess && (

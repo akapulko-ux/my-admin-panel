@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 // Заменяем импорт uploadToCloudinary на загрузку в Firebase Storage с указанием папки
@@ -42,6 +42,21 @@ import { Textarea } from "../components/ui/textarea";
 
 function CreateComplex() {
   const navigate = useNavigate();
+  
+  // Мобильная детекция
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // ----- Поля формы -----
   const [complexNumber, setComplexNumber] = useState("");
 
@@ -291,18 +306,24 @@ function CreateComplex() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-6">
+    <div className={`container mx-auto py-${isMobile ? '4' : '8'} px-4`}>
+      <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'} mb-6`}>
         <div className="flex items-center gap-3">
-          <Building2 className="h-8 w-8 text-primary" />
+          <Building2 className={`h-${isMobile ? '6' : '8'} w-${isMobile ? '6' : '8'} text-primary`} />
           <div>
-            <h1 className="text-3xl font-bold">Добавить комплекс</h1>
+            <h1 className={`text-${isMobile ? '2xl' : '3xl'} font-bold`}>
+              {isMobile ? 'Добавить комплекс' : 'Добавить комплекс'}
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Заполните информацию о новом комплексе
             </p>
           </div>
         </div>
-        <Button variant="outline" onClick={() => navigate("/complex/list")} className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/complex/list")} 
+          className={`flex items-center gap-2 ${isMobile ? 'w-full justify-center h-12' : ''}`}
+        >
           <ArrowLeft className="h-4 w-4" />
           Вернуться к списку
         </Button>
@@ -318,7 +339,7 @@ function CreateComplex() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-4`}>
               <div className="space-y-2">
                 <Label htmlFor="complexNumber">Номер комплекса</Label>
                 <Input
@@ -461,7 +482,7 @@ function CreateComplex() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-4`}>
               <div className="space-y-2">
                 <Label htmlFor="managementCompany">Управляющая компания</Label>
                 <Input
@@ -615,11 +636,11 @@ function CreateComplex() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
+              <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} gap-4`}>
                 <Button
                   type="button"
                   variant="secondary"
-                  className="flex items-center gap-2"
+                  className={`flex items-center gap-2 ${isMobile ? 'w-full h-12 justify-center' : ''}`}
                   onClick={() => document.getElementById("file-upload").click()}
                   disabled={isUploading}
                 >
@@ -643,7 +664,7 @@ function CreateComplex() {
               {/* Превью загруженных фото */}
               {previews.length > 0 && (
                 <DndProvider backend={HTML5Backend}>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} gap-4`}>
                     {previews.map((preview, index) => (
                       <DraggablePreviewItem
                         key={preview.id}
@@ -662,10 +683,10 @@ function CreateComplex() {
         </Card>
 
         {/* Кнопка сохранения */}
-        <div className="flex justify-end">
+        <div className={`flex ${isMobile ? 'justify-center' : 'justify-end'}`}>
           <Button
             type="submit"
-            className="flex items-center gap-2"
+            className={`flex items-center gap-2 ${isMobile ? 'w-full h-12' : ''}`}
             disabled={isLoading}
           >
             {isLoading ? (

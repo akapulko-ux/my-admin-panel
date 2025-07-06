@@ -24,6 +24,19 @@ const ListChessboards = () => {
   const [loading, setLoading] = useState(true);
   const [complexNames, setComplexNames] = useState({});
   const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, chessboard: null });
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Загрузка списка шахматок
   useEffect(() => {
@@ -235,11 +248,11 @@ const ListChessboards = () => {
         title="Подтверждение удаления"
         description={`Вы уверены, что хотите удалить шахматку "${deleteDialog.chessboard?.name}"?`}
       />
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Шахматки</h1>
+      <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-6`}>
+        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Шахматки</h1>
         <Button
           onClick={() => navigate('/chessboard/new')}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className={`bg-blue-600 hover:bg-blue-700 text-white ${isMobile ? 'w-full h-12' : ''}`}
         >
           <Plus className="w-5 h-5 mr-2" />
           Создать шахматку
@@ -255,7 +268,7 @@ const ListChessboards = () => {
             <p className="text-gray-500 mb-6">Создайте первую шахматку для управления планировкой объекта</p>
             <Button 
               onClick={() => navigate('/chessboard/new')} 
-              className="bg-blue-600 hover:bg-blue-700"
+              className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
             >
               <Plus className="w-4 h-4 mr-2" />
               Создать первую шахматку
@@ -334,6 +347,7 @@ const ListChessboards = () => {
                             variant="ghost"
                             onClick={() => copyPublicLink(chessboard.publicUrl)}
                             title="Копировать ссылку"
+                            className={`${isMobile ? 'min-h-[40px]' : ''}`}
                           >
                             <LinkIcon className="w-3 h-3" />
                           </Button>
@@ -342,6 +356,7 @@ const ListChessboards = () => {
                             variant="ghost"
                             onClick={() => window.open(`/public/${chessboard.publicUrl}`, '_blank')}
                             title="Открыть в новой вкладке"
+                            className={`${isMobile ? 'min-h-[40px]' : ''}`}
                           >
                             <Eye className="w-3 h-3" />
                           </Button>
@@ -360,7 +375,7 @@ const ListChessboards = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/chessboard/${chessboard.id}`)}
-                      className="w-full mt-3"
+                      className={`w-full mt-3 ${isMobile ? 'h-12' : ''}`}
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       Открыть
