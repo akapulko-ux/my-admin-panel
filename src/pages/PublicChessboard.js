@@ -178,14 +178,10 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                   {section.floors
                     .map((floor, floorIdx) => (
                       <div key={floorIdx} className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center gap-2 mb-4">
-                          <MapPin className="w-5 h-5 text-blue-600" />
-                          {floor.floor !== null && 
-                           floor.floor !== undefined && 
-                           floor.floor !== '' && 
-                           !isNaN(floor.floor) && (
-                            <span className="font-semibold">{floor.floor} {t.unit.floor}</span>
-                          )}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg font-semibold">
+                            {floor.type ? t.unit[floor.type === 'этаж' ? 'floor' : 'row'] : t.unit.floor} {floor.floor}
+                          </span>
                         </div>
 
                         <div className="overflow-x-auto pb-4">
@@ -267,7 +263,7 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                                     )}
                                   </div>
 
-                                  {unit.status === 'free' && unit.priceUSD > 0 && (
+                                  {unit.status === 'free' && unit.priceUSD > 0 && unit.showPrice && (
                                     <div className="border-t border-white/20 pt-2 mt-2">
                                       <div className="space-y-1">
                                         <p className="font-semibold text-white text-lg">

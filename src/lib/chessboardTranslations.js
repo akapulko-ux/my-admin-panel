@@ -13,6 +13,7 @@ export const chessboardTranslations = {
     },
     unit: {
       floor: 'floor',
+      row: 'row',
       floors: {
         one: '1 floor',
         two: '2 floors',
@@ -76,6 +77,7 @@ export const chessboardTranslations = {
     },
     unit: {
       floor: 'этаж',
+      row: 'ряд',
       floors: {
         one: '1 этаж',
         two: '2 этажа',
@@ -139,6 +141,7 @@ export const chessboardTranslations = {
     },
     unit: {
       floor: 'lantai',
+      row: 'baris',
       floors: {
         one: '1 lantai',
         two: '2 lantai',

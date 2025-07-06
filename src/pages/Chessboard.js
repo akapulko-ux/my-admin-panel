@@ -1,5 +1,5 @@
 // src/pages/Chessboard.js
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from "../firebaseConfig";
 import { 
@@ -265,9 +265,14 @@ const SortableSection = ({
             <input
               type="text"
               value={section.name}
-              onChange={(e) => onNameChange(e.target.value)}
+              onChange={(e) => {
+                // Разрешаем только английские заглавные буквы, цифры и пробелы
+                const newValue = e.target.value.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+                onNameChange(newValue);
+              }}
               className="text-xl font-semibold bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none flex-grow min-w-0"
               style={{ width: `${Math.max(section.name.length * 0.6, 8)}ch` }}
+              placeholder="A1"
             />
           </div>
           <div className={`${isMobile ? 'flex flex-col w-full max-w-[120px] gap-2' : 'flex gap-2'}`}>
@@ -329,8 +334,23 @@ const SortableFloor = ({
   onAddUnit,
   onRemoveFloor,
   canRemoveFloor,
-  isMobile
+  isMobile 
 }) => {
+  const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
+  const typeMenuRef = useRef(null);
+
+  // Закрываем меню при клике вне его
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (typeMenuRef.current && !typeMenuRef.current.contains(event.target)) {
+        setIsTypeMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const {
     attributes,
     listeners,
@@ -344,6 +364,11 @@ const SortableFloor = ({
     transition,
   };
 
+  const handleTypeChange = (newType) => {
+    onFloorChange('type', newType);
+    setIsTypeMenuOpen(false);
+  };
+
   return (
     <div ref={setNodeRef} style={style} className="border rounded-lg p-4 bg-gray-50">
       <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'} mb-4`}>
@@ -355,11 +380,36 @@ const SortableFloor = ({
           <input
             type="number"
             value={floor.floor === null ? '' : floor.floor}
-            onChange={(e) => onFloorChange(e.target.value)}
+            onChange={(e) => onFloorChange('floor', e.target.value === '' ? null : parseInt(e.target.value))}
             className="font-semibold bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none w-16 text-center"
             placeholder="Без номера"
           />
-          <span className="font-semibold">этаж</span>
+          <div className="relative" ref={typeMenuRef}>
+            <button
+              onClick={() => setIsTypeMenuOpen(!isTypeMenuOpen)}
+              className="font-semibold text-gray-700 hover:text-gray-900 focus:outline-none"
+            >
+              {floor.type || 'этаж'}
+            </button>
+            {isTypeMenuOpen && (
+              <div className="absolute top-full left-0 mt-1 w-32 bg-white rounded-md shadow-lg z-50">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleTypeChange('этаж')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${floor.type === 'этаж' ? 'bg-gray-50' : ''}`}
+                  >
+                    этаж
+                  </button>
+                  <button
+                    onClick={() => handleTypeChange('ряд')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${floor.type === 'ряд' ? 'bg-gray-50' : ''}`}
+                  >
+                    ряд
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className={`${isMobile ? 'flex gap-2 w-full' : 'flex gap-2'}`}>
           <Button 
@@ -604,23 +654,39 @@ const SortableUnit = ({
           </label>
           
           {/* Ввод в долларах */}
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-4 h-4 text-green-600" />
-            <input
-              type="number"
-              value={unit.priceUSD === null ? '' : unit.priceUSD}
-              onChange={(e) => {
-                const priceUSD = parseFloat(e.target.value) || 0;
-                onUnitChange('priceUSD', priceUSD);
-                onUnitChange('priceIDR', priceUSD * exchangeRate);
-              }}
-              className="flex-1 px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white"
-              placeholder="0"
-            />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-green-600" />
+              <input
+                type="number"
+                value={unit.priceUSD === null ? '' : unit.priceUSD}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const priceUSD = value === '' ? null : parseFloat(value);
+                  onUnitChange('priceUSD', priceUSD);
+                  onUnitChange('priceIDR', priceUSD === null ? null : priceUSD * exchangeRate);
+                }}
+                className="flex-1 px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white"
+                placeholder="Введите цену"
+              />
+            </div>
+            
+            {/* Чекбокс для отображения цены */}
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-xs text-white/90">
+                <input
+                  type="checkbox"
+                  checked={unit.showPrice}
+                  onChange={(e) => onUnitChange('showPrice', e.target.checked)}
+                  className="w-3 h-3 rounded border-white/50 focus:ring-2 focus:ring-white/50"
+                />
+                <span>Показывать цену на публичной странице</span>
+              </label>
+            </div>
           </div>
           
           {/* Отображение в рупиях */}
-          {unit.priceUSD > 0 && (
+          {unit.priceUSD !== null && unit.priceUSD > 0 && (
             <div className="space-y-1">
               <p className="text-xs text-white/95 font-semibold">
                 <strong>USD:</strong> {formatPriceUSD(unit.priceUSD)}
@@ -699,16 +765,18 @@ const Chessboard = () => {
     bathrooms: "1",
     area: "",
     view: "",
-    side: "", // Добавляем поле для стороны
-    priceUSD: 0,
-    priceIDR: 0,
+    side: "",
+    priceUSD: null,
+    priceIDR: null,
     showPriceIDR: false,
+    showPrice: true, // Добавляем новое поле для управления видимостью цены
     status: "free"
   }), []);
 
   const defaultFloor = useMemo(() => ({
     floor: "",
-    units: []
+    units: [],
+    type: "этаж" // Добавляем поле для типа секции
   }), []);
 
   const defaultSection = useMemo(() => ({
@@ -910,7 +978,7 @@ const Chessboard = () => {
       // Инициализация новой шахматки
       const initialSection = {
         ...defaultSection,
-        name: "Секция 1",
+        name: "A1",
         floors: [{
           ...defaultFloor,
           floor: "1",
@@ -929,7 +997,7 @@ const Chessboard = () => {
   const addSection = () => {
     setSections(prev => [...prev, {
       ...defaultSection,
-      name: `Секция ${prev.length + 1}`,
+      name: `A${prev.length + 1}`,
       floors: [{
         ...defaultFloor,
         floor: "1",
@@ -1426,13 +1494,13 @@ const Chessboard = () => {
                             floor={floor}
                             sectionIdx={sectionIdx}
                             floorIdx={floorIdx}
-                            onFloorChange={(value) => {
+                            onFloorChange={(field, value) => {
                               setSections(prev => {
                                 const newSections = JSON.parse(JSON.stringify(prev));
                                 if (newSections[sectionIdx]?.floors[floorIdx]) {
                                   newSections[sectionIdx].floors[floorIdx] = {
                                     ...newSections[sectionIdx].floors[floorIdx],
-                                    floor: value === '' ? null : parseInt(value)
+                                    [field]: value
                                   };
                                 }
                                 return newSections;
