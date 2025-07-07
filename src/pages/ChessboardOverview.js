@@ -240,7 +240,9 @@ const ChessboardOverview = () => {
                           <div key={floorIdx} className="border rounded-lg p-4 bg-[#1a1d24]/50 border-[#2a2e36]">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-lg font-semibold text-white">
-                                {floor.type ? t.unit[floor.type === 'этаж' ? 'floor' : 'row'] : t.unit.floor} {floor.floor}
+                                {floor.floor && String(floor.floor).trim() !== '' ? (
+                                  `${floor.type ? t.unit[floor.type === 'этаж' ? 'floor' : 'row'] : t.unit.floor} ${floor.floor}`
+                                ) : ''}
                               </span>
                             </div>
 
@@ -249,7 +251,7 @@ const ChessboardOverview = () => {
                               {floor.units.map((unit, unitIdx) => (
                                 <Card 
                                   key={unitIdx} 
-                                  className={`${getStatusColor(unit.status)} hover:shadow-lg hover:scale-105 transition-all duration-200 w-[300px] relative flex-shrink-0`}
+                                  className={`${getStatusColor(unit.status)} hover:shadow-lg hover:scale-105 transition-all duration-200 w-[300px] flex-shrink-0`}
                                 >
                                   <CardHeader className="p-3">
                                     <div className="flex items-center justify-between">
@@ -278,73 +280,77 @@ const ChessboardOverview = () => {
                                       </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <div className="flex items-center gap-1">
-                                        <span className="font-semibold text-white">
-                                          {unit.rooms === 'Студия' && t.unit.rooms.studio}
-                                          {unit.rooms === '1' && t.unit.rooms.one}
-                                          {unit.rooms === '2' && t.unit.rooms.two}
-                                          {unit.rooms === '3' && t.unit.rooms.three}
-                                          {unit.rooms === '4' && t.unit.rooms.four}
-                                          {unit.rooms === '5' && t.unit.rooms.five}
-                                          {unit.rooms === '6' && t.unit.rooms.six}
-                                        </span>
-                                      </div>
-                                      {unit.view && (
-                                        <div className="flex items-center gap-1">
-                                                                                  <span className="font-semibold text-white">
-                                          {unit.view === 'Океан' && t.unit.views.ocean}
-                                          {unit.view === 'Джунгли' && t.unit.views.jungle}
-                                          {unit.view === 'Бассейн' && t.unit.views.pool}
-                                          {unit.view === 'Река' && t.unit.views.river}
-                                          {unit.view === 'Двор' && t.unit.views.yard}
-                                          {unit.view === 'Вулкан' && t.unit.views.volcano}
-                                          {unit.view === 'Рисовые террасы' && t.unit.views.riceTerraces}
-                                        </span>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <div className="flex items-center gap-1">
-                                        <span className="font-semibold text-white">
-                                          {(unit.bathrooms || '1') === '1' && t.unit.bathrooms.one}
-                                          {unit.bathrooms === '2' && t.unit.bathrooms.two}
-                                          {unit.bathrooms === '3' && t.unit.bathrooms.three}
-                                          {unit.bathrooms === '4' && t.unit.bathrooms.four}
-                                          {unit.bathrooms === '5' && t.unit.bathrooms.five}
-                                          {unit.bathrooms === '6' && t.unit.bathrooms.six}
-                                        </span>
-                                      </div>
-                                      {unit.side && (
+                                    <div className="space-y-1">
+                                      <div className="grid grid-cols-2 gap-2">
                                         <div className="flex items-center gap-1">
                                           <span className="font-semibold text-white">
-                                            {unit.side === 'Рассветная' && t.unit.sides.sunrise}
-                                            {unit.side === 'Закатная' && t.unit.sides.sunset}
+                                            {unit.rooms === 'Студия' && t.unit.rooms.studio}
+                                            {unit.rooms === '1' && t.unit.rooms.one}
+                                            {unit.rooms === '2' && t.unit.rooms.two}
+                                            {unit.rooms === '3' && t.unit.rooms.three}
+                                            {unit.rooms === '4' && t.unit.rooms.four}
+                                            {unit.rooms === '5' && t.unit.rooms.five}
+                                            {unit.rooms === '6' && t.unit.rooms.six}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                          <span className="font-semibold text-white">
+                                            {unit.bathrooms === '1' && t.unit.bathrooms.one}
+                                            {unit.bathrooms === '2' && t.unit.bathrooms.two}
+                                            {unit.bathrooms === '3' && t.unit.bathrooms.three}
+                                            {unit.bathrooms === '4' && t.unit.bathrooms.four}
+                                            {unit.bathrooms === '5' && t.unit.bathrooms.five}
+                                            {unit.bathrooms === '6' && t.unit.bathrooms.six}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {unit.view && (
+                                        <div className="flex items-center gap-1 flex-wrap">
+                                          {language !== 'en' && <span className="text-white/90">{t.unit.view}</span>}
+                                          <span className="font-semibold text-white">
+                                            {unit.view === 'Океан' && t.unit.views.ocean}
+                                            {unit.view === 'Джунгли' && t.unit.views.jungle}
+                                            {unit.view === 'Бассейн' && t.unit.views.pool}
+                                            {unit.view === 'Река' && t.unit.views.river}
+                                            {unit.view === 'Двор' && t.unit.views.yard}
+                                            {unit.view === 'Вулкан' && t.unit.views.volcano}
+                                            {unit.view === 'Рисовые террасы' && t.unit.views.riceTerraces}
                                           </span>
                                         </div>
                                       )}
                                     </div>
 
-                                    {unit.status === 'free' && unit.priceUSD > 0 && unit.showPrice && (
-                                      <div className="border-t border-white/20 pt-2 mt-2">
-                                        <div className="space-y-1">
-                                          <p className="font-semibold text-white text-lg">
-                                            {formatPriceUSD(unit.priceUSD)}
-                                          </p>
-                                          {unit.showPriceIDR && (
-                                            <p className="text-yellow-200 font-bold">
-                                              {formatPrice(unit.priceIDR)}
-                                            </p>
-                                          )}
-                                        </div>
+                                    {unit.side && (
+                                      <div className="flex items-center gap-1">
+                                        <span className="font-semibold text-white">
+                                          {unit.side === 'Рассветная' && t.unit.sides.sunrise}
+                                          {unit.side === 'Закатная' && t.unit.sides.sunset}
+                                        </span>
                                       </div>
                                     )}
 
-                                    {/* Статус в правом нижнем углу */}
-                                    <div className="absolute bottom-3 right-3 z-10">
-                                      {getStatusBadge(unit.status, t)}
-                                    </div>
+                                    {unit.status === 'free' && unit.priceUSD > 0 && unit.showPrice ? (
+                                      <div className="border-t border-white/20 pt-2 mt-2">
+                                        <div className="flex justify-between items-start">
+                                          <div className="space-y-1">
+                                            <p className="font-semibold text-white text-lg">
+                                              {formatPriceUSD(unit.priceUSD)}
+                                            </p>
+                                            {unit.showPriceIDR && (
+                                              <p className="text-yellow-200 font-bold">
+                                                {formatPrice(unit.priceIDR)}
+                                              </p>
+                                            )}
+                                          </div>
+                                          {getStatusBadge(unit.status, t)}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      /* Статус - в отдельной строке если нет цены */
+                                      <div className="flex justify-end pt-2 mt-2">
+                                        {getStatusBadge(unit.status, t)}
+                                      </div>
+                                    )}
                                   </CardContent>
                                 </Card>
                               ))}

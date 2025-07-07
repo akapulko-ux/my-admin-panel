@@ -153,9 +153,11 @@ const ListChessboards = () => {
     
     const { id, name, complexId } = deleteDialog.chessboard;
     try {
-      // Если шахматка привязана к комплексу, удаляем ссылку
+      // Если шахматка привязана к комплексу, удаляем все ссылки на шахматку
       if (complexId) {
         await updateDoc(doc(db, "complexes", complexId), {
+          chessboardId: null,
+          chessboardPublicId: null,
           chessboardPublicUrl: null
         });
       }

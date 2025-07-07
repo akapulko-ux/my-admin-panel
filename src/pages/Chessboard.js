@@ -1157,6 +1157,15 @@ const Chessboard = () => {
         // Сохраняем новую шахматку
         const docRef = await addDoc(collection(db, "chessboards"), data);
 
+        // Обновляем связанный комплекс с информацией о шахматке
+        if (selectedComplexId) {
+          await updateDoc(doc(db, "complexes", selectedComplexId), {
+            chessboardId: docRef.id,
+            chessboardPublicId: data.publicUrl,
+            chessboardPublicUrl: data.publicUrl
+          });
+        }
+
         // Настраиваем права доступа
         await setupAccessRights(docRef.id);
 
@@ -1172,6 +1181,32 @@ const Chessboard = () => {
         // Обновление существующей шахматки
         const docRef = doc(db, "chessboards", id);
         await updateDoc(docRef, data);
+
+        // Проверяем и обновляем связанный комплекс, если нужно
+        if (selectedComplexId) {
+          const complexDoc = await getDoc(doc(db, "complexes", selectedComplexId));
+          if (complexDoc.exists()) {
+            const complexData = complexDoc.data();
+            
+            // Проверяем, есть ли уже записи о шахматке в комплексе
+            const needsUpdate = !complexData.chessboardId || 
+                              !complexData.chessboardPublicId || 
+                              !complexData.chessboardPublicUrl;
+            
+            if (needsUpdate) {
+              // Получаем актуальные данные шахматки
+              const chessboardDoc = await getDoc(docRef);
+              if (chessboardDoc.exists()) {
+                const chessboardData = chessboardDoc.data();
+                await updateDoc(doc(db, "complexes", selectedComplexId), {
+                  chessboardId: id,
+                  chessboardPublicId: chessboardData.publicUrl,
+                  chessboardPublicUrl: chessboardData.publicUrl
+                });
+              }
+            }
+          }
+        }
 
         // Создаем запись в истории
         await createHistoryRecord(id, "update");
@@ -1213,9 +1248,11 @@ const Chessboard = () => {
       if (chessboardSnap.exists()) {
         const chessboardData = chessboardSnap.data();
         
-        // Если шахматка привязана к комплексу, удаляем ссылку
+        // Если шахматка привязана к комплексу, удаляем все ссылки на шахматку
         if (chessboardData.complexId) {
           await updateDoc(doc(db, "complexes", chessboardData.complexId), {
+            chessboardId: null,
+            chessboardPublicId: null,
             chessboardPublicUrl: null
           });
         }
