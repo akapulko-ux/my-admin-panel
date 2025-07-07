@@ -70,8 +70,6 @@ function EditComplex() {
   const [developer, setDeveloper] = useState("");
   const [district, setDistrict] = useState("");
   const [coordinates, setCoordinates] = useState("");
-  const [priceFrom, setPriceFrom] = useState("");
-  const [areaRange, setAreaRange] = useState("");
   const [description, setDescription] = useState("");
 
   // Поля "Провинция", "Город", "RDTR"
@@ -126,8 +124,6 @@ function EditComplex() {
           setDeveloper(data.developer || "");
           setDistrict(data.district || "");
           setCoordinates(data.coordinates || "");
-          setPriceFrom(data.priceFrom || "");
-          setAreaRange(data.areaRange || "");
           setDescription(data.description || "");
 
           setProvince(data.province || "Bali");
@@ -288,8 +284,6 @@ function EditComplex() {
         developer,
         district,
         coordinates,
-        priceFrom,
-        areaRange,
         description,
         province,
         city,
@@ -454,24 +448,6 @@ function EditComplex() {
                   value={coordinates}
                   onChange={(e) => setCoordinates(e.target.value)}
                   placeholder="Введите координаты"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="priceFrom">Цена от</Label>
-                <Input
-                  id="priceFrom"
-                  value={priceFrom}
-                  onChange={(e) => setPriceFrom(e.target.value)}
-                  placeholder="Введите цену"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="areaRange">Диапазон площади</Label>
-                <Input
-                  id="areaRange"
-                  value={areaRange}
-                  onChange={(e) => setAreaRange(e.target.value)}
-                  placeholder="Введите диапазон площади"
                 />
               </div>
               <div className="space-y-2">

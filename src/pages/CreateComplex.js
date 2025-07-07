@@ -74,11 +74,9 @@ function CreateComplex() {
     setDeveloper(input);
   };
 
-  // Обязательные поля: район, координаты, цена от, диапазон площади
+  // Обязательные поля: район, координаты
   const [district, setDistrict] = useState("");
   const [coordinates, setCoordinates] = useState("");
-  const [priceFrom, setPriceFrom] = useState("");
-  const [areaRange, setAreaRange] = useState("");
   const [description, setDescription] = useState("");
 
   // Поле «Вознаграждение» (от 1 до 10, шаг 0.5)
@@ -224,8 +222,6 @@ function CreateComplex() {
         developer,
         district,
         coordinates,
-        priceFrom,
-        areaRange,
         description,
         province, // "Bali"
         city,
@@ -275,8 +271,6 @@ function CreateComplex() {
       setDeveloper("");
       setDistrict("");
       setCoordinates("");
-      setPriceFrom("");
-      setAreaRange("");
       setDescription("");
       setCity("Kab. Badung");
       setRdtr("RDTR Kecamatan Ubud");
@@ -415,36 +409,13 @@ function CreateComplex() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="priceFrom">Цена от *</Label>
-                <Input
-                  id="priceFrom"
-                  type="number"
-                  value={priceFrom}
-                  onChange={(e) => setPriceFrom(e.target.value)}
-                  placeholder="Введите цену..."
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="areaRange">Диапазон площади *</Label>
-                <Input
-                  id="areaRange"
-                  value={areaRange}
-                  onChange={(e) => setAreaRange(e.target.value)}
-                  placeholder="Например: 100-150"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="commission">Вознаграждение</Label>
                 <CustomSelect
                   value={commission}
                   onValueChange={setCommission}
                   placeholder="Выберите процент..."
                   options={Array.from({ length: 19 }, (_, i) => ({
-                    value: (i + 2) / 2,
+                    value: ((i + 2) / 2).toFixed(1),
                     label: `${((i + 2) / 2).toFixed(1)}%`
                   }))}
                 />
