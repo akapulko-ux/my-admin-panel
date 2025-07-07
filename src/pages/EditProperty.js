@@ -666,10 +666,11 @@ function EditProperty() {
                     {images.map((item, idx) => (
                       <DraggablePreviewItem
                         key={item.id}
-                        item={item}
+                        id={item.id}
                         index={idx}
-                        moveItem={moveImage}
+                        url={item.url}
                         onRemove={() => handleRemoveImage(idx)}
+                        moveImage={moveImage}
                       />
                     ))}
                   </div>

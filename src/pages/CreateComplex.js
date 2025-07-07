@@ -375,12 +375,31 @@ function CreateComplex() {
 
               <div className="space-y-2">
                 <Label htmlFor="district">Район *</Label>
-                <Input
-                  id="district"
+                <CustomSelect
                   value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  placeholder="Введите район..."
+                  onValueChange={setDistrict}
+                  placeholder="Выберите район..."
                   required
+                  options={[
+                    { value: "Амед", label: "Амед" },
+                    { value: "Берава", label: "Берава" },
+                    { value: "Джимбаран", label: "Джимбаран" },
+                    { value: "Кута", label: "Кута" },
+                    { value: "Ловина", label: "Ловина" },
+                    { value: "Нуану", label: "Нуану" },
+                    { value: "Нуса Дуа", label: "Нуса Дуа" },
+                    { value: "Переренан", label: "Переренан" },
+                    { value: "Санур", label: "Санур" },
+                    { value: "Семиньяк", label: "Семиньяк" },
+                    { value: "Убуд", label: "Убуд" },
+                    { value: "Улувату", label: "Улувату" },
+                    { value: "Умалас", label: "Умалас" },
+                    { value: "Унгасан", label: "Унгасан" },
+                    { value: "Чангу", label: "Чангу" },
+                    { value: "Чемаги", label: "Чемаги" },
+                    { value: "Гили Траванган", label: "Гили Траванган" },
+                    { value: "Ломбок", label: "Ломбок" }
+                  ]}
                 />
               </div>
 
@@ -438,9 +457,14 @@ function CreateComplex() {
                   onValueChange={setCity}
                   placeholder="Выберите город..."
                   options={[
+                    { value: "Kab. Jembrana", label: "Kab. Jembrana" },
+                    { value: "Kab. Tabanan", label: "Kab. Tabanan" },
                     { value: "Kab. Badung", label: "Kab. Badung" },
-                    { value: "Kota Denpasar", label: "Kota Denpasar" },
-                    { value: "Kab. Gianyar", label: "Kab. Gianyar" }
+                    { value: "Kab. Gianyar", label: "Kab. Gianyar" },
+                    { value: "Kab. Bangli", label: "Kab. Bangli" },
+                    { value: "Kab. Karangasem", label: "Kab. Karangasem" },
+                    { value: "Kab. Buleleng", label: "Kab. Buleleng" },
+                    { value: "Kota Denpasar", label: "Kota Denpasar" }
                   ]}
                 />
               </div>
@@ -453,8 +477,15 @@ function CreateComplex() {
                   placeholder="Выберите RDTR..."
                   options={[
                     { value: "RDTR Kecamatan Ubud", label: "RDTR Kecamatan Ubud" },
-                    { value: "RDTR Kecamatan Kuta", label: "RDTR Kecamatan Kuta" },
-                    { value: "RDTR Kecamatan Canggu", label: "RDTR Kecamatan Canggu" }
+                    { value: "RDTR Kuta", label: "RDTR Kuta" },
+                    { value: "RDTR Kecamatan Kuta Utara", label: "RDTR Kecamatan Kuta Utara" },
+                    { value: "RDTR Kuta Selatan", label: "RDTR Кuta Selatan" },
+                    { value: "RDTR Mengwi", label: "RDTR Mengwi" },
+                    { value: "RDTR Kecamatan Abiansemal", label: "RDTR Kecamatan Abiansemal" },
+                    { value: "RDTR Wilayah Перencания Petang", label: "RDTR Wilayah Перencания Petang" },
+                    { value: "RDTR Kecamatan Sukawati", label: "RDTR Kecamatan Sukawati" },
+                    { value: "RDTR Kecamatan Payangan", label: "RDTR Kecamatan Payangan" },
+                    { value: "RDTR Kecamatan Tegallalang", label: "RDTR Kecamatan Tegallalang" }
                   ]}
                 />
               </div>
@@ -509,13 +540,17 @@ function CreateComplex() {
               <div className="space-y-2">
                 <Label htmlFor="landStatus">Статус земли</Label>
                 <CustomSelect
+                  id="landStatus"
                   value={landStatus}
                   onValueChange={setLandStatus}
-                  placeholder="Выберите статус..."
+                  placeholder="Выберите статус земли..."
                   options={[
                     { value: "Туристическая зона (W)", label: "Туристическая зона (W)" },
-                    { value: "Жилая зона (P)", label: "Жилая зона (P)" },
-                    { value: "Коммерческая зона (K)", label: "Коммерческая зона (K)" }
+                    { value: "Торговая зона (K)", label: "Торговая зона (K)" },
+                    { value: "Смешанная зона (C)", label: "Смешанная зона (C)" },
+                    { value: "Жилая зона (R)", label: "Жилая зона (R)" },
+                    { value: "Сельхоз зона (P)", label: "Сельхоз зона (P)" },
+                    { value: "Заповедная зона (RTH)", label: "Заповедная зона (RTH)" }
                   ]}
                 />
               </div>

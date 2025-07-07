@@ -420,11 +420,31 @@ function EditComplex() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="district">Район</Label>
-                <Input
+                <CustomSelect
                   id="district"
                   value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  placeholder="Введите район"
+                  onValueChange={setDistrict}
+                  placeholder="Выберите район..."
+                  options={[
+                    { value: "Амед", label: "Амед" },
+                    { value: "Берава", label: "Берава" },
+                    { value: "Джимбаран", label: "Джимбаран" },
+                    { value: "Кута", label: "Кута" },
+                    { value: "Ловина", label: "Ловина" },
+                    { value: "Нуану", label: "Нуану" },
+                    { value: "Нуса Дуа", label: "Нуса Дуа" },
+                    { value: "Переренан", label: "Переренан" },
+                    { value: "Санур", label: "Санур" },
+                    { value: "Семиньяк", label: "Семиньяк" },
+                    { value: "Убуд", label: "Убуд" },
+                    { value: "Улувату", label: "Улувату" },
+                    { value: "Умалас", label: "Умалас" },
+                    { value: "Унгасан", label: "Унгасан" },
+                    { value: "Чангу", label: "Чангу" },
+                    { value: "Чемаги", label: "Чемаги" },
+                    { value: "Гили Траванган", label: "Гили Траванган" },
+                    { value: "Ломбок", label: "Ломбок" }
+                  ]}
                 />
               </div>
               <div className="space-y-2">
@@ -496,20 +516,42 @@ function EditComplex() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="city">Город</Label>
-                <Input
+                <CustomSelect
                   id="city"
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Введите город"
+                  onValueChange={setCity}
+                  placeholder="Выберите город..."
+                  options={[
+                    { value: "Kab. Jembrana", label: "Kab. Jembrana" },
+                    { value: "Kab. Tabanan", label: "Kab. Tabanan" },
+                    { value: "Kab. Badung", label: "Kab. Badung" },
+                    { value: "Kab. Gianyar", label: "Kab. Gianyar" },
+                    { value: "Kab. Bangli", label: "Kab. Bangli" },
+                    { value: "Kab. Karangasem", label: "Kab. Karangasem" },
+                    { value: "Kab. Buleleng", label: "Kab. Buleleng" },
+                    { value: "Kota Denpasar", label: "Kota Denpasar" }
+                  ]}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rdtr">RDTR</Label>
-                <Input
+                <CustomSelect
                   id="rdtr"
                   value={rdtr}
-                  onChange={(e) => setRdtr(e.target.value)}
-                  placeholder="Введите RDTR"
+                  onValueChange={setRdtr}
+                  placeholder="Выберите RDTR..."
+                  options={[
+                    { value: "RDTR Kecamatan Ubud", label: "RDTR Kecamatan Ubud" },
+                    { value: "RDTR Kuta", label: "RDTR Kuta" },
+                    { value: "RDTR Kecamatan Kuta Utara", label: "RDTR Kecamatan Kuta Utara" },
+                    { value: "RDTR Kuta Selatan", label: "RDTR Кuta Selatan" },
+                    { value: "RDTR Mengwi", label: "RDTR Mengwi" },
+                    { value: "RDTR Kecamatan Abiansemal", label: "RDTR Kecamatan Abiansemal" },
+                    { value: "RDTR Wilayah Перencания Petang", label: "RDTR Wilayah Перencания Petang" },
+                    { value: "RDTR Kecamatan Sukawati", label: "RDTR Kecamatan Sukawati" },
+                    { value: "RDTR Kecamatan Payangan", label: "RDTR Kecamatan Payangan" },
+                    { value: "RDTR Kecamatan Tegallalang", label: "RDTR Kecamatan Tegallalang" }
+                  ]}
                 />
               </div>
             </div>
@@ -546,9 +588,14 @@ function EditComplex() {
                   id="landStatus"
                   value={landStatus}
                   onValueChange={setLandStatus}
+                  placeholder="Выберите статус земли..."
                   options={[
-                    { label: "Туристическая зона (W)", value: "Туристическая зона (W)" },
-                    { label: "Жилая зона (P)", value: "Жилая зона (P)" }
+                    { value: "Туристическая зона (W)", label: "Туристическая зона (W)" },
+                    { value: "Торговая зона (K)", label: "Торговая зона (K)" },
+                    { value: "Смешанная зона (C)", label: "Смешанная зона (C)" },
+                    { value: "Жилая зона (R)", label: "Жилая зона (R)" },
+                    { value: "Сельхоз зона (P)", label: "Сельхоз зона (P)" },
+                    { value: "Заповедная зона (RTH)", label: "Заповедная зона (RTH)" }
                   ]}
                 />
               </div>
@@ -556,9 +603,10 @@ function EditComplex() {
                 <Label htmlFor="completionDate">Дата завершения</Label>
                 <Input
                   id="completionDate"
+                  type="date"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
-                  placeholder="Введите дату завершения"
+                  placeholder="Выберите дату завершения"
                 />
               </div>
               <div className="space-y-2">

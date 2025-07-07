@@ -72,9 +72,6 @@ function CreateProperty() {
   const [city, setCity] = useState("Kab. Badung");
   const [rdtr, setRdtr] = useState("RDTR Kecamatan Ubud");
 
-  // Нужно ли блокировать поля при автозаполнении
-  const [isAutoFill, setIsAutoFill] = useState(false);
-
   // Остальные поля
   const [status, setStatus] = useState("Строится");
   const [buildingType, setBuildingType] = useState("Новый комплекс");
@@ -237,7 +234,6 @@ function CreateProperty() {
       setSlf("");
       setLegalCompanyName("");
       setCommission("1.0");
-      setIsAutoFill(false);
     } else {
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
@@ -264,8 +260,6 @@ function CreateProperty() {
         } else {
           setCommission("1.0");
         }
-
-        setIsAutoFill(true);
       }
     }
   };
@@ -342,7 +336,6 @@ function CreateProperty() {
       setCoordinates("");
       setCity("Kab. Badung");
       setRdtr("RDTR Kecamatan Ubud");
-      setIsAutoFill(false);
       setStatus("Строится");
       setBuildingType("Новый комплекс");
       setBedrooms("none");
@@ -406,6 +399,9 @@ function CreateProperty() {
                     <SelectItem value="Коммерческая недвижимость">
                       Коммерческая недвижимость
                     </SelectItem>
+                    <SelectItem value="Апарт-вилла">Апарт-вилла</SelectItem>
+                    <SelectItem value="Таунхаус">Таунхаус</SelectItem>
+                    <SelectItem value="Земельный участок">Земельный участок</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -436,7 +432,6 @@ function CreateProperty() {
                   value={developer}
                   onChange={handleDeveloperChange}
                   required
-                  disabled={isAutoFill}
                 />
               </div>
 
@@ -446,7 +441,6 @@ function CreateProperty() {
                 <Select 
                   value={district} 
                   onValueChange={setDistrict}
-                  disabled={isAutoFill}
                 >
                   <SelectTrigger id="district">
                     <SelectValue placeholder="Выберите район" />
@@ -483,7 +477,6 @@ function CreateProperty() {
                   value={coordinates}
                   onChange={(e) => setCoordinates(e.target.value)}
                   required
-                  disabled={isAutoFill}
                 />
               </div>
 
@@ -567,7 +560,7 @@ function CreateProperty() {
               {/* Город */}
               <div className="space-y-2">
                 <Label htmlFor="city">Город</Label>
-                <Select value={city} onValueChange={setCity} disabled={isAutoFill}>
+                <Select value={city} onValueChange={setCity}>
                   <SelectTrigger id="city">
                     <SelectValue placeholder="Выберите город" />
                   </SelectTrigger>
@@ -587,7 +580,7 @@ function CreateProperty() {
               {/* RDTR */}
               <div className="space-y-2">
                 <Label htmlFor="rdtr">RDTR</Label>
-                <Select value={rdtr} onValueChange={setRdtr} disabled={isAutoFill}>
+                <Select value={rdtr} onValueChange={setRdtr}>
                   <SelectTrigger id="rdtr">
                     <SelectValue placeholder="Выберите RDTR" />
                   </SelectTrigger>
@@ -613,14 +606,13 @@ function CreateProperty() {
                   id="managementCompany"
                   value={managementCompany}
                   onChange={(e) => setManagementCompany(e.target.value)}
-                  disabled={isAutoFill}
                 />
               </div>
 
               {/* Форма собственности */}
               <div className="space-y-2">
                 <Label htmlFor="ownershipForm">Форма собственности</Label>
-                <Select value={ownershipForm} onValueChange={setOwnershipForm} disabled={isAutoFill}>
+                <Select value={ownershipForm} onValueChange={setOwnershipForm}>
                   <SelectTrigger id="ownershipForm">
                     <SelectValue placeholder="Выберите форму собственности" />
                   </SelectTrigger>
@@ -638,7 +630,6 @@ function CreateProperty() {
                     id="leaseYears"
                     value={leaseYears}
                     onChange={(e) => setLeaseYears(e.target.value)}
-                    disabled={isAutoFill}
                     placeholder="Например: 30, 30+20"
                   />
                 </div>
@@ -647,7 +638,7 @@ function CreateProperty() {
               {/* Статус земли */}
               <div className="space-y-2">
                 <Label htmlFor="landStatus">Статус земли</Label>
-                <Select value={landStatus} onValueChange={setLandStatus} disabled={isAutoFill}>
+                <Select value={landStatus} onValueChange={setLandStatus}>
                   <SelectTrigger id="landStatus">
                     <SelectValue placeholder="Выберите статус земли" />
                   </SelectTrigger>
@@ -670,7 +661,6 @@ function CreateProperty() {
                   type="month"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
-                  disabled={isAutoFill}
                 />
               </div>
 
