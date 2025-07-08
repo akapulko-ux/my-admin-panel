@@ -19,6 +19,48 @@ export function CacheProvider({ children }) {
     return Date.now() - timestamp < CACHE_TTL;
   }, [CACHE_TTL]);
 
+  // Принудительная очистка кеша
+  const invalidateCache = useCallback(() => {
+    setPropertiesCache({
+      list: null,
+      details: {}
+    });
+  }, []);
+
+  // Принудительное обновление списка объектов
+  const forceRefreshPropertiesList = useCallback(async () => {
+    // Загружаем новые данные из Firestore
+    const snapshot = await getDocs(collection(db, "properties"));
+    const data = snapshot.docs.map(doc => {
+      const docData = { id: doc.id, ...doc.data() };
+      
+      // Сохраняем детали объекта в кеш
+      setPropertiesCache(prev => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          [doc.id]: {
+            data: docData,
+            timestamp: Date.now()
+          }
+        }
+      }));
+
+      return docData;
+    });
+
+    // Обновляем кеш списка
+    setPropertiesCache(prev => ({
+      ...prev,
+      list: {
+        data,
+        timestamp: Date.now()
+      }
+    }));
+
+    return data;
+  }, []);
+
   // Получение списка объектов с учетом кеша
   const getPropertiesList = useCallback(async () => {
     // Проверяем кеш списка
@@ -109,7 +151,9 @@ export function CacheProvider({ children }) {
   const value = {
     getPropertiesList,
     getPropertyDetails,
-    propertiesCache // Экспортируем сам кеш для прямого доступа
+    propertiesCache, // Экспортируем сам кеш для прямого доступа
+    invalidateCache, // Принудительная очистка кеша
+    forceRefreshPropertiesList // Принудительное обновление списка
   };
 
   return (

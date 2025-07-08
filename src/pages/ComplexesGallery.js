@@ -19,7 +19,7 @@ function ComplexesGallery() {
   const [loading, setLoading] = useState(true);
   const [developerName, setDeveloperName] = useState(null);
   const { currentUser, role } = useAuth();
-  const { getPropertiesList, propertiesCache } = useCache();
+  const { getPropertiesList, propertiesCache, forceRefreshPropertiesList } = useCache();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -142,13 +142,8 @@ function ComplexesGallery() {
 
       setComplexes(complexesData);
 
-      // Загружаем объекты для расчета цен
-      let propertiesData;
-      if (propertiesCache.list?.data && Date.now() - propertiesCache.list.timestamp < 5 * 60 * 1000) {
-        propertiesData = propertiesCache.list.data;
-      } else {
-        propertiesData = await getPropertiesList();
-      }
+      // Принудительно обновляем объекты для расчета цен
+      const propertiesData = await forceRefreshPropertiesList();
 
       // Загружаем названия комплексов для объектов (как в PropertiesGallery)
       const propertiesWithComplexNames = await Promise.all(
@@ -177,6 +172,27 @@ function ComplexesGallery() {
 
   useEffect(() => {
     fetchData();
+  }, [fetchData]);
+
+  // Обработчики для обновления данных при возврате к странице
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchData();
+      }
+    };
+
+    const handleFocus = () => {
+      fetchData();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchData]);
 
   // Форматирование цены в USD без копеек

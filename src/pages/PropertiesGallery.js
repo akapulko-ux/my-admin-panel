@@ -25,7 +25,7 @@ function PropertiesGallery() {
   const [loading, setLoading] = useState(true);
   const [developerName, setDeveloperName] = useState(null);
   const { currentUser, role } = useAuth();
-  const { getPropertiesList, propertiesCache } = useCache();
+  const { getPropertiesList, propertiesCache, forceRefreshPropertiesList } = useCache();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [editingPrice, setEditingPrice] = useState(null);
   const [newPrice, setNewPrice] = useState("");
@@ -126,13 +126,8 @@ function PropertiesGallery() {
         }
       }
 
-      // Сначала проверяем кеш
-      let data;
-      if (propertiesCache.list?.data && Date.now() - propertiesCache.list.timestamp < 5 * 60 * 1000) {
-        data = propertiesCache.list.data;
-      } else {
-        data = await getPropertiesList();
-      }
+      // Принудительно обновляем данные при каждом переходе на страницу
+      const data = await forceRefreshPropertiesList();
 
       // Фильтруем объекты для застройщика
       let filteredData = data;
@@ -173,6 +168,27 @@ function PropertiesGallery() {
 
   useEffect(() => {
     fetchProperties();
+  }, [fetchProperties]);
+
+  // Обработчики для обновления данных при возврате к странице
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchProperties();
+      }
+    };
+
+    const handleFocus = () => {
+      fetchProperties();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchProperties]);
 
   // Форматирование цены в USD без копеек

@@ -85,10 +85,13 @@ function PropertyDetail() {
   // Функция для обработки изменений значений
   const handleValueChange = (field, value) => {
     let processedValue = value;
-    if (field === 'price') {
+    
+    // Обработка числовых полей
+    if (['price', 'area', 'bedrooms', 'bathrooms', 'leaseYears'].includes(field)) {
       // Убираем все нечисловые символы, кроме цифр
       processedValue = value.replace(/[^\d]/g, '');
-      processedValue = processedValue ? parseInt(processedValue) : 0;
+      // Разрешаем пустые значения для возможности полного удаления
+      processedValue = processedValue === '' ? '' : parseInt(processedValue);
     }
     
     setEditedValues(prev => {
@@ -102,11 +105,23 @@ function PropertyDetail() {
   const handleSave = async () => {
     try {
       const propertyRef = doc(db, "properties", id);
-      await updateDoc(propertyRef, editedValues);
-      setProperty(prev => ({ ...prev, ...editedValues }));
+      // Обрабатываем пустые строки для числовых полей
+      const processedValues = { ...editedValues };
+      
+      // Для числовых полей: если пустая строка, сохраняем как null
+      const numericFields = ['price', 'area', 'bedrooms', 'bathrooms', 'leaseYears'];
+      numericFields.forEach(field => {
+        if (processedValues.hasOwnProperty(field) && processedValues[field] === '') {
+          processedValues[field] = null;
+        }
+      });
+      
+      await updateDoc(propertyRef, processedValues);
+      setProperty(prev => ({ ...prev, ...processedValues }));
       setEditedValues({});
       setHasChanges(false);
       setIsEditing(false);
+      showSuccess("Изменения успешно сохранены");
     } catch (error) {
       console.error("Ошибка при сохранении изменений:", error);
       showError("Произошла ошибка при сохранении изменений");
@@ -463,7 +478,7 @@ function PropertyDetail() {
         return (
           <div className="space-y-2">
             <select
-              value={editedValues[field] || originalValue || ''}
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
               onChange={(e) => handleValueChange(field, e.target.value)}
               className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
             >
@@ -472,10 +487,10 @@ function PropertyDetail() {
                 <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
-            {(editedValues[field] || originalValue) === 'Leashold' && (
+            {(editedValues.hasOwnProperty(field) ? editedValues[field] : originalValue) === 'Leashold' && (
               <input
                 type="text"
-                value={editedValues.leaseYears || property.leaseYears || ''}
+                value={editedValues.hasOwnProperty('leaseYears') ? editedValues.leaseYears : (property.leaseYears || '')}
                 onChange={(e) => handleValueChange('leaseYears', e.target.value)}
                 placeholder="Например: 30, 30+20"
                 className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
@@ -486,7 +501,7 @@ function PropertyDetail() {
       } else if (options) {
         return (
           <select
-            value={editedValues[field] || originalValue || ''}
+            value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
             onChange={(e) => handleValueChange(field, e.target.value)}
             className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
           >
@@ -500,7 +515,7 @@ function PropertyDetail() {
         return (
           <input
             type={type || "text"}
-            value={editedValues[field] || originalValue || ''}
+            value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
             onChange={(e) => handleValueChange(field, e.target.value)}
             className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
           />
@@ -835,7 +850,7 @@ function PropertyDetail() {
           {isEditing ? (
             <input
               type="number"
-              value={editedValues.price || property.price || ''}
+              value={editedValues.hasOwnProperty('price') ? editedValues.price : (property.price || '')}
               onChange={(e) => handleValueChange('price', e.target.value)}
               className="w-48 px-2 py-1 border border-gray-300 rounded text-4xl"
             />
@@ -859,7 +874,7 @@ function PropertyDetail() {
       <div className="text-2xl font-bold mb-4 text-gray-800">
         {isEditing ? (
           <select
-            value={editedValues.type || property.type || ''}
+            value={editedValues.hasOwnProperty('type') ? editedValues.type : (property.type || '')}
             onChange={(e) => handleValueChange('type', e.target.value)}
             className="w-full px-2 py-1 border border-gray-300 rounded text-2xl"
           >
@@ -1051,51 +1066,7 @@ function PropertyDetail() {
             </div>
           </div>
           
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">ROI файл:</span>
-            <div className="flex gap-2">
-              {property.roiFileURL ? (
-                <>
-                  <button 
-                    onClick={() => window.open(property.roiFileURL, '_blank')}
-                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
-                  >
-                    Просмотреть
-                  </button>
-                  {canEdit() && (
-                    <button 
-                      onClick={() => handleFileUpdate('roiFileURL')}
-                      disabled={uploading.roiFileURL}
-                      className={`px-3 py-1 text-xs rounded ${
-                        uploading.roiFileURL 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-gray-600 hover:bg-gray-700'
-                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                    >
-                      {uploading.roiFileURL ? 'Загрузка...' : 'Обновить'}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <>
-                  <span className="text-xs text-gray-500">Файл не загружен</span>
-                  {canEdit() && (
-                    <button 
-                      onClick={() => handleFileUpload('roiFileURL')}
-                      disabled={uploading.roiFileURL}
-                      className={`px-3 py-1 text-xs rounded ${
-                        uploading.roiFileURL 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-green-600 hover:bg-green-700'
-                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                    >
-                      {uploading.roiFileURL ? 'Загрузка...' : 'Загрузить'}
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+
         </div>
       </div>
 
