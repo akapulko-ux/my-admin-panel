@@ -195,6 +195,14 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
   const [notification, setNotification] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Функция для показа уведомлений
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  };
+
   // Детектор мобильного устройства
   useEffect(() => {
     const checkIfMobile = () => {
@@ -269,12 +277,39 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
   };
 
   // Функция создания публичной страницы
-  const generatePublicPage = () => {
-    if (!calculationResults) return;
+  const generatePublicPage = async () => {
+    if (!calculationResults) {
+      showNotification('Сначала выполните расчет ROI', 'error');
+      return;
+    }
     
-    // Открываем публичную страницу в новой вкладке
-    const url = `/public-roi/property/${propertyId}`;
-    window.open(url, '_blank');
+    try {
+      // Сохраняем данные в Firestore для публичной страницы
+      const roiDocRef = doc(db, 'properties', propertyId, 'calculations', 'roi');
+      
+      const publicData = {
+        costData,
+        rentalData,
+        expensesData,
+        results: {
+          ...calculationResults,
+          maxInvestmentPeriod: Number(costData.investmentPeriod) || 5
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await setDoc(roiDocRef, publicData);
+      
+      // Открываем публичную страницу в новой вкладке
+      const url = `/public-roi/property/${propertyId}`;
+      window.open(url, '_blank');
+      
+      showNotification('Публичная страница создана и открыта в новой вкладке', 'success');
+    } catch (error) {
+      console.error('Ошибка при создании публичной страницы:', error);
+      showNotification('Ошибка при создании публичной страницы', 'error');
+    }
   };
 
   // Функция для расчета всех показателей
@@ -668,13 +703,30 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                   {hasSavedData ? 'Обновить расчет' : 'Сохранить расчет'}
                 </Button>
 
-                <Button 
-                  onClick={generatePublicPage}
-                  variant="outline"
-                  className={isMobile ? 'w-full h-12' : ''}
-                >
-                  <Share2 className="mr-2 h-4 w-4" /> Публичная страница
-                </Button>
+                <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
+                  <Button 
+                    onClick={generatePublicPage}
+                    variant="outline"
+                    className={isMobile ? 'w-full h-12' : ''}
+                  >
+                    <Share2 className="mr-2 h-4 w-4" /> Создать публичную страницу
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {
+                      const url = `${window.location.origin}/public-roi/property/${propertyId}`;
+                      navigator.clipboard.writeText(url).then(() => {
+                        showNotification('Ссылка скопирована в буфер обмена!', 'success');
+                      }).catch(() => {
+                        showNotification('Не удалось скопировать ссылку', 'error');
+                      });
+                    }}
+                    variant="outline"
+                    className={isMobile ? 'w-full h-12' : ''}
+                  >
+                    📋 Копировать ссылку
+                  </Button>
+                </div>
 
                 <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                   <Select value={pdfLanguage} onValueChange={setPdfLanguage}>

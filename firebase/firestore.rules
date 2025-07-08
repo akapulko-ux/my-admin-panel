@@ -121,6 +121,16 @@ service cloud.firestore {
         allow read: if true;
         allow create, update, delete: if canManageProperties();
       }
+
+      // === ROI расчеты для публичных страниц ===
+      match /calculations/{calculationId} {
+        // Админ имеет полные права
+        allow read, write, delete: if isAdmin();
+        // публичное чтение для ROI страниц
+        allow read: if true;
+        // создание/изменение/удаление — только admin, agent (обычный или премиум) или застройщик
+        allow create, update, delete: if canManageProperties();
+      }
     }
 
     // === Комплексы ===

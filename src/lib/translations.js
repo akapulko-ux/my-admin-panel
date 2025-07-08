@@ -76,6 +76,17 @@ export const translations = {
     tooltipAverageROI: 'Average annual return on investment over the selected period',
     tooltipAnnualGrowth: 'Annual growth rate for property rental price',
     tooltipManagementFee: 'Property management, maintenance, utilities and tax expenses',
+    
+    // Financial Summary Section
+    annualRentalIncome: 'Annual Rental Income',
+    totalRoiForPeriod: 'Total ROI for Period',
+    yearsText: 'years',
+    roiShort: 'ROI',
+    paybackPeriodShort: 'Payback Period',
+    
+    // Error messages
+    dataNotFound: 'Data Not Found',
+    publicRoiNotAvailable: 'Public ROI page is not available',
   },
   ru: {
     // Page 1: Summary
@@ -154,6 +165,17 @@ export const translations = {
     tooltipAverageROI: 'Средняя годовая доходность за выбранный период',
     tooltipAnnualGrowth: 'Ежегодный рост стоимости аренды объекта',
     tooltipManagementFee: 'Затраты на управление недвижимостью, налоги, коммунальные платежи, обслуживание',
+    
+    // Financial Summary Section
+    annualRentalIncome: 'Годовой доход от аренды',
+    totalRoiForPeriod: 'Общий ROI за период',
+    yearsText: 'лет',
+    roiShort: 'ROI',
+    paybackPeriodShort: 'Срок окупаемости',
+    
+    // Error messages
+    dataNotFound: 'Данные не найдены',
+    publicRoiNotAvailable: 'Публичная страница ROI недоступна',
   },
   id: {
     // Page 1: Summary
@@ -232,5 +254,16 @@ export const translations = {
     tooltipAverageROI: 'Pengembalian investasi tahunan rata-rata selama periode yang dipilih',
     tooltipAnnualGrowth: 'Tingkat pertumbuhan tahunan untuk harga sewa properti',
     tooltipManagementFee: 'Biaya pengelolaan properti, pemeliharaan, utilitas dan pajak',
+    
+    // Financial Summary Section
+    annualRentalIncome: 'Pendapatan Sewa Tahunan',
+    totalRoiForPeriod: 'Total ROI untuk Periode',
+    yearsText: 'tahun',
+    roiShort: 'ROI',
+    paybackPeriodShort: 'Periode Pengembalian',
+    
+    // Error messages
+    dataNotFound: 'Data Tidak Ditemukan',
+    publicRoiNotAvailable: 'Halaman ROI publik tidak tersedia',
   }
 }; 

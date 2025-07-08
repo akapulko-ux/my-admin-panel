@@ -25,6 +25,7 @@ import {
 } from 'recharts';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import Presentation from '../components/Presentation';
+import { showSuccess, showError } from '../utils/notifications';
 
 // Функция форматирования больших чисел
 const formatLargeNumber = (number) => {
@@ -256,31 +257,41 @@ const RoiCalculator = () => {
 
   // Функция создания публичной страницы
   const generatePublicPage = () => {
-    if (!calculationResults) return;
+    if (!calculationResults) {
+      showError('Сначала выполните расчет ROI');
+      return;
+    }
 
-    const publicData = {
-      id: Date.now(),
-      data: {
-        unitPrice: calculationResults.unitPrice,
-        averageROI: calculationResults.averageROI,
-        rentGrowthRate: calculationResults.rentGrowthRate,
-        propertyManagementFee: calculationResults.propertyManagementFee,
-        totalProjectedReturn: calculationResults.totalProjectedReturn,
-        totalCashFlow: calculationResults.totalCashFlow,
-        totalAppreciation: calculationResults.totalAppreciation,
-        detailedProjection: calculationResults.detailedProjection,
-        graphData: calculationResults.graphData,
-        investmentPeriod: calculationResults.investmentPeriod,
-        inputs: { costData, rentalData, expensesData }
-      }
-    };
+    try {
+      const publicData = {
+        id: Date.now(),
+        data: {
+          unitPrice: calculationResults.unitPrice,
+          averageROI: calculationResults.averageROI,
+          rentGrowthRate: calculationResults.rentGrowthRate,
+          propertyManagementFee: calculationResults.propertyManagementFee,
+          totalProjectedReturn: calculationResults.totalProjectedReturn,
+          totalCashFlow: calculationResults.totalCashFlow,
+          totalAppreciation: calculationResults.totalAppreciation,
+          detailedProjection: calculationResults.detailedProjection,
+          graphData: calculationResults.graphData,
+          investmentPeriod: calculationResults.investmentPeriod,
+          inputs: { costData, rentalData, expensesData }
+        }
+      };
 
-    // Сохраняем данные для публичной страницы в localStorage
-    localStorage.setItem(`publicROI_${publicData.id}`, JSON.stringify(publicData));
-    
-    // Открываем публичную страницу в новой вкладке
-    const url = `/public-roi/${publicData.id}`;
-    window.open(url, '_blank');
+      // Сохраняем данные для публичной страницы в localStorage
+      localStorage.setItem(`publicROI_${publicData.id}`, JSON.stringify(publicData));
+      
+      // Открываем публичную страницу в новой вкладке
+      const url = `/public-roi/${publicData.id}`;
+      window.open(url, '_blank');
+      
+      showSuccess('Публичная страница создана и открыта в новой вкладке');
+    } catch (error) {
+      console.error('Ошибка при создании публичной страницы:', error);
+      showError('Ошибка при создании публичной страницы');
+    }
   };
 
   // Функция для расчета всех показателей
@@ -683,14 +694,47 @@ const RoiCalculator = () => {
                 <Download className="mr-2 h-4 w-4" /> Экспорт в CSV
               </Button>
 
-              <Button 
-                onClick={generatePublicPage}
-                variant="outline"
-                size={isMobile ? "default" : "sm"}
-                className={isMobile ? 'h-12 w-full' : ''}
-              >
-                <Share2 className="mr-2 h-4 w-4" /> Публичная страница
-              </Button>
+              <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
+                <Button 
+                  onClick={generatePublicPage}
+                  variant="outline"
+                  size={isMobile ? "default" : "sm"}
+                  className={isMobile ? 'h-12 w-full' : ''}
+                >
+                  <Share2 className="mr-2 h-4 w-4" /> Создать публичную страницу
+                </Button>
+                
+                <Button 
+                  onClick={() => {
+                    if (!calculationResults) {
+                      showError('Сначала создайте расчет ROI');
+                      return;
+                    }
+                    
+                    // Получаем последний созданный ID из localStorage или создаем новый
+                    const keys = Object.keys(localStorage).filter(key => key.startsWith('publicROI_'));
+                    if (keys.length === 0) {
+                      showError('Сначала создайте публичную страницу');
+                      return;
+                    }
+                    
+                    const lastKey = keys[keys.length - 1];
+                    const id = lastKey.replace('publicROI_', '');
+                    const url = `${window.location.origin}/public-roi/${id}`;
+                    
+                    navigator.clipboard.writeText(url).then(() => {
+                      showSuccess('Ссылка скопирована в буфер обмена!');
+                    }).catch(() => {
+                      showError('Не удалось скопировать ссылку');
+                    });
+                  }}
+                  variant="outline"
+                  size={isMobile ? "default" : "sm"}
+                  className={isMobile ? 'h-12 w-full' : ''}
+                >
+                  📋 Копировать ссылку
+                </Button>
+              </div>
 
               <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                 <Select value={pdfLanguage} onValueChange={setPdfLanguage}>

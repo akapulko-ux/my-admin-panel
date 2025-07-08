@@ -337,8 +337,8 @@ const PublicPropertyRoiPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t.dataNotFound || 'Данные не загружены'}</h2>
-          <p className="text-gray-600">{t.publicRoiNotAvailable || 'Публичная страница ROI недоступна'}</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t.dataNotFound}</h2>
+          <p className="text-gray-600">{t.publicRoiNotAvailable}</p>
         </div>
       </div>
     );
@@ -590,19 +590,19 @@ const PublicPropertyRoiPage = () => {
         {/* Секция с карточками основных показателей */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">Общие инвестиции</p>
+            <p className="text-sm text-muted-foreground">{t.totalInvestment}</p>
             <p className="text-lg font-semibold">{formatCurrency(currentData.unitPrice)}</p>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">Годовой доход от аренды</p>
+            <p className="text-sm text-muted-foreground">{t.annualRentalIncome}</p>
             <p className="text-lg font-semibold">{formatCurrency(currentData.detailedProjection?.[currentData.detailedProjection.findIndex(row => row.income > 0)]?.income || 0)}</p>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">Годовые расходы</p>
+            <p className="text-sm text-muted-foreground">{t.annualExpenses}</p>
             <p className="text-lg font-semibold">{formatCurrency(currentData.detailedProjection?.[currentData.detailedProjection.findIndex(row => row.spend > 0)]?.spend || 0)}</p>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">Чистая прибыль в год</p>
+            <p className="text-sm text-muted-foreground">{t.annualNetProfit}</p>
             <p className="text-lg font-semibold">
               {formatCurrency(
                 currentData.detailedProjection
@@ -612,7 +612,7 @@ const PublicPropertyRoiPage = () => {
             </p>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">ROI</p>
+            <p className="text-sm text-muted-foreground">{t.roiShort}</p>
             <p className="text-lg font-semibold">
               {(() => {
                 if (!currentData.detailedProjection || currentData.detailedProjection.length === 0) return '0%';
@@ -623,20 +623,20 @@ const PublicPropertyRoiPage = () => {
             </p>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">Срок окупаемости</p>
+            <p className="text-sm text-muted-foreground">{t.paybackPeriodShort}</p>
             <p className="text-lg font-semibold">
               {(() => {
                 const annualNetProfit = currentData.detailedProjection
                   ? currentData.detailedProjection.reduce((sum, row) => sum + row.cashflow, 0) / currentData.investmentPeriod
                   : 0;
                 return annualNetProfit > 0
-                  ? (currentData.unitPrice / annualNetProfit).toFixed(1) + ' лет'
+                  ? (currentData.unitPrice / annualNetProfit).toFixed(1) + ` ${t.yearsText}`
                   : '∞';
               })()}
             </p>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">Общий ROI за период</p>
+            <p className="text-sm text-muted-foreground">{t.totalRoiForPeriod}</p>
             <p className="text-lg font-semibold">
               {(() => {
                 if (!currentData.detailedProjection || currentData.detailedProjection.length === 0) return '0%';
