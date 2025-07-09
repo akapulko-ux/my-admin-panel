@@ -69,6 +69,12 @@ import UserManagement from "./pages/UserManagement";
 // Заявки на регистрацию
 import RegistrationRequests from "./pages/RegistrationRequests";
 
+// Карта рефералов
+import ReferralMap from "./pages/ReferralMap";
+
+// Настройки
+import Settings from "./pages/Settings";
+
 const AdminLayout = ({ children }) => {
   const { currentUser, logout, role } = useAuth();
   const [developerName, setDeveloperName] = useState('');
@@ -351,6 +357,20 @@ function App() {
                     <Route path="/registration-requests" element={
                       <ProtectedRoute>
                         <RegistrationRequests />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Карта рефералов (только для админа) */}
+                    <Route path="/referral-map" element={
+                      <ProtectedRoute>
+                        <ReferralMap />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Настройки */}
+                    <Route path="/settings" element={
+                      <ProtectedRoute>
+                        <Settings />
                       </ProtectedRoute>
                     } />
 

@@ -16,7 +16,9 @@ import {
   LayoutGrid,
   Calculator,
   UserCheck,
-  ClipboardList
+  ClipboardList,
+  Network,
+  Settings
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -282,6 +284,26 @@ const Navigation = () => {
                   Заявки на регистрацию
                 </NavItem>
               )}
+
+              {role === 'admin' && (
+                <NavItem 
+                  to="/referral-map" 
+                  icon={Network}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Карта рефералов
+                </NavItem>
+              )}
+
+              {['admin', 'модератор', 'застройщик'].includes(role) && (
+                <NavItem 
+                  to="/settings" 
+                  icon={Settings}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Настройки
+                </NavItem>
+              )}
             </nav>
           </div>
         </div>
@@ -381,6 +403,18 @@ const Navigation = () => {
         {role === 'admin' && (
           <NavItem to="/registration-requests" icon={ClipboardList}>
             Заявки на регистрацию
+          </NavItem>
+        )}
+
+        {role === 'admin' && (
+          <NavItem to="/referral-map" icon={Network}>
+            Карта рефералов
+          </NavItem>
+        )}
+
+        {['admin', 'модератор', 'застройщик'].includes(role) && (
+          <NavItem to="/settings" icon={Settings}>
+            Настройки
           </NavItem>
         )}
       </nav>

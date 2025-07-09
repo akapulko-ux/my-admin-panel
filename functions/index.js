@@ -7,6 +7,9 @@ const path = require("path");
 const os = require("os");
 const fs = require("fs");
 
+// Telegram Bot Token
+const BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM";
+
 // Инициализируем admin SDK
 admin.initializeApp();
 
@@ -187,5 +190,242 @@ exports.updateUserRoleClaims = onDocumentUpdated("users/{userId}", async (event)
       console.error('Ошибка при обновлении роли:', error);
       throw new Error('Ошибка при обновлении роли пользователя');
     }
+  }
+});
+
+// Функция для отправки уведомлений через Telegram Bot
+exports.sendTelegramNotification = functions.https.onCall(async (data, context) => {
+  const { chatId, message, role, developerId } = data.data || data;
+  
+  if (!chatId || !message) {
+    throw new functions.https.HttpsError("invalid-argument", "Отсутствуют обязательные параметры chatId или message");
+  }
+
+  console.log(`Отправка уведомления в чат ${chatId}: ${message}`);
+  
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'HTML'
+      })
+    });
+
+    const result = await response.json();
+    
+    if (!response.ok) {
+      console.error('Ошибка Telegram API:', result);
+      throw new Error(`Telegram API Error: ${result.description || 'Unknown error'}`);
+    }
+    
+    console.log('Уведомление успешно отправлено:', result);
+    return { success: true, message: "Уведомление отправлено" };
+  } catch (error) {
+    console.error('Ошибка при отправке уведомления:', error);
+    throw new functions.https.HttpsError("unknown", "Ошибка при отправке уведомления: " + error.message);
+  }
+});
+
+// Функция для уведомления пользователей о новых фиксациях
+exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", async (event) => {
+  const fixationData = event.data.data();
+  
+  try {
+    // Получаем всех пользователей с подключенным телеграмом
+    const usersSnapshot = await admin.firestore()
+      .collection("users")
+      .where("telegramChatId", "!=", null)
+      .get();
+    
+    const notifications = [];
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data();
+      const userRole = userData.role;
+      const telegramChatId = userData.telegramChatId;
+      
+      // Проверяем права доступа пользователя к фиксации
+      let hasAccess = false;
+      
+      if (userRole === 'admin') {
+        hasAccess = true; // Админ видит все
+      } else if (userRole === 'модератор') {
+        hasAccess = true; // Модератор видит все
+      } else if (userRole === 'застройщик') {
+        // Застройщик видит только свои объекты
+        if (fixationData.developerId && userData.developerId === fixationData.developerId) {
+          hasAccess = true;
+        }
+      }
+      
+      if (hasAccess) {
+        // Формируем подробное сообщение
+        const message = `🏠 <b>Новая фиксация клиента</b>\n\n` +
+          `👤 <b>Клиент:</b> ${fixationData.clientName || 'Не указан'}\n` +
+          `📞 <b>Телефон:</b> ${fixationData.clientPhone || 'Не указан'}\n` +
+          `👨‍💼 <b>Агент:</b> ${fixationData.agentName || 'Не указан'}\n` +
+          `🏘️ <b>Комплекс:</b> ${fixationData.complexName || 'Не указан'}\n` +
+          `🏗️ <b>Застройщик:</b> ${fixationData.developerName || 'Не указан'}\n` +
+          `🏡 <b>Тип недвижимости:</b> ${fixationData.propertyType || 'Не указан'}\n` +
+          `⏰ <b>Время:</b> ${new Date(fixationData.dateTime?.seconds * 1000 || Date.now()).toLocaleString('ru-RU')}\n\n` +
+          `📱 Перейдите в админ-панель для обработки фиксации.`;
+        
+        notifications.push({
+          chatId: telegramChatId,
+          message: message,
+          role: userRole,
+          developerId: userData.developerId
+        });
+      }
+    }
+    
+    // Отправляем уведомления асинхронно
+    const sendPromises = notifications.map(async (notification) => {
+      try {
+        // Отправляем уведомление через Telegram Bot API
+        await sendTelegramMessage(notification.chatId, notification.message);
+        
+        // Сохраняем запись об успешной отправке
+        await admin.firestore().collection('telegramNotifications').add({
+          ...notification,
+          fixationId: event.params.fixationId,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          sent: true,
+          sentAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log(`Уведомление отправлено пользователю с ролью ${notification.role}`);
+        return { success: true, role: notification.role };
+      } catch (error) {
+        console.error(`Ошибка отправки уведомления пользователю с ролью ${notification.role}:`, error);
+        
+        // Сохраняем запись о неудачной отправке
+        await admin.firestore().collection('telegramNotifications').add({
+          ...notification,
+          fixationId: event.params.fixationId,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          sent: false,
+          error: error.message
+        });
+        
+        return { success: false, role: notification.role, error: error.message };
+      }
+    });
+    
+    const results = await Promise.all(sendPromises);
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+    
+    console.log(`Отправлено ${successCount} уведомлений, ошибок: ${failureCount} для фиксации ${event.params.fixationId}`);
+    
+    return { success: true, sent: successCount, failed: failureCount, total: notifications.length };
+  } catch (error) {
+    console.error('Ошибка при планировании уведомлений:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Функция для отправки сообщений через Telegram Bot API
+const sendTelegramMessage = async (chatId, text) => {
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: 'HTML'
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      console.error('Ошибка Telegram API:', result);
+      throw new Error(`Telegram API Error: ${result.description || 'Unknown error'}`);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Ошибка отправки сообщения:', error);
+    throw error;
+  }
+};
+
+// Функция для обработки webhook от Telegram Bot
+exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).send('Method Not Allowed');
+  }
+
+  try {
+    const update = req.body;
+    
+    if (update.message) {
+      const chatId = update.message.chat.id;
+      const text = update.message.text;
+      
+      // Обрабатываем команду /start с кодом верификации
+      if (text && text.startsWith('/start ')) {
+        const verificationCode = text.split(' ')[1];
+        
+        if (verificationCode) {
+          // Ищем пользователя с таким кодом верификации
+          const usersSnapshot = await admin.firestore()
+            .collection("users")
+            .where("telegramVerificationCode", "==", verificationCode)
+            .limit(1)
+            .get();
+          
+          if (!usersSnapshot.empty) {
+            const userDoc = usersSnapshot.docs[0];
+            const userData = userDoc.data();
+            
+            console.log(`Верификация для пользователя ${userDoc.id}, Chat ID: ${chatId}`);
+            
+            // Автоматически подключаем пользователя
+            await userDoc.ref.update({
+              telegramChatId: chatId.toString(),
+              telegramConnected: true,
+              telegramConnectedAt: admin.firestore.FieldValue.serverTimestamp(),
+              telegramVerificationCode: admin.firestore.FieldValue.delete() // Удаляем код после использования
+            });
+            
+            const responseMessage = `✅ Подключение успешно завершено!\n\n` +
+              `Теперь вы будете получать уведомления о новых фиксациях клиентов в соответствии с вашей ролью: <b>${userData.role || 'agent'}</b>\n\n` +
+              `Вы можете закрыть это окно и вернуться в админ-панель.`;
+            
+            await sendTelegramMessage(chatId, responseMessage);
+            
+          } else {
+            const errorMessage = `❌ Код верификации не найден или уже использован.\n\n` +
+              `Получите новый код в админ-панели в разделе "Настройки".`;
+            
+            await sendTelegramMessage(chatId, errorMessage);
+          }
+        } else {
+          // Отправляем справку если команда /start без параметров
+          const helpMessage = `👋 Добро пожаловать в IT Agent Admin Bot!\n\n` +
+            `🔗 <b>Автоматическое подключение:</b>\n` +
+            `1. Перейдите в раздел "Настройки" в админ-панели\n` +
+            `2. Нажмите "Подключить телеграм"\n` +
+            `3. Нажмите кнопку "Подключить через Telegram"\n` +
+            `4. Вы автоматически попадете сюда и подключение завершится\n\n` +
+            `📱 <b>Ручное подключение:</b>\n` +
+            `Отправьте команду: <code>/start ВАШ_КОД_ВЕРИФИКАЦИИ</code>\n\n` +
+            `После подключения вы будете получать уведомления о новых фиксациях клиентов в соответствии с вашей ролью.`;
+          
+          await sendTelegramMessage(chatId, helpMessage);
+        }
+      }
+    }
+    
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Ошибка в webhook:', error);
+    res.status(500).send('Internal Server Error');
   }
 });

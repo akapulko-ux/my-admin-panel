@@ -733,7 +733,6 @@ const Chessboard = () => {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [sections, setSections] = useState([]);
   const [exchangeRate, setExchangeRate] = useState(16000);
   const [isEditingRate, setIsEditingRate] = useState(false);
@@ -946,7 +945,6 @@ const Chessboard = () => {
             }
           }
           
-          setDescription(data.description || "");
           setSelectedComplexId(data.complexId || "");
           setExchangeRate(data.exchangeRate || 16000);
           
@@ -1141,7 +1139,6 @@ const Chessboard = () => {
       const data = {
         name: complexName, // Всегда используем название из комплекса
         sections,
-        description,
         complexId: selectedComplexId || null,
         exchangeRate,
         updatedAt: serverTimestamp(),
@@ -1470,17 +1467,7 @@ const Chessboard = () => {
             </div>
           )}
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Описание
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 border rounded-md"
-              rows={3}
-            />
-          </div>
+
         </CardContent>
       </Card>
 
