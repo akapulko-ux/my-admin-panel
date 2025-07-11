@@ -763,10 +763,10 @@ function CreateProperty() {
                   {dndItems.map((item, idx) => (
                     <div key={item.id} className="relative">
                       <DraggablePreviewItem
-                        item={item}
+                        id={item.id}
                         url={item.url}
                         index={idx}
-                        moveItem={moveDndItem}
+                        moveImage={moveDndItem}
                         onRemove={() => handleRemoveDndItem(item.id)}
                       />
                     </div>

@@ -168,7 +168,14 @@ const PublicRoiPage = () => {
       // Базовые расчеты
       const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
       const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100);
-      const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax) / 100;
+      
+      // Операционные расходы (без налогов)
+      const initialOperationalExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
+      const initialProfitBeforeTax = initialAnnualRentalIncome - initialOperationalExpenses;
+      
+      // Налоги рассчитываются от прибыли до налогов
+      const initialTaxes = initialProfitBeforeTax * (annualTax / 100);
+      const initialAnnualExpenses = initialOperationalExpenses + initialTaxes;
 
       // Пересчет для выбранного периода
       const graphData = [];
@@ -201,7 +208,13 @@ const PublicRoiPage = () => {
         const rentalIncome = year <= operationStartYear ? 0 :
           initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear);
         
-        const expenses = rentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
+        // Операционные расходы (без налогов)
+        const operationalExpenses = rentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
+        const profitBeforeTax = rentalIncome - operationalExpenses;
+        
+        // Налоги рассчитываются от прибыли до налогов
+        const taxes = profitBeforeTax * (annualTax / 100);
+        const expenses = operationalExpenses + taxes;
         const totalReturn = rentalIncome - expenses + yearlyAppreciation;
         
         accumulatedProfit += totalReturn;

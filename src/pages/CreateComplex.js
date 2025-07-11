@@ -680,7 +680,7 @@ function CreateComplex() {
                         id={preview.id}
                         url={preview.url}
                         index={index}
-                        moveItem={moveItem}
+                        moveImage={moveItem}
                         onRemove={handleRemovePreview}
                       />
                     ))}

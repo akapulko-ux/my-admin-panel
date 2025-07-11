@@ -292,9 +292,10 @@ function EditLandmark() {
                   {images.map((item, idx) => (
                     <div key={item.id} className="relative">
                       <DraggablePreviewItem
-                        item={item}
+                        id={item.id}
+                        url={item.url}
                         index={idx}
-                        moveItem={moveImage}
+                        moveImage={moveImage}
                         onRemove={() => handleRemoveImage(idx)}
                       />
                     </div>

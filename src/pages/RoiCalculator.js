@@ -174,7 +174,6 @@ const RoiCalculator = () => {
   const [rentalData, setRentalData] = useState({
     dailyRate: '85',
     occupancyRate: '75',
-    daysPerYear: '365',
     otaCommission: '15',
     rentGrowthRate: '1',
     operationStartYear: '0',
@@ -305,7 +304,7 @@ const RoiCalculator = () => {
     
     const dailyRate = Number(rentalData.dailyRate) || 0;
     const occupancyRate = Number(rentalData.occupancyRate) || 0;
-    const daysPerYear = Number(rentalData.daysPerYear) || 365;
+    const daysPerYear = 365; // Фиксированное значение дней в году
     const otaCommission = Number(rentalData.otaCommission) || 0;
     const rentGrowthRate = Number(rentalData.rentGrowthRate) || 0;
     const operationStartYear = Number(rentalData.operationStartYear) || 0;
@@ -318,8 +317,15 @@ const RoiCalculator = () => {
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
     const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100) * (1 - otaCommission / 100);
-    const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax) / 100;
-    const initialNetProfit = initialAnnualRentalIncome - initialAnnualExpenses;
+    
+    // Операционные расходы (без налогов)
+    const initialOperationalExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
+    const initialProfitBeforeTax = initialAnnualRentalIncome - initialOperationalExpenses;
+    
+    // Налоги рассчитываются от прибыли до налогов
+    const initialTaxes = initialProfitBeforeTax * (annualTax / 100);
+    const initialTotalExpenses = initialOperationalExpenses + initialTaxes;
+    const initialNetProfit = initialProfitBeforeTax - initialTaxes;
 
     // Генерация данных для графика и детального анализа
     const graphData = [];
@@ -334,16 +340,21 @@ const RoiCalculator = () => {
       const yearlyRentalIncome = year <= operationStartYear ? 0 : 
         initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear);
       
-      // Расчет расходов (включая комиссию управления)
-      const yearlyExpenses = yearlyRentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
+      // Операционные расходы (без налогов)
+      const yearlyOperationalExpenses = yearlyRentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
+      const yearlyProfitBeforeTax = yearlyRentalIncome - yearlyOperationalExpenses;
+      
+      // Налоги рассчитываются от прибыли до налогов
+      const yearlyTaxes = yearlyProfitBeforeTax * (annualTax / 100);
+      const yearlyTotalExpenses = yearlyOperationalExpenses + yearlyTaxes;
       
       // Чистый доход
-      const yearlyNetProfit = yearlyRentalIncome - yearlyExpenses;
+      const yearlyNetProfit = yearlyProfitBeforeTax - yearlyTaxes;
       
       // Накопленные значения
       accumulatedProfit += yearlyNetProfit;
       cumulativeIncome += yearlyRentalIncome;
-      totalSpend += yearlyExpenses;
+      totalSpend += yearlyTotalExpenses;
       cumulativeCashflow += yearlyNetProfit;
       
       const yearData = {
@@ -351,7 +362,7 @@ const RoiCalculator = () => {
         yearLabel: `${2025 + year}`,
         income: Math.round(yearlyRentalIncome),
         cumulativeIncome: Math.round(cumulativeIncome),
-        spend: Math.round(yearlyExpenses),
+        spend: Math.round(yearlyTotalExpenses),
         cumulativeSpend: Math.round(totalSpend),
         cashflow: Math.round(yearlyNetProfit),
         cumulativeCashflow: Math.round(cumulativeCashflow),
@@ -381,7 +392,7 @@ const RoiCalculator = () => {
     setCalculationResults({
       totalInvestment,
       annualRentalIncome: initialAnnualRentalIncome,
-      annualExpenses: initialAnnualExpenses,
+      annualExpenses: initialTotalExpenses,
       annualNetProfit: initialNetProfit,
       roi: (initialNetProfit / totalInvestment) * 100,
       paybackPeriod: totalInvestment / initialNetProfit,
@@ -538,17 +549,6 @@ const RoiCalculator = () => {
               max="100"
               value={rentalData.occupancyRate}
               onChange={(e) => setRentalData({...rentalData, occupancyRate: e.target.value})}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="daysPerYear">Дней в году</Label>
-            <Input
-              id="daysPerYear"
-              type="number"
-              max="365"
-              value={rentalData.daysPerYear}
-              onChange={(e) => setRentalData({...rentalData, daysPerYear: e.target.value})}
             />
           </div>
 

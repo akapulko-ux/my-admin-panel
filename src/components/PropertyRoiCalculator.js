@@ -173,7 +173,6 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
   const [rentalData, setRentalData] = useState({
     dailyRate: '',
     occupancyRate: '',
-    daysPerYear: '',
     rentGrowthRate: '',
     operationStartYear: '',
   });
@@ -329,7 +328,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     
     const dailyRate = Number(rentalData.dailyRate) || 0;
     const occupancyRate = Number(rentalData.occupancyRate) || 0;
-    const daysPerYear = Number(rentalData.daysPerYear) || 365;
+    const daysPerYear = 365; // Фиксированное значение дней в году
     const rentGrowthRate = Number(rentalData.rentGrowthRate) || 0;
     const operationStartYear = Number(rentalData.operationStartYear) || 0;
     
@@ -344,7 +343,14 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
     const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100);
-    const initialAnnualExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
+    
+    // Операционные расходы (без налогов)
+    const initialOperationalExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
+    const initialProfitBeforeTax = initialAnnualRentalIncome - initialOperationalExpenses;
+    
+    // Налоги рассчитываются от прибыли до налогов
+    const initialTaxes = initialProfitBeforeTax * (annualTax / 100);
+    const initialAnnualExpenses = initialOperationalExpenses + initialTaxes;
 
     // Применяем сценарий
     let scenarioMultiplier = 1;
@@ -371,7 +377,13 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
         Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear) * 
         scenarioMultiplier;
       
-      const expenses = rentalIncome * (maintenanceFees + utilityBills + annualTax + propertyManagementFee) / 100;
+      // Операционные расходы (без налогов)
+      const operationalExpenses = rentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
+      const profitBeforeTax = rentalIncome - operationalExpenses;
+      
+      // Налоги рассчитываются от прибыли до налогов
+      const taxes = profitBeforeTax * (annualTax / 100);
+      const expenses = operationalExpenses + taxes;
       
       // Учитываем удорожание проекта только в первые 3 года
       let yearlyAppreciationRate = 0;
@@ -544,18 +556,6 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 onChange={(e) => setRentalData({...rentalData, occupancyRate: e.target.value})}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="daysPerYear">Дней в году</Label>
-              <Input
-                id="daysPerYear"
-                type="number"
-                value={rentalData.daysPerYear}
-                onChange={(e) => setRentalData({...rentalData, daysPerYear: e.target.value})}
-              />
-            </div>
-
-
 
             <div className="space-y-2">
               <Label htmlFor="rentGrowthRate">Рост арендной платы в год (%)</Label>
