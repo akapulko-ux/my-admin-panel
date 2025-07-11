@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, orderBy, getDocs, updateDoc, doc, Timestamp, addDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -40,6 +42,8 @@ const ClientFixations = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const { currentUser, role: userRole } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -108,27 +112,20 @@ const ClientFixations = () => {
 
   // Функция для получения статуса с правильным цветом
   const getStatusBadge = (status) => {
-    const statusColors = {
-      // Русский
-      'На согласовании': 'bg-yellow-500',
-      'Зафиксирован': 'bg-green-500',
-      'Срок истек': 'bg-red-500',
-      'Отклонен': 'bg-red-500',
-      // Английский
-      'Pending Approval': 'bg-yellow-500',
-      'Fixed': 'bg-green-500',
-      'Expired': 'bg-red-500',
-      'Rejected': 'bg-red-500',
-      // Индонезийский
-      'Menunggu Persetujuan': 'bg-yellow-500',
-      'Diperbaiki': 'bg-green-500',
-      'Kedaluwarsa': 'bg-red-500',
-      'Ditolak': 'bg-red-500'
-    };
+    const statusType = getStatusType(status);
+    const statusColor = getStatusColor(statusType);
+    
+    // Получаем локализованное название статуса
+    const localizedStatus = {
+      pending: t.clientFixations.statuses.pending,
+      approved: t.clientFixations.statuses.approved,
+      expired: t.clientFixations.statuses.expired,
+      rejected: t.clientFixations.statuses.rejected
+    }[statusType] || status;
 
     return (
-      <Badge className={`${statusColors[status] || 'bg-gray-500'}`}>
-        {status}
+      <Badge className={statusColor}>
+        {localizedStatus}
       </Badge>
     );
   };
@@ -141,15 +138,23 @@ const ClientFixations = () => {
         status: newStatus
       };
 
-      // Если статус "Зафиксирован", добавляем срок действия
-      if (newStatus === 'Зафиксирован' && validUntil) {
+      // Если статус соответствует "зафиксирован", добавляем срок действия
+      const approvedStatuses = [
+        t.clientFixations.statuses.approved,
+        'Зафиксирован', 'Fixed', 'Diperbaiki' // для обратной совместимости
+      ];
+      if (approvedStatuses.includes(newStatus) && validUntil) {
         const validUntilDate = new Date(validUntil);
         validUntilDate.setHours(23, 59, 59);
         updateData.validUntil = Timestamp.fromDate(validUntilDate);
       }
 
-      // Если статус "Отклонен", добавляем комментарий
-      if (newStatus === 'Отклонен' && comment) {
+      // Если статус соответствует "отклонен", добавляем комментарий
+      const rejectedStatuses = [
+        t.clientFixations.statuses.rejected,
+        'Отклонен', 'Rejected', 'Ditolak' // для обратной совместимости
+      ];
+      if (rejectedStatuses.includes(newStatus) && comment) {
         updateData.rejectComment = comment;
         updateData.rejectedAt = Timestamp.now();
         updateData.rejectedBy = currentUser.email;
@@ -173,28 +178,20 @@ const ClientFixations = () => {
       setFixations(updatedFixations);
       filterFixations(searchQuery);
 
-      toast.success(`Статус фиксации успешно обновлен на "${newStatus}"`);
+      toast.success(t.clientFixations.statusUpdated.replace('{status}', newStatus));
       closeApproveDialog();
       closeRejectDialog();
     } catch (error) {
       console.error('Ошибка при обновлении статуса:', error);
-      toast.error('Ошибка при обновлении статуса фиксации');
+      toast.error(t.clientFixations.statusUpdateError);
     }
   };
 
-  // Функция для получения правильного статуса в зависимости от языка исходного статуса
-  const getLocalizedStatus = (currentStatus, targetStatus) => {
-    // Определяем язык по текущему статусу
-    if (currentStatus === 'Pending Approval') {
-      // Английский
-      return targetStatus === 'approved' ? 'Fixed' : 'Rejected';
-    } else if (currentStatus === 'Menunggu Persetujuan') {
-      // Индонезийский
-      return targetStatus === 'approved' ? 'Diperbaiki' : 'Ditolak';
-    } else {
-      // Русский (по умолчанию)
-      return targetStatus === 'approved' ? 'Зафиксирован' : 'Отклонен';
-    }
+  // Функция для получения правильного статуса в зависимости от языка
+  const getLocalizedStatus = (targetStatus) => {
+    return targetStatus === 'approved' 
+      ? t.clientFixations.statuses.approved 
+      : t.clientFixations.statuses.rejected;
   };
 
   // Функция для подтверждения фиксации с выбранной датой
@@ -203,7 +200,7 @@ const ClientFixations = () => {
     
     try {
       // Получаем правильный статус на нужном языке
-      const approvedStatus = getLocalizedStatus(selectedFixation.status, 'approved');
+      const approvedStatus = getLocalizedStatus('approved');
       
       // Обновляем статус фиксации
       await updateFixationStatus(selectedFixation.id, approvedStatus, validUntilDate);
@@ -243,7 +240,7 @@ const ClientFixations = () => {
     
     try {
       // Получаем правильный статус на нужном языке
-      const rejectedStatus = getLocalizedStatus(selectedFixation.status, 'rejected');
+      const rejectedStatus = getLocalizedStatus('rejected');
       
       // Обновляем статус фиксации
       await updateFixationStatus(selectedFixation.id, rejectedStatus, null, rejectComment);
@@ -321,11 +318,11 @@ const ClientFixations = () => {
         return searchTerms.every(term => searchableText.includes(term));
       }));
 
-      toast.success('Фиксация и чат успешно удалены');
+      toast.success(t.clientFixations.fixationDeleted);
       closeDeleteDialog();
     } catch (error) {
       console.error('Ошибка при удалении фиксации:', error);
-      toast.error('Ошибка при удалении фиксации');
+      toast.error(t.clientFixations.deleteError);
     }
   };
 
@@ -334,24 +331,17 @@ const ClientFixations = () => {
     const currentDate = new Date();
     
     for (const fixation of fixationsData) {
-      // Проверяем статус "зафиксирован" на всех языках
-      const isFixed = fixation.status === 'Зафиксирован' || 
-                     fixation.status === 'Fixed' || 
-                     fixation.status === 'Diperbaiki';
+      // Проверяем статус "зафиксирован" используя getStatusType
+      const statusType = getStatusType(fixation.status);
                      
       if (
-        isFixed &&
+        statusType === 'approved' &&
         fixation.validUntil &&
         currentDate > new Date(fixation.validUntil.seconds * 1000)
       ) {
         try {
-          // Устанавливаем статус "истек" в том же языке, что и исходный статус
-          let expiredStatus = 'Срок истек'; // по умолчанию русский
-          if (fixation.status === 'Fixed') {
-            expiredStatus = 'Expired';
-          } else if (fixation.status === 'Diperbaiki') {
-            expiredStatus = 'Kedaluwarsa';
-          }
+          // Устанавливаем статус "истек" в текущем языке
+          const expiredStatus = t.clientFixations.statuses.expired;
           
           await updateDoc(doc(db, 'clientFixations', fixation.id), {
             status: expiredStatus
@@ -389,7 +379,7 @@ const ClientFixations = () => {
         const developerId = userDoc.data()?.developerId;
 
         if (!developerId) {
-          setError('Ошибка: не назначен застройщик для пользователя');
+          setError(t.clientFixations.fetchError);
           setIsLoading(false);
           return;
         }
@@ -399,7 +389,7 @@ const ClientFixations = () => {
         const developerDoc = await getDoc(developerRef);
         
         if (!developerDoc.exists()) {
-          setError('Ошибка: не найден застройщик');
+          setError(t.clientFixations.fetchError);
           setIsLoading(false);
           return;
         }
@@ -436,7 +426,7 @@ const ClientFixations = () => {
       setFilteredFixations(fixationsData);
       checkAndUpdateExpiredFixations(fixationsData);
     } catch (err) {
-      setError('Ошибка при загрузке фиксаций: ' + err.message);
+      setError(t.clientFixations.fetchError + ': ' + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -523,12 +513,12 @@ const ClientFixations = () => {
   // Функция для получения отображаемого названия статуса
   const getStatusDisplayName = (statusType) => {
     const names = {
-      pending: 'На согласовании',
-      approved: 'Зафиксированы',
-      expired: 'Срок истек',
-      rejected: 'Отклонены'
+      pending: t.clientFixations.statuses.pending_plural,
+      approved: t.clientFixations.statuses.approved_plural,
+      expired: t.clientFixations.statuses.expired_plural,
+      rejected: t.clientFixations.statuses.rejected_plural
     };
-    return names[statusType] || 'Неизвестно';
+    return names[statusType] || 'Unknown';
   };
 
   // Функция для получения цвета статуса
@@ -581,7 +571,7 @@ const ClientFixations = () => {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <span className="ml-2">Загрузка фиксаций...</span>
+        <span className="ml-2">{t.clientFixations.loading}</span>
       </div>
     );
   }
@@ -603,7 +593,7 @@ const ClientFixations = () => {
         <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
-        <p>Фиксации отсутствуют</p>
+        <p>{t.clientFixations.noFixations}</p>
       </div>
     );
   }
@@ -611,12 +601,12 @@ const ClientFixations = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-6`}>
-        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Фиксации клиентов</h1>
+        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{t.clientFixations.title}</h1>
         <Button 
           onClick={fetchFixations}
           className={`${isMobile ? 'w-full h-12' : ''}`}
         >
-          Обновить
+          {t.clientFixations.refresh}
         </Button>
       </div>
       
@@ -625,7 +615,7 @@ const ClientFixations = () => {
         <div className="relative max-w-md">
           <Input
             type="text"
-            placeholder="Поиск по имени, телефону, агенту, комплексу..."
+            placeholder={t.clientFixations.searchPlaceholder}
             value={searchQuery}
             onChange={handleSearchChange}
             className="pl-10 pr-4"
@@ -651,7 +641,9 @@ const ClientFixations = () => {
         </div>
         {searchQuery && (
           <p className="text-sm text-gray-500 mt-2">
-            Найдено: {filteredFixations.length} из {fixations.length} фиксаций
+            {t.clientFixations.searchResults
+              .replace('{count}', filteredFixations.length)
+              .replace('{total}', fixations.length)}
           </p>
                  )}
        </div>
@@ -688,7 +680,7 @@ const ClientFixations = () => {
                    : 'bg-gray-500'
                } ${isMobile ? 'h-12 justify-center col-span-2' : ''}`}
              >
-               <span className="mr-2">Всего</span>
+               <span className="mr-2">{t.clientFixations.total}</span>
                <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-bold">
                  {fixations.length}
                </span>
@@ -696,10 +688,10 @@ const ClientFixations = () => {
            </div>
            {(searchQuery || selectedStatusFilter) && (
              <p className="text-xs text-gray-500 mt-2">
-               * Применены фильтры: 
-               {searchQuery && ` поиск "${searchQuery}"`}
+               * {t.clientFixations.statusFilters} 
+               {searchQuery && ` ${t.clientFixations.searchFilter.replace('{query}', searchQuery)}`}
                {searchQuery && selectedStatusFilter && ', '}
-               {selectedStatusFilter && ` статус "${getStatusDisplayName(selectedStatusFilter)}"`}
+               {selectedStatusFilter && ` ${t.clientFixations.statusFilter.replace('{status}', getStatusDisplayName(selectedStatusFilter))}`}
              </p>
            )}
          </div>
@@ -710,7 +702,7 @@ const ClientFixations = () => {
           <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <p>По вашему запросу ничего не найдено</p>
+          <p>{t.clientFixations.noSearchResults}</p>
           <button
             onClick={() => {
               setSearchQuery('');
@@ -718,7 +710,7 @@ const ClientFixations = () => {
             }}
             className="mt-2 text-blue-600 hover:text-blue-800 underline"
           >
-            Очистить поиск
+            {t.clientFixations.clearSearch}
           </button>
         </div>
       ) : (
@@ -730,28 +722,28 @@ const ClientFixations = () => {
                 <h3 className="font-semibold">{fixation.clientName}</h3>
                 {fixation.clientPhone && (
                   <p className="text-sm text-gray-600 font-medium">
-                    Телефон: {fixation.clientPhone}
+                    {t.clientFixations.phone}: {fixation.clientPhone}
                   </p>
                 )}
                 <p className="text-sm text-gray-600">
-                  Агент: {fixation.agentName}
+                  {t.clientFixations.agent}: {fixation.agentName}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Комплекс: {fixation.complexName}
+                  {t.clientFixations.complex}: {fixation.complexName}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Застройщик: {fixation.developerName}
+                  {t.clientFixations.developer}: {fixation.developerName}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Тип недвижимости: {fixation.propertyType}
+                  {t.clientFixations.propertyType}: {fixation.propertyType}
                 </p>
                 {fixation.rejectComment && (
                   <div className="mt-2">
                     <p className="text-sm text-gray-600">
-                      Причина отклонения: {fixation.rejectComment}
+                      {t.clientFixations.rejectReason}: {fixation.rejectComment}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Отклонено: {fixation.rejectedBy} ({formatDate(fixation.rejectedAt.seconds * 1000)})
+                      {t.clientFixations.rejectedBy}: {fixation.rejectedBy} ({formatDate(fixation.rejectedAt.seconds * 1000)})
                     </p>
                   </div>
                 )}
@@ -765,7 +757,7 @@ const ClientFixations = () => {
                 </p>
                 {fixation.validUntil && (
                   <p className="text-sm text-gray-600">
-                    Действует до: {formatDate(fixation.validUntil.seconds * 1000)}
+                    {t.clientFixations.validUntil}: {formatDate(fixation.validUntil.seconds * 1000)}
                   </p>
                 )}
               </div>
@@ -773,22 +765,20 @@ const ClientFixations = () => {
             <div className={`${isMobile ? 'space-y-4' : 'flex justify-between'} mt-4`}>
               <div>
                 {/* Проверяем статус "на согласовании" на всех языках */}
-                {(fixation.status === 'На согласовании' || 
-                  fixation.status === 'Pending Approval' || 
-                  fixation.status === 'Menunggu Persetujuan') && 
+                {getStatusType(fixation.status) === 'pending' && 
                   (userRole === 'admin' || userRole === 'застройщик') && (
                   <div className={`${isMobile ? 'flex flex-col gap-2' : 'space-x-2'}`}>
                     <Button
                       onClick={() => openApproveDialog(fixation)}
                       className={`bg-green-500 hover:bg-green-600 text-white ${isMobile ? 'w-full h-12' : ''}`}
                     >
-                      Принять
+                      {t.clientFixations.accept}
                     </Button>
                     <Button
                       onClick={() => openRejectDialog(fixation)}
                       className={`bg-red-500 hover:bg-red-600 text-white ${isMobile ? 'w-full h-12' : ''}`}
                     >
-                      Отклонить
+                      {t.clientFixations.reject}
                     </Button>
                   </div>
                 )}
@@ -800,7 +790,7 @@ const ClientFixations = () => {
                   size={isMobile ? "default" : "sm"}
                   className={`${isMobile ? 'w-full h-12' : ''}`}
                 >
-                  Чат с агентом
+                  {t.clientFixations.chatWithAgent}
                 </Button>
                 {userRole === 'admin' && (
                   <Button
@@ -825,11 +815,11 @@ const ClientFixations = () => {
       <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Подтверждение фиксации</DialogTitle>
+            <DialogTitle>{t.clientFixations.confirmFixation}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Действует до
+              {t.clientFixations.validUntilLabel}
             </label>
             <Input
               type="date"
@@ -845,13 +835,13 @@ const ClientFixations = () => {
               onClick={closeApproveDialog}
               className={`${isMobile ? 'w-full h-12' : ''}`}
             >
-              Отмена
+              {t.clientFixations.cancel}
             </Button>
             <Button
               onClick={handleApproveFixation}
               className={`bg-green-500 hover:bg-green-600 text-white ${isMobile ? 'w-full h-12' : 'ml-2'}`}
             >
-              Принять
+              {t.clientFixations.accept}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -861,24 +851,24 @@ const ClientFixations = () => {
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Отклонение фиксации</DialogTitle>
+            <DialogTitle>{t.clientFixations.rejectFixation}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="rejectComment" className="text-sm font-medium text-gray-700">
-              Комментарий <span className="text-red-500">*</span>
+              {t.clientFixations.commentLabel} <span className="text-red-500">*</span>
             </Label>
             <div className="mt-1">
               <Textarea
                 id="rejectComment"
                 value={rejectComment}
                 onChange={(e) => setRejectComment(e.target.value)}
-                placeholder="Укажите причину отклонения фиксации (минимум 10 символов)"
+                placeholder={t.clientFixations.commentPlaceholder}
                 className="w-full min-h-[100px]"
               />
             </div>
             {rejectComment.length < 10 && rejectComment.length > 0 && (
               <p className="text-sm text-red-500 mt-1">
-                Комментарий должен содержать не менее 10 символов (осталось {10 - rejectComment.length})
+                {t.clientFixations.commentMinLength.replace('{count}', 10 - rejectComment.length)}
               </p>
             )}
           </div>
@@ -888,14 +878,14 @@ const ClientFixations = () => {
               onClick={closeRejectDialog}
               className={`${isMobile ? 'w-full h-12' : ''}`}
             >
-              Отмена
+              {t.clientFixations.cancel}
             </Button>
             <Button
               onClick={handleRejectFixation}
               className={`bg-red-500 hover:bg-red-600 text-white ${isMobile ? 'w-full h-12' : 'ml-2'}`}
               disabled={rejectComment.length < 10}
             >
-              Отклонить
+              {t.clientFixations.reject}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -905,14 +895,14 @@ const ClientFixations = () => {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Удаление фиксации</DialogTitle>
+            <DialogTitle>{t.clientFixations.deleteFixation}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-700">
-              Вы уверены, что хотите удалить фиксацию клиента <strong>{selectedFixation?.clientName}</strong>?
+              {t.clientFixations.deleteConfirmation.replace('{clientName}', selectedFixation?.clientName || '')}
             </p>
             <p className="text-red-600 text-sm mt-2">
-              Это действие нельзя отменить. Будут удалены фиксация и все связанные с ней сообщения в чате.
+              {t.clientFixations.deleteWarning}
             </p>
           </div>
           <DialogFooter className={`${isMobile ? 'flex-col gap-2' : 'flex-row gap-2'}`}>
@@ -921,13 +911,13 @@ const ClientFixations = () => {
               onClick={closeDeleteDialog}
               className={`${isMobile ? 'w-full h-12' : ''}`}
             >
-              Отмена
+              {t.clientFixations.cancel}
             </Button>
             <Button
               onClick={handleDeleteFixation}
               className={`bg-red-500 hover:bg-red-600 text-white ${isMobile ? 'w-full h-12' : 'ml-2'}`}
             >
-              Удалить
+              {t.clientFixations.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

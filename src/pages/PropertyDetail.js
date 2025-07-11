@@ -26,6 +26,9 @@ import {
 import { showError, showSuccess } from '../utils/notifications';
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
 import PropertyRoiCalculator from "../components/PropertyRoiCalculator";
+// Импорт для сжатия изображений и конвертации PDF
+import imageCompression from "browser-image-compression";
+import { convertPdfToImages } from "../utils/pdfUtils";
 
 function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
@@ -135,7 +138,7 @@ function PropertyDetail() {
     setIsEditing(false);
   };
 
-  // Функция для загрузки новых фотографий
+  // Функция для загрузки новых фотографий (с сжатием и поддержкой PDF)
   const handleImageUpload = async () => {
     if (!canEdit()) {
       showError("У вас нет прав для редактирования объекта");
@@ -145,7 +148,7 @@ function PropertyDetail() {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'image/*';
+    input.accept = 'image/*,application/pdf';
     input.onchange = async (event) => {
       const files = Array.from(event.target.files);
       if (!files.length) return;
@@ -153,7 +156,29 @@ function PropertyDetail() {
       setUploadingImages(true);
       
       try {
-        const uploadPromises = files.map(file => 
+        const compressionOptions = {
+          maxSizeMB: 10,
+          useWebWorker: true
+        };
+
+        const processedFiles = [];
+        
+        for (let file of files) {
+          if (file.type === "application/pdf") {
+            // PDF -> конвертация в изображения
+            const pageBlobs = await convertPdfToImages(file);
+            for (let blob of pageBlobs) {
+              const compressedFile = await imageCompression(blob, compressionOptions);
+              processedFiles.push(compressedFile);
+            }
+          } else {
+            // Обычное изображение
+            const compressedFile = await imageCompression(file, compressionOptions);
+            processedFiles.push(compressedFile);
+          }
+        }
+
+        const uploadPromises = processedFiles.map(file => 
           uploadToFirebaseStorageInFolder(file, 'properties/images')
         );
 
@@ -200,11 +225,14 @@ function PropertyDetail() {
       const imageUrl = property.images[index];
       console.log("Начинаем процесс удаления фотографии:", imageUrl);
       
-      // Создаем обновленный массив изображений
+      // Сначала пытаемся удалить файл из хранилища
+      await deleteFileFromFirebaseStorage(imageUrl);
+      console.log("Файл успешно удален из хранилища");
+
+      // После успешного удаления файла обновляем базу данных
       const newImages = [...property.images];
       newImages.splice(index, 1);
-
-      // Сначала обновляем базу данных
+      
       const propertyRef = doc(db, "properties", id);
       await updateDoc(propertyRef, { 
         images: newImages,
@@ -223,19 +251,39 @@ function PropertyDetail() {
         setCurrentImg(Math.max(0, newImages.length - 1));
       }
 
-      // Затем пытаемся удалить файл из хранилища (не критично, если не получится)
-      try {
-        await deleteFileFromFirebaseStorage(imageUrl);
-        console.log("Файл успешно удален из хранилища");
-      } catch (storageError) {
-        console.warn("Не удалось удалить файл из хранилища:", storageError);
-        // Не показываем ошибку пользователю, так как основная задача выполнена
-      }
-
       showSuccess("Фотография успешно удалена");
     } catch (error) {
       console.error("Ошибка при удалении фотографии:", error);
-      showError(`Произошла ошибка при удалении фотографии: ${error.message}`);
+      
+      if (error.message.includes("storage/object-not-found")) {
+        // Если файл не найден в storage, все равно удаляем ссылку из базы данных
+        try {
+          const newImages = [...property.images];
+          newImages.splice(index, 1);
+          
+          const propertyRef = doc(db, "properties", id);
+          await updateDoc(propertyRef, { 
+            images: newImages,
+            updatedAt: Timestamp.now()
+          });
+          
+          setProperty(prev => ({
+            ...prev,
+            images: newImages
+          }));
+          
+          if (currentImg >= newImages.length) {
+            setCurrentImg(Math.max(0, newImages.length - 1));
+          }
+          
+          showSuccess("Ссылка на фотографию удалена из базы данных");
+        } catch (dbError) {
+          console.error("Ошибка обновления базы данных:", dbError);
+          showError("Не удалось обновить информацию в базе данных");
+        }
+      } else {
+        showError("Произошла ошибка при удалении фотографии");
+      }
       
       // Перезагружаем данные объекта в случае ошибки
       try {
@@ -767,7 +815,7 @@ function PropertyDetail() {
             ) : (
               <>
                 <Camera className="h-4 w-4" />
-                Добавить фотографии
+                Добавить фото / PDF
               </>
             )}
           </button>

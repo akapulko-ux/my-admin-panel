@@ -3,6 +3,8 @@ import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'fireb
 import { updatePassword, updateProfile } from 'firebase/auth';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
@@ -14,6 +16,9 @@ import { Bot, Check, X, ExternalLink, FileText, User } from 'lucide-react';
 
 const Settings = () => {
   const { currentUser, role } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language].settings;
+  const common = translations[language];
   const [telegramChatId, setTelegramChatId] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,77 +47,6 @@ const Settings = () => {
   
   // Telegram Bot данные
   const BOT_USERNAME = 'it_agent_admin_bot';
-  
-  // Текст агентского договора
-  const CONTRACT_TEXT = `
-ДОГОВОР ЦЕССИИ
-об оказании информационно-технических услуг
-
-"IT Agent", именуемое в дальнейшем "Исполнитель", с одной стороны, и Застройщик, именуемый в дальнейшем "Заказчик", с другой стороны, заключили настоящий Договор о нижеследующем:
-
-1. ПРЕДМЕТ ДОГОВОРА
-
-1.1. Исполнитель обязуется предоставить Заказчику IT-платформу для размещения информации об объектах недвижимости и организации взаимодействия с агентами по недвижимости.
-
-1.2. Заказчик обязуется оплачивать услуги Исполнителя в размере и порядке, установленном настоящим Договором.
-
-2. ПРАВА И ОБЯЗАННОСТИ СТОРОН
-
-2.1. Исполнитель обязуется:
-2.1.1. Предоставить доступ к IT-платформе для размещения объектов недвижимости;
-2.1.2. Обеспечивать техническое функционирование платформы;
-2.1.3. Организовывать получение и обработку заявок от агентов;
-2.1.4. Предоставлять инструменты для взаимодействия с агентами по недвижимости.
-
-2.2. Заказчик обязуется:
-2.2.1. Своевременно предоставлять актуальную и достоверную информацию об объектах недвижимости;
-2.2.2. Поддерживать информацию об объектах в актуальном состоянии;
-2.2.3. Своевременно производить оплату услуг согласно условиям настоящего Договора;
-2.2.4. Уведомлять Исполнителя о продаже объектов недвижимости через платформу.
-
-3. ПОРЯДОК РАСЧЕТОВ
-
-3.1. Стоимость услуг Исполнителя составляет 0,5% (ноль целых пять десятых процента) от стоимости каждого объекта недвижимости, проданного через IT-платформу.
-
-3.2. Указанная в п. 3.1 комиссия выплачивается Заказчиком сверх стандартной комиссии агентам по недвижимости (5%).
-
-3.3. Оплата производится в течение 10 (десяти) банковских дней с момента заключения договора купли-продажи недвижимости между Заказчиком и покупателем, привлеченным через IT-платформу.
-
-3.4. Основанием для оплаты служит подписанный договор купли-продажи и уведомление Заказчика о совершенной сделке.
-
-4. ОТВЕТСТВЕННОСТЬ СТОРОН
-
-4.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору стороны несут ответственность в соответствии с действующим законодательством.
-
-4.2. При просрочке платежа Заказчик выплачивает пеню в размере 0,1% от суммы просроченного платежа за каждый день просрочки.
-
-5. СРОК ДЕЙСТВИЯ ДОГОВОРА
-
-5.1. Настоящий Договор вступает в силу с момента его подписания и действует в течение одного года.
-
-5.2. Договор автоматически продлевается на тот же срок, если ни одна из сторон не уведомит другую о расторжении за 30 дней до истечения срока действия.
-
-6. ПОРЯДОК РАЗРЕШЕНИЯ СПОРОВ
-
-6.1. Все споры и разногласия разрешаются путем переговоров.
-
-6.2. При невозможности достижения соглашения споры разрешаются в судебном порядке по месту нахождения Исполнителя.
-
-7. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ
-
-7.1. Настоящий Договор составлен в двух экземплярах, имеющих одинаковую юридическую силу, по одному для каждой из сторон.
-
-7.2. Изменения и дополнения к Договору действительны только при оформлении в письменной форме и подписании обеими сторонами.
-
-8. ПОДПИСИ СТОРОН
-
-ИСПОЛНИТЕЛЬ:{36}ЗАКАЗЧИК:
-IT Agent{40}Застройщик
-
-
-{5}_________________{31}_________________
-{8}(подпись){39}(подпись)
-  `;
   
   // Загружаем настройки пользователя
   const loadUserSettings = useCallback(async () => {
@@ -413,11 +347,13 @@ IT Agent{40}Застройщик
 
   // Получаем текст договора с подстановкой названия застройщика
   const getContractText = (userContract = null) => {
-    let contractText = CONTRACT_TEXT;
+    let contractText = t.contract.contractText;
     
     // Для админа, просматривающего договор пользователя
     if (userContract) {
-      contractText = contractText.replace(/Застройщик/g, userContract.developerName);
+      // Заменяем локализованное слово "Застройщик"/"Developer"/"Pengembang" на реальное название
+      const developerPlaceholder = language === 'en' ? 'Developer' : language === 'id' ? 'Pengembang' : 'Застройщик';
+      contractText = contractText.replace(new RegExp(developerPlaceholder, 'g'), userContract.developerName);
       
       // Заменяем подчеркивания на названия сторон (договор всегда подписан для просмотра)
       let signatureCount = 0;
@@ -425,32 +361,38 @@ IT Agent{40}Застройщик
         signatureCount++;
         if (signatureCount === 1) {
           const padding = Math.max(0, Math.floor((17 - 'IT Agent'.length) / 2));
-          return ' '.repeat(padding) + 'IT Agent' + ' '.repeat(17 - padding - 'IT Agent'.length);
+          return '  ' + ' '.repeat(padding) + 'IT Agent' + ' '.repeat(17 - padding - 'IT Agent'.length);
         } else if (signatureCount === 2) {
-          const padding = Math.max(0, Math.floor((17 - userContract.developerName.length) / 2));
-          return ' '.repeat(padding) + userContract.developerName + ' '.repeat(17 - padding - userContract.developerName.length);
+          // Располагаем название застройщика так же далеко справа, как верхнее значение
+          const spacing = '                  '; // Убрали 1 пробел
+          return spacing + userContract.developerName;
         }
         return '_________________';
       });
       
-      // Центрируем строки с "(подпись)"
+      // Центрируем строки с переведенным словом "(подпись)"
+      const signatureWord = t.contract.signature;
+      const escapedSignature = signatureWord.replace(/[()]/g, '\\$&');
       contractText = contractText.replace(
-        /\s{10}\(подпись\)\s{39}\(подпись\)/g,
-        '        (подпись)                                       (подпись)'
+        new RegExp(`${escapedSignature}\\s+${escapedSignature}`, 'g'),
+        `  ${signatureWord}                              ${signatureWord}`
       );
       
       return contractText;
     }
     
     // Обычная логика для текущего пользователя
-    // Заменяем "Застройщик" на реальное название
+    // Заменяем локализованное слово "Застройщик"/"Developer"/"Pengembang" на реальное название
     if (role === 'застройщик' && developerName) {
-      contractText = contractText.replace(/Застройщик/g, developerName);
+      const developerPlaceholder = language === 'en' ? 'Developer' : language === 'id' ? 'Pengembang' : 'Застройщик';
+      contractText = contractText.replace(new RegExp(developerPlaceholder, 'g'), developerName);
     }
     
     // Если договор подписан, заменяем подписи на названия сторон
     if (contractSigned) {
-      const developerNameForSignature = (role === 'застройщик' && developerName) ? developerName : 'Застройщик';
+      const developerNameForSignature = (role === 'застройщик' && developerName) ? 
+        developerName : 
+        (language === 'en' ? 'Developer' : language === 'id' ? 'Pengembang' : 'Застройщик');
       
       // Заменяем подчеркивания на отцентрованные названия сторон
       let signatureCount = 0;
@@ -459,19 +401,21 @@ IT Agent{40}Застройщик
         if (signatureCount === 1) {
           // Центрируем "IT Agent" под "ИСПОЛНИТЕЛЬ" (добавляем отступы)
           const padding = Math.max(0, Math.floor((17 - 'IT Agent'.length) / 2));
-          return ' '.repeat(padding) + 'IT Agent' + ' '.repeat(17 - padding - 'IT Agent'.length);
+          return '  ' + ' '.repeat(padding) + 'IT Agent' + ' '.repeat(17 - padding - 'IT Agent'.length);
         } else if (signatureCount === 2) {
-          // Центрируем название застройщика под "ЗАКАЗЧИК"
-          const padding = Math.max(0, Math.floor((17 - developerNameForSignature.length) / 2));
-          return ' '.repeat(padding) + developerNameForSignature + ' '.repeat(17 - padding - developerNameForSignature.length);
+          // Располагаем название застройщика так же далеко справа, как верхнее значение
+          const spacing = '                  '; // Убрали 1 пробел
+          return spacing + developerNameForSignature;
         }
         return '_________________'; // На случай если есть еще подчеркивания
       });
       
-      // Центрируем строки с "(подпись)" под подписями
+      // Центрируем строки с переведенным словом "(подпись)"
+      const signatureWord = t.contract.signature;
+      const escapedSignature = signatureWord.replace(/[()]/g, '\\$&');
       contractText = contractText.replace(
-        /\s{10}\(подпись\)\s{39}\(подпись\)/g,
-        '        (подпись)                                       (подпись)'
+        new RegExp(`${escapedSignature}\\s+${escapedSignature}`, 'g'),
+        `  ${signatureWord}                              ${signatureWord}`
       );
     }
     
@@ -483,9 +427,9 @@ IT Agent{40}Застройщик
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Настройки</h1>
+        <h1 className="text-3xl font-bold">{t.title}</h1>
         <p className="text-muted-foreground">
-          Управляйте настройками вашего аккаунта и уведомлениями
+          {t.profile.description}
         </p>
       </div>
 
@@ -497,20 +441,20 @@ IT Agent{40}Застройщик
           </div>
           
           <div className="flex-1">
-            <h3 className="text-lg font-semibold mb-2">Профиль</h3>
+            <h3 className="text-lg font-semibold mb-2">{t.profile.title}</h3>
             <p className="text-muted-foreground mb-4">
-              Управление личными данными и настройками безопасности.
+              {t.profile.description}
             </p>
 
             <div className="space-y-3 mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Имя:</span>
+                <span className="text-sm font-medium">{t.profile.name}:</span>
                 <span className="text-sm text-muted-foreground">
                   {userName || 'Не указано'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Email:</span>
+                <span className="text-sm font-medium">{t.profile.email}:</span>
                 <span className="text-sm text-muted-foreground">
                   {userEmail || 'Не указан'}
                 </span>
@@ -525,7 +469,7 @@ IT Agent{40}Застройщик
             
             <Button onClick={openProfileDialog}>
               <User className="h-4 w-4 mr-2" />
-              Редактировать профиль
+              {t.profile.updateProfile}
             </Button>
           </div>
         </div>
@@ -539,9 +483,9 @@ IT Agent{40}Застройщик
           </div>
           
           <div className="flex-1">
-            <h3 className="text-lg font-semibold mb-2">Подключить телеграм бота</h3>
+            <h3 className="text-lg font-semibold mb-2">{t.telegram.title}</h3>
             <p className="text-muted-foreground mb-4">
-              Подключите телеграм бота, чтобы получать уведомления о новых фиксациях клиентов.
+              {t.telegram.description}
             </p>
 
             {isConnected ? (
@@ -549,10 +493,10 @@ IT Agent{40}Застройщик
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="bg-green-100 text-green-800">
                     <Check className="h-3 w-3 mr-1" />
-                    Подключено
+                    {t.telegram.connected}
                   </Badge>
                   <span className="text-sm text-muted-foreground">
-                    Chat ID: {telegramChatId}
+                    {t.telegram.chatId}: {telegramChatId}
                   </span>
                 </div>
                 
@@ -562,7 +506,7 @@ IT Agent{40}Застройщик
                   disabled={isLoading}
                 >
                   <X className="h-4 w-4 mr-2" />
-                  Отключить телеграм
+                  {t.telegram.disconnect}
                 </Button>
               </div>
             ) : (
@@ -570,13 +514,13 @@ IT Agent{40}Застройщик
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="bg-gray-100 text-gray-800">
                     <X className="h-3 w-3 mr-1" />
-                    Не подключено
+                    {t.telegram.notConnected}
                   </Badge>
                 </div>
                 
                 <Button onClick={openConnectDialog}>
                   <Bot className="h-4 w-4 mr-2" />
-                  Подключить телеграм
+                  {t.telegram.connect}
                 </Button>
               </div>
             )}
@@ -593,15 +537,15 @@ IT Agent{40}Застройщик
             </div>
             
             <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2">Подписанные договора</h3>
+              <h3 className="text-lg font-semibold mb-2">{t.contract.allContracts}</h3>
               <p className="text-muted-foreground mb-4">
-                Список всех пользователей, подписавших агентские договора.
+                {t.contract.description}
               </p>
 
               {loadingContracts ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent"></div>
-                  <span className="ml-2 text-muted-foreground">Загрузка договоров...</span>
+                  <span className="ml-2 text-muted-foreground">{t.contract.loading}</span>
                 </div>
               ) : allContracts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -622,7 +566,7 @@ IT Agent{40}Застройщик
                           <div className="text-sm text-muted-foreground space-y-1">
                             <div>📧 {contract.userEmail}</div>
                             <div>🏢 {contract.developerName}</div>
-                            <div>📅 Подписан: {contract.contractSignDate?.toDate ? 
+                            <div>📅 {t.contract.signDate}: {contract.contractSignDate?.toDate ? 
                               contract.contractSignDate.toDate().toLocaleDateString('ru-RU') : 
                               new Date(contract.contractSignDate || 0).toLocaleDateString('ru-RU')
                             }</div>
@@ -634,7 +578,7 @@ IT Agent{40}Застройщик
                           onClick={() => setSelectedContractUser(contract)}
                         >
                           <FileText className="h-4 w-4 mr-2" />
-                          Просмотреть
+                          {t.contract.viewContract}
                         </Button>
                       </div>
                     </div>
@@ -655,9 +599,9 @@ IT Agent{40}Застройщик
             </div>
             
             <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2">Агентский договор</h3>
+              <h3 className="text-lg font-semibold mb-2">{t.contract.title}</h3>
               <p className="text-muted-foreground mb-4">
-                Договор цессии об оказании информационно-технических услуг между застройщиком и IT-платформой.
+                {t.contract.description}
               </p>
 
               {contractSigned ? (
@@ -665,10 +609,10 @@ IT Agent{40}Застройщик
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
                       <Check className="h-3 w-3 mr-1" />
-                      Подписан
+                      {t.contract.signed}
                     </Badge>
                                          <span className="text-sm text-muted-foreground">
-                       {contractSignDate && `Дата: ${contractSignDate.toDate ? contractSignDate.toDate().toLocaleDateString('ru-RU') : new Date(contractSignDate).toLocaleDateString('ru-RU')}`}
+                       {contractSignDate && `${t.contract.signDate}: ${contractSignDate.toDate ? contractSignDate.toDate().toLocaleDateString('ru-RU') : new Date(contractSignDate).toLocaleDateString('ru-RU')}`}
                      </span>
                   </div>
                   
@@ -678,7 +622,7 @@ IT Agent{40}Застройщик
                       onClick={() => setShowContractDialog(true)}
                     >
                       <FileText className="h-4 w-4 mr-2" />
-                      Просмотреть договор
+                      {t.contract.viewContract}
                     </Button>
                   </div>
                 </div>
@@ -687,14 +631,14 @@ IT Agent{40}Застройщик
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="bg-gray-100 text-gray-800">
                       <X className="h-3 w-3 mr-1" />
-                      Не подписан
+                      {t.contract.notSigned}
                     </Badge>
                   </div>
                   
                   <div className="flex gap-2">
                     <Button onClick={() => setShowContractDialog(true)}>
                       <FileText className="h-4 w-4 mr-2" />
-                      Просмотреть и подписать
+                      {t.contract.signContract}
                     </Button>
                   </div>
                 </div>
@@ -708,7 +652,7 @@ IT Agent{40}Застройщик
       <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Подключение телеграм бота</DialogTitle>
+            <DialogTitle>{t.telegram.dialogTitle}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
@@ -719,16 +663,15 @@ IT Agent{40}Застройщик
               </div>
               
               <p className="text-sm text-muted-foreground mb-4">
-                Нажмите кнопку ниже для автоматического подключения к боту. 
-                Вы будете перенаправлены в Telegram, где нужно будет нажать "Start".
+                {t.telegram.autoConnectInstructions}
               </p>
               
               <div className="p-3 bg-yellow-50 rounded-lg mb-4">
                 <p className="text-sm font-medium text-yellow-800">
-                  🔑 Код верификации: <code className="bg-yellow-200 px-2 py-1 rounded">{verificationCode}</code>
+                  🔑 {t.telegram.codeLabel} <code className="bg-yellow-200 px-2 py-1 rounded">{verificationCode}</code>
                 </p>
                 <p className="text-xs text-yellow-700 mt-1">
-                  Этот код будет автоматически передан боту
+                  {t.telegram.codeInstructions}
                 </p>
               </div>
             </div>
@@ -743,17 +686,17 @@ IT Agent{40}Застройщик
               {isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Ожидание подключения...
+                  {t.telegram.waitingConnection}
                 </div>
               ) : (
                 <div className="flex items-center">
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Подключить через Telegram
+                  {t.telegram.connectViaTelegram}
                 </div>
               )}
             </Button>
             <Button variant="outline" onClick={() => setShowConnectDialog(false)} className="w-full">
-              Отмена
+              {common.cancel}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -763,7 +706,7 @@ IT Agent{40}Застройщик
       <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>Агентский договор</DialogTitle>
+            <DialogTitle>{t.contract.title}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
@@ -783,10 +726,10 @@ IT Agent{40}Застройщик
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-yellow-800">
-                      Внимание
+                      {t.contract.warningTitle}
                     </h3>
                     <p className="text-sm text-yellow-700 mt-1">
-                      Внимательно прочитайте договор перед подписанием. После подписания договор станет юридически обязательным документом.
+                      {t.contract.warningText}
                     </p>
                   </div>
                 </div>
@@ -804,18 +747,18 @@ IT Agent{40}Застройщик
                  {isLoading ? (
                    <div className="flex items-center">
                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                     Подписание...
+                     {t.contract.signing}
                    </div>
                  ) : (
                    <div className="flex items-center">
                      <Check className="h-4 w-4 mr-2" />
-                     Подписать договор
+                     {t.contract.signContract}
                    </div>
                  )}
                </Button>
              )}
              <Button variant="outline" onClick={() => setShowContractDialog(false)}>
-               Закрыть
+               {common.close}
              </Button>
            </DialogFooter>
         </DialogContent>
@@ -826,7 +769,7 @@ IT Agent{40}Застройщик
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>
-              Договор пользователя: {selectedContractUser?.userName}
+              {t.contract.userContractTitle} {selectedContractUser?.userName}
             </DialogTitle>
           </DialogHeader>
           
@@ -866,7 +809,7 @@ IT Agent{40}Застройщик
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedContractUser(null)}>
-              Закрыть
+              {common.close}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -950,12 +893,12 @@ IT Agent{40}Застройщик
               ) : (
                 <div className="flex items-center">
                   <Check className="h-4 w-4 mr-2" />
-                  Сохранить
+                  {common.save}
                 </div>
               )}
             </Button>
             <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
-              Отмена
+              {common.cancel}
             </Button>
           </DialogFooter>
         </DialogContent>

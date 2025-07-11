@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { collection, query, orderBy, onSnapshot, addDoc, Timestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
@@ -14,6 +16,8 @@ const FixationChat = ({ chatId, agentId, isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [chatData, setChatData] = useState(null);
   const { currentUser } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -34,7 +38,7 @@ const FixationChat = ({ chatId, agentId, isOpen, onClose }) => {
           }
         } catch (error) {
           console.error('Ошибка при получении данных чата:', error);
-          toast.error('Не удалось загрузить данные чата');
+          toast.error(t.fixationChat.chatDataError);
         }
       };
 
@@ -54,7 +58,7 @@ const FixationChat = ({ chatId, agentId, isOpen, onClose }) => {
         setTimeout(scrollToBottom, 100);
       }, (error) => {
         console.error('Ошибка при получении сообщений:', error);
-        toast.error('Не удалось загрузить сообщения');
+        toast.error(t.fixationChat.messagesError);
         setIsLoading(false);
       });
 
@@ -91,10 +95,10 @@ const FixationChat = ({ chatId, agentId, isOpen, onClose }) => {
       });
 
       setNewMessage('');
-      toast.success('Сообщение отправлено');
+      toast.success(t.fixationChat.messageSent);
     } catch (error) {
       console.error('Ошибка при отправке сообщения:', error);
-      toast.error('Не удалось отправить сообщение');
+      toast.error(t.fixationChat.messageError);
     }
   };
 
@@ -103,7 +107,7 @@ const FixationChat = ({ chatId, agentId, isOpen, onClose }) => {
       <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            {chatData?.chatName || 'Чат фиксации'}
+            {chatData?.chatName || t.fixationChat.title}
           </DialogTitle>
         </DialogHeader>
 
@@ -150,11 +154,11 @@ const FixationChat = ({ chatId, agentId, isOpen, onClose }) => {
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Введите сообщение..."
+              placeholder={t.fixationChat.messagePlaceholder}
               className="flex-1"
             />
             <Button type="submit" disabled={!newMessage.trim()}>
-              Отправить
+              {t.fixationChat.send}
             </Button>
           </div>
         </form>

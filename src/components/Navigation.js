@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
+import LanguageSwitcher from './LanguageSwitcher';
 import {
   Home,
   Building2,
@@ -57,6 +60,8 @@ const ROUTE_ACCESS = {
 
 const Navigation = () => {
   const { role } = useAuth();
+  const { language } = useLanguage();
+  const nav = translations[language].navigation;
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -159,8 +164,13 @@ const Navigation = () => {
             {/* Заголовок меню */}
             <div className="flex items-center justify-between pt-12">
               <span className="text-lg font-semibold">
-                Админ панель
+                {nav.adminPanel}
               </span>
+            </div>
+            
+            {/* Переключатель языков для мобильной версии */}
+            <div className="px-2">
+              <LanguageSwitcher />
             </div>
 
             {/* Навигационные элементы */}
@@ -171,7 +181,7 @@ const Navigation = () => {
                   icon={Home}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Галерея объектов
+                  {nav.propertyGallery}
                 </NavItem>
               )}
 
@@ -181,7 +191,7 @@ const Navigation = () => {
                   icon={Building2}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Галерея комплексов
+                  {nav.complexGallery}
                 </NavItem>
               )}
 
@@ -191,7 +201,7 @@ const Navigation = () => {
                   icon={Building}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Объекты
+                  {nav.properties}
                 </NavItem>
               )}
 
@@ -201,7 +211,7 @@ const Navigation = () => {
                   icon={Building2}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Комплексы
+                  {nav.complexes}
                 </NavItem>
               )}
 
@@ -211,7 +221,7 @@ const Navigation = () => {
                   icon={Building2}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Застройщики
+                  {nav.developers}
                 </NavItem>
               )}
 
@@ -221,7 +231,7 @@ const Navigation = () => {
                   icon={Landmark}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Достопримечательности
+                  {nav.landmarks}
                 </NavItem>
               )}
 
@@ -231,7 +241,7 @@ const Navigation = () => {
                   icon={LayoutGrid}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Шахматки
+                  {nav.chessboards}
                 </NavItem>
               )}
 
@@ -241,7 +251,7 @@ const Navigation = () => {
                   icon={MessageSquare}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Поддержка
+                  {nav.support}
                 </NavItem>
               )}
 
@@ -251,7 +261,7 @@ const Navigation = () => {
                   icon={Calculator}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Калькулятор ROI
+                  {nav.roiCalculator}
                 </NavItem>
               )}
 
@@ -261,7 +271,7 @@ const Navigation = () => {
                   icon={UserCheck}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Фиксации клиентов
+                  {nav.clientFixations}
                 </NavItem>
               )}
 
@@ -271,7 +281,7 @@ const Navigation = () => {
                   icon={Users2}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Управление пользователями
+                  {nav.userManagement}
                 </NavItem>
               )}
 
@@ -281,7 +291,7 @@ const Navigation = () => {
                   icon={ClipboardList}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Заявки на регистрацию
+                  {nav.registrationRequests}
                 </NavItem>
               )}
 
@@ -291,7 +301,7 @@ const Navigation = () => {
                   icon={Network}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Карта рефералов
+                  {nav.referralMap}
                 </NavItem>
               )}
 
@@ -301,7 +311,7 @@ const Navigation = () => {
                   icon={Settings}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Настройки
+                  {nav.settings}
                 </NavItem>
               )}
             </nav>
@@ -320,7 +330,7 @@ const Navigation = () => {
       <div className="flex items-center justify-between">
         {!isCollapsed && (
           <span className="text-lg font-semibold">
-            Админ панель
+            {nav.adminPanel}
           </span>
         )}
         <Button
@@ -333,88 +343,95 @@ const Navigation = () => {
         </Button>
       </div>
 
+      {/* Переключатель языков для десктопной версии */}
+      {!isCollapsed && (
+        <div className="px-2">
+          <LanguageSwitcher />
+        </div>
+      )}
+
       <nav className="space-y-1">
         {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
           <NavItem to="/property/gallery" icon={Home}>
-            Галерея объектов
+            {nav.propertyGallery}
           </NavItem>
         )}
 
         {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
           <NavItem to="/complex/gallery" icon={Building2}>
-            Галерея комплексов
+            {nav.complexGallery}
           </NavItem>
         )}
 
         {['admin', 'модератор'].includes(role) && (
             <NavItem to="/property/list" icon={Building}>
-              Объекты
+              {nav.properties}
             </NavItem>
         )}
 
         {['admin', 'модератор'].includes(role) && (
             <NavItem to="/complex/list" icon={Building2}>
-              Комплексы
+              {nav.complexes}
             </NavItem>
         )}
 
         {['admin', 'модератор'].includes(role) && (
           <NavItem to="/developers/list" icon={Building2}>
-            Застройщики
+            {nav.developers}
           </NavItem>
         )}
 
         {['admin', 'модератор'].includes(role) && (
             <NavItem to="/landmark/list" icon={Landmark}>
-              Достопримечательности
+              {nav.landmarks}
             </NavItem>
         )}
 
         {['admin', 'модератор', 'застройщик'].includes(role) && (
           <NavItem to="/chessboard" icon={LayoutGrid}>
-            Шахматки
+            {nav.chessboards}
           </NavItem>
         )}
 
         {['admin', 'модератор'].includes(role) && (
           <NavItem to="/support/chats" icon={MessageSquare}>
-            Поддержка
+            {nav.support}
           </NavItem>
         )}
 
         {['admin', 'модератор'].includes(role) && (
           <NavItem to="/roi-calculator" icon={Calculator}>
-            Калькулятор ROI
+            {nav.roiCalculator}
           </NavItem>
         )}
 
         {['admin', 'модератор', 'застройщик'].includes(role) && (
           <NavItem to="/client-fixations" icon={UserCheck}>
-            Фиксации клиентов
+            {nav.clientFixations}
           </NavItem>
         )}
 
         {role === 'admin' && (
           <NavItem to="/users/manage" icon={Users2}>
-            Управление пользователями
+            {nav.userManagement}
           </NavItem>
         )}
 
         {role === 'admin' && (
           <NavItem to="/registration-requests" icon={ClipboardList}>
-            Заявки на регистрацию
+            {nav.registrationRequests}
           </NavItem>
         )}
 
         {role === 'admin' && (
           <NavItem to="/referral-map" icon={Network}>
-            Карта рефералов
+            {nav.referralMap}
           </NavItem>
         )}
 
         {['admin', 'модератор', 'застройщик'].includes(role) && (
           <NavItem to="/settings" icon={Settings}>
-            Настройки
+            {nav.settings}
           </NavItem>
         )}
       </nav>

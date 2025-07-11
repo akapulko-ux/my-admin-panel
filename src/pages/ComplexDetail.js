@@ -29,6 +29,9 @@ import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
+// Импорт для сжатия изображений и конвертации PDF
+import imageCompression from "browser-image-compression";
+import { convertPdfToImages } from "../utils/pdfUtils";
 
 function ComplexDetail() {
   const { id } = useParams();
@@ -268,7 +271,7 @@ function ComplexDetail() {
     );
   };
 
-  // Функция для загрузки новых фотографий
+  // Функция для загрузки новых фотографий (с сжатием и поддержкой PDF)
   const handleImageUpload = async () => {
     if (!canEdit()) {
       showError("У вас нет прав для редактирования комплекса");
@@ -278,7 +281,7 @@ function ComplexDetail() {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'image/*';
+    input.accept = 'image/*,application/pdf';
     input.onchange = async (event) => {
       const files = Array.from(event.target.files);
       if (!files.length) return;
@@ -286,7 +289,29 @@ function ComplexDetail() {
       setUploading(true);
       
       try {
-        const uploadPromises = files.map(file => 
+        const compressionOptions = {
+          maxSizeMB: 10,
+          useWebWorker: true
+        };
+
+        const processedFiles = [];
+        
+        for (let file of files) {
+          if (file.type === "application/pdf") {
+            // PDF -> конвертация в изображения
+            const pageBlobs = await convertPdfToImages(file);
+            for (let blob of pageBlobs) {
+              const compressedFile = await imageCompression(blob, compressionOptions);
+              processedFiles.push(compressedFile);
+            }
+          } else {
+            // Обычное изображение
+            const compressedFile = await imageCompression(file, compressionOptions);
+            processedFiles.push(compressedFile);
+          }
+        }
+
+        const uploadPromises = processedFiles.map(file => 
           uploadToFirebaseStorageInFolder(file, 'complexes/images')
         );
 
@@ -518,7 +543,7 @@ function ComplexDetail() {
             ) : (
               <>
                 <Camera className="h-4 w-4" />
-                Добавить фотографии
+                Добавить фото / PDF
               </>
             )}
           </Button>
@@ -608,7 +633,7 @@ function ComplexDetail() {
           {canEdit() && (
             <div className="flex items-center gap-2 text-sm">
               <Plus className="h-4 w-4" />
-              Добавить фотографии
+              Добавить фото / PDF
             </div>
           )}
         </div>

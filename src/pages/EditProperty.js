@@ -7,6 +7,9 @@ import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 import { useParams, useNavigate } from "react-router-dom";
 import { showSuccess, showError } from '../utils/notifications';
+// Импорт для сжатия изображений и конвертации PDF
+import imageCompression from "browser-image-compression";
+import { convertPdfToImages } from "../utils/pdfUtils";
 
 // Импорт компонентов shadcn
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -184,27 +187,49 @@ function EditProperty() {
     fetchProperty();
   }, [id]);
 
-  // Обработчик выбора новых файлов
+  // Обработчик выбора новых файлов (с сжатием и поддержкой PDF)
   const handleFileChange = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
+    if (!e.target.files) return;
 
     setIsUploading(true);
+    const compressionOptions = {
+      maxSizeMB: 10,
+      useWebWorker: true
+    };
+
+    const selectedFiles = Array.from(e.target.files);
+    const newImagesArr = [];
+
     try {
-      const newImages = await Promise.all(
-        files.map(async (file) => ({
-          id: crypto.randomUUID(),
-          url: URL.createObjectURL(file),
-          file
-        }))
-      );
-      setImages(prev => [...prev, ...newImages]);
-    } catch (error) {
-      console.error("Ошибка при обработке файлов:", error);
+      for (let file of selectedFiles) {
+        if (file.type === "application/pdf") {
+          // PDF -> конвертация в изображения
+          const pageBlobs = await convertPdfToImages(file);
+          for (let blob of pageBlobs) {
+            const compressedFile = await imageCompression(blob, compressionOptions);
+            newImagesArr.push({
+              id: crypto.randomUUID(),
+              url: URL.createObjectURL(compressedFile),
+              file: compressedFile
+            });
+          }
+        } else {
+          // Обычное изображение
+          const compressedFile = await imageCompression(file, compressionOptions);
+          newImagesArr.push({
+            id: crypto.randomUUID(),
+            url: URL.createObjectURL(compressedFile),
+            file: compressedFile
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Ошибка обработки файла:", err);
       showError("Ошибка при обработке файлов");
-    } finally {
-      setIsUploading(false);
     }
+
+    setImages((prev) => [...prev, ...newImagesArr]);
+    setIsUploading(false);
   };
 
   // Обработчик сохранения
@@ -317,8 +342,24 @@ function EditProperty() {
   };
 
   // Удаление изображения
-  const handleRemoveImage = (index) => {
+  const handleRemoveImage = async (index) => {
+    const removed = images[index];
+    console.log("Удаляем изображение с URL:", removed.url);
+    
+    // Обновляем локальное состояние
     setImages(prev => prev.filter((_, idx) => idx !== index));
+    
+    // Если это старое фото (file === null) и URL не локальный blob, удаляем его физически из Storage
+    if (!removed.file && !removed.url.startsWith("blob:")) {
+      try {
+        await deleteFileFromFirebaseStorage(removed.url);
+        console.log("Файл удалён физически из Storage");
+      } catch (error) {
+        console.error("Ошибка удаления файла из Firebase Storage:", error);
+      }
+    } else {
+      console.log("Локальный blob URL — физическое удаление не требуется");
+    }
   };
 
   if (loading) {
@@ -685,12 +726,13 @@ function EditProperty() {
                     className={`flex items-center gap-2 ${isMobile ? 'w-full h-12' : ''}`}
                   >
                     <Upload className="w-4 h-4" />
-                    Загрузить фото
+                    Загрузить фото / PDF
                   </Button>
                   <input
                     id="file-upload"
                     type="file"
                     multiple
+                    accept="image/*,application/pdf"
                     onChange={handleFileChange}
                     className="hidden"
                   />
