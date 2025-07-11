@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from "../firebaseConfig";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
@@ -70,6 +70,21 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
+  const isFirstLoad = useRef(true);
+
+  // Устанавливаем английский язык по умолчанию для публичных страниц
+  useEffect(() => {
+    if (isFirstLoad.current) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const langFromUrl = urlParams.get('lang');
+      
+      // Если нет параметра lang в URL, устанавливаем английский для публичных страниц
+      if (!langFromUrl) {
+        changeLanguage('en');
+      }
+      isFirstLoad.current = false;
+    }
+  }, [changeLanguage]);
 
   useEffect(() => {
     async function fetchChessboard() {
@@ -143,8 +158,8 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ru">Русский</SelectItem>
               <SelectItem value="en">English</SelectItem>
+              <SelectItem value="ru">Русский</SelectItem>
               <SelectItem value="id">Bahasa</SelectItem>
             </SelectContent>
           </Select>

@@ -26,7 +26,9 @@ export function AuthProvider({ children }) {
               email: user.email,
               role: "agent",
               createdAt: new Date(),
-              uid: user.uid
+              uid: user.uid,
+              displayName: user.displayName || '',
+              name: user.displayName || ''
             };
             await setDoc(docRef, userData);
           setRole("agent");
@@ -61,7 +63,9 @@ export function AuthProvider({ children }) {
             email: userCredential.user.email,
             role: "agent",
             createdAt: new Date(),
-            uid: userCredential.user.uid
+            uid: userCredential.user.uid,
+            displayName: userCredential.user.displayName || '',
+            name: userCredential.user.displayName || ''
           };
           await setDoc(docRef, userData);
           console.log("Создан новый документ пользователя с ролью agent");

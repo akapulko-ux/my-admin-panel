@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { updatePassword, updateProfile } from 'firebase/auth';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import toast from 'react-hot-toast';
-import { Bot, Check, X, ExternalLink, FileText } from 'lucide-react';
+import { Bot, Check, X, ExternalLink, FileText, User } from 'lucide-react';
 
 const Settings = () => {
   const { currentUser, role } = useAuth();
@@ -16,6 +19,15 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
+  
+  // Состояния для профиля
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   
   // Состояние для агентского договора
   const [contractSigned, setContractSigned] = useState(false);
@@ -30,7 +42,6 @@ const Settings = () => {
   
   // Telegram Bot данные
   const BOT_USERNAME = 'it_agent_admin_bot';
-  const BOT_LINK = `https://t.me/${BOT_USERNAME}`;
   
   // Текст агентского договора
   const CONTRACT_TEXT = `
@@ -95,25 +106,16 @@ const Settings = () => {
 
 8. ПОДПИСИ СТОРОН
 
-ИСПОЛНИТЕЛЬ:                                    ЗАКАЗЧИК:
-IT Agent                                        Застройщик
+ИСПОЛНИТЕЛЬ:{36}ЗАКАЗЧИК:
+IT Agent{40}Застройщик
 
 
-     _________________                               _________________
-        (подпись)                                       (подпись)
+{5}_________________{31}_________________
+{8}(подпись){39}(подпись)
   `;
   
-  useEffect(() => {
-    loadUserSettings();
-    
-    // Загружаем все договора для админа
-    if (role === 'admin') {
-      loadAllContracts();
-    }
-  }, [currentUser, role]);
-
   // Загружаем настройки пользователя
-  const loadUserSettings = async () => {
+  const loadUserSettings = useCallback(async () => {
     if (!currentUser) return;
     
     try {
@@ -122,6 +124,11 @@ IT Agent                                        Застройщик
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        
+        // Загружаем данные профиля
+        setUserName(userData.name || userData.displayName || currentUser.displayName || '');
+        setUserEmail(userData.email || currentUser.email || '');
+        
         if (userData.telegramChatId) {
           setTelegramChatId(userData.telegramChatId);
           setIsConnected(true);
@@ -141,12 +148,25 @@ IT Agent                                        Застройщик
             setDeveloperName(developerDoc.data().name);
           }
         }
+      } else {
+        // Если документ не существует, используем данные из currentUser
+        setUserName(currentUser.displayName || '');
+        setUserEmail(currentUser.email || '');
       }
     } catch (error) {
       console.error('Ошибка при загрузке настроек:', error);
       toast.error('Ошибка при загрузке настроек');
     }
-  };
+  }, [currentUser, role]);
+
+  useEffect(() => {
+    loadUserSettings();
+    
+    // Загружаем все договора для админа
+    if (role === 'admin') {
+      loadAllContracts();
+    }
+  }, [currentUser, role, loadUserSettings]);
 
   // Загружаем все подписанные договора (только для админа)
   const loadAllContracts = async () => {
@@ -200,6 +220,75 @@ IT Agent                                        Застройщик
       toast.error('Ошибка при загрузке договоров');
     } finally {
       setLoadingContracts(false);
+    }
+  };
+
+  // Открываем диалог профиля
+  const openProfileDialog = () => {
+    setNewUserName(userName);
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowProfileDialog(true);
+  };
+
+  // Обновляем профиль пользователя
+  const updateUserProfile = async () => {
+    if (!currentUser) return;
+
+    // Валидация
+    if (!newUserName.trim()) {
+      toast.error('Введите имя пользователя');
+      return;
+    }
+
+    if (newPassword && newPassword !== confirmPassword) {
+      toast.error('Пароли не совпадают');
+      return;
+    }
+
+    if (newPassword && newPassword.length < 6) {
+      toast.error('Пароль должен содержать минимум 6 символов');
+      return;
+    }
+
+    setIsUpdatingProfile(true);
+
+    try {
+      // Обновляем имя пользователя в Firestore
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        name: newUserName.trim(),
+        displayName: newUserName.trim(),
+        updatedAt: new Date()
+      });
+
+      // Обновляем displayName в Firebase Auth
+      await updateProfile(currentUser, {
+        displayName: newUserName.trim()
+      });
+
+      // Обновляем пароль, если указан
+      if (newPassword) {
+        await updatePassword(currentUser, newPassword);
+      }
+
+      // Обновляем локальные состояния
+      setUserName(newUserName.trim());
+      setShowProfileDialog(false);
+      
+      toast.success('Профиль успешно обновлен');
+    } catch (error) {
+      console.error('Ошибка при обновлении профиля:', error);
+      
+      if (error.code === 'auth/requires-recent-login') {
+        toast.error('Для смены пароля необходимо войти в систему повторно');
+      } else if (error.code === 'auth/weak-password') {
+        toast.error('Пароль слишком слабый');
+      } else {
+        toast.error('Ошибка при обновлении профиля');
+      }
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
@@ -346,7 +435,7 @@ IT Agent                                        Застройщик
       
       // Центрируем строки с "(подпись)"
       contractText = contractText.replace(
-        /          \(подпись\)                                       \(подпись\)/g,
+        /\s{10}\(подпись\)\s{39}\(подпись\)/g,
         '        (подпись)                                       (подпись)'
       );
       
@@ -381,7 +470,7 @@ IT Agent                                        Застройщик
       
       // Центрируем строки с "(подпись)" под подписями
       contractText = contractText.replace(
-        /          \(подпись\)                                       \(подпись\)/g,
+        /\s{10}\(подпись\)\s{39}\(подпись\)/g,
         '        (подпись)                                       (подпись)'
       );
     }
@@ -399,6 +488,48 @@ IT Agent                                        Застройщик
           Управляйте настройками вашего аккаунта и уведомлениями
         </p>
       </div>
+
+      {/* Профиль пользователя */}
+      <Card className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <User className="h-6 w-6 text-blue-600" />
+          </div>
+          
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold mb-2">Профиль</h3>
+            <p className="text-muted-foreground mb-4">
+              Управление личными данными и настройками безопасности.
+            </p>
+
+            <div className="space-y-3 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Имя:</span>
+                <span className="text-sm text-muted-foreground">
+                  {userName || 'Не указано'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Email:</span>
+                <span className="text-sm text-muted-foreground">
+                  {userEmail || 'Не указан'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Роль:</span>
+                <Badge variant="secondary" className="text-xs">
+                  {role || 'Не определена'}
+                </Badge>
+              </div>
+            </div>
+            
+            <Button onClick={openProfileDialog}>
+              <User className="h-4 w-4 mr-2" />
+              Редактировать профиль
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       {/* Подключение телеграм бота */}
       <Card className="p-6">
@@ -736,6 +867,95 @@ IT Agent                                        Застройщик
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedContractUser(null)}>
               Закрыть
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог редактирования профиля */}
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Редактирование профиля</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="userName">Имя пользователя</Label>
+              <Input
+                id="userName"
+                type="text"
+                placeholder="Введите имя пользователя"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="userEmail">Email</Label>
+              <Input
+                id="userEmail"
+                type="email"
+                value={userEmail}
+                disabled
+                className="bg-gray-50"
+              />
+              <p className="text-xs text-muted-foreground">
+                Email нельзя изменить
+              </p>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-3">Смена пароля</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Оставьте поля пустыми, если не хотите менять пароль
+              </p>
+              
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">Новый пароль</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Введите новый пароль"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Подтверждение пароля</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Подтвердите новый пароль"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button 
+              onClick={updateUserProfile} 
+              disabled={isUpdatingProfile}
+            >
+              {isUpdatingProfile ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  Сохранение...
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <Check className="h-4 w-4 mr-2" />
+                  Сохранить
+                </div>
+              )}
+            </Button>
+            <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
+              Отмена
             </Button>
           </DialogFooter>
         </DialogContent>

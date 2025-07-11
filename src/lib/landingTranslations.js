@@ -58,6 +58,8 @@ export const landingTranslations = {
     close: "Close",
     // Registration Request Modal
     registrationRequestTitle: "Registration Request",
+    name: "Name",
+    namePlaceholder: "John Smith",
     companyName: "Company Name",
     companyNamePlaceholder: "LLC Construction Company",
     phone: "Phone",
@@ -65,6 +67,7 @@ export const landingTranslations = {
     submitRequest: "Submit Request",
     // Form Validation
     required: {
+      name: "Enter your name",
       companyName: "Enter company name",
       email: "Enter email",
       emailFormat: "Enter valid email",
@@ -137,6 +140,8 @@ export const landingTranslations = {
     close: "Закрыть",
     // Registration Request Modal
     registrationRequestTitle: "Заявка на регистрацию",
+    name: "Имя",
+    namePlaceholder: "Иван Иванов",
     companyName: "Название компании",
     companyNamePlaceholder: "ООО Строительная компания",
     phone: "Телефон",
@@ -144,6 +149,7 @@ export const landingTranslations = {
     submitRequest: "Отправить заявку",
     // Form Validation
     required: {
+      name: "Введите ваше имя",
       companyName: "Введите название компании",
       email: "Введите email",
       emailFormat: "Введите корректный email",
@@ -216,6 +222,8 @@ export const landingTranslations = {
     close: "Tutup",
     // Registration Request Modal
     registrationRequestTitle: "Permintaan Pendaftaran",
+    name: "Nama",
+    namePlaceholder: "John Smith",
     companyName: "Nama Perusahaan",
     companyNamePlaceholder: "PT Perusahaan Konstruksi",
     phone: "Telepon",
@@ -223,6 +231,7 @@ export const landingTranslations = {
     submitRequest: "Kirim Permintaan",
     // Form Validation
     required: {
+      name: "Masukkan nama Anda",
       companyName: "Masukkan nama perusahaan",
       email: "Masukkan email",
       emailFormat: "Masukkan email yang valid",

@@ -10,6 +10,7 @@ import { landingTranslations } from '../lib/landingTranslations';
 
 const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
   const [formData, setFormData] = useState({
+    name: '',
     companyName: '',
     email: '',
     phone: ''
@@ -20,6 +21,11 @@ const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
 
   const validateForm = () => {
     const newErrors = {};
+    
+    // Валидация имени
+    if (!formData.name.trim()) {
+      newErrors.name = t.required.name;
+    }
     
     // Валидация названия компании
     if (!formData.companyName.trim()) {
@@ -66,6 +72,7 @@ const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
       
       // Очищаем форму
       setFormData({
+        name: '',
         companyName: '',
         email: '',
         phone: ''
@@ -89,6 +96,21 @@ const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
         <h2 className="text-2xl font-semibold mb-6">{t.registrationRequestTitle}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">{t.name}</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder={t.namePlaceholder}
+              error={errors.name}
+              disabled={isLoading}
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="companyName">{t.companyName}</Label>
             <Input

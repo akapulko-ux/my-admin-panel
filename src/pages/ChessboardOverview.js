@@ -68,12 +68,22 @@ const ChessboardOverview = () => {
   const [error, setError] = useState(null);
   const [scale, setScale] = useState(1);
   const contentRef = useRef(null);
+  const isFirstLoad = useRef(true);
 
   // Считываем язык из URL при загрузке компонента
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const langFromUrl = urlParams.get('lang');
-    if (langFromUrl && ['ru', 'en', 'id'].includes(langFromUrl) && langFromUrl !== language) {
+    
+    if (isFirstLoad.current) {
+      // При первой загрузке: если есть lang в URL - используем его, иначе английский
+      if (langFromUrl && ['ru', 'en', 'id'].includes(langFromUrl)) {
+        changeLanguage(langFromUrl);
+      } else if (!langFromUrl) {
+        changeLanguage('en');
+      }
+      isFirstLoad.current = false;
+    } else if (langFromUrl && ['ru', 'en', 'id'].includes(langFromUrl) && langFromUrl !== language) {
       changeLanguage(langFromUrl);
     }
   }, [changeLanguage, language]);

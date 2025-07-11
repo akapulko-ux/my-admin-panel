@@ -449,11 +449,14 @@ function CreateProperty() {
                     <SelectItem value="none">(не выбрано)</SelectItem>
                     <SelectItem value="Амед">Амед</SelectItem>
                     <SelectItem value="Берава">Берава</SelectItem>
+                    <SelectItem value="Будук">Будук</SelectItem>
                     <SelectItem value="Джимбаран">Джимбаран</SelectItem>
                     <SelectItem value="Кута">Кута</SelectItem>
+                    <SelectItem value="Кутух">Кутух</SelectItem>
                     <SelectItem value="Ловина">Ловина</SelectItem>
                     <SelectItem value="Нуану">Нуану</SelectItem>
                     <SelectItem value="Нуса Дуа">Нуса Дуа</SelectItem>
+                    <SelectItem value="Пандава">Пандава</SelectItem>
                     <SelectItem value="Переренан">Переренан</SelectItem>
                     <SelectItem value="Санур">Санур</SelectItem>
                     <SelectItem value="Семиньяк">Семиньяк</SelectItem>

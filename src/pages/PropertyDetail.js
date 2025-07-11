@@ -274,6 +274,8 @@ function PropertyDetail() {
         let folder;
         if (fieldName === 'layoutFileURL') {
           folder = 'documents/layout';
+        } else if (fieldName === 'dueDiligenceFileURL') {
+          folder = 'documents/due-diligence';
         } else if (fieldName === 'pkkprFileURL') {
           folder = 'documents/pkkpr';
         } else if (fieldName === 'roiFileURL') {
@@ -332,6 +334,8 @@ function PropertyDetail() {
         let folder;
         if (fieldName === 'layoutFileURL') {
           folder = 'documents/layout';
+        } else if (fieldName === 'dueDiligenceFileURL') {
+          folder = 'documents/due-diligence';
         } else if (fieldName === 'pkkprFileURL') {
           folder = 'documents/pkkpr';
         } else if (fieldName === 'roiFileURL') {
@@ -910,7 +914,6 @@ function PropertyDetail() {
       {/* Добавляем кнопки "Расчет ROI" после характеристик объекта */}
       {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
         <div className="mt-8">
-          <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-4`}>Характеристики объекта</h2>
           <div className="mt-6 flex gap-4">
             <button
               onClick={() => setShowRoiCalculator(true)}
@@ -1013,6 +1016,52 @@ function PropertyDetail() {
                       } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
                       {uploading.layoutFileURL ? 'Загрузка...' : 'Загрузить'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Due Diligence:</span>
+            <div className="flex gap-2">
+              {property.dueDiligenceFileURL ? (
+                <>
+                  <button 
+                    onClick={() => window.open(property.dueDiligenceFileURL, '_blank')}
+                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                  >
+                    Просмотреть
+                  </button>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpdate('dueDiligenceFileURL')}
+                      disabled={uploading.dueDiligenceFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.dueDiligenceFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.dueDiligenceFileURL ? 'Загрузка...' : 'Обновить'}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">Файл не загружен</span>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('dueDiligenceFileURL')}
+                      disabled={uploading.dueDiligenceFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.dueDiligenceFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.dueDiligenceFileURL ? 'Загрузка...' : 'Загрузить'}
                     </button>
                   )}
                 </>

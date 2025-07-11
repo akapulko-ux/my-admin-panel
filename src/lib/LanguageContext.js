@@ -3,10 +3,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  // Получаем сохраненный язык из localStorage или используем русский по умолчанию
+  // Получаем сохраненный язык из localStorage или используем английский по умолчанию
   const [language, setLanguage] = useState(() => {
     const savedLanguage = localStorage.getItem('selectedLanguage');
-    return savedLanguage || 'ru';
+    // Если это первое посещение или сохраненный язык не валидный, используем английский
+    if (!savedLanguage || !['ru', 'en', 'id'].includes(savedLanguage)) {
+      return 'en';
+    }
+    return savedLanguage;
   });
 
   // При изменении языка сохраняем его в localStorage
