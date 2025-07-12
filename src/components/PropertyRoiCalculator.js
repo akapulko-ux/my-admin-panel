@@ -27,6 +27,8 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import Presentation from './Presentation';
 import { db } from "../firebaseConfig";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
 
 // Функция форматирования больших чисел
 const formatLargeNumber = (number) => {
@@ -161,6 +163,9 @@ const exportToCSV = (data, filename) => {
 };
 
 const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
+  const { language } = useLanguage();
+  const t = translations[language];
+  
   // Состояния для всех входных данных
   const [costData, setCostData] = useState({
     purchasePrice: propertyData?.price?.toString() || '',
@@ -266,11 +271,11 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       await setDoc(doc(db, "properties", propertyId, "calculations", "roi"), calculationData);
       setHasSavedData(true);
       // Уведомление об успешном сохранении
-      setNotification({ type: 'success', message: 'Расчет успешно сохранен!' });
+      setNotification({ type: 'success', message: t.roiCalculator.calculationSaved });
       setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       console.error("Ошибка при сохранении расчета:", error);
-      setNotification({ type: 'error', message: 'Ошибка при сохранении расчета' });
+      setNotification({ type: 'error', message: t.roiCalculator.calculationSaveError });
       setTimeout(() => setNotification(null), 3000);
     }
   };
@@ -278,7 +283,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
   // Функция создания публичной страницы
   const generatePublicPage = async () => {
     if (!calculationResults) {
-      showNotification('Сначала выполните расчет ROI', 'error');
+      showNotification(t.roiCalculator.calculateFirstError, 'error');
       return;
     }
     
@@ -304,10 +309,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       const url = `/public-roi/property/${propertyId}`;
       window.open(url, '_blank');
       
-      showNotification('Публичная страница создана и открыта в новой вкладке', 'success');
+      showNotification(t.roiCalculator.publicPageCreated, 'success');
     } catch (error) {
       console.error('Ошибка при создании публичной страницы:', error);
-      showNotification('Ошибка при создании публичной страницы', 'error');
+      showNotification(t.roiCalculator.publicPageError, 'error');
     }
   };
 
@@ -400,7 +405,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       accumulatedProfit += yearlyProfit;
 
       graphData.push({
-        year: `Год ${year}`,
+        year: `${t.roiCalculator.year} ${year}`,
         profit: Math.round(yearlyProfit),
         accumulatedProfit: Math.round(accumulatedProfit),
         propertyValue: Math.round(currentPropertyValue)
@@ -458,24 +463,24 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
         <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-6`}>
           <div className="flex items-center gap-2">
             <Calculator className="h-6 w-6" />
-            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Расчет ROI</h1>
+            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{t.roiCalculator.title}</h1>
           </div>
           <Button 
             onClick={onClose} 
             variant="ghost"
             className={isMobile ? 'self-end w-12 h-12' : ''}
           >
-            ✕
+            {t.roiCalculator.close}
           </Button>
         </div>
 
         <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-6`}>
           {/* Блок затрат и инвестиций */}
           <Card className="p-4 space-y-4">
-            <h2 className="text-xl font-semibold">Затраты и инвестиции</h2>
+            <h2 className="text-xl font-semibold">{t.roiCalculator.costsInvestmentsTitle}</h2>
             
             <div className="space-y-2">
-              <Label htmlFor="purchasePrice">Стоимость недвижимости ($)</Label>
+              <Label htmlFor="purchasePrice">{t.roiCalculator.propertyPrice}</Label>
               <Input
                 id="purchasePrice"
                 type="number"
@@ -485,7 +490,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="renovationCosts">Ремонт и обустройство ($)</Label>
+              <Label htmlFor="renovationCosts">{t.roiCalculator.renovationCosts}</Label>
               <Input
                 id="renovationCosts"
                 type="number"
@@ -495,7 +500,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="legalFees">Юридические расходы ($)</Label>
+              <Label htmlFor="legalFees">{t.roiCalculator.legalFees}</Label>
               <Input
                 id="legalFees"
                 type="number"
@@ -505,7 +510,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="additionalExpenses">Дополнительные расходы ($)</Label>
+              <Label htmlFor="additionalExpenses">{t.roiCalculator.additionalExpenses}</Label>
               <Input
                 id="additionalExpenses"
                 type="number"
@@ -515,19 +520,19 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="investmentPeriod">Период инвестирования (лет)</Label>
+              <Label htmlFor="investmentPeriod">{t.roiCalculator.investmentPeriod}</Label>
               <Select
                 value={costData.investmentPeriod}
                 onValueChange={(value) => setCostData({...costData, investmentPeriod: value})}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите период" />
+                  <SelectValue placeholder={t.roiCalculator.selectPeriod} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="5">5 лет</SelectItem>
-                  <SelectItem value="10">10 лет</SelectItem>
-                  <SelectItem value="20">20 лет</SelectItem>
-                  <SelectItem value="30">30 лет</SelectItem>
+                  <SelectItem value="5">{t.roiCalculator.years5}</SelectItem>
+                  <SelectItem value="10">{t.roiCalculator.years10}</SelectItem>
+                  <SelectItem value="20">{t.roiCalculator.years20}</SelectItem>
+                  <SelectItem value="30">{t.roiCalculator.years30}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -535,10 +540,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
 
           {/* Блок арендного дохода */}
           <Card className="p-4 space-y-4">
-            <h2 className="text-xl font-semibold">Арендный доход</h2>
+            <h2 className="text-xl font-semibold">{t.roiCalculator.rentalIncomeTitle}</h2>
             
             <div className="space-y-2">
-              <Label htmlFor="dailyRate">Стоимость за сутки ($)</Label>
+              <Label htmlFor="dailyRate">{t.roiCalculator.dailyRate}</Label>
               <Input
                 id="dailyRate"
                 type="number"
@@ -548,7 +553,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="occupancyRate">Заполняемость (%)</Label>
+              <Label htmlFor="occupancyRate">{t.roiCalculator.occupancyRate}</Label>
               <Input
                 id="occupancyRate"
                 type="number"
@@ -558,7 +563,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rentGrowthRate">Рост арендной платы в год (%)</Label>
+              <Label htmlFor="rentGrowthRate">{t.roiCalculator.rentGrowthRate}</Label>
               <Input
                 id="rentGrowthRate"
                 type="number"
@@ -568,7 +573,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="operationStartYear">Начало эксплуатации через (год)</Label>
+              <Label htmlFor="operationStartYear">{t.roiCalculator.operationStartYear}</Label>
               <Input
                 id="operationStartYear"
                 type="number"
@@ -581,10 +586,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
 
           {/* Блок операционных показателей */}
           <Card className="p-4 space-y-4">
-            <h2 className="text-xl font-semibold">Операционные показатели</h2>
+            <h2 className="text-xl font-semibold">{t.roiCalculator.operationalMetricsTitle}</h2>
             
             <div className="space-y-2">
-              <Label htmlFor="maintenanceFees">Обслуживание в год (%)</Label>
+              <Label htmlFor="maintenanceFees">{t.roiCalculator.maintenanceFees}</Label>
               <Input
                 id="maintenanceFees"
                 type="number"
@@ -594,7 +599,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="utilityBills">Коммунальные платежи в год (%)</Label>
+              <Label htmlFor="utilityBills">{t.roiCalculator.utilityBills}</Label>
               <Input
                 id="utilityBills"
                 type="number"
@@ -604,7 +609,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="annualTax">Налоги в год (%)</Label>
+              <Label htmlFor="annualTax">{t.roiCalculator.annualTax}</Label>
               <Input
                 id="annualTax"
                 type="number"
@@ -614,7 +619,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="propertyManagementFee">Управление недвижимостью (%)</Label>
+              <Label htmlFor="propertyManagementFee">{t.roiCalculator.propertyManagement}</Label>
               <Input
                 id="propertyManagementFee"
                 type="number"
@@ -624,48 +629,48 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appreciationYear1">Удорожание объекта в первый год (%)</Label>
+              <Label htmlFor="appreciationYear1">{t.roiCalculator.appreciationYear1}</Label>
               <Input
                 id="appreciationYear1"
                 type="number"
                 value={expensesData.appreciationYear1}
                 onChange={(e) => setExpensesData({...expensesData, appreciationYear1: e.target.value})}
-                placeholder="Например: 5"
+                placeholder={t.roiCalculator.examplePlaceholder}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appreciationYear2">Удорожание объекта во второй год (%)</Label>
+              <Label htmlFor="appreciationYear2">{t.roiCalculator.appreciationYear2}</Label>
               <Input
                 id="appreciationYear2"
                 type="number"
                 value={expensesData.appreciationYear2}
                 onChange={(e) => setExpensesData({...expensesData, appreciationYear2: e.target.value})}
-                placeholder="Например: 3"
+                placeholder={t.roiCalculator.examplePlaceholder2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appreciationYear3">Удорожание объекта в третий год (%)</Label>
+              <Label htmlFor="appreciationYear3">{t.roiCalculator.appreciationYear3}</Label>
               <Input
                 id="appreciationYear3"
                 type="number"
                 value={expensesData.appreciationYear3}
                 onChange={(e) => setExpensesData({...expensesData, appreciationYear3: e.target.value})}
-                placeholder="Например: 2"
+                placeholder={t.roiCalculator.examplePlaceholder3}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Сценарий расчета</Label>
+              <Label>{t.roiCalculator.calculationScenario}</Label>
               <Select value={scenario} onValueChange={setScenario}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите сценарий" />
+                  <SelectValue placeholder={t.roiCalculator.selectScenario} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pessimistic">Пессимистичный (70%)</SelectItem>
-                  <SelectItem value="base">Реалистичный (100%)</SelectItem>
-                  <SelectItem value="optimistic">Оптимистичный (130%)</SelectItem>
+                  <SelectItem value="pessimistic">{t.roiCalculator.pessimistic}</SelectItem>
+                  <SelectItem value="base">{t.roiCalculator.realistic}</SelectItem>
+                  <SelectItem value="optimistic">{t.roiCalculator.optimistic}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -676,15 +681,15 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
         {!calculationResults && (
           <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="text-lg font-semibold text-blue-800 mb-2">
-              Для выполнения расчета заполните следующие обязательные поля:
+              {t.roiCalculator.requiredFieldsTitle}
             </h3>
             <ul className="text-blue-700 space-y-1">
-              <li>• Стоимость недвижимости</li>
-              <li>• Дневная ставка аренды</li>
-              <li>• Процент заполняемости</li>
+              {t.roiCalculator.requiredFields.map((field, index) => (
+                <li key={index}>{field}</li>
+              ))}
             </ul>
             <p className="text-sm text-blue-600 mt-2">
-              Остальные поля заполняются по желанию для более точного расчета.
+              {t.roiCalculator.optionalFieldsNote}
             </p>
           </div>
         )}
@@ -693,14 +698,14 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
           <div className="mt-8 p-6 bg-white rounded-2xl shadow-lg">
             <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-start'} mb-6`}>
               <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-800`}>
-                Результаты расчета
+                {t.roiCalculator.calculationResults}
               </h2>
               <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex items-center gap-4'}`}>
                 <Button 
                   onClick={saveCalculation} 
                   className={`bg-green-600 hover:bg-green-700 ${isMobile ? 'w-full h-12' : ''}`}
                 >
-                  {hasSavedData ? 'Обновить расчет' : 'Сохранить расчет'}
+                  {hasSavedData ? t.roiCalculator.updateCalculation : t.roiCalculator.saveCalculation}
                 </Button>
 
                 <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
@@ -709,34 +714,34 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                     variant="outline"
                     className={isMobile ? 'w-full h-12' : ''}
                   >
-                    <Share2 className="mr-2 h-4 w-4" /> Создать публичную страницу
+                    <Share2 className="mr-2 h-4 w-4" /> {t.roiCalculator.createPublicPage}
                   </Button>
                   
                   <Button 
                     onClick={() => {
                       const url = `${window.location.origin}/public-roi/property/${propertyId}`;
                       navigator.clipboard.writeText(url).then(() => {
-                        showNotification('Ссылка скопирована в буфер обмена!', 'success');
+                        showNotification(t.roiCalculator.linkCopied, 'success');
                       }).catch(() => {
-                        showNotification('Не удалось скопировать ссылку', 'error');
+                        showNotification(t.roiCalculator.linkCopyError, 'error');
                       });
                     }}
                     variant="outline"
                     className={isMobile ? 'w-full h-12' : ''}
                   >
-                    📋 Копировать ссылку
+                    {t.roiCalculator.copyLink}
                   </Button>
                 </div>
 
                 <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                   <Select value={pdfLanguage} onValueChange={setPdfLanguage}>
                     <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'w-[120px]'}`}>
-                      <SelectValue placeholder="Language" />
+                      <SelectValue placeholder={t.roiCalculator.language} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ru">Русский</SelectItem>
-                      <SelectItem value="id">Indonesian</SelectItem>
+                      <SelectItem value="en">{t.roiCalculator.english}</SelectItem>
+                      <SelectItem value="ru">{t.roiCalculator.russian}</SelectItem>
+                      <SelectItem value="id">{t.roiCalculator.indonesian}</SelectItem>
                     </SelectContent>
                   </Select>
                   <PDFDownloadLink
@@ -755,7 +760,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                         className={isMobile ? 'w-full h-12' : ''}
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        {loading ? '...' : 'PDF'}
+                        {loading ? t.roiCalculator.loading : t.roiCalculator.pdf}
                       </Button>
                     )}
                   </PDFDownloadLink>
@@ -766,52 +771,52 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             {/* Investment Summary Cards */}
             <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'} gap-6 mb-8`}>
               <Card className="p-4">
-                <p className="text-sm text-muted-foreground">Общие инвестиции</p>
+                <p className="text-sm text-muted-foreground">{t.roiCalculator.totalInvestments}</p>
                 <p className="text-lg font-semibold">${calculationResults.totalInvestment.toLocaleString()}</p>
               </Card>
               
               <Card className="p-4">
-                <p className="text-sm text-muted-foreground">Годовой доход от аренды</p>
+                <p className="text-sm text-muted-foreground">{t.roiCalculator.annualRentalIncome}</p>
                 <p className="text-lg font-semibold">${calculationResults.annualRentalIncome.toLocaleString()}</p>
               </Card>
               
               <Card className="p-4">
-                <p className="text-sm text-muted-foreground">Годовые расходы</p>
+                <p className="text-sm text-muted-foreground">{t.roiCalculator.annualExpenses}</p>
                 <p className="text-lg font-semibold">${calculationResults.annualExpenses.toLocaleString()}</p>
               </Card>
               
               <Card className="p-4">
-                <p className="text-sm text-muted-foreground">Чистая прибыль в год</p>
+                <p className="text-sm text-muted-foreground">{t.roiCalculator.netProfitPerYear}</p>
                 <p className="text-lg font-semibold">${calculationResults.annualNetProfit.toLocaleString()}</p>
               </Card>
               
               <Card className="p-4">
-                <p className="text-sm text-muted-foreground">ROI</p>
+                <p className="text-sm text-muted-foreground">{t.roiCalculator.roi}</p>
                 <p className="text-lg font-semibold">{calculationResults.roi.toFixed(2)}%</p>
               </Card>
               
               <Card className="p-4">
-                <p className="text-sm text-muted-foreground">Срок окупаемости</p>
-                <p className="text-lg font-semibold">{calculationResults.paybackPeriod.toFixed(1)} лет</p>
+                <p className="text-sm text-muted-foreground">{t.roiCalculator.paybackPeriod}</p>
+                <p className="text-lg font-semibold">{calculationResults.paybackPeriod.toFixed(1)} {t.roiCalculator.years}</p>
               </Card>
               
               {calculationResults.totalRoi && (
                 <Card className="p-4">
-                  <p className="text-sm text-muted-foreground">Общий ROI за период</p>
+                  <p className="text-sm text-muted-foreground">{t.roiCalculator.totalRoiPeriod}</p>
                   <p className="text-lg font-semibold">{calculationResults.totalRoi.toFixed(2)}%</p>
                 </Card>
               )}
               
                               {calculationResults.totalAppreciation && (calculationResults.appreciationYear1 > 0 || calculationResults.appreciationYear2 > 0 || calculationResults.appreciationYear3 > 0) && (
                 <Card className="p-4">
-                  <p className="text-sm text-muted-foreground">Удорожание недвижимости</p>
+                  <p className="text-sm text-muted-foreground">{t.roiCalculator.propertyAppreciation}</p>
                   <p className="text-lg font-semibold">${calculationResults.totalAppreciation.toLocaleString()}</p>
                 </Card>
               )}
               
                               {calculationResults.finalPropertyValue && (calculationResults.appreciationYear1 > 0 || calculationResults.appreciationYear2 > 0 || calculationResults.appreciationYear3 > 0) && (
                 <Card className="p-4">
-                  <p className="text-sm text-muted-foreground">Финальная стоимость недвижимости</p>
+                  <p className="text-sm text-muted-foreground">{t.roiCalculator.finalPropertyValue}</p>
                   <p className="text-lg font-semibold">${calculationResults.finalPropertyValue.toLocaleString()}</p>
                 </Card>
               )}
@@ -846,7 +851,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                     <XAxis
                       dataKey="year"
-                      label={isMobile ? null : { value: 'Период', position: 'bottom', offset: 20 }}
+                      label={isMobile ? null : { value: t.roiCalculator.period, position: 'bottom', offset: 20 }}
                       tick={{ 
                         fontSize: isMobile ? 10 : 12, 
                         angle: isMobile ? -45 : 0, 
@@ -903,7 +908,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                       yAxisId="left"
                       type="monotone"
                       dataKey="profit"
-                      name="Прибыль за год"
+                      name={t.roiCalculator.profitPerYear}
                       stroke="#8884d8"
                       strokeWidth={isMobile ? 1.5 : 2}
                       fill="url(#profitGradient)"
@@ -914,7 +919,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                       yAxisId="right"
                       type="monotone"
                       dataKey="accumulatedProfit"
-                      name="Накопленная прибыль"
+                      name={t.roiCalculator.accumulatedProfit}
                       stroke="#82ca9d"
                       strokeWidth={isMobile ? 1.5 : 2}
                       fill="url(#accumulatedGradient)"
@@ -926,7 +931,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                         yAxisId="right"
                         type="monotone"
                         dataKey="propertyValue"
-                        name="Стоимость недвижимости"
+                        name={t.roiCalculator.propertyValue}
                         stroke="#ff7300"
                         strokeWidth={isMobile ? 1.5 : 2}
                         fill="url(#propertyGradient)"
@@ -937,7 +942,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                   </AreaChart>
                 ) : (
                   <div className="h-full flex items-center justify-center text-muted-foreground">
-                    Нет данных для отображения графика
+                    {t.roiCalculator.noChartData}
                   </div>
                 )}
               </ResponsiveContainer>

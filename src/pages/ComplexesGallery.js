@@ -12,6 +12,9 @@ import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../components/ui/collapsible";
 import { CustomSelect } from "../components/ui/custom-select";
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
+import { translateDistrict } from "../lib/utils";
 
 function ComplexesGallery() {
   const [complexes, setComplexes] = useState([]);
@@ -20,6 +23,8 @@ function ComplexesGallery() {
   const [developerName, setDeveloperName] = useState(null);
   const { currentUser, role } = useAuth();
   const { getPropertiesList, propertiesCache, forceRefreshPropertiesList } = useCache();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -279,7 +284,7 @@ function ComplexesGallery() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Загрузка комплексов...</div>
+        <div className="text-lg">{t.complexesGallery.loadingText}</div>
       </div>
     );
   }
@@ -290,7 +295,7 @@ function ComplexesGallery() {
       <div className="flex items-center gap-2">
         <Building2 className="h-6 w-6" />
         <h1 className={`font-bold ${isMobile ? 'text-xl' : 'text-2xl'}`}>
-          Галерея комплексов
+          {t.complexesGallery.title}
           {developerName && ` - ${developerName}`}
         </h1>
       </div>
@@ -301,7 +306,7 @@ function ComplexesGallery() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск по названию, застройщику, району..."
+            placeholder={t.complexesGallery.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 pr-9"
@@ -324,7 +329,7 @@ function ComplexesGallery() {
             <CollapsibleTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
-                Фильтры
+                {t.complexesGallery.filtersTitle}
                 {activeFiltersCount > 0 && (
                   <Badge variant="secondary" className="h-5 px-1.5 text-xs">
                     {activeFiltersCount}
@@ -336,7 +341,7 @@ function ComplexesGallery() {
 
             {activeFiltersCount > 0 && (
               <Button variant="ghost" size="sm" onClick={resetFilters}>
-                Сбросить все
+                {t.complexesGallery.resetAllFilters}
               </Button>
             )}
           </div>
@@ -346,17 +351,17 @@ function ComplexesGallery() {
               <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
                 {/* Цена */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Цена (USD)</Label>
+                  <Label className="text-sm font-medium">{t.complexesGallery.priceLabel}</Label>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="От"
+                      placeholder={t.complexesGallery.pricePlaceholderFrom}
                       type="number"
                       value={filters.priceMin}
                       onChange={(e) => setFilters(prev => ({ ...prev, priceMin: e.target.value }))}
                       className="text-sm"
                     />
                     <Input
-                      placeholder="До"
+                      placeholder={t.complexesGallery.pricePlaceholderTo}
                       type="number"
                       value={filters.priceMax}
                       onChange={(e) => setFilters(prev => ({ ...prev, priceMax: e.target.value }))}
@@ -367,12 +372,12 @@ function ComplexesGallery() {
 
                 {/* Застройщик */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Застройщик</Label>
+                  <Label className="text-sm font-medium">{t.complexesGallery.developerLabel}</Label>
                   <CustomSelect
                     value={filters.developer}
                     onValueChange={(value) => setFilters(prev => ({ ...prev, developer: value }))}
                     options={[
-                      { value: "all", label: "Все застройщики" },
+                      { value: "all", label: t.complexesGallery.allDevelopers },
                       ...filterOptions.developers.map(dev => ({ value: dev, label: dev }))
                     ]}
                   />
@@ -380,25 +385,25 @@ function ComplexesGallery() {
 
                 {/* Район */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Район</Label>
+                  <Label className="text-sm font-medium">{t.complexesGallery.districtLabel}</Label>
                   <CustomSelect
                     value={filters.district}
                     onValueChange={(value) => setFilters(prev => ({ ...prev, district: value }))}
                     options={[
-                      { value: "all", label: "Все районы" },
-                      ...filterOptions.districts.map(district => ({ value: district, label: district }))
+                      { value: "all", label: t.complexesGallery.allDistricts },
+                      ...filterOptions.districts.map(district => ({ value: district, label: translateDistrict(district, language) }))
                     ]}
                   />
                 </div>
 
                 {/* Провинция */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Провинция</Label>
+                  <Label className="text-sm font-medium">{t.complexesGallery.provinceLabel}</Label>
                   <CustomSelect
                     value={filters.province}
                     onValueChange={(value) => setFilters(prev => ({ ...prev, province: value }))}
                     options={[
-                      { value: "all", label: "Все провинции" },
+                      { value: "all", label: t.complexesGallery.allProvinces },
                       ...filterOptions.provinces.map(province => ({ value: province, label: province }))
                     ]}
                   />
@@ -406,12 +411,12 @@ function ComplexesGallery() {
 
                 {/* Статус земли */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Статус земли</Label>
+                  <Label className="text-sm font-medium">{t.complexesGallery.landStatusLabel}</Label>
                   <CustomSelect
                     value={filters.landStatus}
                     onValueChange={(value) => setFilters(prev => ({ ...prev, landStatus: value }))}
                     options={[
-                      { value: "all", label: "Все статусы" },
+                      { value: "all", label: t.complexesGallery.allStatuses },
                       ...filterOptions.landStatuses.map(status => ({ value: status, label: status }))
                     ]}
                   />
@@ -419,12 +424,12 @@ function ComplexesGallery() {
 
                 {/* Форма собственности */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Форма собственности</Label>
+                  <Label className="text-sm font-medium">{t.complexesGallery.ownershipFormLabel}</Label>
                   <CustomSelect
                     value={filters.ownershipForm}
                     onValueChange={(value) => setFilters(prev => ({ ...prev, ownershipForm: value }))}
                     options={[
-                      { value: "all", label: "Все формы" },
+                      { value: "all", label: t.complexesGallery.allForms },
                       ...filterOptions.ownershipForms.map(form => ({ value: form, label: form }))
                     ]}
                   />
@@ -438,7 +443,7 @@ function ComplexesGallery() {
       {/* Результаты */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Найдено: {filteredComplexes.length} из {complexes.length} комплексов
+          {t.complexesGallery.resultsText.replace('{found}', filteredComplexes.length).replace('{total}', complexes.length)}
         </div>
       </div>
 
@@ -448,9 +453,9 @@ function ComplexesGallery() {
           <div className="p-4 text-center text-gray-500">
             {complexes.length === 0 
               ? (role === 'застройщик' 
-                  ? "У вас пока нет комплексов в системе"
-                  : "Комплексы не найдены")
-              : "Нет комплексов, соответствующих заданным критериям"}
+                  ? t.complexesGallery.emptyStateNoDeveloperComplexes
+                  : t.complexesGallery.emptyStateNoComplexes)
+              : t.complexesGallery.emptyStateNoMatches}
           </div>
         ) : (
           filteredComplexes.map((complex) => (
@@ -472,7 +477,7 @@ function ComplexesGallery() {
                 {complex.images?.length ? (
                   <img
                     src={complex.images[0]}
-                    alt={complex.name || "Комплекс"}
+                    alt={complex.name || t.complexesGallery.complexAltText}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -487,12 +492,12 @@ function ComplexesGallery() {
                 <span className={`font-semibold leading-none text-black ${
                   isMobile ? 'text-base' : 'text-lg'
                 }`}>
-                  {complex.name || "Без названия"}
+                  {complex.name || t.complexesGallery.noNameText}
                 </span>
 
                 {complex.number && (
                   <span className="text-sm text-gray-600">
-                    Комплекс №{complex.number}
+                    {t.complexesGallery.complexNumberPrefix}{complex.number}
                   </span>
                 )}
 
@@ -503,25 +508,25 @@ function ComplexesGallery() {
                     <span className={`font-semibold leading-none ${
                       isMobile ? 'text-base' : 'text-lg'
                     }`}>
-                      от {formatPrice(minPrice)}
+                      {t.complexesGallery.priceFromPrefix} {formatPrice(minPrice)}
                     </span>
                   ) : complex.priceFrom ? (
                     <span className={`font-semibold leading-none ${
                       isMobile ? 'text-base' : 'text-lg'
                     }`}>
-                      от {formatPrice(complex.priceFrom)}
+                      {t.complexesGallery.priceFromPrefix} {formatPrice(complex.priceFrom)}
                     </span>
                   ) : null;
                 })()}
 
                 {complex.developer && (
-                  <span className="text-sm">Застройщик: {safeDisplay(complex.developer)}</span>
+                  <span className="text-sm">{t.complexesGallery.developerPrefix} {safeDisplay(complex.developer)}</span>
                 )}
                 {complex.district && (
-                  <span className="text-sm">Район: {safeDisplay(complex.district)}</span>
+                  <span className="text-sm">{t.complexesGallery.districtPrefix} {translateDistrict(safeDisplay(complex.district), language)}</span>
                 )}
                 {complex.completionDate && (
-                  <span className="text-sm">Сдача: {safeDisplay(complex.completionDate)}</span>
+                  <span className="text-sm">{t.complexesGallery.completionPrefix} {safeDisplay(complex.completionDate)}</span>
                 )}
               </div>
             </Link>

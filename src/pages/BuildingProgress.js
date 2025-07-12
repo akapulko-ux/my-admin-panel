@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -20,6 +22,9 @@ function BuildingProgress() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
+  
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [progressData, setProgressData] = useState([]);
@@ -49,20 +54,30 @@ function BuildingProgress() {
         }
       } catch (error) {
         console.error('Ошибка загрузки данных:', error);
-        showError('Ошибка загрузки данных');
+        showError(t.buildingProgress.errorLoading);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [id, t.buildingProgress.errorLoading]);
 
   // Генерация списка месяцев
   const generateMonthsData = () => {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      t.buildingProgress.months.january,
+      t.buildingProgress.months.february,
+      t.buildingProgress.months.march,
+      t.buildingProgress.months.april,
+      t.buildingProgress.months.may,
+      t.buildingProgress.months.june,
+      t.buildingProgress.months.july,
+      t.buildingProgress.months.august,
+      t.buildingProgress.months.september,
+      t.buildingProgress.months.october,
+      t.buildingProgress.months.november,
+      t.buildingProgress.months.december
     ];
     
     const currentYear = new Date().getFullYear();
@@ -109,7 +124,7 @@ function BuildingProgress() {
   // Обработка загрузки файлов
   const handleFileUpload = async (files, monthKey) => {
     if (!canEdit()) {
-      showError('У вас нет прав для загрузки файлов');
+      showError(t.buildingProgress.noAccessUpload);
       return;
     }
 
@@ -161,11 +176,11 @@ function BuildingProgress() {
         buildingProgress: updatedProgressData
       });
 
-      showSuccess('Файлы успешно загружены');
+      showSuccess(t.buildingProgress.successUpload);
       setShowUploadModal(false);
     } catch (error) {
       console.error('Ошибка загрузки файлов:', error);
-      showError('Ошибка загрузки файлов');
+      showError(t.buildingProgress.errorUpload);
     } finally {
       setUploading(false);
     }
@@ -174,7 +189,7 @@ function BuildingProgress() {
   // Удаление файла
   const handleFileDelete = async (monthKey, fileUrl, fileType) => {
     if (!canEdit()) {
-      showError('У вас нет прав для удаления файлов');
+      showError(t.buildingProgress.noAccessDelete);
       return;
     }
 
@@ -196,17 +211,17 @@ function BuildingProgress() {
         buildingProgress: updatedProgressData
       });
 
-      showSuccess('Файл удален');
+      showSuccess(t.buildingProgress.successDelete);
     } catch (error) {
       console.error('Ошибка удаления файла:', error);
-      showError('Ошибка удаления файла');
+      showError(t.buildingProgress.errorDelete);
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Загрузка...</div>
+        <div className="text-lg">{t.buildingProgress.loading}</div>
       </div>
     );
   }
@@ -224,7 +239,7 @@ function BuildingProgress() {
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">Прогресс строительства</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t.buildingProgress.title}</h1>
           </div>
           
           <div className="flex items-center gap-4">
@@ -240,7 +255,7 @@ function BuildingProgress() {
               onClick={() => {
                 const url = `${window.location.origin}/public-building-progress/complex/${id}`;
                 navigator.clipboard.writeText(url);
-                showSuccess('Публичная ссылка скопирована в буфер обмена');
+                showSuccess(t.buildingProgress.successLinkCopied);
               }}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
@@ -248,7 +263,7 @@ function BuildingProgress() {
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
               </svg>
-              Скопировать публичную ссылку
+              {t.buildingProgress.copyPublicLink}
             </button>
           </div>
         </div>
@@ -308,7 +323,7 @@ function BuildingProgress() {
                           onClick={() => navigate(`/building-progress/complex/${id}/${monthData.monthKey}`)}
                           className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
                         >
-                          Просмотр
+                          {t.buildingProgress.view}
                         </button>
                         {canEdit() && (
                           <button
@@ -319,7 +334,7 @@ function BuildingProgress() {
                             className="w-full flex items-center justify-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-xs"
                           >
                             <Plus className="w-3 h-3" />
-                            Добавить ещё
+                            {t.buildingProgress.addMore}
                           </button>
                         )}
                       </div>
@@ -333,15 +348,15 @@ function BuildingProgress() {
                         disabled={!canEdit()}
                       >
                         <Plus className="w-4 h-4" />
-                        Добавить
+                        {t.buildingProgress.add}
                       </button>
                     )}
                     
                     {hasContent && (
                       <div className="mt-2 text-center text-xs text-gray-600">
-                        {totalPhotos > 0 && `${totalPhotos} фото`}
+                        {totalPhotos > 0 && `${totalPhotos} ${t.buildingProgress.photos}`}
                         {totalPhotos > 0 && totalVideos > 0 && ', '}
-                        {totalVideos > 0 && `${totalVideos} видео`}
+                        {totalVideos > 0 && `${totalVideos} ${t.buildingProgress.videos}`}
                       </div>
                     )}
                   </div>
@@ -364,7 +379,7 @@ function BuildingProgress() {
               className="group relative flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               <Plus className="w-5 h-5" />
-              <span className="font-medium">Добавить период</span>
+              <span className="font-medium">{t.buildingProgress.addPeriod}</span>
             </button>
           </div>
         </div>
@@ -375,7 +390,7 @@ function BuildingProgress() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Загрузить файлы</h3>
+              <h3 className="text-lg font-semibold">{t.buildingProgress.uploadFiles}</h3>
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="p-1 hover:bg-gray-100 rounded"
@@ -399,12 +414,12 @@ function BuildingProgress() {
               />
               
               <div className="text-sm text-gray-600">
-                Поддерживаются изображения и видео файлы
+                {t.buildingProgress.supportedFormats}
               </div>
               
               {uploading && (
                 <div className="text-center text-blue-600">
-                  Загрузка файлов...
+                  {t.buildingProgress.uploadingFiles}
                 </div>
               )}
             </div>

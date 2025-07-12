@@ -12,7 +12,8 @@ import ProtectedRoute from "./pages/ProtectedRoute";
 import { Toaster } from 'react-hot-toast';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
-import { LanguageProvider } from './lib/LanguageContext';
+import { LanguageProvider, useLanguage } from './lib/LanguageContext';
+import { translations } from './lib/translations';
 
 // Лендинг
 import LandingPage from "./pages/LandingPage";
@@ -77,6 +78,8 @@ import Settings from "./pages/Settings";
 
 const AdminLayout = ({ children }) => {
   const { currentUser, logout, role } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [developerName, setDeveloperName] = useState('');
   const [isMobile, setIsMobile] = useState(false);
 
@@ -167,7 +170,7 @@ const AdminLayout = ({ children }) => {
                 className="gap-2"
               >
                 <LogOut className="h-4 w-4" />
-                {!isMobile && <span>Выйти</span>}
+                {!isMobile && <span>{t.logout}</span>}
               </Button>
             )}
           </div>

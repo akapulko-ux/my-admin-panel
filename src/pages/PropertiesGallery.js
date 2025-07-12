@@ -6,6 +6,9 @@ import { Building2, Search, X, Filter, ChevronDown, Edit2, Check, X as XIcon } f
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
 import { showSuccess, showError } from "../utils/notifications";
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
+import { translateDistrict, translatePropertyType } from "../lib/utils";
 
 // Импорт компонентов shadcn
 import { Input } from "../components/ui/input";
@@ -26,6 +29,8 @@ function PropertiesGallery() {
   const [developerName, setDeveloperName] = useState(null);
   const { currentUser, role } = useAuth();
   const { getPropertiesList, propertiesCache, forceRefreshPropertiesList } = useCache();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [editingPrice, setEditingPrice] = useState(null);
   const [newPrice, setNewPrice] = useState("");
@@ -94,7 +99,7 @@ function PropertiesGallery() {
       }
       return null;
     } catch (err) {
-      console.error("Ошибка загрузки застройщика:", err);
+      console.error(t.propertiesGallery.developerLoadError, err);
       return null;
     }
   };
@@ -108,7 +113,7 @@ function PropertiesGallery() {
       }
       return null;
     } catch (err) {
-      console.error("Ошибка загрузки комплекса:", err);
+      console.error(t.propertiesGallery.complexLoadError, err);
       return null;
     }
   };
@@ -143,7 +148,7 @@ function PropertiesGallery() {
               const complexName = await fetchComplexName(property.complexId);
               return { ...property, complexName };
             } catch (err) {
-              console.error("Ошибка при загрузке названия комплекса:", err);
+              console.error(t.propertiesGallery.complexLoadError, err);
               return property;
             }
           }
@@ -160,7 +165,7 @@ function PropertiesGallery() {
 
       setProperties(propertiesWithComplexNames);
     } catch (err) {
-      console.error("Ошибка загрузки объектов:", err);
+      console.error(t.propertiesGallery.dataLoadError || "Ошибка загрузки объектов:", err);
     } finally {
       setLoading(false);
     }
@@ -271,14 +276,14 @@ function PropertiesGallery() {
   const handlePriceUpdate = async (propertyId, newPriceValue) => {
     // Дополнительная проверка доступа
     if (!hasEditAccess) {
-      showError("У вас нет прав на редактирование цены");
+      showError(t.propertiesGallery.editPermissionError);
       return;
     }
 
     try {
       const price = parseFloat(newPriceValue);
       if (isNaN(price) || price < 0) {
-        showError("Пожалуйста, введите корректную цену");
+        showError(t.propertiesGallery.priceValidationError);
         return;
       }
 
@@ -295,10 +300,10 @@ function PropertiesGallery() {
 
       setEditingPrice(null);
       setNewPrice("");
-      showSuccess("Цена успешно обновлена");
+      showSuccess(t.propertiesGallery.priceUpdateSuccess);
     } catch (error) {
       console.error("Ошибка при обновлении цены:", error);
-      showError("Не удалось обновить цену");
+      showError(t.propertiesGallery.priceUpdateError);
     }
   };
 
@@ -316,11 +321,11 @@ function PropertiesGallery() {
       <div className={`mx-auto space-y-4 p-4 ${isMobile ? 'max-w-full' : 'max-w-4xl'}`}>
         {role === 'застройщик' && developerName ? (
           <h1 className={`font-bold text-gray-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
-            Объекты застройщика: {developerName}
+            {t.propertiesGallery.developerPropertiesTitle}: {developerName}
           </h1>
         ) : (
           <h1 className={`font-bold text-gray-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
-            Галерея объектов
+            {t.propertiesGallery.title}
           </h1>
         )}
 
@@ -330,7 +335,7 @@ function PropertiesGallery() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
             <Input
               type="text"
-              placeholder="Поиск по названию, району или типу..."
+              placeholder={t.propertiesGallery.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -340,7 +345,7 @@ function PropertiesGallery() {
             <CollapsibleTrigger asChild>
               <Button variant="outline" className="relative">
                 <Filter className="h-4 w-4 mr-2" />
-                Фильтры
+                {t.propertiesGallery.filtersTitle}
                 {activeFiltersCount > 0 && (
                   <Badge 
                     variant="secondary" 
@@ -364,17 +369,17 @@ function PropertiesGallery() {
                 <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
                   {/* Цена */}
                   <div className="space-y-2">
-                    <Label>Цена (USD)</Label>
+                    <Label>{t.propertiesGallery.priceLabel}</Label>
                     <div className="flex gap-2">
                       <Input
                         type="number"
-                        placeholder="От"
+                        placeholder={t.propertiesGallery.pricePlaceholderFrom}
                         value={filters.priceMin}
                         onChange={(e) => setFilters(prev => ({ ...prev, priceMin: e.target.value }))}
                       />
                       <Input
                         type="number"
-                        placeholder="До"
+                        placeholder={t.propertiesGallery.pricePlaceholderTo}
                         value={filters.priceMax}
                         onChange={(e) => setFilters(prev => ({ ...prev, priceMax: e.target.value }))}
                       />
@@ -383,17 +388,17 @@ function PropertiesGallery() {
 
                   {/* Площадь */}
                   <div className="space-y-2">
-                    <Label>Площадь (м²)</Label>
+                    <Label>{t.propertiesGallery.areaLabel}</Label>
                     <div className="flex gap-2">
                       <Input
                         type="number"
-                        placeholder="От"
+                        placeholder={t.propertiesGallery.pricePlaceholderFrom}
                         value={filters.areaMin}
                         onChange={(e) => setFilters(prev => ({ ...prev, areaMin: e.target.value }))}
                       />
                       <Input
                         type="number"
-                        placeholder="До"
+                        placeholder={t.propertiesGallery.pricePlaceholderTo}
                         value={filters.areaMax}
                         onChange={(e) => setFilters(prev => ({ ...prev, areaMax: e.target.value }))}
                       />
@@ -402,13 +407,13 @@ function PropertiesGallery() {
 
                   {/* Спальни */}
                   <div className="space-y-2">
-                    <Label>Спальни</Label>
+                    <Label>{t.propertiesGallery.bedroomsLabel}</Label>
                     <CustomSelect
                       value={filters.bedrooms}
                       onValueChange={(value) => setFilters(prev => ({ ...prev, bedrooms: value }))}
                       options={[
-                        { label: "Все", value: "all" },
-                        { label: "Студия", value: "0" },
+                        { label: t.propertiesGallery.allBedrooms, value: "all" },
+                        { label: t.propertiesGallery.studio, value: "0" },
                         ...filterOptions.bedrooms.map(num => ({
                           label: String(num),
                           value: String(num)
@@ -419,14 +424,14 @@ function PropertiesGallery() {
 
                   {/* Район */}
                   <div className="space-y-2">
-                    <Label>Район</Label>
+                    <Label>{t.propertiesGallery.districtLabel}</Label>
                     <CustomSelect
                       value={filters.district}
                       onValueChange={(value) => setFilters(prev => ({ ...prev, district: value }))}
                       options={[
-                        { label: "Все районы", value: "all" },
+                        { label: t.propertiesGallery.allDistricts, value: "all" },
                         ...filterOptions.districts.map(district => ({
-                          label: district,
+                          label: translateDistrict(district, language),
                           value: district
                         }))
                       ]}
@@ -435,14 +440,14 @@ function PropertiesGallery() {
 
                   {/* Тип */}
                   <div className="space-y-2">
-                    <Label>Тип</Label>
+                    <Label>{t.propertiesGallery.typeLabel}</Label>
                     <CustomSelect
                       value={filters.type}
                       onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}
                       options={[
-                        { label: "Все типы", value: "all" },
+                        { label: t.propertiesGallery.allTypes, value: "all" },
                         ...filterOptions.types.map(type => ({
-                          label: type,
+                          label: translatePropertyType(type, language),
                           value: type
                         }))
                       ]}
@@ -457,7 +462,7 @@ function PropertiesGallery() {
                       className="w-full"
                     >
                       <X className="h-4 w-4 mr-2" />
-                      Сбросить фильтры
+                      {t.propertiesGallery.resetFiltersButton}
                     </Button>
                   </div>
                 </div>
@@ -468,7 +473,7 @@ function PropertiesGallery() {
 
         {/* Результаты поиска */}
         <div className="text-sm text-gray-500 mb-4">
-          Найдено объектов: {filteredProperties.length}
+          {t.propertiesGallery.searchResultsText.replace('{count}', filteredProperties.length)}
         </div>
       </div>
 
@@ -478,9 +483,9 @@ function PropertiesGallery() {
           <div className="p-4 text-center text-gray-500">
             {properties.length === 0 
               ? (role === 'застройщик' 
-                  ? "У вас пока нет объектов в системе"
-                  : "Объекты не найдены")
-              : "Нет объектов, соответствующих заданным критериям"}
+                  ? t.propertiesGallery.emptyStateNoDeveloperProperties
+                  : t.propertiesGallery.emptyStateNoProperties)
+              : t.propertiesGallery.emptyStateNoMatches}
           </div>
         ) : (
           filteredProperties.map((p) => (
@@ -502,7 +507,7 @@ function PropertiesGallery() {
                 {p.images?.length ? (
                   <img
                     src={p.images[0]}
-                    alt={safeDisplay(p.type)}
+                    alt={safeDisplay(p.type) || t.propertiesGallery.propertyAltText}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -531,7 +536,7 @@ function PropertiesGallery() {
                         value={newPrice}
                         onChange={(e) => setNewPrice(e.target.value)}
                         className="w-32 h-8"
-                        placeholder="Новая цена"
+                        placeholder={t.propertiesGallery.newPricePlaceholder}
                         autoFocus
                       />
                       <Button
@@ -578,18 +583,18 @@ function PropertiesGallery() {
                   )}
                 </div>
 
-                {p.type && <span className="text-sm">{safeDisplay(p.type)}</span>}
-                {p.area && <span className="text-sm">{safeDisplay(p.area)} м²</span>}
+                {p.type && <span className="text-sm">{translatePropertyType(safeDisplay(p.type), language)}</span>}
+                {p.area && <span className="text-sm">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>}
                 {p.bedrooms !== undefined && p.bedrooms !== null && (
                   <span className="text-sm">
-                    {p.bedrooms === 0 ? "Студия" : `Спален: ${safeDisplay(p.bedrooms)}`}
+                    {p.bedrooms === 0 ? t.propertiesGallery.studio : `${t.propertiesGallery.bedroomsText}: ${safeDisplay(p.bedrooms)}`}
                   </span>
                 )}
-                {p.district && <span className="text-sm">{safeDisplay(p.district)}</span>}
+                {p.district && <span className="text-sm">{translateDistrict(safeDisplay(p.district), language)}</span>}
                 {/* Показываем застройщика только для не-застройщиков */}
                 {role !== 'застройщик' && p.developer && (
                   <span className="text-sm text-gray-600">
-                    Застройщик: {safeDisplay(p.developer)}
+                    {t.propertiesGallery.developerText} {safeDisplay(p.developer)}
                   </span>
                 )}
               </div>

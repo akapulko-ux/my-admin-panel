@@ -29,6 +29,18 @@ import PropertyRoiCalculator from "../components/PropertyRoiCalculator";
 // Импорт для сжатия изображений и конвертации PDF
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
+import { 
+  translateDistrict, 
+  translatePropertyType, 
+  translateAreaUnit, 
+  translateBuildingType, 
+  translateConstructionStatus, 
+  translateLandStatus, 
+  translatePoolStatus, 
+  translateOwnership 
+} from "../lib/utils";
 
 function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
@@ -42,6 +54,8 @@ function PropertyDetail() {
   const [accessDenied, setAccessDenied] = useState(false);
   const { currentUser, role } = useAuth();
   const { getPropertyDetails, propertiesCache } = useCache();
+  const { language } = useLanguage();
+  const t = translations[language];
   
   // Новые состояния для редактирования
   const [isEditing, setIsEditing] = useState(false);
@@ -124,10 +138,10 @@ function PropertyDetail() {
       setEditedValues({});
       setHasChanges(false);
       setIsEditing(false);
-      showSuccess("Изменения успешно сохранены");
+      showSuccess(t.propertyDetail.changesSaved);
     } catch (error) {
       console.error("Ошибка при сохранении изменений:", error);
-      showError("Произошла ошибка при сохранении изменений");
+      showError(t.propertyDetail.saveError);
     }
   };
 
@@ -141,7 +155,7 @@ function PropertyDetail() {
   // Функция для загрузки новых фотографий (с сжатием и поддержкой PDF)
   const handleImageUpload = async () => {
     if (!canEdit()) {
-      showError("У вас нет прав для редактирования объекта");
+      showError(t.propertyDetail.editPermissionError);
       return;
     }
 
@@ -198,10 +212,10 @@ function PropertyDetail() {
           images: [...(prev.images || []), ...urls]
         }));
         
-        showSuccess("Фотографии успешно загружены");
+        showSuccess(t.propertyDetail.photoUploaded);
       } catch (error) {
         console.error("Ошибка загрузки фотографий:", error);
-        showError("Произошла ошибка при загрузке фотографий");
+        showError(t.propertyDetail.photoUploadError);
       } finally {
         setUploadingImages(false);
       }
@@ -212,7 +226,7 @@ function PropertyDetail() {
   // Функция для удаления фотографии
   const handleImageDelete = async (index) => {
     if (!canEdit()) {
-      showError("У вас нет прав для редактирования объекта");
+      showError(t.propertyDetail.editPermissionError);
       return;
     }
 
@@ -251,7 +265,7 @@ function PropertyDetail() {
         setCurrentImg(Math.max(0, newImages.length - 1));
       }
 
-      showSuccess("Фотография успешно удалена");
+      showSuccess(t.propertyDetail.photoDeleted);
     } catch (error) {
       console.error("Ошибка при удалении фотографии:", error);
       
@@ -276,14 +290,14 @@ function PropertyDetail() {
             setCurrentImg(Math.max(0, newImages.length - 1));
           }
           
-          showSuccess("Ссылка на фотографию удалена из базы данных");
+          showSuccess(t.propertyDetail.photoLinkDeleted);
         } catch (dbError) {
           console.error("Ошибка обновления базы данных:", dbError);
-          showError("Не удалось обновить информацию в базе данных");
+          showError(t.propertyDetail.databaseUpdateError);
         }
-      } else {
-        showError("Произошла ошибка при удалении фотографии");
-      }
+              } else {
+          showError(t.propertyDetail.photoDeleteError);
+        }
       
       // Перезагружаем данные объекта в случае ошибки
       try {
@@ -304,7 +318,7 @@ function PropertyDetail() {
   // Функция для загрузки нового файла
   const handleFileUpload = (fieldName) => {
     if (!canEdit()) {
-      showError("У вас нет прав для редактирования объекта");
+      showError(t.propertyDetail.editPermissionError);
       return;
     }
 
@@ -344,7 +358,7 @@ function PropertyDetail() {
         console.log(`Файл ${fieldName} успешно загружен в ${folder}:`, url);
       } catch (error) {
         console.error(`Ошибка загрузки файла ${fieldName}:`, error);
-        showError("Произошла ошибка при загрузке файла");
+        showError(t.propertyDetail.fileUploadError);
       } finally {
         setUploading(prev => ({ ...prev, [fieldName]: false }));
       }
@@ -355,7 +369,7 @@ function PropertyDetail() {
   // Функция для обновления существующего файла
   const handleFileUpdate = (fieldName) => {
     if (!canEdit()) {
-      showError("У вас нет прав для редактирования объекта");
+      showError(t.propertyDetail.editPermissionError);
       return;
     }
 
@@ -405,7 +419,7 @@ function PropertyDetail() {
         console.log(`Файл ${fieldName} успешно обновлен в ${folder}:`, url);
       } catch (error) {
         console.error(`Ошибка обновления файла ${fieldName}:`, error);
-        showError("Произошла ошибка при обновлении файла");
+        showError(t.propertyDetail.fileUploadError);
       } finally {
         setUploading(prev => ({ ...prev, [fieldName]: false }));
       }
@@ -442,7 +456,7 @@ function PropertyDetail() {
       }
       return null;
     } catch (err) {
-      console.error("Ошибка загрузки застройщика:", err);
+      console.error(t.propertyDetail.developerLoadError || "Ошибка загрузки застройщика:", err);
       return null;
     }
   };
@@ -456,34 +470,34 @@ function PropertyDetail() {
       }
       return null;
     } catch (err) {
-      console.error("Ошибка загрузки комплекса:", err);
+      console.error(t.propertyDetail.complexLoadError || "Ошибка загрузки комплекса:", err);
       return null;
     }
   };
 
   // Добавляем списки значений для выпадающих списков
   const typeOptions = [
-    "Вилла",
-    "Апартаменты",
-    "Дом",
-    "Коммерческая недвижимость",
-    "Апарт-вилла",
-    "Таунхаус",
-    "Земельный участок"
+    { value: "Вилла", label: t.propertyDetail.typeOptions.villa },
+    { value: "Апартаменты", label: t.propertyDetail.typeOptions.apartment },
+    { value: "Дом", label: t.propertyDetail.typeOptions.house },
+    { value: "Коммерческая недвижимость", label: t.propertyDetail.typeOptions.commercial },
+    { value: "Апарт-вилла", label: t.propertyDetail.typeOptions.apartVilla },
+    { value: "Таунхаус", label: t.propertyDetail.typeOptions.townhouse },
+    { value: "Земельный участок", label: t.propertyDetail.typeOptions.land }
   ];
 
   const bedroomsOptions = [
-    "Студия",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10"
+    { value: "Студия", label: t.propertyDetail.studio },
+    { value: "1", label: "1" },
+    { value: "2", label: "2" },
+    { value: "3", label: "3" },
+    { value: "4", label: "4" },
+    { value: "5", label: "5" },
+    { value: "6", label: "6" },
+    { value: "7", label: "7" },
+    { value: "8", label: "8" },
+    { value: "9", label: "9" },
+    { value: "10", label: "10" }
   ];
 
   const bathroomsOptions = [
@@ -496,28 +510,28 @@ function PropertyDetail() {
   ];
 
   const buildingTypeOptions = [
-    "Новый комплекс",
-    "Реновация",
-    "ИЖС"
+    { value: "Новый комплекс", label: t.propertyDetail.buildingTypeOptions.newComplex },
+    { value: "Реновация", label: t.propertyDetail.buildingTypeOptions.renovation },
+    { value: "ИЖС", label: t.propertyDetail.buildingTypeOptions.individual }
   ];
 
   const statusOptions = [
-    "Проект",
-    "Строится",
-    "Готовый",
-    "От собственника"
+    { value: "Проект", label: t.propertyDetail.statusOptions.project },
+    { value: "Строится", label: t.propertyDetail.statusOptions.underConstruction },
+    { value: "Готовый", label: t.propertyDetail.statusOptions.ready },
+    { value: "От собственника", label: t.propertyDetail.statusOptions.fromOwner }
   ];
 
   const poolOptions = [
-    "Нет",
-    "Частный",
-    "Общий"
+    { value: "Нет", label: t.propertyDetail.poolOptions.no },
+    { value: "Частный", label: t.propertyDetail.poolOptions.private },
+    { value: "Общий", label: t.propertyDetail.poolOptions.shared }
   ];
 
   // Добавляем список значений для формы собственности
   const ownershipFormOptions = [
-    "Leashold",
-    "Freehold"
+    { value: "Leashold", label: t.propertyDetail.ownershipOptions.leasehold },
+    { value: "Freehold", label: t.propertyDetail.ownershipOptions.freehold }
   ];
 
   // Обновляем функцию рендеринга значения
@@ -534,9 +548,9 @@ function PropertyDetail() {
               onChange={(e) => handleValueChange(field, e.target.value)}
               className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
             >
-              <option value="">(не выбрано)</option>
+              <option value="">{t.propertyDetail.notSelected}</option>
               {options.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
+                <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>
               ))}
             </select>
             {(editedValues.hasOwnProperty(field) ? editedValues[field] : originalValue) === 'Leashold' && (
@@ -557,11 +571,11 @@ function PropertyDetail() {
             onChange={(e) => handleValueChange(field, e.target.value)}
             className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
           >
-            <option value="">(не выбрано)</option>
-            {options.map(opt => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
+                          <option value="">{t.propertyDetail.notSelected}</option>
+              {options.map(opt => (
+                <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>
+              ))}
+            </select>
         );
       } else {
         return (
@@ -619,7 +633,7 @@ function PropertyDetail() {
               const developerName = await fetchDeveloperName(propertyData.developerId);
               propertyData.developerName = developerName;
             } catch (err) {
-              console.error("Ошибка при загрузке имени застройщика:", err);
+              console.error(t.propertyDetail.developerLoadError || "Ошибка при загрузке имени застройщика:", err);
             }
           }
           
@@ -629,7 +643,7 @@ function PropertyDetail() {
               const complexName = await fetchComplexName(propertyData.complexId);
               propertyData.complexName = complexName;
             } catch (err) {
-              console.error("Ошибка при загрузке названия комплекса:", err);
+              console.error(t.propertyDetail.complexLoadError || "Ошибка при загрузке названия комплекса:", err);
             }
           }
           
@@ -698,41 +712,41 @@ function PropertyDetail() {
   if (!property) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Объект не найден
+        {t.propertyDetail.notFound}
       </div>
     );
   }
 
   const attributes = [
     {
-      label: property.bedrooms === 0 ? "Студия" : "Спален",
-      value: property.bedrooms === 0 ? "Студия" : safeDisplay(property.bedrooms),
+      label: property.bedrooms === 0 ? t.propertyDetail.studio : t.propertyDetail.bedrooms,
+      value: property.bedrooms === 0 ? t.propertyDetail.studio : safeDisplay(property.bedrooms),
       field: "bedrooms",
       icon: Bed,
       type: "select",
       options: bedroomsOptions
     },
     {
-      label: "Площадь",
-      value: property.area ? `${safeDisplay(property.area)} м²` : "—",
+      label: t.propertyDetail.area,
+      value: property.area ? translateAreaUnit(safeDisplay(property.area), language) : "—",
       field: "area",
       icon: Ruler,
       type: "number"
     },
     {
-      label: "Застройщик",
+      label: t.propertyDetail.developer,
       value: safeDisplay(property.developerName || property.developer),
       field: "developer",
       icon: Building2,
     },
     {
-      label: "Комплекс",
+      label: t.propertyDetail.complex,
       value: safeDisplay(property.complexName || property.complex),
       field: "complex",
       icon: Home,
     },
     {
-      label: "Санузлы",
+      label: t.propertyDetail.bathrooms,
       value: safeDisplay(property.bathrooms),
       field: "bathrooms",
       icon: Bath,
@@ -740,59 +754,59 @@ function PropertyDetail() {
       options: bathroomsOptions
     },
     {
-      label: "Этажность",
-      value: property.floors ? `${safeDisplay(property.floors)} этаж${property.floors === 1 ? '' : property.floors < 5 ? 'а' : 'ей'}` : "—",
+      label: t.propertyDetail.floors,
+      value: property.floors ? `${safeDisplay(property.floors)} ${property.floors === 1 ? t.propertyDetail.floorText : t.propertyDetail.floorsText}` : "—",
       field: "floors",
       icon: Layers,
       type: "number"
     },
 
     {
-      label: "Район",
-      value: safeDisplay(property.district),
+      label: t.propertyDetail.district,
+      value: translateDistrict(safeDisplay(property.district), language),
       field: "district",
       icon: MapPin,
     },
     {
-      label: "Тип постройки",
-      value: safeDisplay(property.buildingType),
+      label: t.propertyDetail.buildingType,
+      value: translateBuildingType(safeDisplay(property.buildingType), language),
       field: "buildingType",
       icon: Hammer,
       type: "select",
       options: buildingTypeOptions
     },
     {
-      label: "Статус строительства",
-      value: safeDisplay(property.status),
+      label: t.propertyDetail.constructionStatus,
+      value: translateConstructionStatus(safeDisplay(property.status), language),
       field: "status",
       icon: Hammer,
       type: "select",
       options: statusOptions
     },
     {
-      label: "Статус земли",
-      value: safeDisplay(property.landStatus),
+      label: t.propertyDetail.landStatus,
+      value: translateLandStatus(safeDisplay(property.landStatus), language),
       field: "landStatus",
       icon: MapPin,
     },
     {
-      label: "Бассейн",
-      value: safeDisplay(property.pool),
+      label: t.propertyDetail.pool,
+      value: translatePoolStatus(safeDisplay(property.pool), language),
       field: "pool",
       icon: Droplet,
       type: "select",
       options: poolOptions
     },
     {
-      label: "Собственность",
-      value: property.ownershipForm ? `${property.ownershipForm}${property.leaseYears ? ` ${property.leaseYears} лет` : ""}` : "—",
+      label: t.propertyDetail.ownership,
+      value: property.ownershipForm ? `${translateOwnership(property.ownershipForm, language)}${property.leaseYears ? ` ${property.leaseYears} ${t.propertyDetail.years}` : ""}` : "—",
       field: "ownershipForm",
       icon: FileText,
       type: "select",
       options: ownershipFormOptions
     },
     {
-      label: "Дата завершения",
+      label: t.propertyDetail.completionDate,
       value: safeDisplay(property.completionDate),
       field: "completionDate",
       icon: Calendar,
@@ -811,11 +825,11 @@ function PropertyDetail() {
             disabled={uploadingImages}
           >
             {uploadingImages ? (
-              "Загрузка..."
+              t.propertyDetail.uploading
             ) : (
               <>
                 <Camera className="h-4 w-4" />
-                Добавить фото / PDF
+                {t.propertyDetail.addPhotoButton}
               </>
             )}
           </button>
@@ -831,7 +845,7 @@ function PropertyDetail() {
               className="relative flex-none w-full h-56 rounded-xl overflow-hidden bg-gray-200 snap-center mr-4 last:mr-0"
               style={{ scrollSnapAlign: "center" }}
             >
-              <img onClick={() => { setCurrentImg(idx); setLightbox(true); }} src={url} alt={`Фото ${idx + 1}`} className="w-full h-full object-cover cursor-pointer" />
+              <img onClick={() => { setCurrentImg(idx); setLightbox(true); }} src={url} alt={`${t.propertyDetail.photo} ${idx + 1}`} className="w-full h-full object-cover cursor-pointer" />
               {isEditing && canEdit() && (
                 <button
                   onClick={(e) => {
@@ -917,7 +931,7 @@ function PropertyDetail() {
             className="flex flex-col items-center text-blue-600 hover:underline"
           >
             <MapIcon className="w-6 h-6 mb-1 fill-blue-600 text-blue-600" />
-            <span className="text-xs">на карте</span>
+            <span className="text-xs">{t.propertyDetail.onMap}</span>
           </button>
         )}
       </div>
@@ -930,13 +944,13 @@ function PropertyDetail() {
             onChange={(e) => handleValueChange('type', e.target.value)}
             className="w-full px-2 py-1 border border-gray-300 rounded text-2xl"
           >
-            <option value="">(не выбрано)</option>
+            <option value="">{t.propertyDetail.notSelected}</option>
             {typeOptions.map(opt => (
-              <option key={opt} value={opt}>{opt}</option>
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
         ) : (
-          safeDisplay(property.type)
+          translatePropertyType(safeDisplay(property.type), language)
         )}
       </div>
 
@@ -968,7 +982,7 @@ function PropertyDetail() {
               className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ${isMobile ? 'w-full h-12 justify-center' : ''}`}
             >
               <Calculator className="w-5 h-5" />
-              Расчет ROI
+              {t.propertyDetail.roiCalculatorButton}
             </button>
           </div>
         </div>
@@ -985,40 +999,40 @@ function PropertyDetail() {
 
       {/* Секция Документы */}
       <div className="mt-8">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Документы</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">{t.propertyDetail.documentsSection}</h3>
         <div className="space-y-3">
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Юридическое название компании:</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.legalCompanyName}</span>
             <div className="flex-1 ml-4">
               {renderEditableValue('legalCompanyName', safeDisplay(property.legalCompanyName), 'text')}
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Налоговый номер (NPWP):</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.taxNumber}</span>
             <div className="flex-1 ml-4">
               {renderEditableValue('npwp', safeDisplay(property.npwp), 'text')}
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Разрешение на использование земли (PKKPR):</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.landUsePermit}</span>
             <div className="flex-1 ml-4">
               {renderEditableValue('pkkpr', safeDisplay(property.pkkpr), 'text')}
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Сертификат права на землю (SHGB):</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.landRightsCertificate}</span>
             <div className="flex-1 ml-4">
               {renderEditableValue('shgb', safeDisplay(property.shgb), 'text')}
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Разрешение на строительство (PBG):</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.buildingPermit}</span>
             <div className="flex-1 ml-4">
               {renderEditableValue('pbg', safeDisplay(property.pbg), 'text')}
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Сертификат готовности здания (SLF):</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.buildingReadinessCertificate}</span>
             <div className="flex-1 ml-4">
               {renderEditableValue('slf', safeDisplay(property.slf), 'text')}
             </div>
@@ -1026,7 +1040,7 @@ function PropertyDetail() {
           
           {/* Файловые поля */}
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Планировка:</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.layout}</span>
             <div className="flex gap-2">
               {property.layoutFileURL ? (
                 <>
@@ -1034,45 +1048,45 @@ function PropertyDetail() {
                     onClick={() => window.open(property.layoutFileURL, '_blank')}
                     className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
                   >
-                    Просмотреть
+                    {t.propertyDetail.viewButton}
                   </button>
                   {canEdit() && (
-                    <button 
-                      onClick={() => handleFileUpdate('layoutFileURL')}
-                      disabled={uploading.layoutFileURL}
-                      className={`px-3 py-1 text-xs rounded ${
-                        uploading.layoutFileURL 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-gray-600 hover:bg-gray-700'
-                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                    >
-                      {uploading.layoutFileURL ? 'Загрузка...' : 'Обновить'}
-                    </button>
+                                          <button 
+                        onClick={() => handleFileUpdate('layoutFileURL')}
+                        disabled={uploading.layoutFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.layoutFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.layoutFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
                   )}
                 </>
-              ) : (
-                <>
-                  <span className="text-xs text-gray-500">Файл не загружен</span>
-                  {canEdit() && (
-                    <button 
-                      onClick={() => handleFileUpload('layoutFileURL')}
-                      disabled={uploading.layoutFileURL}
-                      className={`px-3 py-1 text-xs rounded ${
-                        uploading.layoutFileURL 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-green-600 hover:bg-green-700'
-                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                    >
-                      {uploading.layoutFileURL ? 'Загрузка...' : 'Загрузить'}
-                    </button>
-                  )}
-                </>
-              )}
+                              ) : (
+                  <>
+                    <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpload('layoutFileURL')}
+                        disabled={uploading.layoutFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.layoutFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-green-600 hover:bg-green-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.layoutFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                      </button>
+                    )}
+                  </>
+                )}
             </div>
           </div>
           
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Due Diligence:</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.dueDiligence}</span>
             <div className="flex gap-2">
               {property.dueDiligenceFileURL ? (
                 <>
@@ -1080,7 +1094,7 @@ function PropertyDetail() {
                     onClick={() => window.open(property.dueDiligenceFileURL, '_blank')}
                     className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
                   >
-                    Просмотреть
+                    {t.propertyDetail.viewButton}
                   </button>
                   {canEdit() && (
                     <button 
@@ -1092,16 +1106,16 @@ function PropertyDetail() {
                           : 'bg-gray-600 hover:bg-gray-700'
                       } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
-                      {uploading.dueDiligenceFileURL ? 'Загрузка...' : 'Обновить'}
+                                              {uploading.dueDiligenceFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
                     </button>
                   )}
                 </>
-              ) : (
-                <>
-                  <span className="text-xs text-gray-500">Файл не загружен</span>
-                  {canEdit() && (
-                    <button 
-                      onClick={() => handleFileUpload('dueDiligenceFileURL')}
+                              ) : (
+                  <>
+                    <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpload('dueDiligenceFileURL')}
                       disabled={uploading.dueDiligenceFileURL}
                       className={`px-3 py-1 text-xs rounded ${
                         uploading.dueDiligenceFileURL 
@@ -1109,7 +1123,7 @@ function PropertyDetail() {
                           : 'bg-green-600 hover:bg-green-700'
                       } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
-                      {uploading.dueDiligenceFileURL ? 'Загрузка...' : 'Загрузить'}
+                                              {uploading.dueDiligenceFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
                     </button>
                   )}
                 </>
@@ -1118,7 +1132,7 @@ function PropertyDetail() {
           </div>
           
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Файл PKKPR:</span>
+            <span className="text-sm text-gray-600">{t.propertyDetail.pkkprFile}</span>
             <div className="flex gap-2">
               {property.pkkprFileURL ? (
                 <>
@@ -1126,7 +1140,7 @@ function PropertyDetail() {
                     onClick={() => window.open(property.pkkprFileURL, '_blank')}
                     className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
                   >
-                    Просмотреть
+                    {t.propertyDetail.viewButton}
                   </button>
                   {canEdit() && (
                     <button 
@@ -1138,16 +1152,16 @@ function PropertyDetail() {
                           : 'bg-gray-600 hover:bg-gray-700'
                       } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
-                      {uploading.pkkprFileURL ? 'Загрузка...' : 'Обновить'}
+                                              {uploading.pkkprFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
                     </button>
                   )}
                 </>
-              ) : (
-                <>
-                  <span className="text-xs text-gray-500">Файл не загружен</span>
-                  {canEdit() && (
-                    <button 
-                      onClick={() => handleFileUpload('pkkprFileURL')}
+                              ) : (
+                  <>
+                    <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpload('pkkprFileURL')}
                       disabled={uploading.pkkprFileURL}
                       className={`px-3 py-1 text-xs rounded ${
                         uploading.pkkprFileURL 
@@ -1155,7 +1169,7 @@ function PropertyDetail() {
                           : 'bg-green-600 hover:bg-green-700'
                       } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
-                      {uploading.pkkprFileURL ? 'Загрузка...' : 'Загрузить'}
+                                              {uploading.pkkprFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
                     </button>
                   )}
                 </>
@@ -1176,7 +1190,7 @@ function PropertyDetail() {
                 onClick={handleCancel}
                 className={`px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 ${isMobile ? 'w-full h-12' : ''}`}
               >
-                Отменить
+                {t.propertyDetail.cancelButton}
               </button>
               <button
                 onClick={handleSave}
@@ -1187,7 +1201,7 @@ function PropertyDetail() {
                     : "bg-gray-400 cursor-not-allowed"
                 } ${isMobile ? 'w-full h-12' : ''}`}
               >
-                Сохранить
+                {t.propertyDetail.saveButton}
               </button>
             </>
           ) : (
@@ -1195,7 +1209,7 @@ function PropertyDetail() {
               onClick={() => setIsEditing(true)}
               className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
             >
-              Редактировать
+              {t.propertyDetail.editButton}
             </button>
           )}
         </div>
@@ -1207,7 +1221,7 @@ function PropertyDetail() {
           <div className="relative w-full h-full">
             <img
               src={property.images[currentImg]}
-              alt={`Фото ${currentImg + 1}`}
+              alt={`${t.propertyDetail.photo} ${currentImg + 1}`}
               className="absolute inset-0 m-auto max-w-full max-h-full object-contain"
               onClick={() => setLightbox(false)}
             />
@@ -1238,7 +1252,7 @@ function PropertyDetail() {
             )}
             {/* Счетчик фотографий */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black bg-opacity-50 px-4 py-2 rounded-full">
-              {currentImg + 1} / {property.images.length}
+              {t.propertyDetail.photoCounter.replace('{current}', currentImg + 1).replace('{total}', property.images.length)}
             </div>
           </div>
         </div>

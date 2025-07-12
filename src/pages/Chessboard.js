@@ -53,6 +53,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { useAuth } from '../AuthContext';
 import { showError, showSuccess } from '../utils/notifications';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 
 // Создаем пустые структуры данных
 // eslint-disable-next-line no-unused-vars
@@ -82,14 +84,15 @@ const initialData = {
 };
 
 // Стили статусов (яркие цвета)
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, translations) => {
+  const t = translations;
   switch (status) {
     case 'free':
-      return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg">✓ Свободно</Badge>;
+      return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg">✓ {t.chessboards.statuses.free}</Badge>;
     case 'booked':
-      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg">⏳ Забронировано</Badge>;
+      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg">⏳ {t.chessboards.statuses.booked}</Badge>;
     case 'sold':
-      return <Badge className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-lg">✖ Продано</Badge>;
+      return <Badge className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-lg">✖ {t.chessboards.statuses.sold}</Badge>;
     default:
       return <Badge className="bg-gray-500 text-white">❓ Неизвестно</Badge>;
   }
@@ -108,50 +111,53 @@ const getStatusColor = (status) => {
   }
 };
 
-const getPropertyTypeBadge = (propertyType) => {
+const getPropertyTypeBadge = (propertyType, translations) => {
+  const t = translations;
   switch (propertyType) {
     case 'Апартаменты':
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🏢 Апартаменты</Badge>;
+      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🏢 {t.chessboards.propertyTypes.apartments}</Badge>;
     case 'Вилла':
-      return <Badge className="bg-purple-500 hover:bg-purple-600 text-white text-xs">🏖️ Вилла</Badge>;
+      return <Badge className="bg-purple-500 hover:bg-purple-600 text-white text-xs">🏖️ {t.chessboards.propertyTypes.villa}</Badge>;
     case 'Апарт-вилла':
-      return <Badge className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs">🏘️ Апарт-вилла</Badge>;
+      return <Badge className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs">🏘️ {t.chessboards.propertyTypes.apartVilla}</Badge>;
     case 'Таунхаус':
-      return <Badge className="bg-teal-500 hover:bg-teal-600 text-white text-xs">🏘️ Таунхаус</Badge>;
+      return <Badge className="bg-teal-500 hover:bg-teal-600 text-white text-xs">🏘️ {t.chessboards.propertyTypes.townhouse}</Badge>;
     default:
-      return <Badge className="bg-gray-500 text-white text-xs">🏢 Апартаменты</Badge>;
+      return <Badge className="bg-gray-500 text-white text-xs">🏢 {t.chessboards.propertyTypes.apartments}</Badge>;
   }
 };
 
-const getViewBadge = (view) => {
+const getViewBadge = (view, translations) => {
+  const t = translations;
   switch (view) {
     case 'Океан':
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 Океан</Badge>;
+      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 {t.chessboards.views.ocean}</Badge>;
     case 'Река':
-      return <Badge className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs">🌊 Река</Badge>;
+      return <Badge className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs">🌊 {t.chessboards.views.river}</Badge>;
     case 'Джунгли':
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">🌳 Джунгли</Badge>;
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">🌳 {t.chessboards.views.jungle}</Badge>;
     case 'Бассейн':
-      return <Badge className="bg-sky-500 hover:bg-sky-600 text-white text-xs">🏊‍♂️ Бассейн</Badge>;
+      return <Badge className="bg-sky-500 hover:bg-sky-600 text-white text-xs">🏊‍♂️ {t.chessboards.views.pool}</Badge>;
     case 'Двор':
-      return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs">🏡 Двор</Badge>;
+      return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs">🏡 {t.chessboards.views.yard}</Badge>;
     case 'Вулкан':
-      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">🌋 Вулкан</Badge>;
+      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">🌋 {t.chessboards.views.volcano}</Badge>;
     case 'Рисовые террасы':
-      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">🌾 Рисовые террасы</Badge>;
+      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">🌾 {t.chessboards.views.riceTerraces}</Badge>;
     default:
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 Океан</Badge>;
+      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 {t.chessboards.views.ocean}</Badge>;
   }
 };
 
 // Новые функции валидации
 // eslint-disable-next-line no-unused-vars
-const validateChessboard = (data) => {
+const validateChessboard = (data, translations) => {
+  const t = translations;
   const errors = [];
   
   // Проверка основных полей
   if (!data.name?.trim()) {
-    errors.push("Название шахматки обязательно");
+    errors.push(t.chessboards.nameRequiredError);
   }
   
   if (!data.sections?.length) {
@@ -161,7 +167,7 @@ const validateChessboard = (data) => {
   // Проверка секций
   data.sections?.forEach((section, sIdx) => {
     if (!section.name?.trim()) {
-      errors.push(`Секция ${sIdx + 1}: название обязательно`);
+      errors.push(`Секция ${sIdx + 1}: ${t.chessboards.sectionNameRequired}`);
     }
     
     // Проверка этажей
@@ -170,7 +176,7 @@ const validateChessboard = (data) => {
       // Проверяем только если номер этажа указан
       if (floor.floor !== null && floor.floor !== undefined && floor.floor !== '') {
         if (floorNumbers.has(floor.floor)) {
-          errors.push(`Секция ${sIdx + 1}: дублирование этажа ${floor.floor}`);
+          errors.push(`Секция ${sIdx + 1}: ${t.chessboards.duplicateFloor} ${floor.floor}`);
         }
         floorNumbers.add(floor.floor);
       }
@@ -178,13 +184,13 @@ const validateChessboard = (data) => {
       // Проверка юнитов
       floor.units?.forEach((unit, uIdx) => {
         if (!unit.id?.trim()) {
-          errors.push(`Секция ${sIdx + 1}, Этаж ${floor.floor || 'без номера'}, Юнит ${uIdx + 1}: ID обязателен`);
+          errors.push(`Секция ${sIdx + 1}, Этаж ${floor.floor || 'без номера'}, Юнит ${uIdx + 1}: ${t.chessboards.unitIdRequired}`);
         }
         if (unit.area !== null && unit.area !== undefined && (isNaN(unit.area) || unit.area <= 0)) {
-          errors.push(`Секция ${sIdx + 1}, Этаж ${floor.floor || 'без номера'}, Юнит ${unit.id}: некорректная площадь`);
+          errors.push(`Секция ${sIdx + 1}, Этаж ${floor.floor || 'без номера'}, Юнит ${unit.id}: ${t.chessboards.invalidArea}`);
         }
         if (unit.priceUSD !== null && unit.priceUSD !== undefined && (isNaN(unit.priceUSD) || unit.priceUSD < 0)) {
-          errors.push(`Секция ${sIdx + 1}, Этаж ${floor.floor || 'без номера'}, Юнит ${unit.id}: некорректная цена`);
+          errors.push(`Секция ${sIdx + 1}, Этаж ${floor.floor || 'без номера'}, Юнит ${unit.id}: ${t.chessboards.invalidPrice}`);
         }
       });
     });
@@ -238,7 +244,8 @@ const SortableSection = ({
   onMoveDown,
   canMoveUp,
   canMoveDown,
-  isMobile
+  isMobile,
+  t
 }) => {
   const {
     attributes,
@@ -304,7 +311,7 @@ const SortableSection = ({
               className={`bg-green-600 hover:bg-green-700 ${isMobile ? 'h-10 w-full' : ''}`}
             >
               <Plus className="w-4 h-4 mr-1" />
-              {isMobile ? '' : 'Этаж'}
+              {isMobile ? '' : t.chessboards.floorButton}
             </Button>
             {canRemoveSection && (
               <Button 
@@ -334,7 +341,8 @@ const SortableFloor = ({
   onAddUnit,
   onRemoveFloor,
   canRemoveFloor,
-  isMobile 
+  isMobile,
+  t 
 }) => {
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
   const typeMenuRef = useRef(null);
@@ -382,14 +390,14 @@ const SortableFloor = ({
             value={floor.floor === null ? '' : floor.floor}
             onChange={(e) => onFloorChange('floor', e.target.value === '' ? null : parseInt(e.target.value))}
             className="font-semibold bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none w-16 text-center"
-            placeholder="Без номера"
+            placeholder={t.chessboards.noNumber}
           />
           <div className="relative" ref={typeMenuRef}>
             <button
               onClick={() => setIsTypeMenuOpen(!isTypeMenuOpen)}
               className="font-semibold text-gray-700 hover:text-gray-900 focus:outline-none"
             >
-              {floor.type || 'этаж'}
+              {floor.type === 'ряд' ? t.chessboards.rowType : t.chessboards.floorType}
             </button>
             {isTypeMenuOpen && (
               <div className="absolute top-full left-0 mt-1 w-32 bg-white rounded-md shadow-lg z-50">
@@ -398,13 +406,13 @@ const SortableFloor = ({
                     onClick={() => handleTypeChange('этаж')}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${floor.type === 'этаж' ? 'bg-gray-50' : ''}`}
                   >
-                    этаж
+                    {t.chessboards.floorType}
                   </button>
                   <button
                     onClick={() => handleTypeChange('ряд')}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${floor.type === 'ряд' ? 'bg-gray-50' : ''}`}
                   >
-                    ряд
+                    {t.chessboards.rowType}
                   </button>
                 </div>
               </div>
@@ -419,7 +427,7 @@ const SortableFloor = ({
             className={isMobile ? 'h-10 flex-1' : ''}
           >
             <Plus className="w-4 h-4 mr-1" />
-            {isMobile ? '' : 'Юнит'}
+            {isMobile ? '' : t.chessboards.unitButton}
           </Button>
           {canRemoveFloor && (
             <Button 
@@ -453,7 +461,8 @@ const SortableUnit = ({
   formatPrice,
   formatPriceUSD,
   onExchangeRateChange,
-  isMobile
+  isMobile,
+  t
 }) => {
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [tempRate, setTempRate] = useState(exchangeRate);
@@ -527,17 +536,17 @@ const SortableUnit = ({
             onChange={(e) => onUnitChange('propertyType', e.target.value)}
             className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold mb-3"
           >
-            <option value="Апартаменты">Апартаменты</option>
-            <option value="Вилла">Вилла</option>
-            <option value="Апарт-вилла">Апарт-вилла</option>
-            <option value="Таунхаус">Таунхаус</option>
+            <option value="Апартаменты">{t.chessboards.propertyTypes.apartments}</option>
+            <option value="Вилла">{t.chessboards.propertyTypes.villa}</option>
+            <option value="Апарт-вилла">{t.chessboards.propertyTypes.apartVilla}</option>
+            <option value="Таунхаус">{t.chessboards.propertyTypes.townhouse}</option>
           </select>
         </div>
         
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <label className="block text-xs text-white/90 font-semibold mb-1">Этажность</label>
+              <label className="block text-xs text-white/90 font-semibold mb-1">{t.chessboards.floors}</label>
               <select
                 value={unit.floors || '1'} 
                 onChange={(e) => onUnitChange('floors', e.target.value)}
@@ -549,7 +558,7 @@ const SortableUnit = ({
               </select>
             </div>
             <div>
-              <label className="block text-xs text-white/90 font-semibold mb-1">Площадь м²</label>
+              <label className="block text-xs text-white/90 font-semibold mb-1">{t.chessboards.area}</label>
               <input
                 type="number"
                 step="0.1"
@@ -563,66 +572,66 @@ const SortableUnit = ({
           
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <label className="block text-xs text-white/90 font-semibold mb-1">Спальни</label>
+              <label className="block text-xs text-white/90 font-semibold mb-1">{t.chessboards.rooms}</label>
                 <select
                   value={unit.rooms} 
                   onChange={(e) => onUnitChange('rooms', e.target.value)}
                   className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                 >
-                  <option value="Студия">Студия</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
+                  <option value="Студия">{t.chessboards.roomOptions.studio}</option>
+                  <option value="1">{t.chessboards.roomOptions.one}</option>
+                  <option value="2">{t.chessboards.roomOptions.two}</option>
+                  <option value="3">{t.chessboards.roomOptions.three}</option>
+                  <option value="4">{t.chessboards.roomOptions.four}</option>
+                  <option value="5">{t.chessboards.roomOptions.five}</option>
+                  <option value="6">{t.chessboards.roomOptions.six}</option>
                 </select>
             </div>
             <div>
-              <label className="block text-xs text-white/90 font-semibold mb-1">Санузлы</label>
+              <label className="block text-xs text-white/90 font-semibold mb-1">{t.chessboards.bathrooms}</label>
                 <select
                   value={unit.bathrooms || '1'} 
                   onChange={(e) => onUnitChange('bathrooms', e.target.value)}
                   className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                 >
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
+                  <option value="1">{t.chessboards.bathroomOptions.one}</option>
+                  <option value="2">{t.chessboards.bathroomOptions.two}</option>
+                  <option value="3">{t.chessboards.bathroomOptions.three}</option>
+                  <option value="4">{t.chessboards.bathroomOptions.four}</option>
+                  <option value="5">{t.chessboards.bathroomOptions.five}</option>
+                  <option value="6">{t.chessboards.bathroomOptions.six}</option>
                 </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <label className="block text-xs text-white/90 font-semibold mb-1">Вид из окна</label>
+              <label className="block text-xs text-white/90 font-semibold mb-1">{t.chessboards.view}</label>
                 <select
                   value={unit.view || ''} 
                   onChange={(e) => onUnitChange('view', e.target.value)}
                   className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                 >
-                  <option value="">Не указан</option>
-                  <option value="Океан">Океан</option>
-                  <option value="Река">Река</option>
-                  <option value="Джунгли">Джунгли</option>
-                  <option value="Бассейн">Бассейн</option>
-                  <option value="Двор">Двор</option>
-                  <option value="Вулкан">Вулкан</option>
-                  <option value="Рисовые террасы">Рисовые террасы</option>
+                  <option value="">{t.chessboards.views.notSelected}</option>
+                  <option value="Океан">{t.chessboards.views.ocean}</option>
+                  <option value="Река">{t.chessboards.views.river}</option>
+                  <option value="Джунгли">{t.chessboards.views.jungle}</option>
+                  <option value="Бассейн">{t.chessboards.views.pool}</option>
+                  <option value="Двор">{t.chessboards.views.yard}</option>
+                  <option value="Вулкан">{t.chessboards.views.volcano}</option>
+                  <option value="Рисовые террасы">{t.chessboards.views.riceTerraces}</option>
                 </select>
             </div>
             <div>
-              <label className="block text-xs text-white/90 font-semibold mb-1">Сторона</label>
+              <label className="block text-xs text-white/90 font-semibold mb-1">{t.chessboards.side}</label>
                 <select
                   value={unit.side || ''} 
                   onChange={(e) => onUnitChange('side', e.target.value)}
                   className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
                 >
-                  <option value="">Не указана</option>
-                  <option value="Рассветная">Рассветная</option>
-                  <option value="Закатная">Закатная</option>
+                  <option value="">{t.chessboards.sideOptions.notSpecified}</option>
+                  <option value="Рассветная">{t.chessboards.sideOptions.sunrise}</option>
+                  <option value="Закатная">{t.chessboards.sideOptions.sunset}</option>
                 </select>
             </div>
           </div>
@@ -630,7 +639,7 @@ const SortableUnit = ({
         
         <div>
           <label className="block text-xs text-white/90 font-semibold mb-1">
-            Цена (USD → IDR) 
+            {t.chessboards.priceWithRate} 
             {isEditingRate ? (
               <form onSubmit={handleRateSubmit} className="inline-flex items-center ml-1">
                 <span className="text-yellow-200 font-bold">1:</span>
@@ -667,7 +676,7 @@ const SortableUnit = ({
                   onUnitChange('priceIDR', priceUSD === null ? null : priceUSD * exchangeRate);
                 }}
                 className="flex-1 px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white"
-                placeholder="Введите цену"
+                placeholder={t.chessboards.enterPrice}
               />
             </div>
             
@@ -680,7 +689,7 @@ const SortableUnit = ({
                   onChange={(e) => onUnitChange('showPrice', e.target.checked)}
                   className="w-3 h-3 rounded border-white/50 focus:ring-2 focus:ring-white/50"
                 />
-                <span>Показывать цену на публичной странице</span>
+                <span>{t.chessboards.showPriceOnPublic}</span>
               </label>
             </div>
           </div>
@@ -702,7 +711,7 @@ const SortableUnit = ({
                     onChange={(e) => onUnitChange('showPriceIDR', e.target.checked)}
                     className="w-3 h-3 rounded border-white/50 focus:ring-2 focus:ring-white/50"
                   />
-                  Показывать
+                  {t.chessboards.showPrice}
                 </label>
               </div>
             </div>
@@ -710,15 +719,15 @@ const SortableUnit = ({
         </div>
         
         <div>
-          <label className="block text-xs text-white/90 font-semibold mb-1">Статус</label>
+          <label className="block text-xs text-white/90 font-semibold mb-1">{t.chessboards.status}</label>
           <select
             value={unit.status}
             onChange={(e) => onUnitChange('status', e.target.value)}
             className="w-full px-2 py-1 bg-white/90 text-gray-900 border border-white/50 rounded focus:ring-2 focus:ring-white/50 focus:border-white text-sm font-bold"
           >
-            <option value="free" className="text-emerald-800">✓ Свободно</option>
-            <option value="booked" className="text-amber-800">⏳ Забронировано</option>
-            <option value="sold" className="text-rose-800">✖ Продано</option>
+            <option value="free" className="text-emerald-800">{t.chessboards.statusOptions.free}</option>
+            <option value="booked" className="text-amber-800">{t.chessboards.statusOptions.booked}</option>
+            <option value="sold" className="text-rose-800">{t.chessboards.statusOptions.sold}</option>
           </select>
         </div>
       </div>
@@ -730,6 +739,8 @@ const Chessboard = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser, role } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
@@ -863,7 +874,7 @@ const Chessboard = () => {
       }
       return null;
     } catch (err) {
-      console.error("Ошибка загрузки застройщика:", err);
+      console.error(t.chessboards.complexLoadError || "Ошибка загрузки застройщика:", err);
       return null;
     }
   };
@@ -912,11 +923,11 @@ const Chessboard = () => {
 
         // Если нет доступных комплексов для застройщика, показываем специальное сообщение
         if (role === 'застройщик' && userDeveloperName && availableComplexes.length === 0) {
-          setComplexError(`Нет доступных комплексов для застройщика "${userDeveloperName}" без шахматки`);
+          setComplexError(t.chessboards.noComplexesForDeveloper.replace('{name}', userDeveloperName));
         }
       } catch (error) {
-        console.error("Ошибка загрузки комплексов:", error);
-        setComplexError("Ошибка загрузки списка комплексов");
+        console.error(t.chessboards.complexLoadError || "Ошибка загрузки комплексов:", error);
+        setComplexError(t.chessboards.complexLoadError || "Ошибка загрузки списка комплексов");
       }
     };
 
@@ -1257,11 +1268,11 @@ const Chessboard = () => {
       
       // Удаляем саму шахматку
       await deleteDoc(chessboardRef);
-      showSuccess("Шахматка удалена!");
+      showSuccess(t.chessboards.chessboardDeleted);
       navigate('/chessboard');
     } catch (error) {
-      console.error("Ошибка удаления:", error);
-      showError("Ошибка при удалении шахматки");
+      console.error(t.chessboards.deleteError || "Ошибка удаления:", error);
+      showError(t.chessboards.deleteError);
     } finally {
       setDeleteDialog({ isOpen: false, id: null, name: null });
     }
@@ -1354,8 +1365,8 @@ const Chessboard = () => {
         isOpen={deleteDialog.isOpen}
         onClose={() => setDeleteDialog({ isOpen: false, id: null, name: null })}
         onConfirm={confirmDelete}
-        title="Подтверждение удаления"
-        description={`Вы уверены, что хотите удалить шахматку "${deleteDialog.name}"?`}
+        title={t.chessboards.deleteConfirmTitle}
+        description={t.chessboards.deleteConfirmText.replace('{name}', deleteDialog.name || '')}
       />
       {/* Breadcrumbs */}
       <nav className="flex text-sm text-gray-600">
@@ -1363,11 +1374,11 @@ const Chessboard = () => {
           onClick={() => navigate("/chessboard")}
           className="hover:text-blue-600 transition-colors"
         >
-          Шахматки
+          {t.chessboards.title}
         </button>
         <span className="mx-2">/</span>
         <span className="text-gray-900">
-          {!id || id === "new" ? "Новая шахматка" : "Редактирование шахматки"}
+          {!id || id === "new" ? t.chessboards.createChessboard : t.chessboards.editingChessboard}
         </span>
       </nav>
 
@@ -1378,7 +1389,7 @@ const Chessboard = () => {
             <div className="flex items-center gap-2">
               <Building className="w-6 h-6 text-blue-600" />
               <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>
-                {id && id !== "new" ? "Редактирование шахматки" : "Создание шахматки"}
+                {id && id !== "new" ? t.chessboards.editingChessboard : t.chessboards.createChessboard}
               </h2>
             </div>
             <div className={`${isMobile ? 'flex flex-col w-full gap-2' : 'flex gap-4'}`}>
@@ -1393,12 +1404,12 @@ const Chessboard = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Сохранение...
+                    {t.chessboards.loading}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Сохранить
+                    {t.chessboards.save}
                   </>
                 )}
               </Button>
@@ -1408,7 +1419,7 @@ const Chessboard = () => {
                 disabled={isSaving}
                 className={`${isMobile ? 'w-full h-12 order-2' : ''}`}
               >
-                К списку
+                {t.chessboards.backToList}
               </Button>
             </div>
           </div>
@@ -1418,7 +1429,7 @@ const Chessboard = () => {
           {(!id || id === "new") && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Выберите комплекс *
+                {t.chessboards.selectComplex} *
               </label>
               <select
                 value={selectedComplexId}
@@ -1433,7 +1444,7 @@ const Chessboard = () => {
                 className="w-full p-2 border rounded-md"
                 required
               >
-                <option value="">Выберите комплекс</option>
+                <option value="">{t.chessboards.selectComplex}</option>
                 {complexes.map((complex) => (
                   <option key={complex.id} value={complex.id}>
                     {complex.name}
@@ -1449,7 +1460,7 @@ const Chessboard = () => {
               {complexes.length === 0 && !complexError && (
                 <p className="text-amber-500 text-sm mt-1 flex items-center">
                   <AlertCircle className="w-4 h-4 mr-1" />
-                  Нет доступных комплексов без шахматки
+                  {t.chessboards.noAvailableComplexes}
                 </p>
               )}
             </div>
@@ -1459,7 +1470,7 @@ const Chessboard = () => {
           {id && id !== "new" && selectedComplexId && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Комплекс
+                {t.chessboards.complex}
               </label>
               <div className="p-2 bg-gray-50 border rounded-md">
                 {name}
@@ -1504,6 +1515,7 @@ const Chessboard = () => {
                 canMoveUp={sectionIdx > 0}
                 canMoveDown={sectionIdx < sections.length - 1}
                 isMobile={isMobile}
+                t={t}
               >
                 <CardContent>
                   <div className="space-y-4">
@@ -1542,6 +1554,7 @@ const Chessboard = () => {
                             }}
                             canRemoveFloor={section.floors.length > 1}
                             isMobile={isMobile}
+                            t={t}
                           >
                             <div className="overflow-x-auto pb-4">
                               <SortableContext
@@ -1583,6 +1596,7 @@ const Chessboard = () => {
                                       formatPriceUSD={formatPriceUSD}
                                       onExchangeRateChange={updateExchangeRate}
                                       isMobile={isMobile}
+                                      t={t}
                                     />
                                   ))}
                                 </div>
@@ -1608,7 +1622,7 @@ const Chessboard = () => {
             className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
           >
             <Plus className="w-5 h-5 mr-2" />
-            Добавить секцию
+            {t.chessboards.addSection}
           </Button>
         </CardContent>
       </Card>

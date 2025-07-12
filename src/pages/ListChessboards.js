@@ -16,10 +16,14 @@ import {
 } from 'lucide-react';
 import { showSuccess, showError, showInfo } from '../utils/notifications';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 
 const ListChessboards = () => {
   const navigate = useNavigate();
   const { currentUser, role } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [chessboards, setChessboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [complexNames, setComplexNames] = useState({});
@@ -62,7 +66,7 @@ const ListChessboards = () => {
         }
         setComplexNames(names);
       } catch (error) {
-        console.error("Ошибка загрузки имен комплексов:", error);
+        console.error(t.chessboards.complexLoadError || "Ошибка загрузки имен комплексов:", error);
       }
     };
 
@@ -78,7 +82,7 @@ const ListChessboards = () => {
       }
       return null;
     } catch (err) {
-      console.error("Ошибка загрузки застройщика:", err);
+      console.error(t.chessboards.complexLoadError || "Ошибка загрузки застройщика:", err);
       return null;
     }
   };
@@ -119,7 +123,7 @@ const ListChessboards = () => {
                   };
                 }
               } catch (error) {
-                console.error("Ошибка загрузки комплекса:", error);
+                console.error(t.chessboards.complexLoadError || "Ошибка загрузки комплекса:", error);
               }
             }
             return { ...chessboard, complexDeveloper: "" };
@@ -134,7 +138,7 @@ const ListChessboards = () => {
 
       setChessboards(filteredChessboards);
     } catch (error) {
-      console.error("Ошибка загрузки шахматок:", error);
+      console.error(t.chessboards.loadError || "Ошибка загрузки шахматок:", error);
     } finally {
       setLoading(false);
     }
@@ -165,10 +169,10 @@ const ListChessboards = () => {
       // Удаляем саму шахматку
       await deleteDoc(doc(db, "chessboards", id));
       setChessboards(prev => prev.filter(item => item.id !== id));
-      showSuccess("Шахматка удалена!");
+      showSuccess(t.chessboards.chessboardDeleted);
     } catch (error) {
       console.error("Ошибка удаления:", error);
-      showError("Ошибка при удалении шахматки");
+      showError(t.chessboards.deleteError);
     } finally {
       setDeleteDialog({ isOpen: false, chessboard: null });
     }
@@ -230,7 +234,7 @@ const ListChessboards = () => {
   const copyPublicLink = (publicUrl) => {
     const link = `${window.location.origin}/public/${publicUrl}`;
     navigator.clipboard.writeText(link);
-    showInfo("Публичная ссылка скопирована!");
+    showInfo(t.chessboards.publicLinkCopied);
   };
 
   if (loading) {
@@ -247,17 +251,17 @@ const ListChessboards = () => {
         isOpen={deleteDialog.isOpen}
         onClose={() => setDeleteDialog({ isOpen: false, chessboard: null })}
         onConfirm={confirmDelete}
-        title="Подтверждение удаления"
-        description={`Вы уверены, что хотите удалить шахматку "${deleteDialog.chessboard?.name}"?`}
+        title={t.chessboards.deleteConfirmTitle}
+        description={t.chessboards.deleteConfirmText.replace('{name}', deleteDialog.chessboard?.name || '')}
       />
       <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-6`}>
-        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Шахматки</h1>
+        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{t.chessboards.title}</h1>
         <Button
           onClick={() => navigate('/chessboard/new')}
           className={`bg-blue-600 hover:bg-blue-700 text-white ${isMobile ? 'w-full h-12' : ''}`}
         >
           <Plus className="w-5 h-5 mr-2" />
-          Создать шахматку
+          {t.chessboards.createChessboard}
         </Button>
       </div>
 
@@ -266,14 +270,14 @@ const ListChessboards = () => {
         <Card className="border-dashed border-2 border-gray-300">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Building className="w-16 h-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">Нет созданных шахматок</h3>
-            <p className="text-gray-500 mb-6">Создайте первую шахматку для управления планировкой объекта</p>
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">{t.chessboards.noChessboards}</h3>
+            <p className="text-gray-500 mb-6">{t.chessboards.noChessboardsDescription}</p>
             <Button 
               onClick={() => navigate('/chessboard/new')} 
               className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Создать первую шахматку
+              {t.chessboards.createFirstChessboard}
             </Button>
           </CardContent>
         </Card>
@@ -285,12 +289,12 @@ const ListChessboards = () => {
               <Card key={chessboard.id} className="mb-4">
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold">{chessboard.name || "Без названия"}</h2>
+                    <h2 className="text-xl font-semibold">{chessboard.name || t.chessboards.untitled}</h2>
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDelete(chessboard.id, chessboard.name, chessboard.complexId)}
-                      title="Удалить"
+                      title={t.chessboards.delete}
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
@@ -303,24 +307,24 @@ const ListChessboards = () => {
                     {chessboard.complexId && (
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Building className="w-4 h-4" />
-                        <span>Комплекс: {complexNames[chessboard.complexId] || "Загрузка..."}</span>
+                        <span>{t.chessboards.complex} {complexNames[chessboard.complexId] || t.chessboards.loading}</span>
                       </div>
                     )}
 
                     {/* Статистика */}
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center">
-                        <span className="text-gray-600">Всего юнитов:</span>
+                        <span className="text-gray-600">{t.chessboards.totalUnits}</span>
                         <span className="font-semibold ml-[4px]">{stats.totalUnits}</span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-gray-600">Секций:</span>
+                        <span className="text-gray-600">{t.chessboards.sections}</span>
                         <span className="font-semibold ml-[4px]">
                           {chessboard.sections ? chessboard.sections.length : 0}
                         </span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-gray-600">Этажей:</span>
+                        <span className="text-gray-600">{t.chessboards.floors}</span>
                         <span className="font-semibold ml-[4px]">{stats.totalFloors}</span>
                       </div>
                     </div>
@@ -328,13 +332,13 @@ const ListChessboards = () => {
                     {/* Статусы */}
                     <div className="flex flex-wrap gap-2">
                       <Badge className="bg-green-500 hover:bg-green-600 text-xs">
-                        Свободно: {stats.freeUnits}
+                        {t.chessboards.free.replace('{count}', stats.freeUnits)}
                       </Badge>
                       <Badge className="bg-yellow-500 hover:bg-yellow-600 text-xs">
-                        Забронировано: {stats.bookedUnits}
+                        {t.chessboards.booked.replace('{count}', stats.bookedUnits)}
                       </Badge>
                       <Badge className="bg-red-500 hover:bg-red-600 text-xs">
-                        Продано: {stats.soldUnits}
+                        {t.chessboards.sold.replace('{count}', stats.soldUnits)}
                       </Badge>
                     </div>
 
@@ -342,13 +346,13 @@ const ListChessboards = () => {
                     {chessboard.publicUrl && (
                       <div className="flex items-center gap-2 text-xs text-gray-500 border-t pt-3 mb-3">
                         <LinkIcon className="w-3 h-3" />
-                        <span className="flex-1">Публичная ссылка доступна</span>
+                        <span className="flex-1">{t.chessboards.publicLinkAvailable}</span>
                         <div className="flex gap-1">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => copyPublicLink(chessboard.publicUrl)}
-                            title="Копировать ссылку"
+                            title={t.chessboards.copyLink}
                             className={`${isMobile ? 'min-h-[40px]' : ''}`}
                           >
                             <LinkIcon className="w-3 h-3" />
@@ -357,7 +361,7 @@ const ListChessboards = () => {
                             size="sm"
                             variant="ghost"
                             onClick={() => window.open(`/public/${chessboard.publicUrl}`, '_blank')}
-                            title="Открыть в новой вкладке"
+                            title={t.chessboards.openInNewTab}
                             className={`${isMobile ? 'min-h-[40px]' : ''}`}
                           >
                             <Eye className="w-3 h-3" />
@@ -369,7 +373,7 @@ const ListChessboards = () => {
                     {/* Дата создания */}
                     <div className="flex items-center gap-2 text-xs text-gray-500 border-t pt-3">
                       <Calendar className="w-3 h-3" />
-                      <span>Создано: {formatDate(chessboard.createdAt)}</span>
+                      <span>{t.chessboards.created} {formatDate(chessboard.createdAt)}</span>
                     </div>
 
                     {/* Кнопка просмотра */}
@@ -380,7 +384,7 @@ const ListChessboards = () => {
                       className={`w-full mt-3 ${isMobile ? 'h-12' : ''}`}
                     >
                       <Eye className="w-4 h-4 mr-2" />
-                      Открыть
+                      {t.chessboards.open}
                     </Button>
                   </div>
                 </CardContent>

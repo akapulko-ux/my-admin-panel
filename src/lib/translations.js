@@ -92,6 +92,41 @@ export const translations = {
     close: 'Close',
     cancel: 'Cancel',
     save: 'Save',
+    logout: 'Logout',
+
+    // Districts/Regions translations
+    districts: {
+      'Амед': 'Amed',
+      'Берава': 'Berawa', 
+      'Будук': 'Buduk',
+      'Джимбаран': 'Jimbaran',
+      'Кута': 'Kuta',
+      'Кутух': 'Kutuh',
+      'Ловина': 'Lovina',
+      'Нуану': 'Nuanu',
+      'Нуса Дуа': 'Nusa Dua',
+      'Пандава': 'Pandawa',
+      'Переренан': 'Pererenan',
+      'Санур': 'Sanur',
+      'Семиньяк': 'Seminyak',
+      'Убуд': 'Ubud',
+      'Улувату': 'Uluwatu',
+      'Умалас': 'Umalas',
+      'Унгасан': 'Ungasan',
+      'Чангу': 'Canggu',
+      'Чемаги': 'Cemagi',
+      'Гили Траванган': 'Gili Trawangan',
+      'Ломбок': 'Lombok',
+      'Kab. Jembrana': 'Jembrana Regency',
+      'Kab. Tabanan': 'Tabanan Regency',
+      'Kab. Badung': 'Badung Regency',
+      'Kab. Gianyar': 'Gianyar Regency',
+      'Kab. Klungkung': 'Klungkung Regency',
+      'Kab. Bangli': 'Bangli Regency',
+      'Kab. Karangasem': 'Karangasem Regency',
+      'Kab. Buleleng': 'Buleleng Regency',
+      'Kota Denpasar': 'Denpasar City'
+    },
 
     // Navigation
     navigation: {
@@ -343,6 +378,561 @@ _________________               _________________
         russian: 'Russian',
         indonesian: 'Indonesian'
       }
+    },
+
+    // Complexes Gallery
+    complexesGallery: {
+      title: 'Complexes Gallery',
+      loadingText: 'Loading complexes...',
+      searchPlaceholder: 'Search by name, developer, district...',
+      filtersTitle: 'Filters',
+      resetAllFilters: 'Reset all',
+      priceLabel: 'Price (USD)',
+      pricePlaceholderFrom: 'From',
+      pricePlaceholderTo: 'To',
+      developerLabel: 'Developer',
+      allDevelopers: 'All developers',
+      districtLabel: 'District', 
+      allDistricts: 'All districts',
+      provinceLabel: 'Province',
+      allProvinces: 'All provinces',
+      landStatusLabel: 'Land Status',
+      allStatuses: 'All statuses',
+      ownershipFormLabel: 'Ownership Form',
+      allForms: 'All forms',
+      resultsText: 'Found: {found} of {total} complexes',
+      emptyStateNoDeveloperComplexes: 'You don\'t have any complexes in the system yet',
+      emptyStateNoComplexes: 'No complexes found',
+      emptyStateNoMatches: 'No complexes match the specified criteria',
+      complexAltText: 'Complex',
+      noNameText: 'Unnamed',
+      complexNumberPrefix: 'Complex #',
+      priceFromPrefix: 'from',
+      developerPrefix: 'Developer:',
+      districtPrefix: 'District:',
+      completionPrefix: 'Completion:'
+    },
+
+    // Complex Detail
+    complexDetail: {
+      loadingText: 'Loading complex...',
+      accessDenied: 'Access Denied',
+      accessDeniedMessage: 'You do not have permission to view this complex',
+      complexNotFound: 'Complex Not Found',
+      complexNotFoundMessage: 'Complex with the specified ID does not exist',
+      backButton: 'Back',
+      cancelButton: 'Cancel',
+      saveButton: 'Save',
+      editButton: 'Edit',
+      addPhotoButton: 'Add Photo / PDF',
+      uploadingText: 'Uploading...',
+      watchVideoButton: 'Watch Video',
+      view3DTourButton: 'View 3D Tour',
+      buildingProgressButton: 'Building Progress',
+      linksAndDocuments: 'Links and Documents',
+      description: 'Description',
+      priceFromLabel: 'Price from',
+      priceMinFromObjects: '(minimum from objects)',
+      priceFromComplex: '(complex price)',
+      commissionLabel: 'Commission',
+      developerLabel: 'Developer',
+      districtLabel: 'District',
+      completionDateLabel: 'Completion Date',
+      coordinatesLabel: 'Coordinates',
+      videoLabel: 'Video',
+      tourLabel: '3D Tour',
+      pricePlaceholder: 'Price in USD',
+      descriptionPlaceholder: 'Complex description',
+      videoLinkPlaceholder: 'Video link',
+      tourLinkPlaceholder: '3D tour link',
+      photoAltText: 'Photo',
+      autoCalculatedPriceText: 'Automatically calculated as minimum price among complex objects',
+      changesSaved: 'Changes saved',
+      saveError: 'Error saving changes',
+      editPermissionError: 'You do not have permission to edit this complex',
+      photosUploadSuccess: 'Photos uploaded successfully',
+      photosUploadError: 'Error uploading photos',
+      photoNotFound: 'Photo not found',
+      photoDeleteSuccess: 'Photo deleted successfully',
+      photoLinkDeleted: 'Photo link removed from database',
+      photoDeleteError: 'Error deleting photo',
+      databaseUpdateError: 'Failed to update database information',
+      dataLoadError: 'Error loading complex data',
+      developerLoadError: 'Error loading developer',
+      complexNameLoadError: 'Error loading complex name'
+    },
+
+    // Properties Gallery
+    propertiesGallery: {
+      title: 'Properties Gallery',
+      developerPropertiesTitle: 'Developer Properties',
+      searchPlaceholder: 'Search by name, district or type...',
+      filtersTitle: 'Filters',
+      priceLabel: 'Price (USD)',
+      pricePlaceholderFrom: 'From',
+      pricePlaceholderTo: 'To',
+      areaLabel: 'Area (m²)',
+      bedroomsLabel: 'Bedrooms',
+      allBedrooms: 'All',
+      studio: 'Studio',
+      bedroomsText: 'Bedrooms',
+      districtLabel: 'District',
+      allDistricts: 'All districts',
+      typeLabel: 'Type',
+      allTypes: 'All types',
+      resetFiltersButton: 'Reset filters',
+      searchResultsText: 'Properties found: {count}',
+      emptyStateNoDeveloperProperties: 'You don\'t have any properties in the system yet',
+      emptyStateNoProperties: 'No properties found',
+      emptyStateNoMatches: 'No properties match the specified criteria',
+      propertyAltText: 'Property',
+      newPricePlaceholder: 'New price',
+      areaText: 'm²',
+      developerText: 'Developer:',
+      editPermissionError: 'You do not have permission to edit price',
+      priceValidationError: 'Please enter a valid price',
+      priceUpdateSuccess: 'Price updated successfully',
+      priceUpdateError: 'Failed to update price',
+      complexLoadError: 'Error loading complex name',
+      developerLoadError: 'Error loading developer'
+    },
+
+    // Property Detail
+    propertyDetail: {
+      // Loading states
+      loading: 'Loading...',
+      uploading: 'Uploading...',
+      
+      // Navigation
+      backToGallery: 'Back to Gallery',
+      onMap: 'on map',
+      
+      // Buttons
+      editButton: 'Edit',
+      saveButton: 'Save',
+      cancelButton: 'Cancel',
+      addPhotoButton: 'Add Photo / PDF',
+      viewButton: 'View',
+      updateButton: 'Update',
+      uploadButton: 'Upload',
+      roiCalculatorButton: 'ROI Calculator',
+      
+      // Field labels
+      bedrooms: 'Bedrooms',
+      studio: 'Studio',
+      area: 'Area',
+      developer: 'Developer',
+      complex: 'Complex',
+      bathrooms: 'Bathrooms',
+      floors: 'Floors',
+      district: 'District',
+      buildingType: 'Building Type',
+      constructionStatus: 'Construction Status',
+      landStatus: 'Land Status',
+      pool: 'Pool',
+      ownership: 'Ownership',
+      completionDate: 'Completion Date',
+      years: 'years',
+      
+      // Document labels
+      documentsSection: 'Documents',
+      legalCompanyName: 'Legal Company Name:',
+      taxNumber: 'Tax Number (NPWP):',
+      landUsePermit: 'Land Use Permit (PKKPR):',
+      landRightsCertificate: 'Land Rights Certificate (SHGB):',
+      buildingPermit: 'Building Permit (PBG):',
+      buildingReadinessCertificate: 'Building Readiness Certificate (SLF):',
+      layout: 'Layout:',
+      dueDiligence: 'Due Diligence:',
+      pkkprFile: 'PKKPR File:',
+      
+      // Options
+      typeOptions: {
+        villa: 'Villa',
+        apartment: 'Apartment',
+        house: 'House',
+        commercial: 'Commercial Property',
+        apartVilla: 'Apart-Villa',
+        townhouse: 'Townhouse',
+        land: 'Land Plot'
+      },
+      
+      buildingTypeOptions: {
+        newComplex: 'New Complex',
+        renovation: 'Renovation',
+        individual: 'Individual'
+      },
+      
+      statusOptions: {
+        project: 'Project',
+        underConstruction: 'Under Construction',
+        ready: 'Ready',
+        fromOwner: 'From Owner'
+      },
+      
+      poolOptions: {
+        no: 'No',
+        private: 'Private',
+        shared: 'Shared'
+      },
+      
+      ownershipOptions: {
+        leasehold: 'Leasehold',
+        freehold: 'Freehold'
+      },
+      
+      // Messages
+      notSelected: '(not selected)',
+      notFound: 'Property not found',
+      accessDenied: 'Access denied',
+      fileNotUploaded: 'File not uploaded',
+      floorText: 'floor',
+      floorsText: 'floors',
+      
+      // Success messages
+      changesSaved: 'Changes saved successfully',
+      photoUploaded: 'Photos uploaded successfully',
+      photoDeleted: 'Photo deleted successfully',
+      photoLinkDeleted: 'Photo link removed from database',
+      
+      // Error messages
+      editPermissionError: 'You do not have permission to edit this property',
+      saveError: 'An error occurred while saving changes',
+      photoUploadError: 'An error occurred while uploading photos',
+      photoDeleteError: 'An error occurred while deleting photo',
+      fileUploadError: 'An error occurred while uploading file',
+      databaseUpdateError: 'Could not update database information',
+      developerLoadError: 'Error loading developer',
+      complexLoadError: 'Error loading complex',
+      
+      // Lightbox
+      photo: 'Photo',
+      photoCounter: '{current} / {total}'
+    },
+
+    // Chessboards
+    chessboards: {
+      title: 'Chessboards',
+      createChessboard: 'Create Chessboard',
+      createFirstChessboard: 'Create First Chessboard',
+      noChessboards: 'No created chessboards',
+      noChessboardsDescription: 'Create the first chessboard to manage object layout',
+      deleteConfirmTitle: 'Confirm Deletion',
+      deleteConfirmText: 'Are you sure you want to delete chessboard "{name}"?',
+      chessboardDeleted: 'Chessboard deleted!',
+      deleteError: 'Error deleting chessboard',
+      publicLinkCopied: 'Public link copied!',
+      
+      // Table headers and labels
+      complex: 'Complex:',
+      totalUnits: 'Total units:',
+      sections: 'Sections:',
+      floors: 'Floors:',
+      publicLinkAvailable: 'Public link available',
+      created: 'Created:',
+      loading: 'Loading...',
+      untitled: 'Untitled',
+      open: 'Open',
+      delete: 'Delete',
+      copyLink: 'Copy link',
+      openInNewTab: 'Open in new tab',
+      
+      // Status badges
+      free: 'Free: {count}',
+      booked: 'Booked: {count}',
+      sold: 'Sold: {count}',
+      
+      // Chessboard page
+      chessboardName: 'Chessboard Name',
+      selectComplex: 'Select Complex',
+      noComplexSelected: 'No complex selected',
+      nameRequired: 'Chessboard name is required',
+      save: 'Save',
+      delete: 'Delete',
+      addSection: 'Add Section',
+      exchangeRate: 'Exchange Rate (USD to IDR)',
+      
+      // Sections and floors
+      sectionName: 'Section Name',
+      addFloor: 'Add Floor',
+      floor: 'Floor',
+      addUnit: 'Add Unit',
+      
+      // Units
+      unitId: 'Unit ID',
+      rooms: 'Rooms',
+      bathrooms: 'Bathrooms',
+      area: 'Area (m²)',
+      priceUSD: 'Price (USD)',
+      priceIDR: 'Price (IDR)',
+      showIDRPrice: 'Show IDR price',
+      propertyType: 'Property Type',
+      view: 'View',
+      status: 'Status',
+      
+      // Options
+      roomOptions: {
+        studio: 'Studio',
+        one: '1',
+        two: '2',
+        three: '3',
+        four: '4',
+        five: '5',
+        six: '6'
+      },
+      
+      bathroomOptions: {
+        one: '1',
+        two: '2',
+        three: '3',
+        four: '4',
+        five: '5',
+        six: '6'
+      },
+      
+      propertyTypes: {
+        apartments: 'Apartments',
+        villa: 'Villa',
+        apartVilla: 'Apart-Villa',
+        townhouse: 'Townhouse'
+      },
+      
+      views: {
+        notSelected: 'Not specified',
+        ocean: 'Ocean',
+        jungle: 'Jungle',
+        pool: 'Pool',
+        river: 'River',
+        yard: 'Yard',
+        volcano: 'Volcano',
+        riceTerraces: 'Rice Terraces'
+      },
+      
+      statuses: {
+        free: 'Free',
+        booked: 'Booked',
+        sold: 'Sold'
+      },
+      
+      // Actions
+      copy: 'Copy',
+      remove: 'Remove',
+      moveUp: 'Move Up',
+      moveDown: 'Move Down',
+      
+      // Messages
+      chessboardSaved: 'Chessboard saved successfully',
+      chessboardDeleted: 'Chessboard deleted successfully',
+      saveError: 'Error saving chessboard',
+      loadError: 'Error loading chessboard',
+      complexLoadError: 'Error loading complexes',
+      chessboardNotFound: 'Chessboard not found',
+      accessDenied: 'Access denied',
+      validationError: 'Please fix validation errors before saving',
+      
+      // Validation messages
+      nameRequiredError: 'Chessboard name is required',
+      sectionNameRequired: 'Section name is required',
+      duplicateFloor: 'Duplicate floor number',
+      unitIdRequired: 'Unit ID is required',
+      invalidArea: 'Invalid area value',
+      invalidPrice: 'Invalid price value',
+      
+      // Additional editing texts
+      editingChessboard: 'Editing Chessboard',
+      backToList: 'Back to List',
+      noAvailableComplexes: 'No available complexes without chessboard',
+      floorButton: 'Floor',
+      noComplexesForDeveloper: 'No available complexes for developer "{name}" without chessboard',
+      
+      // Unit form labels
+      floors: 'Floors',
+      area: 'Area (m²)',
+      rooms: 'Bedrooms',
+      bathrooms: 'Bathrooms',
+      view: 'View',
+      side: 'Side',
+      priceWithRate: 'Price (USD → IDR)',
+      enterPrice: 'Enter price',
+      showPriceOnPublic: 'Show price on public page',
+      showPrice: 'Show price',
+      
+      // Floor form labels
+      noNumber: 'No number',
+      floorType: 'floor',
+      rowType: 'row',
+      unitButton: 'Unit',
+      
+      // Side options
+      sideOptions: {
+        notSpecified: 'Not specified',
+        sunrise: 'Sunrise',
+        sunset: 'Sunset'
+      },
+      
+      // Status options with prefixes
+      statusOptions: {
+        free: '✓ Free',
+        booked: '⏳ Booked',
+        sold: '✖ Sold'
+      }
+    },
+
+    // ROI Calculator
+    roiCalculator: {
+      title: 'ROI Calculation',
+      close: '✕',
+      
+      // Sections
+      costsInvestmentsTitle: 'Costs and Investments',
+      rentalIncomeTitle: 'Rental Income',
+      operationalMetricsTitle: 'Operational Metrics',
+      calculationResults: 'Calculation Results',
+      
+      // Cost and Investment Fields
+      propertyPrice: 'Property Price ($)',
+      renovationCosts: 'Renovation and Furnishing ($)',
+      legalFees: 'Legal Expenses ($)',
+      additionalExpenses: 'Additional Expenses ($)',
+      investmentPeriod: 'Investment Period (years)',
+      selectPeriod: 'Select period',
+      years5: '5 years',
+      years10: '10 years',
+      years20: '20 years',
+      years30: '30 years',
+      
+      // Rental Income Fields
+      dailyRate: 'Daily Rate ($)',
+      occupancyRate: 'Occupancy Rate (%)',
+      rentGrowthRate: 'Rent Growth Rate per Year (%)',
+      operationStartYear: 'Operation Start After (year)',
+      
+      // Operational Metrics Fields
+      maintenanceFees: 'Maintenance per Year (%)',
+      utilityBills: 'Utility Bills per Year (%)',
+      annualTax: 'Annual Tax (%)',
+      propertyManagement: 'Property Management (%)',
+      appreciationYear1: 'Property Appreciation Year 1 (%)',
+      appreciationYear2: 'Property Appreciation Year 2 (%)',
+      appreciationYear3: 'Property Appreciation Year 3 (%)',
+      examplePlaceholder: 'Example: 5',
+      examplePlaceholder2: 'Example: 3',
+      examplePlaceholder3: 'Example: 2',
+      
+      // Scenario Selection
+      calculationScenario: 'Calculation Scenario',
+      selectScenario: 'Select scenario',
+      pessimistic: 'Pessimistic (70%)',
+      realistic: 'Realistic (100%)',
+      optimistic: 'Optimistic (130%)',
+      
+      // Information Messages
+      requiredFieldsTitle: 'To perform calculation, fill in the following required fields:',
+      requiredFields: [
+        '• Property price',
+        '• Daily rental rate',
+        '• Occupancy percentage'
+      ],
+      optionalFieldsNote: 'Other fields are optional for more accurate calculation.',
+      
+      // Buttons
+      updateCalculation: 'Update Calculation',
+      saveCalculation: 'Save Calculation',
+      createPublicPage: 'Create Public Page',
+      copyLink: '📋 Copy Link',
+      
+      // Result Cards
+      totalInvestments: 'Total Investments',
+      annualRentalIncome: 'Annual Rental Income',
+      annualExpenses: 'Annual Expenses',
+      netProfitPerYear: 'Net Profit per Year',
+      roi: 'ROI',
+      paybackPeriod: 'Payback Period',
+      years: 'years',
+      totalRoiPeriod: 'Total ROI for Period',
+      propertyAppreciation: 'Property Appreciation',
+      finalPropertyValue: 'Final Property Value',
+      
+      // Chart
+      period: 'Period',
+      year: 'Year',
+      profitPerYear: 'Profit per Year',
+      accumulatedProfit: 'Accumulated Profit',
+      propertyValue: 'Property Value',
+      noChartData: 'No data to display chart',
+      
+      // Success/Error Messages
+      calculationSaved: 'Calculation saved successfully!',
+      calculationSaveError: 'Error saving calculation',
+      linkCopied: 'Link copied to clipboard!',
+      linkCopyError: 'Failed to copy link',
+      publicPageCreated: 'Public page created and opened in new tab',
+      publicPageError: 'Error creating public page',
+      calculateFirstError: 'Please perform ROI calculation first',
+      
+      // PDF Export
+      language: 'Language',
+      english: 'English',
+      russian: 'Russian',
+      indonesian: 'Indonesian',
+      pdf: 'PDF',
+      loading: '...'
+    },
+
+    // Building Progress
+    buildingProgress: {
+      title: 'Building Progress',
+      loading: 'Loading...',
+      errorLoading: 'Error loading data',
+      errorUpload: 'Error uploading files',
+      errorDelete: 'Error deleting file',
+      successUpload: 'Files uploaded successfully',
+      successDelete: 'File deleted',
+      successLinkCopied: 'Public link copied to clipboard',
+      noAccessUpload: 'You do not have permission to upload files',
+      noAccessDelete: 'You do not have permission to delete files',
+      
+      // Buttons
+      view: 'View',
+      add: 'Add',
+      addMore: 'Add More',
+      copyPublicLink: 'Copy Public Link',
+      addPeriod: 'Add Period',
+      backToProgress: 'Back to building progress',
+      
+      // Upload modal
+      uploadFiles: 'Upload Files',
+      uploadingFiles: 'Uploading files...',
+      supportedFormats: 'Images and video files are supported',
+      
+      // Media counts
+      photos: 'photos',
+      videos: 'videos',
+      photo: 'photo',
+      video: 'video',
+      
+      // Confirm dialog
+      confirmDelete: 'Are you sure you want to delete this file?',
+      
+      // Error messages
+      dataNotFound: 'Data not found',
+      noData: 'No data available for this month',
+      
+      // Months
+      months: {
+        january: 'January',
+        february: 'February',
+        march: 'March',
+        april: 'April',
+        may: 'May',
+        june: 'June',
+        july: 'July',
+        august: 'August',
+        september: 'September',
+        october: 'October',
+        november: 'November',
+        december: 'December'
+      }
     }
   },
   ru: {
@@ -438,6 +1028,41 @@ _________________               _________________
     close: 'Закрыть',
     cancel: 'Отмена',
     save: 'Сохранить',
+    logout: 'Выйти',
+
+    // Districts/Regions translations (keep original Russian names)
+    districts: {
+      'Амед': 'Амед',
+      'Берава': 'Берава', 
+      'Будук': 'Будук',
+      'Джимбаран': 'Джимбаран',
+      'Кута': 'Кута',
+      'Кутух': 'Кутух',
+      'Ловина': 'Ловина',
+      'Нуану': 'Нуану',
+      'Нуса Дуа': 'Нуса Дуа',
+      'Пандава': 'Пандава',
+      'Переренан': 'Переренан',
+      'Санур': 'Санур',
+      'Семиньяк': 'Семиньяк',
+      'Убуд': 'Убуд',
+      'Улувату': 'Улувату',
+      'Умалас': 'Умалас',
+      'Унгасан': 'Унгасан',
+      'Чангу': 'Чангу',
+      'Чемаги': 'Чемаги',
+      'Гили Траванган': 'Гили Траванган',
+      'Ломбок': 'Ломбок',
+      'Kab. Jembrana': 'Регентство Джембрана',
+      'Kab. Tabanan': 'Регентство Табанан',
+      'Kab. Badung': 'Регентство Бадунг',
+      'Kab. Gianyar': 'Регентство Гианьяр',
+      'Kab. Klungkung': 'Регентство Клунгкунг',
+      'Kab. Bangli': 'Регентство Бангли',
+      'Kab. Karangasem': 'Регентство Карангасем',
+      'Kab. Buleleng': 'Регентство Буллеленг',
+      'Kota Denpasar': 'Город Денпасар'
+    },
 
     // Navigation
     navigation: {
@@ -689,6 +1314,561 @@ _________________               _________________
         russian: 'Русский',
         indonesian: 'Индонезийский'
       }
+    },
+
+    // Complexes Gallery
+    complexesGallery: {
+      title: 'Галерея комплексов',
+      loadingText: 'Загрузка комплексов...',
+      searchPlaceholder: 'Поиск по названию, застройщику, району...',
+      filtersTitle: 'Фильтры',
+      resetAllFilters: 'Сбросить все',
+      priceLabel: 'Цена (USD)',
+      pricePlaceholderFrom: 'От',
+      pricePlaceholderTo: 'До',
+      developerLabel: 'Застройщик',
+      allDevelopers: 'Все застройщики',
+      districtLabel: 'Район', 
+      allDistricts: 'Все районы',
+      provinceLabel: 'Провинция',
+      allProvinces: 'Все провинции',
+      landStatusLabel: 'Статус земли',
+      allStatuses: 'Все статусы',
+      ownershipFormLabel: 'Форма собственности',
+      allForms: 'Все формы',
+      resultsText: 'Найдено: {found} из {total} комплексов',
+      emptyStateNoDeveloperComplexes: 'У вас пока нет комплексов в системе',
+      emptyStateNoComplexes: 'Комплексы не найдены',
+      emptyStateNoMatches: 'Нет комплексов, соответствующих заданным критериям',
+      complexAltText: 'Комплекс',
+      noNameText: 'Без названия',
+      complexNumberPrefix: 'Комплекс №',
+      priceFromPrefix: 'от',
+      developerPrefix: 'Застройщик:',
+      districtPrefix: 'Район:',
+      completionPrefix: 'Сдача:'
+    },
+
+    // Complex Detail
+    complexDetail: {
+      loadingText: 'Загрузка комплекса...',
+      accessDenied: 'Доступ запрещен',
+      accessDeniedMessage: 'У вас нет прав для просмотра этого комплекса',
+      complexNotFound: 'Комплекс не найден',
+      complexNotFoundMessage: 'Комплекс с указанным ID не существует',
+      backButton: 'Назад',
+      cancelButton: 'Отменить',
+      saveButton: 'Сохранить',
+      editButton: 'Редактировать',
+      addPhotoButton: 'Добавить фото / PDF',
+      uploadingText: 'Загрузка...',
+      watchVideoButton: 'Посмотреть видео',
+      view3DTourButton: 'Посмотреть 3D тур',
+      buildingProgressButton: 'Прогресс строительства',
+      linksAndDocuments: 'Ссылки и документы',
+      description: 'Описание',
+      priceFromLabel: 'Цена от',
+      priceMinFromObjects: '(минимальная из объектов)',
+      priceFromComplex: '(цена комплекса)',
+      commissionLabel: 'Вознаграждение',
+      developerLabel: 'Застройщик',
+      districtLabel: 'Район',
+      completionDateLabel: 'Дата сдачи',
+      coordinatesLabel: 'Координаты',
+      videoLabel: 'Видео',
+      tourLabel: '3D тур',
+      pricePlaceholder: 'Цена в USD',
+      descriptionPlaceholder: 'Описание комплекса',
+      videoLinkPlaceholder: 'Ссылка на видео',
+      tourLinkPlaceholder: 'Ссылка на 3D тур',
+      photoAltText: 'Фото',
+      autoCalculatedPriceText: 'Автоматически рассчитана как минимальная цена среди объектов комплекса',
+      changesSaved: 'Изменения сохранены',
+      saveError: 'Произошла ошибка при сохранении изменений',
+      editPermissionError: 'У вас нет прав для редактирования комплекса',
+      photosUploadSuccess: 'Фотографии успешно загружены',
+      photosUploadError: 'Произошла ошибка при загрузке фотографий',
+      photoNotFound: 'Фотография не найдена',
+      photoDeleteSuccess: 'Фотография успешно удалена',
+      photoLinkDeleted: 'Ссылка на фотографию удалена из базы данных',
+      photoDeleteError: 'Произошла ошибка при удалении фотографии',
+      databaseUpdateError: 'Не удалось обновить информацию в базе данных',
+      dataLoadError: 'Ошибка при загрузке данных комплекса',
+      developerLoadError: 'Ошибка загрузки застройщика',
+      complexNameLoadError: 'Ошибка при загрузке названия комплекса'
+    },
+
+    // Properties Gallery
+    propertiesGallery: {
+      title: 'Галерея объектов',
+      developerPropertiesTitle: 'Объекты застройщика',
+      searchPlaceholder: 'Поиск по названию, району или типу...',
+      filtersTitle: 'Фильтры',
+      priceLabel: 'Цена (USD)',
+      pricePlaceholderFrom: 'От',
+      pricePlaceholderTo: 'До',
+      areaLabel: 'Площадь (м²)',
+      bedroomsLabel: 'Спальни',
+      allBedrooms: 'Все',
+      studio: 'Студия',
+      bedroomsText: 'Спален',
+      districtLabel: 'Район',
+      allDistricts: 'Все районы',
+      typeLabel: 'Тип',
+      allTypes: 'Все типы',
+      resetFiltersButton: 'Сбросить фильтры',
+      searchResultsText: 'Найдено объектов: {count}',
+      emptyStateNoDeveloperProperties: 'У вас пока нет объектов в системе',
+      emptyStateNoProperties: 'Объекты не найдены',
+      emptyStateNoMatches: 'Нет объектов, соответствующих заданным критериям',
+      propertyAltText: 'Объект',
+      newPricePlaceholder: 'Новая цена',
+      areaText: 'м²',
+      developerText: 'Застройщик:',
+      editPermissionError: 'У вас нет прав на редактирование цены',
+      priceValidationError: 'Пожалуйста, введите корректную цену',
+      priceUpdateSuccess: 'Цена успешно обновлена',
+      priceUpdateError: 'Не удалось обновить цену',
+      complexLoadError: 'Ошибка при загрузке названия комплекса',
+      developerLoadError: 'Ошибка загрузки застройщика'
+    },
+
+    // Property Detail
+    propertyDetail: {
+      // Loading states
+      loading: 'Загрузка...',
+      uploading: 'Загрузка...',
+      
+      // Navigation
+      backToGallery: 'Вернуться в галерею',
+      onMap: 'на карте',
+      
+      // Buttons
+      editButton: 'Редактировать',
+      saveButton: 'Сохранить',
+      cancelButton: 'Отменить',
+      addPhotoButton: 'Добавить фото / PDF',
+      viewButton: 'Просмотреть',
+      updateButton: 'Обновить',
+      uploadButton: 'Загрузить',
+      roiCalculatorButton: 'Расчет ROI',
+      
+      // Field labels
+      bedrooms: 'Спален',
+      studio: 'Студия',
+      area: 'Площадь',
+      developer: 'Застройщик',
+      complex: 'Комплекс',
+      bathrooms: 'Санузлы',
+      floors: 'Этажность',
+      district: 'Район',
+      buildingType: 'Тип постройки',
+      constructionStatus: 'Статус строительства',
+      landStatus: 'Статус земли',
+      pool: 'Бассейн',
+      ownership: 'Собственность',
+      completionDate: 'Дата завершения',
+      years: 'лет',
+      
+      // Document labels
+      documentsSection: 'Документы',
+      legalCompanyName: 'Юридическое название компании:',
+      taxNumber: 'Налоговый номер (NPWP):',
+      landUsePermit: 'Разрешение на использование земли (PKKPR):',
+      landRightsCertificate: 'Сертификат права на землю (SHGB):',
+      buildingPermit: 'Разрешение на строительство (PBG):',
+      buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
+      layout: 'Планировка:',
+      dueDiligence: 'Due Diligence:',
+      pkkprFile: 'Файл PKKPR:',
+      
+      // Options
+      typeOptions: {
+        villa: 'Вилла',
+        apartment: 'Апартаменты',
+        house: 'Дом',
+        commercial: 'Коммерческая недвижимость',
+        apartVilla: 'Апарт-вилла',
+        townhouse: 'Таунхаус',
+        land: 'Земельный участок'
+      },
+      
+      buildingTypeOptions: {
+        newComplex: 'Новый комплекс',
+        renovation: 'Реновация',
+        individual: 'ИЖС'
+      },
+      
+      statusOptions: {
+        project: 'Проект',
+        underConstruction: 'Строится',
+        ready: 'Готовый',
+        fromOwner: 'От собственника'
+      },
+      
+      poolOptions: {
+        no: 'Нет',
+        private: 'Частный',
+        shared: 'Общий'
+      },
+      
+      ownershipOptions: {
+        leasehold: 'Leashold',
+        freehold: 'Freehold'
+      },
+      
+      // Messages
+      notSelected: '(не выбрано)',
+      notFound: 'Объект не найден',
+      accessDenied: 'Доступ запрещен',
+      fileNotUploaded: 'Файл не загружен',
+      floorText: 'этаж',
+      floorsText: 'этажа',
+      
+      // Success messages
+      changesSaved: 'Изменения успешно сохранены',
+      photoUploaded: 'Фотографии успешно загружены',
+      photoDeleted: 'Фотография успешно удалена',
+      photoLinkDeleted: 'Ссылка на фотографию удалена из базы данных',
+      
+      // Error messages
+      editPermissionError: 'У вас нет прав для редактирования объекта',
+      saveError: 'Произошла ошибка при сохранении изменений',
+      photoUploadError: 'Произошла ошибка при загрузке фотографий',
+      photoDeleteError: 'Произошла ошибка при удалении фотографии',
+      fileUploadError: 'Произошла ошибка при загрузке файла',
+      databaseUpdateError: 'Не удалось обновить информацию в базе данных',
+      developerLoadError: 'Ошибка загрузки застройщика',
+      complexLoadError: 'Ошибка загрузки комплекса',
+      
+      // Lightbox
+      photo: 'Фото',
+      photoCounter: '{current} / {total}'
+    },
+
+    // Chessboards
+    chessboards: {
+      title: 'Шахматки',
+      createChessboard: 'Создать шахматку',
+      createFirstChessboard: 'Создать первую шахматку',
+      noChessboards: 'Нет созданных шахматок',
+      noChessboardsDescription: 'Создайте первую шахматку для управления планировкой объекта',
+      deleteConfirmTitle: 'Подтверждение удаления',
+      deleteConfirmText: 'Вы уверены, что хотите удалить шахматку "{name}"?',
+      chessboardDeleted: 'Шахматка удалена!',
+      deleteError: 'Ошибка при удалении шахматки',
+      publicLinkCopied: 'Публичная ссылка скопирована!',
+      
+      // Table headers and labels
+      complex: 'Комплекс:',
+      totalUnits: 'Всего юнитов:',
+      sections: 'Секций:',
+      floors: 'Этажей:',
+      publicLinkAvailable: 'Публичная ссылка доступна',
+      created: 'Создано:',
+      loading: 'Загрузка...',
+      untitled: 'Без названия',
+      open: 'Открыть',
+      delete: 'Удалить',
+      copyLink: 'Копировать ссылку',
+      openInNewTab: 'Открыть в новой вкладке',
+      
+      // Status badges
+      free: 'Свободно: {count}',
+      booked: 'Забронировано: {count}',
+      sold: 'Продано: {count}',
+      
+      // Chessboard page
+      chessboardName: 'Название шахматки',
+      selectComplex: 'Выберите комплекс',
+      noComplexSelected: 'Комплекс не выбран',
+      nameRequired: 'Название шахматки обязательно',
+      save: 'Сохранить',
+      delete: 'Удалить',
+      addSection: 'Добавить секцию',
+      exchangeRate: 'Курс валют (USD к IDR)',
+      
+      // Sections and floors
+      sectionName: 'Название секции',
+      addFloor: 'Добавить этаж',
+      floor: 'Этаж',
+      addUnit: 'Добавить юнит',
+      
+      // Units
+      unitId: 'ID юнита',
+      rooms: 'Комнаты',
+      bathrooms: 'Санузлы',
+      area: 'Площадь (м²)',
+      priceUSD: 'Цена (USD)',
+      priceIDR: 'Цена (IDR)',
+      showIDRPrice: 'Показать цену в IDR',
+      propertyType: 'Тип недвижимости',
+      view: 'Вид',
+      status: 'Статус',
+      
+      // Options
+      roomOptions: {
+        studio: 'Студия',
+        one: '1',
+        two: '2',
+        three: '3',
+        four: '4',
+        five: '5',
+        six: '6'
+      },
+      
+      bathroomOptions: {
+        one: '1',
+        two: '2',
+        three: '3',
+        four: '4',
+        five: '5',
+        six: '6'
+      },
+      
+      propertyTypes: {
+        apartments: 'Апартаменты',
+        villa: 'Вилла',
+        apartVilla: 'Апарт-вилла',
+        townhouse: 'Таунхаус'
+      },
+      
+      views: {
+        notSelected: 'Не указан',
+        ocean: 'Океан',
+        jungle: 'Джунгли',
+        pool: 'Бассейн',
+        river: 'Река',
+        yard: 'Двор',
+        volcano: 'Вулкан',
+        riceTerraces: 'Рисовые террасы'
+      },
+      
+      statuses: {
+        free: 'Свободно',
+        booked: 'Забронировано',
+        sold: 'Продано'
+      },
+      
+      // Actions
+      copy: 'Копировать',
+      remove: 'Удалить',
+      moveUp: 'Переместить вверх',
+      moveDown: 'Переместить вниз',
+      
+      // Messages
+      chessboardSaved: 'Шахматка успешно сохранена',
+      chessboardDeleted: 'Шахматка успешно удалена',
+      saveError: 'Ошибка при сохранении шахматки',
+      loadError: 'Ошибка при загрузке шахматки',
+      complexLoadError: 'Ошибка загрузки комплексов',
+      chessboardNotFound: 'Шахматка не найдена',
+      accessDenied: 'Доступ запрещен',
+      validationError: 'Пожалуйста, исправьте ошибки валидации перед сохранением',
+      
+      // Validation messages
+      nameRequiredError: 'Название шахматки обязательно',
+      sectionNameRequired: 'Название секции обязательно',
+      duplicateFloor: 'Дублирование этажа',
+      unitIdRequired: 'ID юнита обязателен',
+      invalidArea: 'Некорректная площадь',
+      invalidPrice: 'Некорректная цена',
+      
+      // Additional editing texts
+      editingChessboard: 'Редактирование шахматки',
+      backToList: 'К списку',
+      noAvailableComplexes: 'Нет доступных комплексов без шахматки',
+      floorButton: 'Этаж',
+      noComplexesForDeveloper: 'Нет доступных комплексов для застройщика "{name}" без шахматки',
+      
+      // Unit form labels
+      floors: 'Этажность',
+      area: 'Площадь (м²)',
+      rooms: 'Спальни',
+      bathrooms: 'Санузлы',
+      view: 'Вид из окна',
+      side: 'Сторона',
+      priceWithRate: 'Цена (USD → IDR)',
+      enterPrice: 'Введите цену',
+      showPriceOnPublic: 'Показывать цену на публичной странице',
+      showPrice: 'Показывать',
+      
+      // Floor form labels
+      noNumber: 'Без номера',
+      floorType: 'этаж',
+      rowType: 'ряд',
+      unitButton: 'Юнит',
+      
+      // Side options
+      sideOptions: {
+        notSpecified: 'Не указана',
+        sunrise: 'Рассветная',
+        sunset: 'Закатная'
+      },
+      
+      // Status options with prefixes
+      statusOptions: {
+        free: '✓ Свободно',
+        booked: '⏳ Забронировано',
+        sold: '✖ Продано'
+      }
+    },
+
+    // ROI Calculator
+    roiCalculator: {
+      title: 'Расчет ROI',
+      close: '✕',
+      
+      // Sections
+      costsInvestmentsTitle: 'Затраты и инвестиции',
+      rentalIncomeTitle: 'Арендный доход',
+      operationalMetricsTitle: 'Операционные показатели',
+      calculationResults: 'Результаты расчета',
+      
+      // Cost and Investment Fields
+      propertyPrice: 'Стоимость недвижимости ($)',
+      renovationCosts: 'Ремонт и обустройство ($)',
+      legalFees: 'Юридические расходы ($)',
+      additionalExpenses: 'Дополнительные расходы ($)',
+      investmentPeriod: 'Период инвестирования (лет)',
+      selectPeriod: 'Выберите период',
+      years5: '5 лет',
+      years10: '10 лет',
+      years20: '20 лет',
+      years30: '30 лет',
+      
+      // Rental Income Fields
+      dailyRate: 'Стоимость за сутки ($)',
+      occupancyRate: 'Заполняемость (%)',
+      rentGrowthRate: 'Рост арендной платы в год (%)',
+      operationStartYear: 'Начало эксплуатации через (год)',
+      
+      // Operational Metrics Fields
+      maintenanceFees: 'Обслуживание в год (%)',
+      utilityBills: 'Коммунальные платежи в год (%)',
+      annualTax: 'Налоги в год (%)',
+      propertyManagement: 'Управление недвижимостью (%)',
+      appreciationYear1: 'Удорожание объекта в первый год (%)',
+      appreciationYear2: 'Удорожание объекта во второй год (%)',
+      appreciationYear3: 'Удорожание объекта в третий год (%)',
+      examplePlaceholder: 'Например: 5',
+      examplePlaceholder2: 'Например: 3',
+      examplePlaceholder3: 'Например: 2',
+      
+      // Scenario Selection
+      calculationScenario: 'Сценарий расчета',
+      selectScenario: 'Выберите сценарий',
+      pessimistic: 'Пессимистичный (70%)',
+      realistic: 'Реалистичный (100%)',
+      optimistic: 'Оптимистичный (130%)',
+      
+      // Information Messages
+      requiredFieldsTitle: 'Для выполнения расчета заполните следующие обязательные поля:',
+      requiredFields: [
+        '• Стоимость недвижимости',
+        '• Дневная ставка аренды',
+        '• Процент заполняемости'
+      ],
+      optionalFieldsNote: 'Остальные поля заполняются по желанию для более точного расчета.',
+      
+      // Buttons
+      updateCalculation: 'Обновить расчет',
+      saveCalculation: 'Сохранить расчет',
+      createPublicPage: 'Создать публичную страницу',
+      copyLink: '📋 Копировать ссылку',
+      
+      // Result Cards
+      totalInvestments: 'Общие инвестиции',
+      annualRentalIncome: 'Годовой доход от аренды',
+      annualExpenses: 'Годовые расходы',
+      netProfitPerYear: 'Чистая прибыль в год',
+      roi: 'ROI',
+      paybackPeriod: 'Срок окупаемости',
+      years: 'лет',
+      totalRoiPeriod: 'Общий ROI за период',
+      propertyAppreciation: 'Удорожание недвижимости',
+      finalPropertyValue: 'Финальная стоимость недвижимости',
+      
+      // Chart
+      period: 'Период',
+      year: 'Год',
+      profitPerYear: 'Прибыль за год',
+      accumulatedProfit: 'Накопленная прибыль',
+      propertyValue: 'Стоимость недвижимости',
+      noChartData: 'Нет данных для отображения графика',
+      
+      // Success/Error Messages
+      calculationSaved: 'Расчет успешно сохранен!',
+      calculationSaveError: 'Ошибка при сохранении расчета',
+      linkCopied: 'Ссылка скопирована в буфер обмена!',
+      linkCopyError: 'Не удалось скопировать ссылку',
+      publicPageCreated: 'Публичная страница создана и открыта в новой вкладке',
+      publicPageError: 'Ошибка при создании публичной страницы',
+      calculateFirstError: 'Сначала выполните расчет ROI',
+      
+      // PDF Export
+      language: 'Язык',
+      english: 'English',
+      russian: 'Русский',
+      indonesian: 'Indonesian',
+      pdf: 'PDF',
+      loading: '...'
+    },
+
+    // Building Progress
+    buildingProgress: {
+      title: 'Прогресс строительства',
+      loading: 'Загрузка...',
+      errorLoading: 'Ошибка загрузки данных',
+      errorUpload: 'Ошибка загрузки файлов',
+      errorDelete: 'Ошибка удаления файла',
+      successUpload: 'Файлы успешно загружены',
+      successDelete: 'Файл удален',
+      successLinkCopied: 'Публичная ссылка скопирована в буфер обмена',
+      noAccessUpload: 'У вас нет прав для загрузки файлов',
+      noAccessDelete: 'У вас нет прав для удаления файлов',
+      
+      // Buttons
+      view: 'Просмотр',
+      add: 'Добавить',
+      addMore: 'Добавить ещё',
+      copyPublicLink: 'Скопировать публичную ссылку',
+      addPeriod: 'Добавить период',
+      backToProgress: 'Назад к прогрессу строительства',
+      
+      // Upload modal
+      uploadFiles: 'Загрузить файлы',
+      uploadingFiles: 'Загрузка файлов...',
+      supportedFormats: 'Поддерживаются изображения и видео файлы',
+      
+      // Media counts
+      photos: 'фото',
+      videos: 'видео',
+      photo: 'фото',
+      video: 'видео',
+      
+      // Confirm dialog
+      confirmDelete: 'Вы уверены, что хотите удалить этот файл?',
+      
+      // Error messages
+      dataNotFound: 'Данные не найдены',
+      noData: 'Нет данных для этого месяца',
+      
+      // Months
+      months: {
+        january: 'Январь',
+        february: 'Февраль',
+        march: 'Март',
+        april: 'Апрель',
+        may: 'Май',
+        june: 'Июнь',
+        july: 'Июль',
+        august: 'Август',
+        september: 'Сентябрь',
+        october: 'Октябрь',
+        november: 'Ноябрь',
+        december: 'Декабрь'
+      }
     }
   },
   id: {
@@ -784,6 +1964,41 @@ _________________               _________________
     close: 'Tutup',
     cancel: 'Batal',
     save: 'Simpan',
+    logout: 'Keluar',
+
+    // Districts/Regions translations
+    districts: {
+      'Амед': 'Amed',
+      'Берава': 'Berawa', 
+      'Будук': 'Buduk',
+      'Джимбаран': 'Jimbaran',
+      'Кута': 'Kuta',
+      'Кутух': 'Kutuh',
+      'Ловина': 'Lovina',
+      'Нуану': 'Nuanu',
+      'Нуса Дуа': 'Nusa Dua',
+      'Пандава': 'Pandawa',
+      'Переренан': 'Pererenan',
+      'Санур': 'Sanur',
+      'Семиньяк': 'Seminyak',
+      'Убуд': 'Ubud',
+      'Улувату': 'Uluwatu',
+      'Умалас': 'Umalas',
+      'Унгасан': 'Ungasan',
+      'Чангу': 'Canggu',
+      'Чемаги': 'Cemagi',
+      'Гили Траванган': 'Gili Trawangan',
+      'Ломбок': 'Lombok',
+      'Kab. Jembrana': 'Kab. Jembrana',
+      'Kab. Tabanan': 'Kab. Tabanan',
+      'Kab. Badung': 'Kab. Badung',
+      'Kab. Gianyar': 'Kab. Gianyar',
+      'Kab. Klungkung': 'Kab. Klungkung',
+      'Kab. Bangli': 'Kab. Bangli',
+      'Kab. Karangasem': 'Kab. Karangasem',
+      'Kab. Buleleng': 'Kab. Buleleng',
+      'Kota Denpasar': 'Kota Denpasar'
+    },
 
     // Navigation
     navigation: {
@@ -1034,6 +2249,561 @@ _________________               _________________
         english: 'Bahasa Inggris',
         russian: 'Bahasa Rusia',
         indonesian: 'Bahasa Indonesia'
+      }
+    },
+
+    // Complexes Gallery
+    complexesGallery: {
+      title: 'Galeri Kompleks',
+      loadingText: 'Memuat kompleks...',
+      searchPlaceholder: 'Cari berdasarkan nama, pengembang, distrik...',
+      filtersTitle: 'Filter',
+      resetAllFilters: 'Reset semua',
+      priceLabel: 'Harga (USD)',
+      pricePlaceholderFrom: 'Dari',
+      pricePlaceholderTo: 'Sampai',
+      developerLabel: 'Pengembang',
+      allDevelopers: 'Semua pengembang',
+      districtLabel: 'Distrik', 
+      allDistricts: 'Semua distrik',
+      provinceLabel: 'Provinsi',
+      allProvinces: 'Semua provinsi',
+      landStatusLabel: 'Status Tanah',
+      allStatuses: 'Semua status',
+      ownershipFormLabel: 'Bentuk Kepemilikan',
+      allForms: 'Semua bentuk',
+      resultsText: 'Ditemukan: {found} dari {total} kompleks',
+      emptyStateNoDeveloperComplexes: 'Anda belum memiliki kompleks di sistem',
+      emptyStateNoComplexes: 'Kompleks tidak ditemukan',
+      emptyStateNoMatches: 'Tidak ada kompleks yang sesuai dengan kriteria yang ditentukan',
+      complexAltText: 'Kompleks',
+      noNameText: 'Tanpa nama',
+      complexNumberPrefix: 'Kompleks #',
+      priceFromPrefix: 'dari',
+      developerPrefix: 'Pengembang:',
+      districtPrefix: 'Distrik:',
+      completionPrefix: 'Selesai:'
+    },
+
+    // Complex Detail
+    complexDetail: {
+      loadingText: 'Memuat kompleks...',
+      accessDenied: 'Akses Ditolak',
+      accessDeniedMessage: 'Anda tidak memiliki izin untuk melihat kompleks ini',
+      complexNotFound: 'Kompleks Tidak Ditemukan',
+      complexNotFoundMessage: 'Kompleks dengan ID yang ditentukan tidak ada',
+      backButton: 'Kembali',
+      cancelButton: 'Batal',
+      saveButton: 'Simpan',
+      editButton: 'Edit',
+      addPhotoButton: 'Tambah Foto / PDF',
+      uploadingText: 'Mengupload...',
+      watchVideoButton: 'Tonton Video',
+      view3DTourButton: 'Lihat Tur 3D',
+      buildingProgressButton: 'Progres Pembangunan',
+      linksAndDocuments: 'Tautan dan Dokumen',
+      description: 'Deskripsi',
+      priceFromLabel: 'Harga dari',
+      priceMinFromObjects: '(minimum dari objek)',
+      priceFromComplex: '(harga kompleks)',
+      commissionLabel: 'Komisi',
+      developerLabel: 'Pengembang',
+      districtLabel: 'Distrik',
+      completionDateLabel: 'Tanggal Selesai',
+      coordinatesLabel: 'Koordinat',
+      videoLabel: 'Video',
+      tourLabel: 'Tur 3D',
+      pricePlaceholder: 'Harga dalam USD',
+      descriptionPlaceholder: 'Deskripsi kompleks',
+      videoLinkPlaceholder: 'Tautan video',
+      tourLinkPlaceholder: 'Tautan tur 3D',
+      photoAltText: 'Foto',
+      autoCalculatedPriceText: 'Otomatis dihitung sebagai harga minimum di antara objek kompleks',
+      changesSaved: 'Perubahan disimpan',
+      saveError: 'Kesalahan menyimpan perubahan',
+      editPermissionError: 'Anda tidak memiliki izin untuk mengedit kompleks ini',
+      photosUploadSuccess: 'Foto berhasil diupload',
+      photosUploadError: 'Kesalahan mengupload foto',
+      photoNotFound: 'Foto tidak ditemukan',
+      photoDeleteSuccess: 'Foto berhasil dihapus',
+      photoLinkDeleted: 'Tautan foto dihapus dari database',
+      photoDeleteError: 'Kesalahan menghapus foto',
+      databaseUpdateError: 'Gagal memperbarui informasi database',
+      dataLoadError: 'Kesalahan memuat data kompleks',
+      developerLoadError: 'Kesalahan memuat pengembang',
+      complexNameLoadError: 'Kesalahan memuat nama kompleks'
+    },
+
+    // Properties Gallery
+    propertiesGallery: {
+      title: 'Galeri Properti',
+      developerPropertiesTitle: 'Properti Pengembang',
+      searchPlaceholder: 'Cari berdasarkan nama, distrik atau tipe...',
+      filtersTitle: 'Filter',
+      priceLabel: 'Harga (USD)',
+      pricePlaceholderFrom: 'Dari',
+      pricePlaceholderTo: 'Sampai',
+      areaLabel: 'Luas (m²)',
+      bedroomsLabel: 'Kamar Tidur',
+      allBedrooms: 'Semua',
+      studio: 'Studio',
+      bedroomsText: 'Kamar Tidur',
+      districtLabel: 'Distrik',
+      allDistricts: 'Semua distrik',
+      typeLabel: 'Tipe',
+      allTypes: 'Semua tipe',
+      resetFiltersButton: 'Reset filter',
+      searchResultsText: 'Properti ditemukan: {count}',
+      emptyStateNoDeveloperProperties: 'Anda belum memiliki properti di sistem',
+      emptyStateNoProperties: 'Properti tidak ditemukan',
+      emptyStateNoMatches: 'Tidak ada properti yang sesuai dengan kriteria yang ditentukan',
+      propertyAltText: 'Properti',
+      newPricePlaceholder: 'Harga baru',
+      areaText: 'm²',
+      developerText: 'Pengembang:',
+      editPermissionError: 'Anda tidak memiliki izin untuk mengedit harga',
+      priceValidationError: 'Silakan masukkan harga yang valid',
+      priceUpdateSuccess: 'Harga berhasil diperbarui',
+      priceUpdateError: 'Gagal memperbarui harga',
+      complexLoadError: 'Kesalahan memuat nama kompleks',
+      developerLoadError: 'Kesalahan memuat pengembang'
+    },
+
+    // Property Detail
+    propertyDetail: {
+      // Loading states
+      loading: 'Memuat...',
+      uploading: 'Mengunggah...',
+      
+      // Navigation
+      backToGallery: 'Kembali ke Galeri',
+      onMap: 'di peta',
+      
+      // Buttons
+      editButton: 'Edit',
+      saveButton: 'Simpan',
+      cancelButton: 'Batal',
+      addPhotoButton: 'Tambah Foto / PDF',
+      viewButton: 'Lihat',
+      updateButton: 'Perbarui',
+      uploadButton: 'Unggah',
+      roiCalculatorButton: 'Kalkulator ROI',
+      
+      // Field labels
+      bedrooms: 'Kamar Tidur',
+      studio: 'Studio',
+      area: 'Luas',
+      developer: 'Pengembang',
+      complex: 'Kompleks',
+      bathrooms: 'Kamar Mandi',
+      floors: 'Lantai',
+      district: 'Distrik',
+      buildingType: 'Tipe Bangunan',
+      constructionStatus: 'Status Konstruksi',
+      landStatus: 'Status Tanah',
+      pool: 'Kolam Renang',
+      ownership: 'Kepemilikan',
+      completionDate: 'Tanggal Selesai',
+      years: 'tahun',
+      
+      // Document labels
+      documentsSection: 'Dokumen',
+      legalCompanyName: 'Nama Perusahaan Legal:',
+      taxNumber: 'Nomor Pajak (NPWP):',
+      landUsePermit: 'Izin Penggunaan Tanah (PKKPR):',
+      landRightsCertificate: 'Sertifikat Hak Tanah (SHGB):',
+      buildingPermit: 'Izin Bangunan (PBG):',
+      buildingReadinessCertificate: 'Sertifikat Kesiapan Bangunan (SLF):',
+      layout: 'Tata Letak:',
+      dueDiligence: 'Due Diligence:',
+      pkkprFile: 'File PKKPR:',
+      
+      // Options
+      typeOptions: {
+        villa: 'Vila',
+        apartment: 'Apartemen',
+        house: 'Rumah',
+        commercial: 'Properti Komersial',
+        apartVilla: 'Apart-Vila',
+        townhouse: 'Rumah Teres',
+        land: 'Tanah'
+      },
+      
+      buildingTypeOptions: {
+        newComplex: 'Kompleks Baru',
+        renovation: 'Renovasi',
+        individual: 'Individu'
+      },
+      
+      statusOptions: {
+        project: 'Proyek',
+        underConstruction: 'Dalam Pembangunan',
+        ready: 'Siap',
+        fromOwner: 'Dari Pemilik'
+      },
+      
+      poolOptions: {
+        no: 'Tidak',
+        private: 'Pribadi',
+        shared: 'Bersama'
+      },
+      
+      ownershipOptions: {
+        leasehold: 'Leasehold',
+        freehold: 'Freehold'
+      },
+      
+      // Messages
+      notSelected: '(tidak dipilih)',
+      notFound: 'Properti tidak ditemukan',
+      accessDenied: 'Akses ditolak',
+      fileNotUploaded: 'File tidak diunggah',
+      floorText: 'lantai',
+      floorsText: 'lantai',
+      
+      // Success messages
+      changesSaved: 'Perubahan berhasil disimpan',
+      photoUploaded: 'Foto berhasil diunggah',
+      photoDeleted: 'Foto berhasil dihapus',
+      photoLinkDeleted: 'Tautan foto dihapus dari database',
+      
+      // Error messages
+      editPermissionError: 'Anda tidak memiliki izin untuk mengedit properti ini',
+      saveError: 'Terjadi kesalahan saat menyimpan perubahan',
+      photoUploadError: 'Terjadi kesalahan saat mengunggah foto',
+      photoDeleteError: 'Terjadi kesalahan saat menghapus foto',
+      fileUploadError: 'Terjadi kesalahan saat mengunggah file',
+      databaseUpdateError: 'Tidak dapat memperbarui informasi database',
+      developerLoadError: 'Kesalahan memuat pengembang',
+      complexLoadError: 'Kesalahan memuat kompleks',
+      
+      // Lightbox
+      photo: 'Foto',
+      photoCounter: '{current} / {total}'
+    },
+
+    // Chessboards
+    chessboards: {
+      title: 'Papan Catur',
+      createChessboard: 'Buat Papan Catur',
+      createFirstChessboard: 'Buat Papan Catur Pertama',
+      noChessboards: 'Tidak ada papan catur yang dibuat',
+      noChessboardsDescription: 'Buat papan catur pertama untuk mengelola tata letak objek',
+      deleteConfirmTitle: 'Konfirmasi Penghapusan',
+      deleteConfirmText: 'Apakah Anda yakin ingin menghapus papan catur "{name}"?',
+      chessboardDeleted: 'Papan catur dihapus!',
+      deleteError: 'Kesalahan menghapus papan catur',
+      publicLinkCopied: 'Tautan publik disalin!',
+      
+      // Table headers and labels
+      complex: 'Kompleks:',
+      totalUnits: 'Total unit:',
+      sections: 'Bagian:',
+      floors: 'Lantai:',
+      publicLinkAvailable: 'Tautan publik tersedia',
+      created: 'Dibuat:',
+      loading: 'Memuat...',
+      untitled: 'Tanpa judul',
+      open: 'Buka',
+      delete: 'Hapus',
+      copyLink: 'Salin tautan',
+      openInNewTab: 'Buka di tab baru',
+      
+      // Status badges
+      free: 'Tersedia: {count}',
+      booked: 'Dipesan: {count}',
+      sold: 'Terjual: {count}',
+      
+      // Chessboard page
+      chessboardName: 'Nama Papan Catur',
+      selectComplex: 'Pilih Kompleks',
+      noComplexSelected: 'Tidak ada kompleks yang dipilih',
+      nameRequired: 'Nama papan catur wajib diisi',
+      save: 'Simpan',
+      delete: 'Hapus',
+      addSection: 'Tambah Bagian',
+      exchangeRate: 'Nilai Tukar (USD ke IDR)',
+      
+      // Sections and floors
+      sectionName: 'Nama Bagian',
+      addFloor: 'Tambah Lantai',
+      floor: 'Lantai',
+      addUnit: 'Tambah Unit',
+      
+      // Units
+      unitId: 'ID Unit',
+      rooms: 'Kamar',
+      bathrooms: 'Kamar Mandi',
+      area: 'Luas (m²)',
+      priceUSD: 'Harga (USD)',
+      priceIDR: 'Harga (IDR)',
+      showIDRPrice: 'Tampilkan harga IDR',
+      propertyType: 'Tipe Properti',
+      view: 'Pemandangan',
+      status: 'Status',
+      
+      // Options
+      roomOptions: {
+        studio: 'Studio',
+        one: '1',
+        two: '2',
+        three: '3',
+        four: '4',
+        five: '5',
+        six: '6'
+      },
+      
+      bathroomOptions: {
+        one: '1',
+        two: '2',
+        three: '3',
+        four: '4',
+        five: '5',
+        six: '6'
+      },
+      
+      propertyTypes: {
+        apartments: 'Apartemen',
+        villa: 'Villa',
+        apartVilla: 'Apart Villa',
+        townhouse: 'Townhouse'
+      },
+      
+      views: {
+        notSelected: 'Tidak ditentukan',
+        ocean: 'Samudra',
+        jungle: 'Hutan',
+        pool: 'Kolam Renang',
+        river: 'Sungai',
+        yard: 'Halaman',
+        volcano: 'Gunung Berapi',
+        riceTerraces: 'Terasering Padi'
+      },
+      
+      statuses: {
+        free: 'Tersedia',
+        booked: 'Dipesan',
+        sold: 'Terjual'
+      },
+      
+      // Actions
+      copy: 'Salin',
+      remove: 'Hapus',
+      moveUp: 'Pindah Ke Atas',
+      moveDown: 'Pindah Ke Bawah',
+      
+      // Messages
+      chessboardSaved: 'Papan catur berhasil disimpan',
+      chessboardDeleted: 'Papan catur berhasil dihapus',
+      saveError: 'Kesalahan menyimpan papan catur',
+      loadError: 'Kesalahan memuat papan catur',
+      complexLoadError: 'Kesalahan memuat kompleks',
+      chessboardNotFound: 'Papan catur tidak ditemukan',
+      accessDenied: 'Akses ditolak',
+      validationError: 'Silakan perbaiki kesalahan validasi sebelum menyimpan',
+      
+      // Validation messages
+      nameRequiredError: 'Nama papan catur wajib diisi',
+      sectionNameRequired: 'Nama bagian wajib diisi',
+      duplicateFloor: 'Duplikasi lantai',
+      unitIdRequired: 'ID unit wajib diisi',
+      invalidArea: 'Nilai luas tidak valid',
+      invalidPrice: 'Nilai harga tidak valid',
+      
+      // Additional editing texts
+      editingChessboard: 'Mengedit Papan Catur',
+      backToList: 'Kembali ke Daftar',
+      noAvailableComplexes: 'Tidak ada kompleks yang tersedia tanpa papan catur',
+      floorButton: 'Lantai',
+      noComplexesForDeveloper: 'Tidak ada kompleks yang tersedia untuk pengembang "{name}" tanpa papan catur',
+      
+      // Unit form labels
+      floors: 'Tingkat',
+      area: 'Luas (m²)',
+      rooms: 'Kamar Tidur',
+      bathrooms: 'Kamar Mandi',
+      view: 'Pemandangan',
+      side: 'Sisi',
+      priceWithRate: 'Harga (USD → IDR)',
+      enterPrice: 'Masukkan harga',
+      showPriceOnPublic: 'Tampilkan harga di halaman publik',
+      showPrice: 'Tampilkan harga',
+      
+      // Floor form labels
+      noNumber: 'Tanpa nomor',
+      floorType: 'lantai',
+      rowType: 'baris',
+      unitButton: 'Unit',
+      
+      // Side options
+      sideOptions: {
+        notSpecified: 'Tidak ditentukan',
+        sunrise: 'Matahari Terbit',
+        sunset: 'Matahari Terbenam'
+      },
+      
+      // Status options with prefixes
+      statusOptions: {
+        free: '✓ Tersedia',
+        booked: '⏳ Dipesan',
+        sold: '✖ Terjual'
+      }
+    },
+
+    // ROI Calculator
+    roiCalculator: {
+      title: 'Perhitungan ROI',
+      close: '✕',
+      
+      // Sections
+      costsInvestmentsTitle: 'Biaya dan Investasi',
+      rentalIncomeTitle: 'Pendapatan Sewa',
+      operationalMetricsTitle: 'Metrik Operasional',
+      calculationResults: 'Hasil Perhitungan',
+      
+      // Cost and Investment Fields
+      propertyPrice: 'Harga Properti ($)',
+      renovationCosts: 'Renovasi dan Perabotan ($)',
+      legalFees: 'Biaya Hukum ($)',
+      additionalExpenses: 'Biaya Tambahan ($)',
+      investmentPeriod: 'Periode Investasi (tahun)',
+      selectPeriod: 'Pilih periode',
+      years5: '5 tahun',
+      years10: '10 tahun',
+      years20: '20 tahun',
+      years30: '30 tahun',
+      
+      // Rental Income Fields
+      dailyRate: 'Tarif Harian ($)',
+      occupancyRate: 'Tingkat Hunian (%)',
+      rentGrowthRate: 'Tingkat Pertumbuhan Sewa per Tahun (%)',
+      operationStartYear: 'Mulai Operasi Setelah (tahun)',
+      
+      // Operational Metrics Fields
+      maintenanceFees: 'Pemeliharaan per Tahun (%)',
+      utilityBills: 'Tagihan Utilitas per Tahun (%)',
+      annualTax: 'Pajak Tahunan (%)',
+      propertyManagement: 'Pengelolaan Properti (%)',
+      appreciationYear1: 'Apresiasi Properti Tahun 1 (%)',
+      appreciationYear2: 'Apresiasi Properti Tahun 2 (%)',
+      appreciationYear3: 'Apresiasi Properti Tahun 3 (%)',
+      examplePlaceholder: 'Contoh: 5',
+      examplePlaceholder2: 'Contoh: 3',
+      examplePlaceholder3: 'Contoh: 2',
+      
+      // Scenario Selection
+      calculationScenario: 'Skenario Perhitungan',
+      selectScenario: 'Pilih skenario',
+      pessimistic: 'Pesimis (70%)',
+      realistic: 'Realistis (100%)',
+      optimistic: 'Optimis (130%)',
+      
+      // Information Messages
+      requiredFieldsTitle: 'Untuk melakukan perhitungan, isi bidang wajib berikut:',
+      requiredFields: [
+        '• Harga properti',
+        '• Tarif sewa harian',
+        '• Persentase hunian'
+      ],
+      optionalFieldsNote: 'Bidang lain bersifat opsional untuk perhitungan yang lebih akurat.',
+      
+      // Buttons
+      updateCalculation: 'Perbarui Perhitungan',
+      saveCalculation: 'Simpan Perhitungan',
+      createPublicPage: 'Buat Halaman Publik',
+      copyLink: '📋 Salin Link',
+      
+      // Result Cards
+      totalInvestments: 'Total Investasi',
+      annualRentalIncome: 'Pendapatan Sewa Tahunan',
+      annualExpenses: 'Biaya Tahunan',
+      netProfitPerYear: 'Keuntungan Bersih per Tahun',
+      roi: 'ROI',
+      paybackPeriod: 'Periode Pengembalian',
+      years: 'tahun',
+      totalRoiPeriod: 'Total ROI untuk Periode',
+      propertyAppreciation: 'Apresiasi Properti',
+      finalPropertyValue: 'Nilai Properti Akhir',
+      
+      // Chart
+      period: 'Periode',
+      year: 'Tahun',
+      profitPerYear: 'Keuntungan per Tahun',
+      accumulatedProfit: 'Keuntungan Terakumulasi',
+      propertyValue: 'Nilai Properti',
+      noChartData: 'Tidak ada data untuk menampilkan grafik',
+      
+      // Success/Error Messages
+      calculationSaved: 'Perhitungan berhasil disimpan!',
+      calculationSaveError: 'Kesalahan menyimpan perhitungan',
+      linkCopied: 'Link berhasil disalin ke clipboard!',
+      linkCopyError: 'Gagal menyalin link',
+      publicPageCreated: 'Halaman publik berhasil dibuat dan dibuka di tab baru',
+      publicPageError: 'Kesalahan membuat halaman publik',
+      calculateFirstError: 'Silakan lakukan perhitungan ROI terlebih dahulu',
+      
+      // PDF Export
+      language: 'Bahasa',
+      english: 'English',
+      russian: 'Русский',
+      indonesian: 'Indonesian',
+      pdf: 'PDF',
+      loading: '...'
+    },
+
+    // Building Progress
+    buildingProgress: {
+      title: 'Kemajuan Pembangunan',
+      loading: 'Memuat...',
+      errorLoading: 'Kesalahan memuat data',
+      errorUpload: 'Kesalahan mengunggah file',
+      errorDelete: 'Kesalahan menghapus file',
+      successUpload: 'File berhasil diunggah',
+      successDelete: 'File dihapus',
+      successLinkCopied: 'Tautan publik disalin ke clipboard',
+      noAccessUpload: 'Anda tidak memiliki izin untuk mengunggah file',
+      noAccessDelete: 'Anda tidak memiliki izin untuk menghapus file',
+      
+      // Buttons
+      view: 'Lihat',
+      add: 'Tambah',
+      addMore: 'Tambah Lagi',
+      copyPublicLink: 'Salin Tautan Publik',
+      addPeriod: 'Tambah Periode',
+      backToProgress: 'Kembali ke kemajuan pembangunan',
+      
+      // Upload modal
+      uploadFiles: 'Unggah File',
+      uploadingFiles: 'Mengunggah file...',
+      supportedFormats: 'Gambar dan file video didukung',
+      
+      // Media counts
+      photos: 'foto',
+      videos: 'video',
+      photo: 'foto',
+      video: 'video',
+      
+      // Confirm dialog
+      confirmDelete: 'Apakah Anda yakin ingin menghapus file ini?',
+      
+      // Error messages
+      dataNotFound: 'Data tidak ditemukan',
+      noData: 'Tidak ada data untuk bulan ini',
+      
+      // Months
+      months: {
+        january: 'Januari',
+        february: 'Februari',
+        march: 'Maret',
+        april: 'April',
+        may: 'Mei',
+        june: 'Juni',
+        july: 'Juli',
+        august: 'Agustus',
+        september: 'September',
+        october: 'Oktober',
+        november: 'November',
+        december: 'Desember'
       }
     }
   }

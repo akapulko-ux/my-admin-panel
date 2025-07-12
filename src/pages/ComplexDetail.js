@@ -4,6 +4,9 @@ import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc, collection } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
+import { translateDistrict } from "../lib/utils";
 import {
   Building2,
   MapPin,
@@ -42,6 +45,8 @@ function ComplexDetail() {
   const [accessDenied, setAccessDenied] = useState(false);
   const { currentUser, role } = useAuth();
   const { getPropertiesList, propertiesCache } = useCache();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [currentImg, setCurrentImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   
@@ -103,10 +108,10 @@ function ComplexDetail() {
       setEditedValues({});
       setHasChanges(false);
       setIsEditing(false);
-      showSuccess("Изменения сохранены");
+      showSuccess(t.complexDetail.changesSaved);
     } catch (error) {
       console.error("Ошибка при сохранении изменений:", error);
-      showError("Произошла ошибка при сохранении изменений");
+      showError(t.complexDetail.saveError);
     }
   };
 
@@ -145,7 +150,7 @@ function ComplexDetail() {
       }
       return null;
     } catch (err) {
-      console.error("Ошибка загрузки застройщика:", err);
+      console.error(t.complexDetail.developerLoadError, err);
       return null;
     }
   };
@@ -224,7 +229,7 @@ function ComplexDetail() {
                   return { ...property, complexName: complexDoc.data().name };
                 }
               } catch (err) {
-                console.error("Ошибка при загрузке названия комплекса:", err);
+                console.error(t.complexDetail.complexNameLoadError, err);
               }
             }
             return property;
@@ -234,7 +239,7 @@ function ComplexDetail() {
         setProperties(propertiesWithComplexNames);
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
-        showError("Ошибка при загрузке данных комплекса");
+        showError(t.complexDetail.dataLoadError);
       } finally {
         setLoading(false);
       }
@@ -274,7 +279,7 @@ function ComplexDetail() {
   // Функция для загрузки новых фотографий (с сжатием и поддержкой PDF)
   const handleImageUpload = async () => {
     if (!canEdit()) {
-      showError("У вас нет прав для редактирования комплекса");
+      showError(t.complexDetail.editPermissionError);
       return;
     }
 
@@ -331,10 +336,10 @@ function ComplexDetail() {
           images: [...(prev.images || []), ...urls]
         }));
         
-        showSuccess("Фотографии успешно загружены");
+        showSuccess(t.complexDetail.photosUploadSuccess);
       } catch (error) {
         console.error("Ошибка загрузки фотографий:", error);
-        showError("Произошла ошибка при загрузке фотографий");
+        showError(t.complexDetail.photosUploadError);
       } finally {
         setUploading(false);
       }
@@ -345,12 +350,12 @@ function ComplexDetail() {
   // Функция для удаления фотографии
   const handleImageDelete = async (index) => {
     if (!canEdit()) {
-      showError("У вас нет прав для редактирования комплекса");
+      showError(t.complexDetail.editPermissionError);
       return;
     }
 
     if (!complex.images?.[index]) {
-      showError("Фотография не найдена");
+      showError(t.complexDetail.photoNotFound);
       return;
     }
 
@@ -384,7 +389,7 @@ function ComplexDetail() {
         setCurrentImg(Math.max(0, newImages.length - 1));
       }
 
-      showSuccess("Фотография успешно удалена");
+      showSuccess(t.complexDetail.photoDeleteSuccess);
     } catch (error) {
       console.error("Ошибка при удалении фотографии:", error);
       
@@ -409,13 +414,13 @@ function ComplexDetail() {
             setCurrentImg(Math.max(0, newImages.length - 1));
           }
           
-          showSuccess("Ссылка на фотографию удалена из базы данных");
+          showSuccess(t.complexDetail.photoLinkDeleted);
         } catch (dbError) {
           console.error("Ошибка обновления базы данных:", dbError);
-          showError("Не удалось обновить информацию в базе данных");
+          showError(t.complexDetail.databaseUpdateError);
         }
       } else {
-        showError("Произошла ошибка при удалении фотографии");
+        showError(t.complexDetail.photoDeleteError);
       }
       
       // Перезагружаем данные комплекса в случае ошибки
@@ -437,7 +442,7 @@ function ComplexDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Загрузка комплекса...</div>
+        <div className="text-lg">{t.complexDetail.loadingText}</div>
       </div>
     );
   }
@@ -447,13 +452,13 @@ function ComplexDetail() {
       <div className="max-w-2xl mx-auto p-6">
         <Card className="p-8 text-center">
           <Building2 className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Доступ запрещен</h2>
+          <h2 className="text-xl font-semibold mb-2">{t.complexDetail.accessDenied}</h2>
           <p className="text-gray-600 mb-4">
-            У вас нет прав для просмотра этого комплекса
+            {t.complexDetail.accessDeniedMessage}
           </p>
           <Button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+            {t.complexDetail.backButton}
           </Button>
         </Card>
       </div>
@@ -465,13 +470,13 @@ function ComplexDetail() {
       <div className="max-w-2xl mx-auto p-6">
         <Card className="p-8 text-center">
           <Building2 className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Комплекс не найден</h2>
+          <h2 className="text-xl font-semibold mb-2">{t.complexDetail.complexNotFound}</h2>
           <p className="text-gray-600 mb-4">
-            Комплекс с указанным ID не существует
+            {t.complexDetail.complexNotFoundMessage}
           </p>
           <Button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+            {t.complexDetail.backButton}
           </Button>
         </Card>
       </div>
@@ -504,7 +509,7 @@ function ComplexDetail() {
                   className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
                 >
                   <X className="h-4 w-4" />
-                  Отменить
+                  {t.complexDetail.cancelButton}
                 </Button>
                 <Button
                   onClick={handleSave}
@@ -512,7 +517,7 @@ function ComplexDetail() {
                   disabled={!hasChanges}
                 >
                   <Save className="h-4 w-4" />
-                  Сохранить
+                  {t.complexDetail.saveButton}
                 </Button>
               </>
             ) : (
@@ -522,7 +527,7 @@ function ComplexDetail() {
                 className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
               >
                 <Edit2 className="h-4 w-4" />
-                Редактировать
+                {t.complexDetail.editButton}
               </Button>
             )}
           </div>
@@ -539,11 +544,11 @@ function ComplexDetail() {
             disabled={uploading}
           >
             {uploading ? (
-              "Загрузка..."
+              t.complexDetail.uploadingText
             ) : (
               <>
                 <Camera className="h-4 w-4" />
-                Добавить фото / PDF
+                {t.complexDetail.addPhotoButton}
               </>
             )}
           </Button>
@@ -562,7 +567,7 @@ function ComplexDetail() {
               <img 
                 onClick={() => { setCurrentImg(idx); setLightbox(true); }} 
                 src={url} 
-                alt={`Фото ${idx + 1}`} 
+                alt={`${t.complexDetail.photoAltText} ${idx + 1}`} 
                 className="w-full h-full object-cover cursor-pointer" 
               />
               {isEditing && canEdit() && (
@@ -591,7 +596,7 @@ function ComplexDetail() {
           <div className="w-full h-72 rounded-xl overflow-hidden bg-gray-200">
             <img
               src={complex.images[currentImg]}
-              alt={`Фото ${currentImg + 1}`}
+              alt={`${t.complexDetail.photoAltText} ${currentImg + 1}`}
               className="w-full h-full object-cover cursor-pointer"
               onClick={() => setLightbox(true)}
             />
@@ -633,7 +638,7 @@ function ComplexDetail() {
           {canEdit() && (
             <div className="flex items-center gap-2 text-sm">
               <Plus className="h-4 w-4" />
-              Добавить фото / PDF
+              {t.complexDetail.addPhotoButton}
             </div>
           )}
         </div>
@@ -648,7 +653,7 @@ function ComplexDetail() {
           <div className="relative max-w-4xl w-full max-h-screen p-4">
             <img
               src={complex.images[currentImg]}
-              alt={`Фото ${currentImg + 1}`}
+              alt={`${t.complexDetail.photoAltText} ${currentImg + 1}`}
               className="w-full h-auto max-h-screen object-contain"
             />
             {/* Prev */}
@@ -691,7 +696,7 @@ function ComplexDetail() {
               <div>
                 <div className="space-y-1">
                   <Label className="text-sm font-medium text-gray-600">
-                    Цена от {minPrice ? "(минимальная из объектов)" : "(цена комплекса)"}
+                    {t.complexDetail.priceFromLabel} {minPrice ? t.complexDetail.priceMinFromObjects : t.complexDetail.priceFromComplex}
                   </Label>
                   <div className="flex items-center gap-2">
                     {isEditing && canEdit() && !minPrice ? (
@@ -700,7 +705,7 @@ function ComplexDetail() {
                         value={editedValues.priceFrom !== undefined ? editedValues.priceFrom : complex.priceFrom}
                         onChange={(e) => handleValueChange('priceFrom', e.target.value)}
                         className="text-lg font-bold"
-                        placeholder="Цена в USD"
+                        placeholder={t.complexDetail.pricePlaceholder}
                       />
                     ) : (
                       <span className="text-2xl font-bold text-green-600">
@@ -710,7 +715,7 @@ function ComplexDetail() {
                   </div>
                   {minPrice && (
                     <div className="text-xs text-gray-500">
-                      Автоматически рассчитана как минимальная цена среди объектов комплекса
+                      {t.complexDetail.autoCalculatedPriceText}
                     </div>
                   )}
                 </div>
@@ -722,7 +727,7 @@ function ComplexDetail() {
           {complex.commission && (
             <div>
               <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-600">Вознаграждение</Label>
+                <Label className="text-sm font-medium text-gray-600">{t.complexDetail.commissionLabel}</Label>
                 <div className="text-lg font-bold text-green-600">
                   <span>{safeDisplay(complex.commission)}%</span>
                 </div>
@@ -735,7 +740,7 @@ function ComplexDetail() {
             {/* Застройщик */}
             <div>
               <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-600">Застройщик</Label>
+                <Label className="text-sm font-medium text-gray-600">{t.complexDetail.developerLabel}</Label>
                 <div className="text-sm break-words">{safeDisplay(complex.developer)}</div>
               </div>
             </div>
@@ -743,19 +748,19 @@ function ComplexDetail() {
             {/* Район */}
             <div>
               <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-600">Район</Label>
-                <div className="text-sm break-words">{safeDisplay(complex.district)}</div>
+                <Label className="text-sm font-medium text-gray-600">{t.complexDetail.districtLabel}</Label>
+                <div className="text-sm break-words">{translateDistrict(safeDisplay(complex.district), language)}</div>
               </div>
             </div>
 
             {/* Дата сдачи */}
             <div>
-              {renderEditableValue('completionDate', complex.completionDate, 'text', 'Дата сдачи')}
+              {renderEditableValue('completionDate', complex.completionDate, 'text', t.complexDetail.completionDateLabel)}
             </div>
 
             {/* Координаты */}
             <div>
-              {renderEditableValue('coordinates', complex.coordinates, 'text', 'Координаты')}
+              {renderEditableValue('coordinates', complex.coordinates, 'text', t.complexDetail.coordinatesLabel)}
             </div>
           </div>
         </div>
@@ -767,14 +772,14 @@ function ComplexDetail() {
           <div className="space-y-3">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Описание
+              {t.complexDetail.description}
             </h3>
             {isEditing && canEdit() ? (
               <textarea
                 value={editedValues.description !== undefined ? editedValues.description : complex.description}
                 onChange={(e) => handleValueChange('description', e.target.value)}
                 className="w-full p-3 border rounded-md min-h-[512px] font-mono text-sm"
-                placeholder="Описание комплекса"
+                placeholder={t.complexDetail.descriptionPlaceholder}
               />
             ) : (
               <p className="text-gray-700 leading-relaxed whitespace-pre-wrap font-mono text-sm">
@@ -789,19 +794,19 @@ function ComplexDetail() {
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Layers className="h-5 w-5" />
-          Ссылки и документы
+          {t.complexDetail.linksAndDocuments}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Видео */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-600">Видео</Label>
+            <Label className="text-sm font-medium text-gray-600">{t.complexDetail.videoLabel}</Label>
             {isEditing && canEdit() ? (
               <Input
                 type="text"
                 value={editedValues.videoLink !== undefined ? editedValues.videoLink : complex.videoLink || ''}
                 onChange={(e) => handleValueChange('videoLink', e.target.value)}
                 className="w-full mb-2"
-                placeholder="Ссылка на видео"
+                placeholder={t.complexDetail.videoLinkPlaceholder}
               />
             ) : (
               <Button 
@@ -814,12 +819,12 @@ function ComplexDetail() {
                 {complex.videoLink ? (
                   <a href={complex.videoLink} target="_blank" rel="noopener noreferrer">
                     <Video className="h-4 w-4 mr-2" />
-                    Посмотреть видео
+                    {t.complexDetail.watchVideoButton}
                   </a>
                 ) : (
                   <span>
                     <Video className="h-4 w-4 mr-2" />
-                    Посмотреть видео
+                    {t.complexDetail.watchVideoButton}
                   </span>
                 )}
               </Button>
@@ -828,14 +833,14 @@ function ComplexDetail() {
 
           {/* 3D тур */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-600">3D тур</Label>
+            <Label className="text-sm font-medium text-gray-600">{t.complexDetail.tourLabel}</Label>
             {isEditing && canEdit() ? (
               <Input
                 type="text"
                 value={editedValues.threeDTour !== undefined ? editedValues.threeDTour : complex.threeDTour || ''}
                 onChange={(e) => handleValueChange('threeDTour', e.target.value)}
                 className="w-full mb-2"
-                placeholder="Ссылка на 3D тур"
+                placeholder={t.complexDetail.tourLinkPlaceholder}
               />
             ) : (
               <Button 
@@ -848,12 +853,12 @@ function ComplexDetail() {
                 {complex.threeDTour ? (
                   <a href={complex.threeDTour} target="_blank" rel="noopener noreferrer">
                     <Globe className="h-4 w-4 mr-2" />
-                    Посмотреть 3D тур
+                    {t.complexDetail.view3DTourButton}
                   </a>
                 ) : (
                   <span>
                     <Globe className="h-4 w-4 mr-2" />
-                    Посмотреть 3D тур
+                    {t.complexDetail.view3DTourButton}
                   </span>
                 )}
               </Button>
@@ -869,7 +874,7 @@ function ComplexDetail() {
               className={`w-full bg-green-600 hover:bg-green-700 text-white ${isMobile ? 'h-12' : ''}`}
             >
               <BarChart3 className="h-4 w-4 mr-2" />
-              Прогресс строительства
+              {t.complexDetail.buildingProgressButton}
             </Button>
           </div>
         )}

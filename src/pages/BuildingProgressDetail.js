@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -22,6 +24,9 @@ function BuildingProgressDetail() {
   const { id, monthKey } = useParams();
   const navigate = useNavigate();
   const { role } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
+  
   const [data, setData] = useState(null);
   const [monthData, setMonthData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -65,23 +70,23 @@ function BuildingProgressDetail() {
         }
       } catch (error) {
         console.error('Ошибка загрузки данных:', error);
-        showError('Ошибка загрузки данных');
+        showError(t.buildingProgress.errorLoading);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id, monthKey]);
+  }, [id, monthKey, t.buildingProgress.errorLoading]);
 
   // Удаление медиа файла
   const handleDeleteMedia = async (mediaUrl, mediaType) => {
     if (!canEdit()) {
-      showError('У вас нет прав для удаления файлов');
+      showError(t.buildingProgress.noAccessDelete);
       return;
     }
 
-    if (!window.confirm('Вы уверены, что хотите удалить этот файл?')) {
+    if (!window.confirm(t.buildingProgress.confirmDelete)) {
       return;
     }
 
@@ -120,11 +125,11 @@ function BuildingProgressDetail() {
         setAllMedia(combinedMedia);
         setSelectedMedia(null);
 
-        showSuccess('Файл удален');
+        showSuccess(t.buildingProgress.successDelete);
       }
     } catch (error) {
       console.error('Ошибка удаления файла:', error);
-      showError('Ошибка удаления файла');
+      showError(t.buildingProgress.errorDelete);
     }
   };
 
@@ -148,7 +153,7 @@ function BuildingProgressDetail() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Загрузка...</div>
+        <div className="text-lg">{t.buildingProgress.loading}</div>
       </div>
     );
   }
@@ -157,12 +162,12 @@ function BuildingProgressDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">Data not found</h2>
+          <h2 className="text-xl font-semibold mb-4">{t.buildingProgress.dataNotFound}</h2>
           <button
             onClick={() => navigate(`/building-progress/complex/${id}`)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Back to building progress
+            {t.buildingProgress.backToProgress}
           </button>
         </div>
       </div>
@@ -187,7 +192,7 @@ function BuildingProgressDetail() {
                   {monthData.month} {monthData.year}
                 </h1>
                 <p className="text-gray-600">
-                  {monthData.photos?.length || 0} photos, {monthData.videos?.length || 0} videos
+                  {monthData.photos?.length || 0} {t.buildingProgress.photos}, {monthData.videos?.length || 0} {t.buildingProgress.videos}
                 </p>
               </div>
             </div>
@@ -215,7 +220,7 @@ function BuildingProgressDetail() {
               {media.type === 'photo' ? (
                 <img
                   src={media.url}
-                  alt={`Photo ${index + 1}`}
+                  alt={`${t.buildingProgress.photo} ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -237,7 +242,10 @@ function BuildingProgressDetail() {
               {/* Кнопка удаления */}
               {canEdit() && (
                 <button
-                  onClick={(e) => handleDeleteMedia(media.url, media.type)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteMedia(media.url, media.type);
+                  }}
                   className="absolute top-2 left-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -314,7 +322,7 @@ function BuildingProgressDetail() {
             {selectedMedia.type === 'photo' ? (
               <img
                 src={selectedMedia.url}
-                alt="Selected photo"
+                alt={t.buildingProgress.photo}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
               />
             ) : (
