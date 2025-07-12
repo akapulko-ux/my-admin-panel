@@ -69,7 +69,9 @@ const createDefaultUnit = () => ({
   showPriceIDR: false,
   status: 'free',
   propertyType: '',
-  view: ''
+  view: '',
+  rooftop: false,
+  terrace: false
 });
 
 const createDefaultSection = () => ({
@@ -635,6 +637,32 @@ const SortableUnit = ({
                 </select>
             </div>
           </div>
+
+          {/* Чекбоксы для дополнительных удобств */}
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <label className="flex items-center gap-2 text-xs text-white/90 font-semibold">
+                <input
+                  type="checkbox"
+                  checked={unit.rooftop || false}
+                  onChange={(e) => onUnitChange('rooftop', e.target.checked)}
+                  className="w-3 h-3 rounded border-white/50 focus:ring-2 focus:ring-white/50"
+                />
+                <span>{t.chessboards.features?.rooftop || 'Руфтоп'}</span>
+              </label>
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-xs text-white/90 font-semibold">
+                <input
+                  type="checkbox"
+                  checked={unit.terrace || false}
+                  onChange={(e) => onUnitChange('terrace', e.target.checked)}
+                  className="w-3 h-3 rounded border-white/50 focus:ring-2 focus:ring-white/50"
+                />
+                <span>{t.chessboards.features?.terrace || 'Терраса'}</span>
+              </label>
+            </div>
+          </div>
         </div>
         
         <div>
@@ -780,7 +808,9 @@ const Chessboard = () => {
     priceIDR: null,
     showPriceIDR: false,
     showPrice: true, // Добавляем новое поле для управления видимостью цены
-    status: "free"
+    status: "free",
+    rooftop: false, // Новое поле для руфтопа
+    terrace: false // Новое поле для террасы
   }), []);
 
   const defaultFloor = useMemo(() => ({

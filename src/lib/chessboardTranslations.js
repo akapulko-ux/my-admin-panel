@@ -57,6 +57,10 @@ export const chessboardTranslations = {
         villa: 'Villa',
         apartVilla: 'Apart Villa',
         townhouse: 'Townhouse'
+      },
+      features: {
+        rooftop: 'Rooftop',
+        terrace: 'Terrace'
       }
     },
     overview: 'Overview',
@@ -121,6 +125,10 @@ export const chessboardTranslations = {
         villa: 'Вилла',
         apartVilla: 'Апарт-вилла',
         townhouse: 'Таунхаус'
+      },
+      features: {
+        rooftop: 'Руфтоп',
+        terrace: 'Терраса'
       }
     },
     overview: 'Общий обзор',
@@ -185,6 +193,10 @@ export const chessboardTranslations = {
         villa: 'Villa',
         apartVilla: 'Apart Villa',
         townhouse: 'Townhouse'
+      },
+      features: {
+        rooftop: 'Rooftop',
+        terrace: 'Teras'
       }
     },
     overview: 'Ikhtisar',

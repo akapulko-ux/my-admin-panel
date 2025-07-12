@@ -187,6 +187,20 @@ const ClientFixations = () => {
     }
   };
 
+  // Функция для получения локализованного названия типа недвижимости
+  const getLocalizedPropertyType = (propertyType) => {
+    if (!propertyType) return '';
+    
+    const propertyTypeMap = {
+      'Апартаменты': t.chessboards.propertyTypes.apartments,
+      'Вилла': t.chessboards.propertyTypes.villa,
+      'Апарт-вилла': t.chessboards.propertyTypes.apartVilla,
+      'Таунхаус': t.chessboards.propertyTypes.townhouse
+    };
+    
+    return propertyTypeMap[propertyType] || propertyType;
+  };
+
   // Функция для получения правильного статуса в зависимости от языка
   const getLocalizedStatus = (targetStatus) => {
     return targetStatus === 'approved' 
@@ -735,7 +749,7 @@ const ClientFixations = () => {
                   {t.clientFixations.developer}: {fixation.developerName}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {t.clientFixations.propertyType}: {fixation.propertyType}
+                  {t.clientFixations.propertyType}: {getLocalizedPropertyType(fixation.propertyType)}
                 </p>
                 {fixation.rejectComment && (
                   <div className="mt-2">

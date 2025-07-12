@@ -775,6 +775,12 @@ _________________               _________________
         free: '✓ Free',
         booked: '⏳ Booked',
         sold: '✖ Sold'
+      },
+      
+      // Additional features
+      features: {
+        rooftop: 'Rooftop',
+        terrace: 'Terrace'
       }
     },
 
@@ -1711,6 +1717,12 @@ _________________               _________________
         free: '✓ Свободно',
         booked: '⏳ Забронировано',
         sold: '✖ Продано'
+      },
+      
+      // Additional features
+      features: {
+        rooftop: 'Руфтоп',
+        terrace: 'Терраса'
       }
     },
 
@@ -2647,6 +2659,12 @@ _________________               _________________
         free: '✓ Tersedia',
         booked: '⏳ Dipesan',
         sold: '✖ Terjual'
+      },
+      
+      // Additional features
+      features: {
+        rooftop: 'Rooftop',
+        terrace: 'Teras'
       }
     },
 

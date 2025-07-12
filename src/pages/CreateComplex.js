@@ -104,6 +104,12 @@ function CreateComplex() {
   const [leaseYears, setLeaseYears] = useState("");
   const [docsLink, setDocsLink] = useState("");
 
+  // Обработчик для поля срока аренды (только цифры и знак +)
+  const handleLeaseYearsChange = (e) => {
+    const input = e.target.value.replace(/[^0-9+]/g, "");
+    setLeaseYears(input);
+  };
+
   // Новые поля: SHGB, PBG, SLF
   const [shgb, setShgb] = useState("");
   const [pbg, setPbg] = useState("");
@@ -564,10 +570,10 @@ function CreateComplex() {
                   <Label htmlFor="leaseYears">Срок аренды (лет)</Label>
                   <Input
                     id="leaseYears"
-                    type="number"
+                    type="text"
                     value={leaseYears}
-                    onChange={(e) => setLeaseYears(e.target.value)}
-                    placeholder="Количество лет..."
+                    onChange={handleLeaseYearsChange}
+                    placeholder="Например: 30, 25+5, 30+25..."
                   />
                 </div>
               )}

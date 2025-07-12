@@ -281,6 +281,22 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                                     </div>
                                   )}
 
+                                  {/* Белые бейджи для дополнительных удобств */}
+                                  {(unit.rooftop || unit.terrace) && (
+                                    <div className="flex items-center gap-1 flex-wrap">
+                                      {unit.rooftop && (
+                                        <Badge className="bg-white text-gray-800 text-xs font-medium">
+                                          {t.unit.features?.rooftop || 'Rooftop'}
+                                        </Badge>
+                                      )}
+                                      {unit.terrace && (
+                                        <Badge className="bg-white text-gray-800 text-xs font-medium">
+                                          {t.unit.features?.terrace || 'Terrace'}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  )}
+
                                   {unit.status === 'free' && unit.priceUSD > 0 && unit.showPrice ? (
                                     <div className="border-t border-white/20 pt-2 mt-2">
                                       <div className="flex justify-between items-start">
