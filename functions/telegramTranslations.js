@@ -9,7 +9,8 @@ const telegramTranslations = {
     developerLabel: '🏗️ <b>Застройщик:</b>',
     propertyTypeLabel: '🏡 <b>Тип недвижимости:</b>',
     timeLabel: '⏰ <b>Время:</b>',
-    adminPanelLink: '📱 <a href="https://it-agent.pro/">Перейдите в админ-панель для обработки фиксации.</a>',
+    adminPanelText: '📱 Для обработки фиксации перейдите в админ-панель:',
+    adminPanelButton: 'Открыть админ-панель',
     
     // Системные сообщения
     notSpecified: 'Не указан',
@@ -40,7 +41,8 @@ const telegramTranslations = {
     developerLabel: '🏗️ <b>Developer:</b>',
     propertyTypeLabel: '🏡 <b>Property Type:</b>',
     timeLabel: '⏰ <b>Time:</b>',
-    adminPanelLink: '📱 <a href="https://it-agent.pro/">Go to admin panel to process fixation.</a>',
+    adminPanelText: '📱 To process fixation, go to admin panel:',
+    adminPanelButton: 'Open Admin Panel',
     
     // System messages
     notSpecified: 'Not specified',
@@ -71,7 +73,8 @@ const telegramTranslations = {
     developerLabel: '🏗️ <b>Pengembang:</b>',
     propertyTypeLabel: '🏡 <b>Jenis Properti:</b>',
     timeLabel: '⏰ <b>Waktu:</b>',
-    adminPanelLink: '📱 <a href="https://it-agent.pro/">Buka panel admin untuk memproses fiksasi.</a>',
+    adminPanelText: '📱 Untuk memproses fiksasi, buka panel admin:',
+    adminPanelButton: 'Buka Panel Admin',
     
     // Pesan sistem
     notSpecified: 'Tidak ditentukan',

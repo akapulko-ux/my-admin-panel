@@ -25,6 +25,41 @@ function getTelegramTranslations(language) {
   return telegramTranslations[language] || telegramTranslations.ru;
 }
 
+// Функция для установки кнопки меню Web App
+const setupWebAppMenuButton = async () => {
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setChatMenuButton`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        menu_button: {
+          type: 'web_app',
+          text: 'Админ-панель',
+          web_app: {
+            url: 'https://it-agent.pro/'
+          }
+        }
+      })
+    });
+
+    const result = await response.json();
+    
+    if (response.ok) {
+      console.log('✅ Web App menu button установлена успешно');
+    } else {
+      console.error('❌ Ошибка установки Web App menu button:', result);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('❌ Ошибка при установке Web App menu button:', error);
+    throw error;
+  }
+};
+
+// Вызываем установку меню при инициализации
+setupWebAppMenuButton();
+
 // Клиент для распознавания речи
 const speechClient = new speech.SpeechClient();
 const gcs = new Storage();
@@ -287,11 +322,24 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
           `${t.developerLabel} ${fixationData.developerName || t.notSpecified}\n` +
           `${t.propertyTypeLabel} ${fixationData.propertyType || t.notSpecified}\n` +
           `${t.timeLabel} ${new Date(fixationData.dateTime?.seconds * 1000 || Date.now()).toLocaleString(userLanguage === 'ru' ? 'ru-RU' : userLanguage === 'en' ? 'en-US' : 'id-ID')}\n\n` +
-          `${t.adminPanelLink}`;
+          `${t.adminPanelText}`;
+
+        // Создаем inline клавиатуру с Web App кнопкой
+        const inlineKeyboard = {
+          inline_keyboard: [[
+            {
+              text: t.adminPanelButton,
+              web_app: {
+                url: 'https://it-agent.pro/'
+              }
+            }
+          ]]
+        };
         
         notifications.push({
           chatId: telegramChatId,
           message: message,
+          replyMarkup: inlineKeyboard,
           role: userRole,
           developerId: userData.developerId,
           language: userLanguage
@@ -303,11 +351,14 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
     const sendPromises = notifications.map(async (notification) => {
       try {
         // Отправляем уведомление через Telegram Bot API
-        await sendTelegramMessage(notification.chatId, notification.message);
+        await sendTelegramMessage(notification.chatId, notification.message, notification.replyMarkup);
         
-        // Сохраняем запись об успешной отправке
+        // Сохраняем запись об успешной отправке (без replyMarkup для экономии места)
+        const notificationData = { ...notification };
+        delete notificationData.replyMarkup; // Убираем из сохранения
+        
         await admin.firestore().collection('telegramNotifications').add({
-          ...notification,
+          ...notificationData,
           fixationId: event.params.fixationId,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           sent: true,
@@ -319,9 +370,12 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
       } catch (error) {
         console.error(`Ошибка отправки уведомления пользователю с ролью ${notification.role}:`, error);
         
-        // Сохраняем запись о неудачной отправке
+        // Сохраняем запись о неудачной отправке (без replyMarkup)
+        const notificationData = { ...notification };
+        delete notificationData.replyMarkup;
+        
         await admin.firestore().collection('telegramNotifications').add({
-          ...notification,
+          ...notificationData,
           fixationId: event.params.fixationId,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           sent: false,
@@ -346,17 +400,24 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
 });
 
 // Функция для отправки сообщений через Telegram Bot API
-const sendTelegramMessage = async (chatId, text) => {
+const sendTelegramMessage = async (chatId, text, replyMarkup = null) => {
   try {
+    const messageData = {
+      chat_id: chatId,
+      text: text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true
+    };
+
+    // Добавляем inline клавиатуру если она предоставлена
+    if (replyMarkup) {
+      messageData.reply_markup = replyMarkup;
+    }
+
     const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: text,
-        parse_mode: 'HTML',
-        disable_web_page_preview: true
-      })
+      body: JSON.stringify(messageData)
     });
     
     const result = await response.json();
@@ -418,8 +479,20 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
             
             const responseMessage = `${t.connectionSuccess}\n\n` +
               `${t.connectionSuccessMessage.replace('{role}', userData.role || 'agent')}`;
+
+            // Создаем inline клавиатуру с Web App кнопкой
+            const inlineKeyboard = {
+              inline_keyboard: [[
+                {
+                  text: t.adminPanelButton,
+                  web_app: {
+                    url: 'https://it-agent.pro/'
+                  }
+                }
+              ]]
+            };
             
-            await sendTelegramMessage(chatId, responseMessage);
+            await sendTelegramMessage(chatId, responseMessage, inlineKeyboard);
             
           } else {
             // Используем русский язык по умолчанию для неизвестных пользователей
@@ -438,8 +511,20 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
             `${t.manualConnection}\n` +
             `${t.manualConnectionInstruction}\n\n` +
             `${t.finalMessage}`;
+
+          // Создаем inline клавиатуру с Web App кнопкой
+          const inlineKeyboard = {
+            inline_keyboard: [[
+              {
+                text: t.adminPanelButton,
+                web_app: {
+                  url: 'https://it-agent.pro/'
+                }
+              }
+            ]]
+          };
           
-          await sendTelegramMessage(chatId, helpMessage);
+          await sendTelegramMessage(chatId, helpMessage, inlineKeyboard);
         }
       }
     }
