@@ -6,6 +6,7 @@ import { collection, addDoc, getDocs } from "firebase/firestore";
 // Импортируем функцию загрузки в Firebase Storage в нужную папку
 import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 import { showSuccess } from '../utils/notifications';
+import { validateArea } from "../lib/utils";
 
 // Импорт компонентов shadcn
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -80,6 +81,7 @@ function CreateProperty() {
   const [bedrooms, setBedrooms] = useState("none");
   // Площадь (обязательное)
   const [area, setArea] = useState("");
+  const [areaError, setAreaError] = useState("");
 
   // Провинция (Bali)
   const province = "Bali";
@@ -264,10 +266,35 @@ function CreateProperty() {
     }
   };
 
+  // Обработка изменения площади с валидацией
+  const handleAreaChange = (value) => {
+    setArea(value);
+    
+    if (value === "") {
+      setAreaError("");
+      return;
+    }
+    
+    const validation = validateArea(value);
+    if (!validation.isValid) {
+      setAreaError(validation.error);
+    } else {
+      setAreaError("");
+    }
+  };
+
   // Сабмит формы
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
+
+    // Валидация площади перед отправкой
+    const areaValidation = validateArea(area);
+    if (!areaValidation.isValid) {
+      setAreaError(areaValidation.error);
+      setIsSaving(false);
+      return;
+    }
 
     try {
       // Загружаем фото через Firebase Storage в папку "property"
@@ -304,7 +331,7 @@ function CreateProperty() {
         status,
         buildingType,
         bedrooms: bedrooms === "none" ? "" : bedrooms,
-        area,
+        area: areaValidation.value,
         province,
         city,
         rdtr,
@@ -340,6 +367,7 @@ function CreateProperty() {
       setBuildingType("Новый комплекс");
       setBedrooms("none");
       setArea("");
+      setAreaError("");
       setManagementCompany("");
       setOwnershipForm("Freehold");
       setLandStatus("Туристическая зона (W)");
@@ -544,10 +572,16 @@ function CreateProperty() {
                 <Input
                   id="area"
                   type="number"
+                  step="0.1"
+                  min="0.1"
                   value={area}
-                  onChange={(e) => setArea(e.target.value)}
+                  onChange={(e) => handleAreaChange(e.target.value)}
+                  className={areaError ? "border-red-500" : ""}
                   required
                 />
+                {areaError && (
+                  <p className="text-sm text-red-500">{areaError}</p>
+                )}
               </div>
 
               {/* Провинция */}

@@ -443,8 +443,14 @@ function ListProperties() {
       const updateData = {};
       Object.keys(massEdit).forEach(key => {
         const value = massEdit[key];
-          if (value && value.trim() !== "") {
-          updateData[key] = value.trim();
+        if (value && value.trim() !== "") {
+          // Специальная обработка для числовых полей
+          if (key === 'area' || key === 'price' || key === 'commission') {
+            const numValue = parseFloat(value.trim());
+            updateData[key] = !isNaN(numValue) ? numValue : 0;
+          } else {
+            updateData[key] = value.trim();
+          }
         }
       });
 

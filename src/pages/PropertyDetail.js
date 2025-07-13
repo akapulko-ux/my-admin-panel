@@ -39,7 +39,9 @@ import {
   translateConstructionStatus, 
   translateLandStatus, 
   translatePoolStatus, 
-  translateOwnership 
+  translateOwnership,
+  formatArea,
+  validateArea 
 } from "../lib/utils";
 
 function PropertyDetail() {
@@ -103,8 +105,22 @@ function PropertyDetail() {
   const handleValueChange = (field, value) => {
     let processedValue = value;
     
-    // Обработка числовых полей
-    if (['price', 'area', 'bedrooms', 'bathrooms', 'leaseYears'].includes(field)) {
+    // Специальная обработка для поля площади
+    if (field === 'area') {
+      // Разрешаем цифры, точки и пустые значения
+      processedValue = value.replace(/[^\d.]/g, '');
+      // Убираем множественные точки
+      processedValue = processedValue.replace(/\.+/g, '.');
+      // Убираем точки в начале
+      processedValue = processedValue.replace(/^\./, '');
+      // Разрешаем пустые значения для возможности полного удаления
+      if (processedValue !== '' && processedValue !== '.') {
+        const numValue = parseFloat(processedValue);
+        processedValue = !isNaN(numValue) ? numValue : '';
+      }
+    }
+    // Обработка других числовых полей
+    else if (['price', 'bedrooms', 'bathrooms', 'leaseYears'].includes(field)) {
       // Убираем все нечисловые символы, кроме цифр
       processedValue = value.replace(/[^\d]/g, '');
       // Разрешаем пустые значения для возможности полного удаления
@@ -125,8 +141,22 @@ function PropertyDetail() {
       // Обрабатываем пустые строки для числовых полей
       const processedValues = { ...editedValues };
       
-      // Для числовых полей: если пустая строка, сохраняем как null
-      const numericFields = ['price', 'area', 'bedrooms', 'bathrooms', 'leaseYears'];
+      // Специальная валидация для поля area
+      if (processedValues.hasOwnProperty('area')) {
+        if (processedValues.area === '' || processedValues.area === null) {
+          processedValues.area = null;
+        } else {
+          const validation = validateArea(processedValues.area);
+          if (!validation.isValid) {
+            showError(validation.error);
+            return;
+          }
+          processedValues.area = validation.value;
+        }
+      }
+      
+      // Для других числовых полей: если пустая строка, сохраняем как null
+      const numericFields = ['price', 'bedrooms', 'bathrooms', 'leaseYears'];
       numericFields.forEach(field => {
         if (processedValues.hasOwnProperty(field) && processedValues[field] === '') {
           processedValues[field] = null;
@@ -578,6 +608,20 @@ function PropertyDetail() {
             </select>
         );
       } else {
+        // Специальная обработка для поля площади
+        if (field === 'area') {
+          return (
+            <input
+              type="number"
+              step="0.1"
+              min="0.1"
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+              placeholder="Введите площадь"
+            />
+          );
+        }
         return (
           <input
             type={type || "text"}
@@ -728,7 +772,7 @@ function PropertyDetail() {
     },
     {
       label: t.propertyDetail.area,
-      value: property.area ? translateAreaUnit(safeDisplay(property.area), language) : "—",
+      value: property.area ? translateAreaUnit(formatArea(property.area), language) : "—",
       field: "area",
       icon: Ruler,
       type: "number"

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 
 const PWANotifications = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [installPrompt, setInstallPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
 
@@ -25,17 +24,10 @@ const PWANotifications = () => {
     window.addEventListener('offline', handleOffline);
 
     // Слушаем событие установки
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    };
-
     const handleAppInstalled = () => {
       setIsInstalled(true);
-      setInstallPrompt(null);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     // Проверяем обновления Service Worker
@@ -48,20 +40,11 @@ const PWANotifications = () => {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
-  const handleInstallClick = async () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      const result = await installPrompt.userChoice;
-      if (result.outcome === 'accepted') {
-        setInstallPrompt(null);
-      }
-    }
-  };
+
 
   const handleUpdateClick = () => {
     window.location.reload();
@@ -97,10 +80,7 @@ const PWANotifications = () => {
       backgroundColor: '#ef4444',
       color: 'white',
     },
-    install: {
-      backgroundColor: '#3b82f6',
-      color: 'white',
-    },
+
     update: {
       backgroundColor: '#f59e0b',
       color: 'white',
@@ -139,21 +119,7 @@ const PWANotifications = () => {
         </div>
       )}
 
-      {/* Уведомление об установке */}
-      {installPrompt && !isInstalled && (
-        <div style={{...styles.notification, ...styles.install}}>
-          <span style={styles.icon}>📱</span>
-          <span>Установить приложение</span>
-          <button 
-            style={styles.button}
-            onClick={handleInstallClick}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.3)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
-          >
-            Установить
-          </button>
-        </div>
-      )}
+
 
       {/* Уведомление об обновлении */}
       {showUpdateNotification && (

@@ -255,4 +255,49 @@ export const translateOwnership = (ownership, language) => {
   };
   
   return ownershipTranslations[ownership]?.[language] || ownership;
+};
+
+/**
+ * Валидирует и преобразует значение площади в число
+ * @param {string|number} value - Значение площади
+ * @returns {Object} { isValid: boolean, value: number, error?: string }
+ */
+export const validateArea = (value) => {
+  // Если значение пустое или null/undefined
+  if (value === null || value === undefined || value === '') {
+    return { isValid: false, value: 0, error: 'Площадь обязательна для заполнения' };
+  }
+
+  // Преобразуем в число
+  const numValue = parseFloat(value);
+
+  // Проверяем на NaN
+  if (isNaN(numValue)) {
+    return { isValid: false, value: 0, error: 'Площадь должна быть числом' };
+  }
+
+  // Проверяем на положительное значение
+  if (numValue <= 0) {
+    return { isValid: false, value: 0, error: 'Площадь должна быть больше 0' };
+  }
+
+  // Проверяем на разумные пределы (не больше 10000 м²)
+  if (numValue > 10000) {
+    return { isValid: false, value: 0, error: 'Площадь не может быть больше 10,000 м²' };
+  }
+
+  return { isValid: true, value: numValue };
+};
+
+/**
+ * Форматирует площадь для отображения
+ * @param {string|number} area - Площадь
+ * @returns {string} Отформатированная площадь
+ */
+export const formatArea = (area) => {
+  const validation = validateArea(area);
+  if (!validation.isValid) return '0';
+  
+  // Округляем до 2 знаков после запятой и убираем лишние нули
+  return parseFloat(validation.value.toFixed(2)).toString();
 }; 

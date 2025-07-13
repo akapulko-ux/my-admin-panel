@@ -1604,7 +1604,25 @@ const Chessboard = () => {
                                           const newSections = JSON.parse(JSON.stringify(prev));
                                           if (newSections[sectionIdx]?.floors[floorIdx]?.units[unitIdx]) {
                                             const unit = newSections[sectionIdx].floors[floorIdx].units[unitIdx];
-                                            unit[field] = value;
+                                            
+                                            // Специальная обработка для числовых полей
+                                            if (field === 'area') {
+                                              if (value === '' || value === null || value === undefined) {
+                                                unit[field] = null;
+                                              } else {
+                                                const numValue = parseFloat(value);
+                                                unit[field] = !isNaN(numValue) ? numValue : 0;
+                                              }
+                                            } else if (field === 'priceUSD' || field === 'priceIDR') {
+                                              if (value === '' || value === null || value === undefined) {
+                                                unit[field] = null;
+                                              } else {
+                                                const numValue = parseFloat(value);
+                                                unit[field] = !isNaN(numValue) ? numValue : 0;
+                                              }
+                                            } else {
+                                              unit[field] = value;
+                                            }
                                           }
                                           return newSections;
                                         });

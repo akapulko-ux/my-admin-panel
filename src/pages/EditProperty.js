@@ -7,6 +7,7 @@ import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 import { useParams, useNavigate } from "react-router-dom";
 import { showSuccess, showError } from '../utils/notifications';
+import { validateArea } from "../lib/utils";
 // Импорт для сжатия изображений и конвертации PDF
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
@@ -78,6 +79,7 @@ function EditProperty() {
   const [developer, setDeveloper] = useState("");
   const [complex, setComplex] = useState("");
   const [area, setArea] = useState("");
+  const [areaError, setAreaError] = useState("");
 
   // «Провинция» (Bali), «Город», «RDTR»
   const [province, setProvince] = useState("Bali");
@@ -232,10 +234,35 @@ function EditProperty() {
     setIsUploading(false);
   };
 
+  // Обработка изменения площади с валидацией
+  const handleAreaChange = (value) => {
+    setArea(value);
+    
+    if (value === "") {
+      setAreaError("");
+      return;
+    }
+    
+    const validation = validateArea(value);
+    if (!validation.isValid) {
+      setAreaError(validation.error);
+    } else {
+      setAreaError("");
+    }
+  };
+
   // Обработчик сохранения
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
+
+    // Валидация площади перед сохранением
+    const areaValidation = validateArea(area);
+    if (!areaValidation.isValid) {
+      setAreaError(areaValidation.error);
+      setIsSaving(false);
+      return;
+    }
 
     try {
       const finalUrls = [];
@@ -280,7 +307,7 @@ function EditProperty() {
         complex,
         buildingType,
         bedrooms,
-        area,
+        area: areaValidation.value,
         province,
         city,
         rdtr,
@@ -509,9 +536,15 @@ function EditProperty() {
                   <Input
                     id="area"
                     type="number"
+                    step="0.1"
+                    min="0.1"
                     value={area}
-                    onChange={(e) => setArea(e.target.value)}
+                    onChange={(e) => handleAreaChange(e.target.value)}
+                    className={areaError ? "border-red-500" : ""}
                   />
+                  {areaError && (
+                    <p className="text-sm text-red-500">{areaError}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
