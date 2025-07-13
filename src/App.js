@@ -14,6 +14,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import { LanguageProvider, useLanguage } from './lib/LanguageContext';
 import { translations } from './lib/translations';
+import PWANotifications from './components/PWANotifications';
 
 // Лендинг
 import LandingPage from "./pages/LandingPage";
@@ -193,6 +194,7 @@ function App() {
         <AuthProvider>
           <CacheProvider>
             <Toaster />
+            <PWANotifications />
             <Routes>
               {/* Публичные маршруты - без оболочки админ-панели */}
               <Route path="/public/:publicId" element={<PublicChessboard />} />
