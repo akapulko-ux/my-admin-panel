@@ -15,6 +15,7 @@ import { db } from './firebaseConfig';
 import { LanguageProvider, useLanguage } from './lib/LanguageContext';
 import { translations } from './lib/translations';
 import PWANotifications from './components/PWANotifications';
+import './testLanguageUpdate'; // Импортируем тестовую функцию
 
 // Лендинг
 import LandingPage from "./pages/LandingPage";

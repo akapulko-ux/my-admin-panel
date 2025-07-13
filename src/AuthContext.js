@@ -28,7 +28,8 @@ export function AuthProvider({ children }) {
               createdAt: new Date(),
               uid: user.uid,
               displayName: user.displayName || '',
-              name: user.displayName || ''
+              name: user.displayName || '',
+              language: localStorage.getItem('selectedLanguage') || 'ru'
             };
             await setDoc(docRef, userData);
           setRole("agent");
@@ -65,7 +66,8 @@ export function AuthProvider({ children }) {
             createdAt: new Date(),
             uid: userCredential.user.uid,
             displayName: userCredential.user.displayName || '',
-            name: userCredential.user.displayName || ''
+            name: userCredential.user.displayName || '',
+            language: localStorage.getItem('selectedLanguage') || 'ru'
           };
           await setDoc(docRef, userData);
           console.log("Создан новый документ пользователя с ролью agent");

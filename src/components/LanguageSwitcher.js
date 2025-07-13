@@ -15,8 +15,8 @@ const LanguageSwitcher = () => {
 
   const currentLanguage = languages.find(lang => lang.code === language);
 
-  const handleLanguageChange = (langCode) => {
-    changeLanguage(langCode);
+  const handleLanguageChange = async (langCode) => {
+    await changeLanguage(langCode);
     setIsOpen(false);
   };
 

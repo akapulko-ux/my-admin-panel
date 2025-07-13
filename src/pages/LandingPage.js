@@ -75,7 +75,7 @@ const LandingPage = () => {
             IT Agent Admin Panel
           </Link>
           <div className="flex items-center gap-4">
-            <Select value={language} onValueChange={changeLanguage}>
+            <Select value={language} onValueChange={(lang) => changeLanguage(lang)}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue>
                   {language === 'ru' ? 'Русский' : language === 'en' ? 'English' : 'Bahasa'}

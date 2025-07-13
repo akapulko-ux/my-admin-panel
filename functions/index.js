@@ -6,12 +6,24 @@ const { Storage } = require("@google-cloud/storage");
 const path = require("path");
 const os = require("os");
 const fs = require("fs");
+const telegramTranslations = require("./telegramTranslations");
 
 // Telegram Bot Token
 const BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM";
 
 // Инициализируем admin SDK
 admin.initializeApp();
+
+// Функция для получения языка пользователя
+function getUserLanguage(userData) {
+  const userLanguage = userData.language || 'ru'; // По умолчанию русский
+  return ['ru', 'en', 'id'].includes(userLanguage) ? userLanguage : 'ru';
+}
+
+// Функция для получения локализованных переводов
+function getTelegramTranslations(language) {
+  return telegramTranslations[language] || telegramTranslations.ru;
+}
 
 // Клиент для распознавания речи
 const speechClient = new speech.SpeechClient();
@@ -262,22 +274,27 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
       }
       
       if (hasAccess) {
-        // Формируем подробное сообщение
-        const message = `🏠 <b>Новая фиксация клиента</b>\n\n` +
-          `👤 <b>Клиент:</b> ${fixationData.clientName || 'Не указан'}\n` +
-          `📞 <b>Телефон:</b> ${fixationData.clientPhone || 'Не указан'}\n` +
-          `👨‍💼 <b>Агент:</b> ${fixationData.agentName || 'Не указан'}\n` +
-          `🏘️ <b>Комплекс:</b> ${fixationData.complexName || 'Не указан'}\n` +
-          `🏗️ <b>Застройщик:</b> ${fixationData.developerName || 'Не указан'}\n` +
-          `🏡 <b>Тип недвижимости:</b> ${fixationData.propertyType || 'Не указан'}\n` +
-          `⏰ <b>Время:</b> ${new Date(fixationData.dateTime?.seconds * 1000 || Date.now()).toLocaleString('ru-RU')}\n\n` +
-          `📱 Перейдите в админ-панель для обработки фиксации.`;
+        // Получаем язык пользователя и соответствующие переводы
+        const userLanguage = getUserLanguage(userData);
+        const t = getTelegramTranslations(userLanguage);
+        
+        // Формируем подробное сообщение на языке пользователя
+        const message = `${t.newFixationTitle}\n\n` +
+          `${t.clientLabel} ${fixationData.clientName || t.notSpecified}\n` +
+          `${t.phoneLabel} ${fixationData.clientPhone || t.notSpecified}\n` +
+          `${t.agentLabel} ${fixationData.agentName || t.notSpecified}\n` +
+          `${t.complexLabel} ${fixationData.complexName || t.notSpecified}\n` +
+          `${t.developerLabel} ${fixationData.developerName || t.notSpecified}\n` +
+          `${t.propertyTypeLabel} ${fixationData.propertyType || t.notSpecified}\n` +
+          `${t.timeLabel} ${new Date(fixationData.dateTime?.seconds * 1000 || Date.now()).toLocaleString(userLanguage === 'ru' ? 'ru-RU' : userLanguage === 'en' ? 'en-US' : 'id-ID')}\n\n` +
+          `${t.adminPanelLink}`;
         
         notifications.push({
           chatId: telegramChatId,
           message: message,
           role: userRole,
-          developerId: userData.developerId
+          developerId: userData.developerId,
+          language: userLanguage
         });
       }
     }
@@ -337,7 +354,8 @@ const sendTelegramMessage = async (chatId, text) => {
       body: JSON.stringify({
         chat_id: chatId,
         text: text,
-        parse_mode: 'HTML'
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
       })
     });
     
@@ -386,6 +404,10 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
             
             console.log(`Верификация для пользователя ${userDoc.id}, Chat ID: ${chatId}`);
             
+            // Получаем язык пользователя и соответствующие переводы
+            const userLanguage = getUserLanguage(userData);
+            const t = getTelegramTranslations(userLanguage);
+            
             // Автоматически подключаем пользователя
             await userDoc.ref.update({
               telegramChatId: chatId.toString(),
@@ -394,29 +416,28 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
               telegramVerificationCode: admin.firestore.FieldValue.delete() // Удаляем код после использования
             });
             
-            const responseMessage = `✅ Подключение успешно завершено!\n\n` +
-              `Теперь вы будете получать уведомления о новых фиксациях клиентов в соответствии с вашей ролью: <b>${userData.role || 'agent'}</b>\n\n` +
-              `Вы можете закрыть это окно и вернуться в админ-панель.`;
+            const responseMessage = `${t.connectionSuccess}\n\n` +
+              `${t.connectionSuccessMessage.replace('{role}', userData.role || 'agent')}`;
             
             await sendTelegramMessage(chatId, responseMessage);
             
           } else {
-            const errorMessage = `❌ Код верификации не найден или уже использован.\n\n` +
-              `Получите новый код в админ-панели в разделе "Настройки".`;
+            // Используем русский язык по умолчанию для неизвестных пользователей
+            const t = getTelegramTranslations('ru');
+            const errorMessage = t.verificationCodeNotFound;
             
             await sendTelegramMessage(chatId, errorMessage);
           }
         } else {
           // Отправляем справку если команда /start без параметров
-          const helpMessage = `👋 Добро пожаловать в IT Agent Admin Bot!\n\n` +
-            `🔗 <b>Автоматическое подключение:</b>\n` +
-            `1. Перейдите в раздел "Настройки" в админ-панели\n` +
-            `2. Нажмите "Подключить телеграм"\n` +
-            `3. Нажмите кнопку "Подключить через Telegram"\n` +
-            `4. Вы автоматически попадете сюда и подключение завершится\n\n` +
-            `📱 <b>Ручное подключение:</b>\n` +
-            `Отправьте команду: <code>/start ВАШ_КОД_ВЕРИФИКАЦИИ</code>\n\n` +
-            `После подключения вы будете получать уведомления о новых фиксациях клиентов в соответствии с вашей ролью.`;
+          // Используем русский язык по умолчанию для неизвестных пользователей
+          const t = getTelegramTranslations('ru');
+          const helpMessage = `${t.welcomeMessage}\n\n` +
+            `${t.automaticConnection}\n` +
+            `${t.automaticConnectionSteps}\n\n` +
+            `${t.manualConnection}\n` +
+            `${t.manualConnectionInstruction}\n\n` +
+            `${t.finalMessage}`;
           
           await sendTelegramMessage(chatId, helpMessage);
         }
