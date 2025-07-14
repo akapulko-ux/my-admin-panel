@@ -21,7 +21,8 @@ import {
   UserCheck,
   ClipboardList,
   Network,
-  Settings
+  Settings,
+  GraduationCap
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -63,6 +64,11 @@ const Navigation = () => {
   const { language } = useLanguage();
   const nav = translations[language].navigation;
   const location = useLocation();
+  
+  // Отладочная информация
+  console.log('Navigation - Current role:', role);
+  console.log('Navigation - Available roles for education:', ['admin', 'модератор', 'застройщик']);
+  console.log('Navigation - Has education access:', ['admin', 'модератор', 'застройщик'].includes(role));
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -307,6 +313,16 @@ const Navigation = () => {
 
               {['admin', 'модератор', 'застройщик'].includes(role) && (
                 <NavItem 
+                  to="/education" 
+                  icon={GraduationCap}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.education}
+                </NavItem>
+              )}
+
+              {['admin', 'модератор', 'застройщик'].includes(role) && (
+                <NavItem 
                   to="/settings" 
                   icon={Settings}
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -426,6 +442,12 @@ const Navigation = () => {
         {role === 'admin' && (
           <NavItem to="/referral-map" icon={Network}>
             {nav.referralMap}
+          </NavItem>
+        )}
+
+        {['admin', 'модератор', 'застройщик'].includes(role) && (
+          <NavItem to="/education" icon={GraduationCap}>
+            {nav.education}
           </NavItem>
         )}
 

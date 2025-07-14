@@ -281,6 +281,44 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
   const fixationData = event.data.data();
   
   try {
+    // Если у фиксации нет developerId, пытаемся его определить
+    if (!fixationData.developerId && fixationData.developerName) {
+      console.log(`🔍 Определение developerId для застройщика: ${fixationData.developerName}`);
+      
+      try {
+        // Ищем застройщика по названию
+        const developersSnapshot = await admin.firestore()
+          .collection("developers")
+          .where("name", "==", fixationData.developerName)
+          .limit(1)
+          .get();
+        
+        if (!developersSnapshot.empty) {
+          const developerDoc = developersSnapshot.docs[0];
+          const developerId = developerDoc.id;
+          
+          console.log(`✅ Найден developerId: ${developerId} для застройщика: ${fixationData.developerName}`);
+          
+          // Обновляем фиксацию, добавляя developerId
+          await admin.firestore()
+            .collection("clientFixations")
+            .doc(event.params.fixationId)
+            .update({
+              developerId: developerId,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+          
+          console.log(`✅ Фиксация обновлена с developerId: ${developerId}`);
+          
+          // Обновляем данные фиксации для дальнейшей обработки
+          fixationData.developerId = developerId;
+        } else {
+          console.log(`⚠️  Застройщик не найден: ${fixationData.developerName}`);
+        }
+      } catch (error) {
+        console.error(`❌ Ошибка при определении developerId: ${error.message}`);
+      }
+    }
     // Получаем всех пользователей с подключенным телеграмом
     const usersSnapshot = await admin.firestore()
       .collection("users")
@@ -294,19 +332,43 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
       const userRole = userData.role;
       const telegramChatId = userData.telegramChatId;
       
+      console.log(`🔍 Проверка пользователя: ${userData.email || userDoc.id}`);
+      console.log(`   Роль: ${userRole}`);
+      console.log(`   Telegram Chat ID: ${telegramChatId}`);
+      console.log(`   Developer ID пользователя: ${userData.developerId}`);
+      console.log(`   Developer ID фиксации: ${fixationData.developerId}`);
+      
       // Проверяем права доступа пользователя к фиксации
       let hasAccess = false;
+      let accessReason = '';
       
       if (userRole === 'admin') {
         hasAccess = true; // Админ видит все
+        accessReason = 'Админ имеет доступ ко всем фиксациям';
       } else if (userRole === 'модератор') {
         hasAccess = true; // Модератор видит все
+        accessReason = 'Модератор имеет доступ ко всем фиксациям';
       } else if (userRole === 'застройщик') {
         // Застройщик видит только свои объекты
-        if (fixationData.developerId && userData.developerId === fixationData.developerId) {
+        const userDeveloperId = userData.developerId;
+        const fixationDeveloperId = fixationData.developerId;
+        
+        // Проверяем различные варианты совпадения
+        const developerIdsMatch = 
+          (userDeveloperId && fixationDeveloperId && userDeveloperId === fixationDeveloperId) ||
+          (userDeveloperId && fixationDeveloperId && userDeveloperId.toString() === fixationDeveloperId.toString());
+        
+        if (developerIdsMatch) {
           hasAccess = true;
+          accessReason = 'Застройщик имеет доступ к своим объектам';
+        } else {
+          accessReason = `Застройщик не имеет доступа: developerId не совпадают (пользователь: ${userDeveloperId}, фиксация: ${fixationDeveloperId})`;
         }
+      } else {
+        accessReason = `Роль ${userRole} не имеет доступа к фиксациям`;
       }
+      
+      console.log(`   Доступ: ${hasAccess ? '✅' : '❌'} - ${accessReason}`);
       
       if (hasAccess) {
         // Получаем язык пользователя и соответствующие переводы
@@ -390,7 +452,11 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
     const successCount = results.filter(r => r.success).length;
     const failureCount = results.filter(r => !r.success).length;
     
-    console.log(`Отправлено ${successCount} уведомлений, ошибок: ${failureCount} для фиксации ${event.params.fixationId}`);
+    console.log(`📊 Итоговая статистика для фиксации ${event.params.fixationId}:`);
+    console.log(`   ✅ Успешно отправлено: ${successCount}`);
+    console.log(`   ❌ Ошибок: ${failureCount}`);
+    console.log(`   📝 Всего уведомлений: ${notifications.length}`);
+    console.log(`   👥 Всего пользователей с Telegram: ${usersSnapshot.docs.length}`);
     
     return { success: true, sent: successCount, failed: failureCount, total: notifications.length };
   } catch (error) {

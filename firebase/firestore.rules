@@ -264,6 +264,36 @@ service cloud.firestore {
       allow create: if isAnyAgent() && request.auth.uid == request.data.agentId;
     }
 
+    // === Education (Обучение) ===
+    // === Education Sections (Разделы обучения) ===
+    match /educationSections/{sectionId} {
+      // Чтение: если пользователь залогинен и его роль содержится в массиве roles раздела
+      allow read: if isSignedIn() && (resource.data.roles.hasAny([request.auth.token.role, get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role]));
+      // Создание/редактирование/удаление: только admin
+      allow create, update, delete: if isAdmin();
+    }
+
+    // === Education Topics (Темы обучения) ===
+    match /educationTopics/{topicId} {
+      // Получаем раздел, к которому принадлежит тема
+      function sectionHasAccess() {
+        return exists(/databases/$(database)/documents/educationSections/$(resource.data.sectionId)) &&
+          get(/databases/$(database)/documents/educationSections/$(resource.data.sectionId)).data.roles.hasAny([request.auth.token.role, get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role]);
+      }
+      // Чтение: если есть доступ к разделу
+      allow read: if isSignedIn() && sectionHasAccess();
+      // Создание/редактирование/удаление: только admin или модератор
+      allow create, update, delete: if isAdmin() || isModerator();
+
+      // === Уроки внутри темы ===
+      match /lessons/{lessonId} {
+        // Чтение: если есть доступ к разделу
+        allow read: if isSignedIn() && sectionHasAccess();
+        // Создание/редактирование/удаление: только admin или модератор
+        allow create, update, delete: if isAdmin() || isModerator();
+      }
+    }
+
     // === Фоллбэк для любых новых коллекций ===
     match /{path=**} {
       // Админ имеет АБСОЛЮТНО ПОЛНЫЕ права на всё

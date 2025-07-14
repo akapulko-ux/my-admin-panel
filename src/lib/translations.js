@@ -144,7 +144,8 @@ export const translations = {
       userManagement: 'User Management',
       registrationRequests: 'Registration Requests',
       referralMap: 'Referral Map',
-      settings: 'Settings'
+      settings: 'Settings',
+      education: 'Education'
     },
 
     // Client Fixations
@@ -369,7 +370,9 @@ _________________               _________________
   (signature)                            (signature)`,
         executor: 'CONTRACTOR',
         customer: 'CLIENT',
-        signature: '(signature)'
+        signature: '(signature)',
+        createdAt: 'Created',
+        updatedAt: 'Updated'
       },
       language: {
         title: 'Language',
@@ -410,7 +413,9 @@ _________________               _________________
       priceFromPrefix: 'from',
       developerPrefix: 'Developer:',
       districtPrefix: 'District:',
-      completionPrefix: 'Completion:'
+      completionPrefix: 'Completion:',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // Complex Detail
@@ -459,7 +464,9 @@ _________________               _________________
       databaseUpdateError: 'Failed to update database information',
       dataLoadError: 'Error loading complex data',
       developerLoadError: 'Error loading developer',
-      complexNameLoadError: 'Error loading complex name'
+      complexNameLoadError: 'Error loading complex name',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // Properties Gallery
@@ -494,7 +501,9 @@ _________________               _________________
       priceUpdateSuccess: 'Price updated successfully',
       priceUpdateError: 'Failed to update price',
       complexLoadError: 'Error loading complex name',
-      developerLoadError: 'Error loading developer'
+      developerLoadError: 'Error loading developer',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // Property Detail
@@ -607,7 +616,9 @@ _________________               _________________
       
       // Lightbox
       photo: 'Photo',
-      photoCounter: '{current} / {total}'
+      photoCounter: '{current} / {total}',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // Chessboards
@@ -648,7 +659,7 @@ _________________               _________________
       noComplexSelected: 'No complex selected',
       nameRequired: 'Chessboard name is required',
       save: 'Save',
-      delete: 'Delete',
+      deleteChessboard: 'Delete',
       addSection: 'Add Section',
       exchangeRate: 'Exchange Rate (USD to IDR)',
       
@@ -722,7 +733,7 @@ _________________               _________________
       
       // Messages
       chessboardSaved: 'Chessboard saved successfully',
-      chessboardDeleted: 'Chessboard deleted successfully',
+      chessboardDeletedSuccess: 'Chessboard deleted successfully',
       saveError: 'Error saving chessboard',
       loadError: 'Error loading chessboard',
       complexLoadError: 'Error loading complexes',
@@ -746,11 +757,11 @@ _________________               _________________
       noComplexesForDeveloper: 'No available complexes for developer "{name}" without chessboard',
       
       // Unit form labels
-      floors: 'Floors',
-      area: 'Area (m²)',
-      rooms: 'Bedrooms',
-      bathrooms: 'Bathrooms',
-      view: 'View',
+      chessboardFloors: 'Floors',
+      chessboardArea: 'Area (m²)',
+      chessboardRooms: 'Bedrooms',
+      chessboardBathrooms: 'Bathrooms',
+      chessboardView: 'View',
       side: 'Side',
       priceWithRate: 'Price (USD → IDR)',
       enterPrice: 'Enter price',
@@ -781,7 +792,9 @@ _________________               _________________
       features: {
         rooftop: 'Rooftop',
         terrace: 'Terrace'
-      }
+      },
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // ROI Calculator
@@ -882,7 +895,9 @@ _________________               _________________
       russian: 'Russian',
       indonesian: 'Indonesian',
       pdf: 'PDF',
-      loading: '...'
+      loading: '...',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // Building Progress
@@ -938,7 +953,73 @@ _________________               _________________
         october: 'October',
         november: 'November',
         december: 'December'
-      }
+      },
+      createdAt: 'Created',
+      updatedAt: 'Updated'
+    },
+
+    // Education
+    education: {
+      title: 'Education',
+      description: 'Learning materials and training courses',
+      topics: 'Topics',
+      lessons: 'Lessons',
+      createTopic: 'Create Topic',
+      editTopic: 'Edit Topic',
+      deleteTopic: 'Delete Topic',
+      createLesson: 'Create Lesson',
+      editLesson: 'Edit Lesson',
+      deleteLesson: 'Delete Lesson',
+      topicName: 'Topic Name',
+      topicNameEn: 'Topic Name (English)',
+      topicNameRu: 'Topic Name (Russian)',
+      topicNameId: 'Topic Name (Indonesian)',
+      lessonName: 'Lesson Name',
+      lessonNameEn: 'Lesson Name (English)',
+      lessonNameRu: 'Lesson Name (Russian)',
+      lessonNameId: 'Lesson Name (Indonesian)',
+      lessonDescription: 'Lesson Description',
+      lessonDescriptionEn: 'Lesson Description (English)',
+      lessonDescriptionRu: 'Lesson Description (Russian)',
+      lessonDescriptionId: 'Lesson Description (Indonesian)',
+      videoUrlEn: 'Video URL (English)',
+      videoUrlRu: 'Video URL (Russian)',
+      videoUrlId: 'Video URL (Indonesian)',
+      order: 'Order',
+      save: 'Save',
+      cancel: 'Cancel',
+      loading: 'Loading...',
+      noTopics: 'No topics available',
+      noLessons: 'No lessons in this topic',
+      topicCreated: 'Topic created successfully',
+      topicUpdated: 'Topic updated successfully',
+      topicDeleted: 'Topic deleted successfully',
+      lessonCreated: 'Lesson created successfully',
+      lessonUpdated: 'Lesson updated successfully',
+      lessonDeleted: 'Lesson deleted successfully',
+      confirmDeleteTopic: 'Are you sure you want to delete this topic? All lessons will also be deleted.',
+      confirmDeleteLesson: 'Are you sure you want to delete this lesson?',
+      errorLoading: 'Error loading data',
+      errorSaving: 'Error saving data',
+      errorDeleting: 'Error deleting data',
+      noPermission: 'You do not have permission to perform this action',
+      watchVideo: 'Watch Video',
+      backToTopics: 'Back to Topics',
+      backToLessons: 'Back to Lessons',
+      viewLessons: 'View Lessons',
+      goToEducation: 'Go to Education',
+      backToSection: 'Back to Section',
+      addVideoUrl: 'Add video URL',
+      videoNotAvailable: 'Video not available in your language',
+      selectLanguage: 'Select language',
+      english: 'English',
+      russian: 'Russian',
+      indonesian: 'Indonesian',
+      infoSection: 'Information',
+      navigationSection: 'Navigation',
+      lessonDescriptionSection: 'Lesson Description',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     }
   },
   ru: {
@@ -1067,7 +1148,9 @@ _________________               _________________
       'Kab. Bangli': 'Регентство Бангли',
       'Kab. Karangasem': 'Регентство Карангасем',
       'Kab. Buleleng': 'Регентство Буллеленг',
-      'Kota Denpasar': 'Город Денпасар'
+      'Kota Denpasar': 'Город Денпасар',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Navigation
@@ -1086,7 +1169,10 @@ _________________               _________________
       userManagement: 'Управление пользователями',
       registrationRequests: 'Заявки на регистрацию',
       referralMap: 'Карта рефералов',
-      settings: 'Настройки'
+      settings: 'Настройки',
+      education: 'Обучение',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Client Fixations
@@ -1157,7 +1243,9 @@ _________________               _________________
       fetchError: 'Ошибка при загрузке фиксаций',
       commentTooShort: 'Комментарий должен содержать не менее 10 символов',
       validDateRequired: 'Пожалуйста, выберите действительную дату',
-      cancel: 'Отмена'
+      cancel: 'Отмена',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Fixation Chat
@@ -1168,7 +1256,9 @@ _________________               _________________
       messageSent: 'Сообщение отправлено',
       messageError: 'Не удалось отправить сообщение',
       chatDataError: 'Не удалось загрузить данные чата',
-      messagesError: 'Не удалось загрузить сообщения'
+      messagesError: 'Не удалось загрузить сообщения',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Settings Page
@@ -1190,7 +1280,9 @@ _________________               _________________
         updating: 'Обновление...',
         profileUpdated: 'Профиль успешно обновлен',
         passwordsNotMatch: 'Пароли не совпадают',
-        passwordUpdated: 'Пароль успешно обновлен'
+        passwordUpdated: 'Пароль успешно обновлен',
+        createdAt: 'Создан',
+        updatedAt: 'Обновлен'
       },
       telegram: {
         title: 'Интеграция с Telegram',
@@ -1219,7 +1311,9 @@ _________________               _________________
         codeLabel: 'Код верификации:',
         codeInstructions: 'Этот код будет автоматически передан боту',
         connectViaTelegram: 'Подключить через Telegram',
-        waitingConnection: 'Ожидание подключения...'
+        waitingConnection: 'Ожидание подключения...',
+        createdAt: 'Создан',
+        updatedAt: 'Обновлен'
       },
       contract: {
         title: 'Агентский договор',
@@ -1259,59 +1353,61 @@ _________________               _________________
 2.1.1. Предоставить доступ к IT-платформе для размещения объектов недвижимости;
 2.1.2. Обеспечивать техническое функционирование платформы;
 2.1.3. Организовывать получение и обработку заявок от агентов;
-2.1.4. Menyediakan alat untuk interaksi dengan agen real estat.
+2.1.4. Предоставлять инструменты для взаимодействия с агентами по недвижимости.
 
-2.2. Klien berkomitmen untuk:
-2.2.1. Tepat waktu menyediakan informasi terkini dan terpercaya tentang objek real estat;
-2.2.2. Menjaga informasi tentang objek tetap terkini;
-2.2.3. Tepat waktu membayar layanan sesuai dengan syarat Perjanjian ini;
-2.2.4. Memberitahu Kontraktor tentang penjualan objek real estat melalui platform.
+2.2. Заказчик обязуется:
+2.2.1. Своевременно предоставлять актуальную и достоверную информацию об объектах недвижимости;
+2.2.2. Поддерживать информацию об объектах в актуальном состоянии;
+2.2.3. Своевременно оплачивать услуги согласно условиям настоящего Договора;
+2.2.4. Уведомлять Исполнителя о продаже объектов недвижимости через платформу.
 
-3. PROSEDUR PEMBAYARAN
+3. ПОРЯДОК ОПЛАТЫ
 
-3.1. Biaya layanan Kontraktor adalah 0,5% (nol koma lima persen) dari harga setiap objek real estat yang dijual melalui platform IT.
+3.1. Стоимость услуг Исполнителя составляет 0,5% (ноль целых пять десятых процента) от цены каждого объекта недвижимости, проданного через IT-платформу.
 
-3.2. Komisi yang ditentukan dalam pasal 3.1 dibayar oleh Klien sebagai tambahan dari komisi standar kepada agen real estat (5%).
+3.2. Комиссия, указанная в пункте 3.1, оплачивается Заказчиком дополнительно к стандартной комиссии агентам по недвижимости (5%).
 
-3.3. Pembayaran dilakukan dalam waktu 10 (sepuluh) hari perbankan sejak saat penandatanganan perjanjian jual beli real estat antara Klien dan pembeli yang didapat melalui platform IT.
+3.3. Оплата производится в течение 10 (десяти) банковских дней с момента заключения договора купли-продажи недвижимости между Заказчиком и покупателем, привлеченным через IT-платформу.
 
-3.4. Dasar untuk pembayaran adalah perjanjian jual beli yang ditandatangani dan pemberitahuan dari Klien tentang transaksi yang diselesaikan.
+3.4. Основанием для оплаты является подписанный договор купли-продажи и уведомление от Заказчика о совершенной сделке.
 
-4. TANGGUNG JAWAB PARA PIHAK
+4. ОТВЕТСТВЕННОСТЬ СТОРОН
 
-4.1. Untuk tidak melaksanakan atau melaksanakan dengan tidak benar kewajiban berdasarkan Perjanjian ini, para pihak memikul tanggung jawab sesuai dengan hukum yang berlaku.
+4.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору стороны несут ответственность в соответствии с действующим законодательством.
 
-4.2. Dalam hal keterlambatan pembayaran, Klien membayar denda sebesar 0,1% dari jumlah pembayaran yang tertunggak untuk setiap hari keterlambatan.
+4.2. В случае просрочки оплаты Заказчик уплачивает пеню в размере 0,1% от суммы просроченного платежа за каждый день просрочки.
 
-5. JANGKA WAKTU PERJANJIAN
+5. СРОК ДЕЙСТВИЯ ДОГОВОРА
 
-5.1. Perjanjian ini mulai berlaku sejak saat penandatanganan dan berlaku selama satu tahun.
+5.1. Настоящий Договор вступает в силу с момента его подписания и действует в течение одного года.
 
-5.2. Perjanjian diperpanjang secara otomatis untuk periode yang sama jika salah satu pihak tidak memberitahu pihak lain tentang penghentian 30 hari sebelum tanggal kedaluwarsa.
+5.2. Договор автоматически продлевается на тот же срок, если ни одна из сторон не уведомит другую о расторжении за 30 дней до истечения срока.
 
-6. PROSEDUR PENYELESAIAN SENGKETA
+6. ПОРЯДОК РАЗРЕШЕНИЯ СПОРОВ
 
-6.1. Semua sengketa dan perselisihan diselesaikan melalui negosiasi.
+6.1. Все споры и разногласия разрешаются путем переговоров.
 
-6.2. Jika tidak mungkin mencapai kesepakatan, sengketa diselesaikan di pengadilan di lokasi Kontraktor.
+6.2. При невозможности достижения соглашения споры разрешаются в суде по месту нахождения Исполнителя.
 
-7. KETENTUAN AKHIR
+7. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ
 
-7.1. Perjanjian ini dibuat dalam dua salinan, memiliki kekuatan hukum yang sama, satu untuk setiap pihak.
+7.1. Настоящий Договор составлен в двух экземплярах, имеющих равную юридическую силу, по одному для каждой из сторон.
 
-7.2. Perubahan dan penambahan pada Perjanjian hanya berlaku jika dilakukan secara tertulis dan ditandatangani oleh kedua belah pihak.
+7.2. Изменения и дополнения к Договору действительны только при оформлении в письменном виде и подписании обеими сторонами.
 
-8. TANDA TANGAN PARA PIHAK
+8. ПОДПИСИ СТОРОН
 
-KONTRAKTOR:                     KLIEN:
-     IT Agent                                         Pengembang
+ИСПОЛНИТЕЛЬ:                     ЗАКАЗЧИК:
+     IT Agent                                         Застройщик
 
 
 _________________               _________________
   (подпись)                            (подпись)`,
         executor: 'ИСПОЛНИТЕЛЬ',
         customer: 'ЗАКАЗЧИК',
-        signature: '(подпись)'
+        signature: '(подпись)',
+        createdAt: 'Создан',
+        updatedAt: 'Обновлен'
       },
       language: {
         title: 'Язык',
@@ -1352,7 +1448,9 @@ _________________               _________________
       priceFromPrefix: 'от',
       developerPrefix: 'Застройщик:',
       districtPrefix: 'Район:',
-      completionPrefix: 'Сдача:'
+      completionPrefix: 'Сдача:',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Complex Detail
@@ -1401,7 +1499,9 @@ _________________               _________________
       databaseUpdateError: 'Не удалось обновить информацию в базе данных',
       dataLoadError: 'Ошибка при загрузке данных комплекса',
       developerLoadError: 'Ошибка загрузки застройщика',
-      complexNameLoadError: 'Ошибка при загрузке названия комплекса'
+      complexNameLoadError: 'Ошибка при загрузке названия комплекса',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Properties Gallery
@@ -1436,7 +1536,9 @@ _________________               _________________
       priceUpdateSuccess: 'Цена успешно обновлена',
       priceUpdateError: 'Не удалось обновить цену',
       complexLoadError: 'Ошибка при загрузке названия комплекса',
-      developerLoadError: 'Ошибка загрузки застройщика'
+      developerLoadError: 'Ошибка загрузки застройщика',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Property Detail
@@ -1484,7 +1586,7 @@ _________________               _________________
       landRightsCertificate: 'Сертификат права на землю (SHGB):',
       buildingPermit: 'Разрешение на строительство (PBG):',
       buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
-      layout: 'Планировка:',
+      layout: 'Тонировка:',
       dueDiligence: 'Due Diligence:',
       pkkprFile: 'Файл PKKPR:',
       
@@ -1549,7 +1651,9 @@ _________________               _________________
       
       // Lightbox
       photo: 'Фото',
-      photoCounter: '{current} / {total}'
+      photoCounter: '{current} / {total}',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Chessboards
@@ -1590,7 +1694,7 @@ _________________               _________________
       noComplexSelected: 'Комплекс не выбран',
       nameRequired: 'Название шахматки обязательно',
       save: 'Сохранить',
-      delete: 'Удалить',
+      deleteChessboard: 'Удалить',
       addSection: 'Добавить секцию',
       exchangeRate: 'Курс валют (USD к IDR)',
       
@@ -1664,7 +1768,7 @@ _________________               _________________
       
       // Messages
       chessboardSaved: 'Шахматка успешно сохранена',
-      chessboardDeleted: 'Шахматка успешно удалена',
+      chessboardDeletedSuccess: 'Шахматка успешно удалена',
       saveError: 'Ошибка при сохранении шахматки',
       loadError: 'Ошибка при загрузке шахматки',
       complexLoadError: 'Ошибка загрузки комплексов',
@@ -1688,11 +1792,11 @@ _________________               _________________
       noComplexesForDeveloper: 'Нет доступных комплексов для застройщика "{name}" без шахматки',
       
       // Unit form labels
-      floors: 'Этажность',
-      area: 'Площадь (м²)',
-      rooms: 'Спальни',
-      bathrooms: 'Санузлы',
-      view: 'Вид из окна',
+      chessboardFloors: 'Этажность',
+      chessboardArea: 'Площадь (м²)',
+      chessboardRooms: 'Спальни',
+      chessboardBathrooms: 'Санузлы',
+      chessboardView: 'Вид из окна',
       side: 'Сторона',
       priceWithRate: 'Цена (USD → IDR)',
       enterPrice: 'Введите цену',
@@ -1723,7 +1827,9 @@ _________________               _________________
       features: {
         rooftop: 'Руфтоп',
         terrace: 'Терраса'
-      }
+      },
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // ROI Calculator
@@ -1824,7 +1930,9 @@ _________________               _________________
       russian: 'Русский',
       indonesian: 'Indonesian',
       pdf: 'PDF',
-      loading: '...'
+      loading: '...',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Building Progress
@@ -1880,7 +1988,73 @@ _________________               _________________
         october: 'Октябрь',
         november: 'Ноябрь',
         december: 'Декабрь'
-      }
+      },
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
+    },
+
+    // Education
+    education: {
+      title: 'Обучение',
+      description: 'Обучающие материалы и курсы',
+      topics: 'Темы',
+      lessons: 'Уроки',
+      createTopic: 'Создать тему',
+      editTopic: 'Редактировать тему',
+      deleteTopic: 'Удалить тему',
+      createLesson: 'Создать урок',
+      editLesson: 'Редактировать урок',
+      deleteLesson: 'Удалить урок',
+      topicName: 'Название темы',
+      topicNameEn: 'Название темы (Английский)',
+      topicNameRu: 'Название темы (Русский)',
+      topicNameId: 'Название темы (Индонезийский)',
+      lessonName: 'Название урока',
+      lessonNameEn: 'Название урока (Английский)',
+      lessonNameRu: 'Название урока (Русский)',
+      lessonNameId: 'Название урока (Индонезийский)',
+      lessonDescription: 'Описание урока',
+      lessonDescriptionEn: 'Описание урока (Английский)',
+      lessonDescriptionRu: 'Описание урока (Русский)',
+      lessonDescriptionId: 'Описание урока (Индонезийский)',
+      videoUrlEn: 'Ссылка на видео (Английский)',
+      videoUrlRu: 'Ссылка на видео (Русский)',
+      videoUrlId: 'Ссылка на видео (Индонезийский)',
+      order: 'Порядок',
+      save: 'Сохранить',
+      cancel: 'Отмена',
+      loading: 'Загрузка...',
+      noTopics: 'Темы не найдены',
+      noLessons: 'В этой теме нет уроков',
+      topicCreated: 'Тема успешно создана',
+      topicUpdated: 'Тема успешно обновлена',
+      topicDeleted: 'Тема успешно удалена',
+      lessonCreated: 'Урок успешно создан',
+      lessonUpdated: 'Урок успешно обновлен',
+      lessonDeleted: 'Урок успешно удален',
+      confirmDeleteTopic: 'Вы уверены, что хотите удалить эту тему? Все уроки также будут удалены.',
+      confirmDeleteLesson: 'Вы уверены, что хотите удалить этот урок?',
+      errorLoading: 'Ошибка загрузки данных',
+      errorSaving: 'Ошибка сохранения данных',
+      errorDeleting: 'Ошибка удаления данных',
+      noPermission: 'У вас нет прав для выполнения этого действия',
+      watchVideo: 'Смотреть видео',
+      backToTopics: 'Назад к темам',
+      backToLessons: 'Назад к урокам',
+      viewLessons: 'Смотреть уроки',
+      goToEducation: 'Перейти к обучению',
+      backToSection: 'Назад к разделу',
+      addVideoUrl: 'Добавить ссылку на видео',
+      videoNotAvailable: 'Video tidak tersedia dalam bahasa Anda',
+      selectLanguage: 'Выберите язык',
+      english: 'Английский',
+      russian: 'Русский',
+      indonesian: 'Индонезийский',
+      infoSection: 'Информация',
+      navigationSection: 'Навигация',
+      lessonDescriptionSection: 'Описание урока',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     }
   },
   id: {
@@ -2009,7 +2183,9 @@ _________________               _________________
       'Kab. Bangli': 'Kab. Bangli',
       'Kab. Karangasem': 'Kab. Karangasem',
       'Kab. Buleleng': 'Kab. Buleleng',
-      'Kota Denpasar': 'Kota Denpasar'
+      'Kota Denpasar': 'Kota Denpasar',
+      createdAt: 'Dibuat',
+      updatedAt: 'Diperbarui'
     },
 
     // Navigation
@@ -2028,7 +2204,10 @@ _________________               _________________
       userManagement: 'Manajemen Pengguna',
       registrationRequests: 'Permintaan Registrasi',
       referralMap: 'Peta Referral',
-      settings: 'Pengaturan'
+      settings: 'Pengaturan',
+      education: 'Pendidikan',
+      createdAt: 'Dibuat',
+      updatedAt: 'Diperbarui'
     },
 
     // Client Fixations
@@ -2099,7 +2278,9 @@ _________________               _________________
       fetchError: 'Kesalahan saat memuat fiksasi',
       commentTooShort: 'Komentar harus mengandung minimal 10 karakter',
       validDateRequired: 'Harap pilih tanggal yang valid',
-      cancel: 'Batal'
+      cancel: 'Batal',
+      createdAt: 'Dibuat',
+      updatedAt: 'Diperbarui'
     },
 
     // Fixation Chat
@@ -2110,7 +2291,9 @@ _________________               _________________
       messageSent: 'Pesan berhasil dikirim',
       messageError: 'Gagal mengirim pesan',
       chatDataError: 'Gagal memuat data chat',
-      messagesError: 'Gagal memuat pesan'
+      messagesError: 'Gagal memuat pesan',
+      createdAt: 'Dibuat',
+      updatedAt: 'Diperbarui'
     },
 
     // Settings Page
@@ -2132,7 +2315,9 @@ _________________               _________________
         updating: 'Memperbarui...',
         profileUpdated: 'Profil berhasil diperbarui',
         passwordsNotMatch: 'Kata sandi tidak cocok',
-        passwordUpdated: 'Kata sandi berhasil diperbarui'
+        passwordUpdated: 'Kata sandi berhasil diperbarui',
+        createdAt: 'Dibuat',
+        updatedAt: 'Diperbarui'
       },
       telegram: {
         title: 'Integrasi Telegram',
@@ -2161,7 +2346,9 @@ _________________               _________________
         codeLabel: 'Kode verifikasi:',
         codeInstructions: 'Kode ini akan secara otomatis diteruskan ke bot',
         connectViaTelegram: 'Hubungkan melalui Telegram',
-        waitingConnection: 'Menunggu koneksi...'
+        waitingConnection: 'Menunggu koneksi...',
+        createdAt: 'Dibuat',
+        updatedAt: 'Diperbarui'
       },
       contract: {
         title: 'Kontrak Agen',
@@ -2253,7 +2440,9 @@ _________________               _________________
   (tanda tangan)                       (tanda tangan)`,
         executor: 'KONTRAKTOR',
         customer: 'KLIEN',
-        signature: '(tanda tangan)'
+        signature: '(tanda tangan)',
+        createdAt: 'Создан',
+        updatedAt: 'Обновлен'
       },
       language: {
         title: 'Bahasa',
@@ -2294,7 +2483,9 @@ _________________               _________________
       priceFromPrefix: 'dari',
       developerPrefix: 'Pengembang:',
       districtPrefix: 'Distrik:',
-      completionPrefix: 'Selesai:'
+      completionPrefix: 'Selesai:',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Complex Detail
@@ -2343,7 +2534,9 @@ _________________               _________________
       databaseUpdateError: 'Gagal memperbarui informasi database',
       dataLoadError: 'Kesalahan memuat data kompleks',
       developerLoadError: 'Kesalahan memuat pengembang',
-      complexNameLoadError: 'Kesalahan memuat nama kompleks'
+      complexNameLoadError: 'Kesalahan memuat nama kompleks',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Properties Gallery
@@ -2378,7 +2571,9 @@ _________________               _________________
       priceUpdateSuccess: 'Harga berhasil diperbarui',
       priceUpdateError: 'Gagal memperbarui harga',
       complexLoadError: 'Kesalahan memuat nama kompleks',
-      developerLoadError: 'Kesalahan memuat pengembang'
+      developerLoadError: 'Kesalahan memuat pengembang',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Property Detail
@@ -2491,7 +2686,9 @@ _________________               _________________
       
       // Lightbox
       photo: 'Foto',
-      photoCounter: '{current} / {total}'
+      photoCounter: '{current} / {total}',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Chessboards
@@ -2532,7 +2729,7 @@ _________________               _________________
       noComplexSelected: 'Tidak ada kompleks yang dipilih',
       nameRequired: 'Nama papan catur wajib diisi',
       save: 'Simpan',
-      delete: 'Hapus',
+      deleteChessboard: 'Hapus',
       addSection: 'Tambah Bagian',
       exchangeRate: 'Nilai Tukar (USD ke IDR)',
       
@@ -2606,7 +2803,7 @@ _________________               _________________
       
       // Messages
       chessboardSaved: 'Papan catur berhasil disimpan',
-      chessboardDeleted: 'Papan catur berhasil dihapus',
+      chessboardDeletedSuccess: 'Papan catur berhasil dihapus',
       saveError: 'Kesalahan menyimpan papan catur',
       loadError: 'Kesalahan memuat papan catur',
       complexLoadError: 'Kesalahan memuat kompleks',
@@ -2630,11 +2827,11 @@ _________________               _________________
       noComplexesForDeveloper: 'Tidak ada kompleks yang tersedia untuk pengembang "{name}" tanpa papan catur',
       
       // Unit form labels
-      floors: 'Tingkat',
-      area: 'Luas (m²)',
-      rooms: 'Kamar Tidur',
-      bathrooms: 'Kamar Mandi',
-      view: 'Pemandangan',
+      chessboardFloors: 'Tingkat',
+      chessboardArea: 'Luas (m²)',
+      chessboardRooms: 'Kamar Tidur',
+      chessboardBathrooms: 'Kamar Mandi',
+      chessboardView: 'Pemandangan',
       side: 'Sisi',
       priceWithRate: 'Harga (USD → IDR)',
       enterPrice: 'Masukkan harga',
@@ -2665,7 +2862,9 @@ _________________               _________________
       features: {
         rooftop: 'Rooftop',
         terrace: 'Teras'
-      }
+      },
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // ROI Calculator
@@ -2766,7 +2965,9 @@ _________________               _________________
       russian: 'Русский',
       indonesian: 'Indonesian',
       pdf: 'PDF',
-      loading: '...'
+      loading: '...',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Building Progress
@@ -2822,7 +3023,73 @@ _________________               _________________
         october: 'Oktober',
         november: 'November',
         december: 'Desember'
-      }
+      },
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
+    },
+
+    // Education
+    education: {
+      title: 'Pendidikan',
+      description: 'Materi pembelajaran dan kursus pelatihan',
+      topics: 'Topik',
+      lessons: 'Pelajaran',
+      createTopic: 'Buat Topik',
+      editTopic: 'Edit Topik',
+      deleteTopic: 'Hapus Topik',
+      createLesson: 'Buat Pelajaran',
+      editLesson: 'Edit Pelajaran',
+      deleteLesson: 'Hapus Pelajaran',
+      topicName: 'Nama Topik',
+      topicNameEn: 'Nama Topik (Bahasa Inggris)',
+      topicNameRu: 'Nama Topik (Bahasa Rusia)',
+      topicNameId: 'Nama Topik (Bahasa Indonesia)',
+      lessonName: 'Nama Pelajaran',
+      lessonNameEn: 'Nama Pelajaran (Bahasa Inggris)',
+      lessonNameRu: 'Nama Pelajaran (Bahasa Rusia)',
+      lessonNameId: 'Nama Pelajaran (Bahasa Indonesia)',
+      lessonDescription: 'Deskripsi Pelajaran',
+      lessonDescriptionEn: 'Deskripsi Pelajaran (Bahasa Inggris)',
+      lessonDescriptionRu: 'Deskripsi Pelajaran (Bahasa Rusia)',
+      lessonDescriptionId: 'Deskripsi Pelajaran (Bahasa Indonesia)',
+      videoUrlEn: 'URL Video (Bahasa Inggris)',
+      videoUrlRu: 'URL Video (Bahasa Rusia)',
+      videoUrlId: 'URL Video (Bahasa Indonesia)',
+      order: 'Urutan',
+      save: 'Simpan',
+      cancel: 'Batal',
+      loading: 'Memuat...',
+      noTopics: 'Tidak ada topik yang tersedia',
+      noLessons: 'Tidak ada pelajaran dalam topik ini',
+      topicCreated: 'Topik berhasil dibuat',
+      topicUpdated: 'Topik berhasil diperbarui',
+      topicDeleted: 'Topik berhasil dihapus',
+      lessonCreated: 'Pelajaran berhasil dibuat',
+      lessonUpdated: 'Pelajaran berhasil diperbarui',
+      lessonDeleted: 'Pelajaran berhasil dihapus',
+      confirmDeleteTopic: 'Apakah Anda yakin ingin menghapus topik ini? Semua pelajaran juga akan dihapus.',
+      confirmDeleteLesson: 'Apakah Anda yakin ingin menghapus pelajaran ini?',
+      errorLoading: 'Kesalahan memuat data',
+      errorSaving: 'Kesalahan menyimpan data',
+      errorDeleting: 'Kesalahan menghapus data',
+      noPermission: 'Anda tidak memiliki izin untuk melakukan tindakan ini',
+      watchVideo: 'Tonton Video',
+      backToTopics: 'Kembali ke Topik',
+      backToLessons: 'Kembali ke Pelajaran',
+      viewLessons: 'Lihat Pelajaran',
+      goToEducation: 'Pergi ke Pendidikan',
+      backToSection: 'Kembali ke Bagian',
+      addVideoUrl: 'Tambahkan URL video',
+      videoNotAvailable: 'Video tidak tersedia dalam bahasa Anda',
+      selectLanguage: 'Pilih bahasa',
+      english: 'Bahasa Inggris',
+      russian: 'Bahasa Rusia',
+      indonesian: 'Bahasa Indonesia',
+      infoSection: 'Informasi',
+      navigationSection: 'Navigasi',
+      lessonDescriptionSection: 'Deskripsi Pelajaran',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     }
   }
 }; 

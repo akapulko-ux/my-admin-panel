@@ -10,27 +10,32 @@ import {
 import { Button } from "./ui/button";
 
 const ConfirmDialog = ({ 
-  isOpen, 
-  onClose, 
+  open, 
+  onOpenChange, 
   onConfirm, 
   title, 
   description,
   confirmText = "Удалить",
   cancelText = "Отмена",
-  variant = "destructive"
+  variant = "destructive",
+  loading = false,
+  children
 }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             {cancelText}
           </Button>
-          <Button variant={variant} onClick={onConfirm}>
+          <Button variant={variant} onClick={onConfirm} disabled={loading}>
             {confirmText}
           </Button>
         </DialogFooter>

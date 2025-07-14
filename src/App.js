@@ -43,6 +43,12 @@ import CreateLandmark from "./pages/CreateLandmark";
 import EditLandmark from "./pages/EditLandmark";
 import ListLandmarks from "./pages/ListLandmarks";
 
+// Обучение
+import Education from "./pages/Education";
+import EducationTopic from "./pages/EducationTopic";
+import EducationLesson from "./pages/EducationLesson";
+import EducationSection from "./pages/EducationSection";
+
 // Застройщики
 import ListDevelopers from "./pages/ListDevelopers";
 import EditDeveloper from "./pages/EditDeveloper";
@@ -370,6 +376,28 @@ function App() {
                     <Route path="/referral-map" element={
                       <ProtectedRoute>
                         <ReferralMap />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Обучение */}
+                    <Route path="/education" element={
+                      <ProtectedRoute>
+                        <Education />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/education/section/:sectionId" element={
+                      <ProtectedRoute>
+                        <EducationSection />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/education/topic/:topicId" element={
+                      <ProtectedRoute>
+                        <EducationTopic />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/education/lesson/:topicId/:lessonId" element={
+                      <ProtectedRoute>
+                        <EducationLesson />
                       </ProtectedRoute>
                     } />
 

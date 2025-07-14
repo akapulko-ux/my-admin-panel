@@ -14,7 +14,8 @@ const ROUTE_ACCESS = {
     '/roi-calculator',
     '/client-fixations',
     '/building-progress/*',
-    '/settings'
+    '/settings',
+    '/education/*'
   ],
   'premium agent': [
     '/property/gallery',
@@ -33,7 +34,9 @@ const ROUTE_ACCESS = {
     '/client-fixations',
     '/dashboard',
     '/building-progress/*',
-    '/settings'
+    '/settings',
+    '/education', // добавлено
+    '/education/*'
   ],
   user: [
     '/property/gallery',
