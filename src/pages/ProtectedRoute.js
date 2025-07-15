@@ -19,11 +19,13 @@ const ROUTE_ACCESS = {
   ],
   'premium agent': [
     '/property/gallery',
-    '/building-progress/*'
+    '/building-progress/*',
+    '/roi-calculator'
   ],
   agent: [
     '/property/gallery',
-    '/building-progress/*'
+    '/building-progress/*',
+    '/roi-calculator'
   ],
   застройщик: [
     '/property/gallery',

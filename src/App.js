@@ -212,6 +212,7 @@ function App() {
               <Route path="/public-building-progress/:type/:id" element={<PublicBuildingProgress />} />
               <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/roi-calculator" element={<RoiCalculator />} />
 
               {/* Лендинг для неавторизованных пользователей */}
               <Route path="/" element={
@@ -235,12 +236,7 @@ function App() {
                       </ProtectedRoute>
                     } />
 
-                    {/* Калькулятор ROI */}
-                    <Route path="/roi-calculator" element={
-                      <ProtectedRoute>
-                        <RoiCalculator />
-                      </ProtectedRoute>
-                    } />
+
 
                     {/* Комплексы */}
                     <Route path="/complex/new" element={

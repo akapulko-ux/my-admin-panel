@@ -700,7 +700,8 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
               <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-800`}>
                 {t.roiCalculator.calculationResults}
               </h2>
-              <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex items-center gap-4'}`}>
+              <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex flex-wrap items-start gap-4'}`}>
+                {/* Группа 1: Сохранение расчета */}
                 <Button 
                   onClick={saveCalculation} 
                   className={`bg-green-600 hover:bg-green-700 ${isMobile ? 'w-full h-12' : ''}`}
@@ -708,7 +709,8 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                   {hasSavedData ? t.roiCalculator.updateCalculation : t.roiCalculator.saveCalculation}
                 </Button>
 
-                <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
+                {/* Группа 2: Публичная страница */}
+                <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex flex-col gap-2'}`}>
                   <Button 
                     onClick={generatePublicPage}
                     variant="outline"
@@ -733,6 +735,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                   </Button>
                 </div>
 
+                {/* Группа 3: PDF экспорт */}
                 <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                   <Select value={pdfLanguage} onValueChange={setPdfLanguage}>
                     <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'w-[120px]'}`}>

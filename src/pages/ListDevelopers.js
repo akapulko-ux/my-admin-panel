@@ -3,6 +3,8 @@ import { db } from "../firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Building2, Plus, Pencil } from "lucide-react";
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
 
 import {
   Card,
@@ -20,6 +22,9 @@ function ListDevelopers() {
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  const { language } = useLanguage();
+  const t = translations[language]?.developersList || translations.ru.developersList;
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -72,14 +77,19 @@ function ListDevelopers() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-8`}>
-        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>Список Застройщиков</h1>
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>{t.title}</h1>
         <Button 
           onClick={() => navigate("/developers/edit/new")}
           className={`${isMobile ? 'w-full h-12' : ''}`}
         >
           <Plus className="mr-2 h-4 w-4" />
-          Добавить Застройщика
+          {t.addDeveloper}
         </Button>
+      </div>
+
+      {/* Счетчик количества застройщиков */}
+      <div className="text-sm text-gray-500 mb-4">
+        {t.developersFound.replace('{count}', developers.length)}
       </div>
 
       {loading ? (
@@ -90,7 +100,7 @@ function ListDevelopers() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-xl text-muted-foreground">Нет застройщиков</p>
+            <p className="text-xl text-muted-foreground">{t.noDevelopers}</p>
           </CardContent>
         </Card>
       ) : (
@@ -127,7 +137,7 @@ function ListDevelopers() {
                   onClick={() => navigate(`/developers/edit/${dev.id}`)}
                 >
                   <Pencil className="mr-2 h-4 w-4" />
-                  Редактировать
+                  {t.editDeveloper}
                 </Button>
               </CardFooter>
             </Card>

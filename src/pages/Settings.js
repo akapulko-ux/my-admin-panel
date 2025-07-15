@@ -285,7 +285,7 @@ const Settings = () => {
         }
       } else {
         // Для десктопных устройств используем window.open
-        window.open(telegramLink, '_blank');
+      window.open(telegramLink, '_blank');
       }
       
       // Начинаем проверку статуса подключения

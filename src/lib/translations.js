@@ -897,7 +897,16 @@ _________________               _________________
       pdf: 'PDF',
       loading: '...',
       createdAt: 'Created',
-      updatedAt: 'Updated'
+      updatedAt: 'Updated',
+      
+      // Additional translations
+      savedCalculations: 'Saved Calculations',
+      loginToSave: 'Sign in to save and view calculations',
+      noSavedCalculations: 'No saved calculations',
+      otaCommission: 'OTA Commission (%)',
+      calculationName: 'Calculation Name',
+      exportToCSV: 'Export to CSV',
+      basedOnDataAndScenario: 'Based on entered data and scenario'
     },
 
     // Building Progress
@@ -1018,6 +1027,19 @@ _________________               _________________
       infoSection: 'Information',
       navigationSection: 'Navigation',
       lessonDescriptionSection: 'Lesson Description',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
+    },
+
+    // Developers List
+    developersList: {
+      title: 'Developers List',
+      addDeveloper: 'Add Developer',
+      noDevelopers: 'No developers',
+      developersFound: 'Developers found: {count}',
+      editDeveloper: 'Edit',
+      loading: 'Loading...',
+      errorLoading: 'Error loading developers',
       createdAt: 'Created',
       updatedAt: 'Updated'
     }
@@ -1932,7 +1954,16 @@ _________________               _________________
       pdf: 'PDF',
       loading: '...',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      
+      // Additional translations
+      savedCalculations: 'Сохраненные расчеты',
+      loginToSave: 'Войдите в систему для сохранения и просмотра расчетов',
+      noSavedCalculations: 'Нет сохраненных расчетов',
+      otaCommission: 'Комиссия площадок (%)',
+      calculationName: 'Название расчета',
+      exportToCSV: 'Экспорт в CSV',
+      basedOnDataAndScenario: 'На основе введенных данных и сценария'
     },
 
     // Building Progress
@@ -1945,8 +1976,8 @@ _________________               _________________
       successUpload: 'Файлы успешно загружены',
       successDelete: 'Файл удален',
       successLinkCopied: 'Публичная ссылка скопирована в буфер обмена',
-      noAccessUpload: 'У вас нет прав для загрузки файлов',
-      noAccessDelete: 'У вас нет прав для удаления файлов',
+      noAccessUpload: 'You do not have permission to upload files',
+      noAccessDelete: 'You do not have permission to delete files',
       
       // Buttons
       view: 'Просмотр',
@@ -2053,6 +2084,19 @@ _________________               _________________
       infoSection: 'Информация',
       navigationSection: 'Навигация',
       lessonDescriptionSection: 'Описание урока',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
+    },
+
+    // Список застройщиков
+    developersList: {
+      title: 'Список застройщиков',
+      addDeveloper: 'Добавить застройщика',
+      noDevelopers: 'Нет застройщиков',
+      developersFound: 'Найдено застройщиков: {count}',
+      editDeveloper: 'Редактировать',
+      loading: 'Загрузка...',
+      errorLoading: 'Ошибка при загрузке застройщиков',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
     }
@@ -2967,7 +3011,16 @@ _________________               _________________
       pdf: 'PDF',
       loading: '...',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      
+      // Additional translations
+      savedCalculations: 'Perhitungan Tersimpan',
+      loginToSave: 'Masuk untuk menyimpan dan melihat perhitungan',
+      noSavedCalculations: 'Tidak ada perhitungan tersimpan',
+      otaCommission: 'Komisi OTA (%)',
+      calculationName: 'Nama Perhitungan',
+      exportToCSV: 'Ekspor ke CSV',
+      basedOnDataAndScenario: 'Berdasarkan data yang dimasukkan dan skenario'
     },
 
     // Building Progress
@@ -3088,6 +3141,19 @@ _________________               _________________
       infoSection: 'Informasi',
       navigationSection: 'Navigasi',
       lessonDescriptionSection: 'Deskripsi Pelajaran',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
+    },
+
+    // Список застройщиков
+    developersList: {
+      title: 'Список застройщиков',
+      addDeveloper: 'Добавить застройщика',
+      noDevelopers: 'Нет застройщиков',
+      developersFound: 'Найдено застройщиков: {count}',
+      editDeveloper: 'Редактировать',
+      loading: 'Загрузка...',
+      errorLoading: 'Ошибка при загрузке застройщиков',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
     }

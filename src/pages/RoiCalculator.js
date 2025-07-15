@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -12,8 +12,6 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -26,6 +24,13 @@ import {
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import Presentation from '../components/Presentation';
 import { showSuccess, showError } from '../utils/notifications';
+import { db } from '../firebaseConfig';
+import { collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
+import { useAuth } from '../AuthContext';
+import { migrateRoiCalculations, hasLocalStorageCalculations } from '../utils/migrateRoiCalculations';
+import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 
 // Функция форматирования больших чисел
 const formatLargeNumber = (number) => {
@@ -102,7 +107,6 @@ const calculateOptimalDomain = (data, dataKey, padding = 0.15) => {
   
   if (finalRange < minDesiredRange) {
     const center = (domainMin + domainMax) / 2;
-    const expansion = (minDesiredRange - finalRange) / 2;
     domainMin = center - minDesiredRange / 2;
     domainMax = center + minDesiredRange / 2;
   }
@@ -161,32 +165,39 @@ const exportToCSV = (data, filename) => {
 
 const RoiCalculator = () => {
   console.log('RoiCalculator component rendered'); // Отладочный лог
+  
+  const { currentUser } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
 
   // Состояния для всех входных данных
   const [costData, setCostData] = useState({
-    purchasePrice: '127500',
-    renovationCosts: '15000',
-    legalFees: '5000',
-    additionalExpenses: '7500',
-    investmentPeriod: '5',
+    purchasePrice: '',
+    renovationCosts: '',
+    legalFees: '',
+    additionalExpenses: '',
+    investmentPeriod: '',
   });
 
   const [rentalData, setRentalData] = useState({
-    dailyRate: '85',
-    occupancyRate: '75',
-    otaCommission: '15',
-    rentGrowthRate: '1',
-    operationStartYear: '0',
+    dailyRate: '',
+    occupancyRate: '',
+    otaCommission: '',
+    rentGrowthRate: '',
+    operationStartYear: '',
   });
 
   const [expensesData, setExpensesData] = useState({
-    maintenanceFees: '8',
-    utilityBills: '6',
-    annualTax: '4',
-    propertyManagementFee: '18',
+    maintenanceFees: '',
+    utilityBills: '',
+    annualTax: '',
+    propertyManagementFee: '',
+    appreciationYear1: '',
+    appreciationYear2: '',
+    appreciationYear3: '',
   });
 
-  const [scenario, setScenario] = useState('base');
+  const [scenario, setScenario] = useState('');
   const [calculationResults, setCalculationResults] = useState(null);
 
   const [savedCalculations, setSavedCalculations] = useState([]);
@@ -208,20 +219,71 @@ const RoiCalculator = () => {
 
   // Загрузка сохраненных расчетов при монтировании
   useEffect(() => {
-    const saved = localStorage.getItem('roiCalculations');
-    if (saved) {
-      setSavedCalculations(JSON.parse(saved));
-    }
-  }, []);
+    const loadSavedCalculations = async () => {
+      if (!currentUser) {
+        setSavedCalculations([]);
+        return;
+      }
+      
+      try {
+        // Проверяем, есть ли данные в localStorage для миграции
+        if (hasLocalStorageCalculations()) {
+          console.log('Обнаружены данные в localStorage, начинаем миграцию...');
+          const migrationResult = await migrateRoiCalculations(currentUser.uid);
+          
+          if (migrationResult.success && migrationResult.migrated > 0) {
+            showSuccess(`Успешно мигрировано ${migrationResult.migrated} расчетов в облако`);
+          } else if (migrationResult.errors.length > 0) {
+            console.error('Ошибки при миграции:', migrationResult.errors);
+            showError('Ошибка при миграции некоторых расчетов');
+          }
+        }
+
+        const calculationsRef = collection(db, 'roiCalculations');
+        const q = query(
+          calculationsRef,
+          where('userId', '==', currentUser.uid),
+          orderBy('createdAt', 'desc')
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const calculations = [];
+        
+        querySnapshot.forEach((doc) => {
+          calculations.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        setSavedCalculations(calculations);
+      } catch (error) {
+        console.error('Ошибка загрузки сохраненных расчетов:', error);
+        showError('Ошибка загрузки сохраненных расчетов');
+      }
+    };
+
+    loadSavedCalculations();
+  }, [currentUser]);
 
   // Функция сохранения расчета
-  const saveCalculation = () => {
-    if (!calculationResults || !calculationName.trim()) return;
+  const saveCalculation = async () => {
+    if (!calculationResults || !calculationName.trim()) {
+      showError('Введите название расчета');
+      return;
+    }
+    
+    if (!currentUser) {
+      showError('Необходимо войти в систему для сохранения расчетов');
+      return;
+    }
 
+    try {
     const newCalculation = {
-      id: Date.now(),
+        userId: currentUser.uid,
       name: calculationName,
       date: new Date().toLocaleDateString(),
+        createdAt: new Date(),
       data: {
         costData,
         rentalData,
@@ -231,14 +293,30 @@ const RoiCalculator = () => {
       }
     };
 
-    const updatedCalculations = [...savedCalculations, newCalculation];
-    setSavedCalculations(updatedCalculations);
-    localStorage.setItem('roiCalculations', JSON.stringify(updatedCalculations));
+      const docRef = await addDoc(collection(db, 'roiCalculations'), newCalculation);
+      
+      // Добавляем ID документа к объекту расчета
+      const savedCalculation = {
+        id: docRef.id,
+        ...newCalculation
+      };
+
+      setSavedCalculations(prev => [savedCalculation, ...prev]);
     setCalculationName('');
+      showSuccess('Расчет успешно сохранен!');
+    } catch (error) {
+      console.error('Ошибка сохранения расчета:', error);
+      showError('Ошибка сохранения расчета');
+    }
   };
 
   // Функция загрузки расчета
   const loadCalculation = (calculation) => {
+    if (!currentUser) {
+      showError('Необходимо войти в систему для загрузки расчетов');
+      return;
+    }
+    
     const { data } = calculation;
     setCostData(data.costData);
     setRentalData(data.rentalData);
@@ -248,10 +326,20 @@ const RoiCalculator = () => {
   };
 
   // Функция удаления расчета
-  const deleteCalculation = (id) => {
-    const updatedCalculations = savedCalculations.filter(calc => calc.id !== id);
-    setSavedCalculations(updatedCalculations);
-    localStorage.setItem('roiCalculations', JSON.stringify(updatedCalculations));
+  const deleteCalculation = async (id) => {
+    if (!currentUser) {
+      showError('Необходимо войти в систему для удаления расчетов');
+      return;
+    }
+    
+    try {
+      await deleteDoc(doc(db, 'roiCalculations', id));
+      setSavedCalculations(prev => prev.filter(calc => calc.id !== id));
+      showSuccess('Расчет успешно удален!');
+    } catch (error) {
+      console.error('Ошибка удаления расчета:', error);
+      showError('Ошибка удаления расчета');
+    }
   };
 
   // Функция создания публичной страницы
@@ -313,6 +401,11 @@ const RoiCalculator = () => {
     const utilityBills = Number(expensesData.utilityBills) || 0;
     const annualTax = Number(expensesData.annualTax) || 0;
     const propertyManagementFee = Number(expensesData.propertyManagementFee) || 0;
+    
+    // Поля удорожания недвижимости
+    const appreciationYear1 = Number(expensesData.appreciationYear1) || 0;
+    const appreciationYear2 = Number(expensesData.appreciationYear2) || 0;
+    const appreciationYear3 = Number(expensesData.appreciationYear3) || 0;
 
     // Базовые расчеты
     const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
@@ -334,8 +427,24 @@ const RoiCalculator = () => {
     let totalSpend = totalInvestment;
     let cumulativeIncome = 0;
     let cumulativeCashflow = -totalInvestment;
+    let currentPropertyValue = totalInvestment;
     
     for (let year = 1; year <= investmentPeriod; year++) {
+      // Расчет удорожания для текущего года
+      let yearlyAppreciationRate = 0;
+      if (year === 1) {
+        yearlyAppreciationRate = appreciationYear1;
+      } else if (year === 2) {
+        yearlyAppreciationRate = appreciationYear2;
+      } else if (year === 3) {
+        yearlyAppreciationRate = appreciationYear3;
+      }
+
+      // Расчет стоимости недвижимости с учетом удорожания
+      const previousPropertyValue = currentPropertyValue;
+      currentPropertyValue = currentPropertyValue * (1 + yearlyAppreciationRate / 100);
+      const yearlyAppreciation = currentPropertyValue - previousPropertyValue;
+      
       // Расчет дохода с учетом роста и периода начала эксплуатации
       const yearlyRentalIncome = year <= operationStartYear ? 0 : 
         initialAnnualRentalIncome * Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear);
@@ -348,11 +457,12 @@ const RoiCalculator = () => {
       const yearlyTaxes = yearlyProfitBeforeTax * (annualTax / 100);
       const yearlyTotalExpenses = yearlyOperationalExpenses + yearlyTaxes;
       
-      // Чистый доход
+      // Чистый доход с учетом удорожания
       const yearlyNetProfit = yearlyProfitBeforeTax - yearlyTaxes;
+      const totalReturn = yearlyNetProfit + yearlyAppreciation;
       
       // Накопленные значения
-      accumulatedProfit += yearlyNetProfit;
+      accumulatedProfit += totalReturn;
       cumulativeIncome += yearlyRentalIncome;
       totalSpend += yearlyTotalExpenses;
       cumulativeCashflow += yearlyNetProfit;
@@ -366,9 +476,10 @@ const RoiCalculator = () => {
         cumulativeSpend: Math.round(totalSpend),
         cashflow: Math.round(yearlyNetProfit),
         cumulativeCashflow: Math.round(cumulativeCashflow),
-        totalReturn: Math.round(yearlyNetProfit),
-        accumulatedReturn: Math.round(accumulatedProfit),
-        propertyValue: Math.round(totalInvestment)
+        appreciation: Math.round(yearlyAppreciation),
+        propertyValue: Math.round(currentPropertyValue),
+        totalReturn: Math.round(totalReturn),
+        accumulatedReturn: Math.round(accumulatedProfit)
       };
       
       graphData.push({
@@ -376,7 +487,8 @@ const RoiCalculator = () => {
         profit: Math.round(yearlyNetProfit),
         accumulatedProfit: Math.round(accumulatedProfit),
         cashFlow: Math.round(yearlyNetProfit),
-        totalReturns: Math.round(yearlyNetProfit)
+        appreciation: Math.round(yearlyAppreciation),
+        totalReturns: Math.round(totalReturn)
       });
       
       detailedProjection.push(yearData);
@@ -387,7 +499,8 @@ const RoiCalculator = () => {
       ? detailedProjection.reduce((sum, year) => sum + (year.totalReturn / totalInvestment * 100), 0) / detailedProjection.length 
       : 0;
     
-    const finalCumulativeCashflow = detailedProjection[detailedProjection.length - 1]?.cumulativeCashflow || 0;
+    const finalPropertyValue = detailedProjection[detailedProjection.length - 1]?.propertyValue || totalInvestment;
+    const totalAppreciation = finalPropertyValue - totalInvestment;
     
     setCalculationResults({
       totalInvestment,
@@ -403,11 +516,15 @@ const RoiCalculator = () => {
       propertyManagementFee: propertyManagementFee,
       detailedProjection,
       totalProjectedReturn: accumulatedProfit + totalInvestment,
-      finalPropertyValue: totalInvestment,
+      finalPropertyValue: finalPropertyValue,
       totalCashFlow: cumulativeCashflow,
-      investmentPeriod
+      totalAppreciation: totalAppreciation,
+      investmentPeriod,
+      appreciationYear1: appreciationYear1,
+      appreciationYear2: appreciationYear2,
+      appreciationYear3: appreciationYear3
     });
-  }, [costData, rentalData, expensesData, scenario]);
+  }, [costData, rentalData, expensesData]);
 
   // Автоматический расчет при изменении данных
   useEffect(() => {
@@ -423,16 +540,23 @@ const RoiCalculator = () => {
 
   return (
     <div className={`container mx-auto ${isMobile ? 'p-4' : 'p-6'} space-y-6`}>
-      <div className="flex items-center gap-2 mb-6">
-        <Calculator className="h-6 w-6" />
-        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Калькулятор ROI</h1>
+      <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex items-center justify-between'} mb-6`}>
+        <div className="flex items-center gap-2">
+          <Calculator className="h-6 w-6" />
+          <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{t.roiCalculator.title}</h1>
+        </div>
+        <LanguageSwitcher />
       </div>
 
       {/* Блок сохраненных расчетов */}
       <Card className="p-4">
-        <h2 className="text-xl font-semibold mb-4">Сохраненные расчеты</h2>
+        <h2 className="text-xl font-semibold mb-4">{t.roiCalculator.savedCalculations || 'Сохраненные расчеты'}</h2>
         <div className="space-y-4">
-          {savedCalculations.length > 0 ? (
+          {!currentUser ? (
+            <p className="text-center text-muted-foreground">
+              {t.roiCalculator.loginToSave || 'Войдите в систему для сохранения и просмотра расчетов'}
+            </p>
+          ) : savedCalculations.length > 0 ? (
             <div className="grid gap-4">
               {savedCalculations.map((calc) => (
                 <div
@@ -465,7 +589,7 @@ const RoiCalculator = () => {
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground">Нет сохраненных расчетов</p>
+            <p className="text-center text-muted-foreground">{t.roiCalculator.noSavedCalculations || 'Нет сохраненных расчетов'}</p>
           )}
         </div>
       </Card>
@@ -473,10 +597,10 @@ const RoiCalculator = () => {
       <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-6`}>
         {/* Блок затрат и инвестиций */}
         <Card className="p-4 space-y-4">
-          <h2 className="text-xl font-semibold">Затраты и инвестиции</h2>
+          <h2 className="text-xl font-semibold">{t.roiCalculator.costsInvestmentsTitle}</h2>
           
           <div className="space-y-2">
-            <Label htmlFor="purchasePrice">Стоимость недвижимости ($)</Label>
+            <Label htmlFor="purchasePrice">{t.roiCalculator.propertyPrice}</Label>
             <Input
               id="purchasePrice"
               type="number"
@@ -486,7 +610,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="renovationCosts">Затраты на ремонт ($)</Label>
+            <Label htmlFor="renovationCosts">{t.roiCalculator.renovationCosts}</Label>
             <Input
               id="renovationCosts"
               type="number"
@@ -496,7 +620,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="legalFees">Юридические расходы ($)</Label>
+            <Label htmlFor="legalFees">{t.roiCalculator.legalFees}</Label>
             <Input
               id="legalFees"
               type="number"
@@ -506,7 +630,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="additionalExpenses">Дополнительные расходы ($)</Label>
+            <Label htmlFor="additionalExpenses">{t.roiCalculator.additionalExpenses}</Label>
             <Input
               id="additionalExpenses"
               type="number"
@@ -516,7 +640,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="investmentPeriod">Период инвестирования (лет)</Label>
+            <Label htmlFor="investmentPeriod">{t.roiCalculator.investmentPeriod}</Label>
             <Input
               id="investmentPeriod"
               type="number"
@@ -528,10 +652,10 @@ const RoiCalculator = () => {
 
         {/* Блок арендного дохода */}
         <Card className="p-4 space-y-4">
-          <h2 className="text-xl font-semibold">Арендный доход</h2>
+          <h2 className="text-xl font-semibold">{t.roiCalculator.rentalIncomeTitle}</h2>
           
           <div className="space-y-2">
-            <Label htmlFor="dailyRate">Стоимость аренды в день ($)</Label>
+            <Label htmlFor="dailyRate">{t.roiCalculator.dailyRate}</Label>
             <Input
               id="dailyRate"
               type="number"
@@ -541,7 +665,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="occupancyRate">Заполняемость (%)</Label>
+            <Label htmlFor="occupancyRate">{t.roiCalculator.occupancyRate}</Label>
             <Input
               id="occupancyRate"
               type="number"
@@ -553,7 +677,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="otaCommission">Комиссия площадок (%)</Label>
+            <Label htmlFor="otaCommission">{t.roiCalculator.otaCommission || 'Комиссия площадок (%)'}</Label>
             <Input
               id="otaCommission"
               type="number"
@@ -565,7 +689,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="rentGrowthRate">Годовой рост аренды (%)</Label>
+            <Label htmlFor="rentGrowthRate">{t.roiCalculator.rentGrowthRate}</Label>
             <Input
               id="rentGrowthRate"
               type="number"
@@ -575,7 +699,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="operationStartYear">Начало эксплуатации через (год)</Label>
+            <Label htmlFor="operationStartYear">{t.roiCalculator.operationStartYear}</Label>
             <Input
               id="operationStartYear"
               type="number"
@@ -588,10 +712,10 @@ const RoiCalculator = () => {
 
         {/* Блок операционных расходов */}
         <Card className="p-4 space-y-4">
-          <h2 className="text-xl font-semibold">Операционные расходы</h2>
+          <h2 className="text-xl font-semibold">{t.roiCalculator.operationalMetricsTitle}</h2>
           
           <div className="space-y-2">
-            <Label htmlFor="maintenanceFees">Обслуживание в год (%)</Label>
+            <Label htmlFor="maintenanceFees">{t.roiCalculator.maintenanceFees}</Label>
             <Input
               id="maintenanceFees"
               type="number"
@@ -601,7 +725,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="utilityBills">Коммунальные платежи в год (%)</Label>
+            <Label htmlFor="utilityBills">{t.roiCalculator.utilityBills}</Label>
             <Input
               id="utilityBills"
               type="number"
@@ -611,7 +735,7 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="annualTax">Налоги в год (%)</Label>
+            <Label htmlFor="annualTax">{t.roiCalculator.annualTax}</Label>
             <Input
               id="annualTax"
               type="number"
@@ -621,12 +745,46 @@ const RoiCalculator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="propertyManagementFee">Комиссия управления (%)</Label>
+            <Label htmlFor="propertyManagementFee">{t.roiCalculator.propertyManagement}</Label>
             <Input
               id="propertyManagementFee"
               type="number"
               value={expensesData.propertyManagementFee}
               onChange={(e) => setExpensesData({...expensesData, propertyManagementFee: e.target.value})}
+            />
+          </div>
+
+          {/* Поля удорожания недвижимости */}
+          <div className="space-y-2">
+            <Label htmlFor="appreciationYear1">{t.roiCalculator.appreciationYear1}</Label>
+            <Input
+              id="appreciationYear1"
+              type="number"
+              placeholder={t.roiCalculator.examplePlaceholder}
+              value={expensesData.appreciationYear1}
+              onChange={(e) => setExpensesData({...expensesData, appreciationYear1: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="appreciationYear2">{t.roiCalculator.appreciationYear2}</Label>
+            <Input
+              id="appreciationYear2"
+              type="number"
+              placeholder={t.roiCalculator.examplePlaceholder2}
+              value={expensesData.appreciationYear2}
+              onChange={(e) => setExpensesData({...expensesData, appreciationYear2: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="appreciationYear3">{t.roiCalculator.appreciationYear3}</Label>
+            <Input
+              id="appreciationYear3"
+              type="number"
+              placeholder={t.roiCalculator.examplePlaceholder3}
+              value={expensesData.appreciationYear3}
+              onChange={(e) => setExpensesData({...expensesData, appreciationYear3: e.target.value})}
             />
           </div>
 
@@ -649,7 +807,7 @@ const RoiCalculator = () => {
               onClick={calculateInvestment} 
               className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
             >
-              <Calculator className="mr-2 h-4 w-4" /> Рассчитать
+              <Calculator className="mr-2 h-4 w-4" /> {t.roiCalculator.updateCalculation}
             </Button>
           </div>
         </Card>
@@ -660,48 +818,53 @@ const RoiCalculator = () => {
           <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-start'} mb-6`}>
             <div>
               <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-800`}>
-                Результаты расчета
+                {t.roiCalculator.calculationResults}
               </h2>
               <p className="text-gray-500">
-                На основе введенных данных и сценария "{scenario}"
+                {t.roiCalculator.basedOnDataAndScenario || 'На основе введенных данных и сценария'} "{scenario}"
               </p>
             </div>
-            <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex items-center gap-4'}`}>
+            <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex flex-wrap items-start gap-4'}`}>
+              {/* Группа 1: Сохранение расчета */}
               <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                 <Input
                   type="text"
-                  placeholder="Название расчета"
+                  placeholder={currentUser ? t.roiCalculator.calculationName || "Название расчета" : t.roiCalculator.loginToSave}
                   value={calculationName}
                   onChange={(e) => setCalculationName(e.target.value)}
                   className={`${isMobile ? 'w-full' : 'w-48'}`}
+                  disabled={!currentUser}
                 />
                 <Button 
                   onClick={saveCalculation} 
                   size={isMobile ? "default" : "sm"} 
-                  disabled={!calculationName.trim()}
+                  disabled={!calculationName.trim() || !currentUser}
                   className={isMobile ? 'h-12 w-full' : ''}
+                  title={!currentUser ? 'Войдите в систему для сохранения' : ''}
                 >
                   <Save className="h-4 w-4" />
                 </Button>
               </div>
 
+              {/* Группа 2: Экспорт */}
               <Button 
                 onClick={() => exportToCSV({ ...calculationResults, graphData: calculationResults.graphData }, 'roi-analysis.csv')}
                 variant="outline"
                 size={isMobile ? "default" : "sm"}
                 className={isMobile ? 'h-12 w-full' : ''}
               >
-                <Download className="mr-2 h-4 w-4" /> Экспорт в CSV
+                <Download className="mr-2 h-4 w-4" /> {t.roiCalculator.exportToCSV || 'Экспорт в CSV'}
               </Button>
 
-              <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
+              {/* Группа 3: Публичная страница */}
+              <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex flex-col gap-2'}`}>
                 <Button 
                   onClick={generatePublicPage}
                   variant="outline"
                   size={isMobile ? "default" : "sm"}
                   className={isMobile ? 'h-12 w-full' : ''}
                 >
-                  <Share2 className="mr-2 h-4 w-4" /> Создать публичную страницу
+                  <Share2 className="mr-2 h-4 w-4" /> {t.roiCalculator.createPublicPage}
                 </Button>
                 
                 <Button 
@@ -732,14 +895,15 @@ const RoiCalculator = () => {
                   size={isMobile ? "default" : "sm"}
                   className={isMobile ? 'h-12 w-full' : ''}
                 >
-                  📋 Копировать ссылку
+                  {t.roiCalculator.copyLink}
                 </Button>
               </div>
 
+              {/* Группа 4: PDF экспорт */}
               <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
                 <Select value={pdfLanguage} onValueChange={setPdfLanguage}>
                   <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'w-[120px]'}`}>
-                    <SelectValue placeholder="Language" />
+                    <SelectValue placeholder={t.roiCalculator.language} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
@@ -775,33 +939,43 @@ const RoiCalculator = () => {
           {/* Investment Summary Cards */}
           <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'} gap-6 mb-8`}>
             <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
-              <p className="text-sm text-muted-foreground">Общие инвестиции</p>
+              <p className="text-sm text-muted-foreground">{t.roiCalculator.totalInvestments}</p>
               <p className="text-lg font-semibold">${calculationResults.totalInvestment.toLocaleString()}</p>
             </div>
             
             <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
-              <p className="text-sm text-muted-foreground">Годовой доход от аренды</p>
+              <p className="text-sm text-muted-foreground">{t.roiCalculator.annualRentalIncome}</p>
               <p className="text-lg font-semibold">${calculationResults.annualRentalIncome.toLocaleString()}</p>
             </div>
             
             <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
-              <p className="text-sm text-muted-foreground">Годовые расходы</p>
+              <p className="text-sm text-muted-foreground">{t.roiCalculator.annualExpenses}</p>
               <p className="text-lg font-semibold">${calculationResults.annualExpenses.toLocaleString()}</p>
             </div>
             
             <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
-              <p className="text-sm text-muted-foreground">Чистая прибыль в год</p>
+              <p className="text-sm text-muted-foreground">{t.roiCalculator.netProfitPerYear}</p>
               <p className="text-lg font-semibold">${calculationResults.annualNetProfit.toLocaleString()}</p>
             </div>
             
             <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
-              <p className="text-sm text-muted-foreground">ROI</p>
+              <p className="text-sm text-muted-foreground">{t.roiCalculator.roi}</p>
               <p className="text-lg font-semibold">{calculationResults.roi.toFixed(2)}%</p>
             </div>
             
             <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
-              <p className="text-sm text-muted-foreground">Срок окупаемости</p>
-              <p className="text-lg font-semibold">{calculationResults.paybackPeriod.toFixed(1)} лет</p>
+              <p className="text-sm text-muted-foreground">{t.roiCalculator.paybackPeriod}</p>
+              <p className="text-lg font-semibold">{calculationResults.paybackPeriod.toFixed(1)} {t.roiCalculator.years}</p>
+            </div>
+            
+            <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
+              <p className="text-sm text-muted-foreground">{t.roiCalculator.propertyAppreciation}</p>
+              <p className="text-lg font-semibold">${calculationResults.totalAppreciation?.toLocaleString() || '0'}</p>
+            </div>
+            
+            <div className={`${isMobile ? 'p-4 bg-gray-50 rounded-lg' : ''}`}>
+              <p className="text-sm text-muted-foreground">{t.roiCalculator.finalPropertyValue}</p>
+              <p className="text-lg font-semibold">${calculationResults.finalPropertyValue?.toLocaleString() || calculationResults.totalInvestment.toLocaleString()}</p>
             </div>
           </div>
 
@@ -826,11 +1000,15 @@ const RoiCalculator = () => {
                       <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
                       <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.1}/>
                     </linearGradient>
+                    <linearGradient id="appreciationGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                    </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis
                     dataKey="year"
-                    label={isMobile ? null : { value: 'Период', position: 'bottom', offset: 20 }}
+                    label={isMobile ? null : { value: t.roiCalculator.period, position: 'bottom', offset: 20 }}
                     tick={{ 
                       fontSize: isMobile ? 10 : 12, 
                       angle: isMobile ? -45 : 0, 
@@ -887,7 +1065,7 @@ const RoiCalculator = () => {
                     yAxisId="left"
                     type="monotone"
                     dataKey="profit"
-                    name="Прибыль за год"
+                    name={t.roiCalculator.profitPerYear}
                     stroke="#8884d8"
                     strokeWidth={isMobile ? 1.5 : 2}
                     fill="url(#profitGradient)"
@@ -898,17 +1076,28 @@ const RoiCalculator = () => {
                     yAxisId="right"
                     type="monotone"
                     dataKey="accumulatedProfit"
-                    name="Накопленная прибыль"
+                    name={t.roiCalculator.accumulatedProfit}
                     stroke="#82ca9d"
                     strokeWidth={isMobile ? 1.5 : 2}
                     fill="url(#accumulatedGradient)"
                     dot={{ r: isMobile ? 3 : 4, fill: '#82ca9d' }}
                     activeDot={{ r: isMobile ? 5 : 6, fill: '#82ca9d' }}
                   />
+                  <Area
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="appreciation"
+                    name={t.roiCalculator.appreciation}
+                    stroke="#3b82f6"
+                    strokeWidth={isMobile ? 1.5 : 2}
+                    fill="url(#appreciationGradient)"
+                    dot={{ r: isMobile ? 3 : 4, fill: '#3b82f6' }}
+                    activeDot={{ r: isMobile ? 5 : 6, fill: '#3b82f6' }}
+                  />
                 </AreaChart>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
-                  Нет данных для отображения графика
+                  {t.roiCalculator.noChartData}
                 </div>
               )}
             </ResponsiveContainer>

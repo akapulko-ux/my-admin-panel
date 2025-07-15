@@ -294,6 +294,16 @@ service cloud.firestore {
       }
     }
 
+    // === ROI Calculations (Расчеты ROI) ===
+    match /roiCalculations/{calculationId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Пользователи могут читать, создавать, обновлять и удалять только свои расчеты
+      allow read, create, update, delete: if isSignedIn() && 
+        (resource == null || resource.data.userId == request.auth.uid) &&
+        (request.data == null || request.data.userId == request.auth.uid);
+    }
+
     // === Фоллбэк для любых новых коллекций ===
     match /{path=**} {
       // Админ имеет АБСОЛЮТНО ПОЛНЫЕ права на всё

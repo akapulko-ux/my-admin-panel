@@ -261,7 +261,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'модератор'].includes(role) && (
+              {['admin', 'модератор', 'premium agent', 'agent'].includes(role) && (
                 <NavItem 
                   to="/roi-calculator" 
                   icon={Calculator}
@@ -415,7 +415,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'модератор'].includes(role) && (
+        {['admin', 'модератор', 'premium agent', 'agent'].includes(role) && (
           <NavItem to="/roi-calculator" icon={Calculator}>
             {nav.roiCalculator}
           </NavItem>

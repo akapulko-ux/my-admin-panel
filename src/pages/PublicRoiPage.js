@@ -337,16 +337,16 @@ const PublicRoiPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden touch-none">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8 overflow-x-hidden">
         {/* Language Switcher */}
-        <div className="flex justify-end mb-4 sm:mb-6 overflow-x-auto">
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+        <div className="flex justify-end mb-4 sm:mb-6 -mx-2 sm:mx-0 overflow-x-hidden">
+          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm w-full sm:w-auto justify-center">
             <Button
               variant={language === 'en' ? 'default' : 'ghost'}
               onClick={() => handleLanguageChange('en')}
               size="sm"
-              className="px-2 sm:px-3 text-xs sm:text-sm"
+              className="flex-1 sm:flex-none px-2 sm:px-3 text-[10px] xs:text-xs sm:text-sm min-w-0"
             >
               English
             </Button>
@@ -354,7 +354,7 @@ const PublicRoiPage = () => {
               variant={language === 'ru' ? 'default' : 'ghost'}
               onClick={() => handleLanguageChange('ru')}
               size="sm"
-              className="px-2 sm:px-3 text-xs sm:text-sm"
+              className="flex-1 sm:flex-none px-2 sm:px-3 text-[10px] xs:text-xs sm:text-sm min-w-0"
             >
               Русский
             </Button>
@@ -362,7 +362,7 @@ const PublicRoiPage = () => {
               variant={language === 'id' ? 'default' : 'ghost'}
               onClick={() => handleLanguageChange('id')}
               size="sm"
-              className="px-2 sm:px-3 text-xs sm:text-sm"
+              className="flex-1 sm:flex-none px-2 sm:px-3 text-[10px] xs:text-xs sm:text-sm min-w-0"
             >
               Indonesia
             </Button>
@@ -370,43 +370,43 @@ const PublicRoiPage = () => {
         </div>
         
         {/* Investor Highlights */}
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t.investorHighlights}</h1>
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-4 sm:mb-8">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t.investorHighlights}</h1>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
             <div>
-              <div className="text-sm text-gray-500 mb-1">{t.unitPrice}</div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-xs sm:text-sm text-gray-500 mb-1">{t.unitPrice}</div>
+              <div className="text-base sm:text-2xl font-bold text-gray-900">
                 {formatCurrency(currentData.unitPrice)}
               </div>
             </div>
             
             <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
                 {t.averageROI}
                 <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-300"></span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-base sm:text-2xl font-bold text-gray-900">
                 {formatPercentage(currentData.averageROI)}
               </div>
             </div>
             
             <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
                 {t.annualRentExpenseGrowth}
                 <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-300"></span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-base sm:text-2xl font-bold text-gray-900">
                 +{formatPercentage(currentData.rentGrowthRate)}
               </div>
             </div>
             
             <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
                 {t.propertyManagementFee}
                 <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-300"></span>
               </div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-base sm:text-2xl font-bold text-gray-900">
                 {formatPercentage(currentData.propertyManagementFee)}
               </div>
             </div>
@@ -414,15 +414,15 @@ const PublicRoiPage = () => {
         </div>
 
         {/* Chart Section */}
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-4 sm:mb-8">
+          <div className="flex flex-col gap-4 mb-6">
             {/* Chart Type Buttons - Scrollable on mobile */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
               <Button 
                 variant={chartView === 'totalReturns' ? 'default' : 'ghost'}
                 onClick={() => setChartView('totalReturns')}
                 size="sm"
-                className="whitespace-nowrap text-xs sm:text-sm"
+                className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
               >
                 {t.totalReturns}
               </Button>
@@ -430,7 +430,7 @@ const PublicRoiPage = () => {
                 variant={chartView === 'cashFlow' ? 'default' : 'ghost'}
                 onClick={() => setChartView('cashFlow')}
                 size="sm"
-                className="whitespace-nowrap text-xs sm:text-sm"
+                className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
               >
                 {t.cashFlow}
               </Button>
@@ -438,33 +438,33 @@ const PublicRoiPage = () => {
                 variant={chartView === 'appreciation' ? 'default' : 'ghost'}
                 onClick={() => setChartView('appreciation')}
                 size="sm"
-                className="whitespace-nowrap text-xs sm:text-sm"
+                className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
               >
                 {t.appreciation}
               </Button>
             </div>
             
             {/* Scenario and Period Selection */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex flex-col gap-4">
               {/* Scenarios */}
-              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
                 <Badge 
                   variant={scenario === 'pessimistic' ? 'default' : 'outline'}
-                  className="cursor-pointer whitespace-nowrap text-xs sm:text-sm"
+                  className="cursor-pointer whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   onClick={() => setScenario('pessimistic')}
                 >
                   {t.pessimistic}
                 </Badge>
                 <Badge 
                   variant={scenario === 'realistic' ? 'default' : 'outline'}
-                  className="cursor-pointer whitespace-nowrap text-xs sm:text-sm"
+                  className="cursor-pointer whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   onClick={() => setScenario('realistic')}
                 >
                   {t.realistic}
                 </Badge>
                 <Badge 
                   variant={scenario === 'optimistic' ? 'default' : 'outline'}
-                  className="cursor-pointer whitespace-nowrap text-xs sm:text-sm"
+                  className="cursor-pointer whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   onClick={() => setScenario('optimistic')}
                 >
                   {t.optimistic}
@@ -472,12 +472,14 @@ const PublicRoiPage = () => {
               </div>
               
               {/* Time Periods */}
-              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
                 {getAvailablePeriods().map(period => (
                   <Button
                     key={period}
-                    variant={timeframe === `${period} Years` ? 'default' : 'outline'}
+                    variant={timeframe === `${period} Years` ? 'default' : 'ghost'}
                     onClick={() => setTimeframe(`${period} Years`)}
+                    size="sm"
+                    className="whitespace-nowrap text-[10px] xs:text-xs sm:text-sm flex-shrink-0 min-w-0 px-2 sm:px-3"
                   >
                     {period} Years
                   </Button>
