@@ -56,7 +56,8 @@ const ROUTE_ACCESS = {
   ],
   user: [
     '/gallery/*'
-  ]
+  ],
+  closed: [] // Закрытый аккаунт не имеет доступа ни к каким маршрутам
 };
 
 const Navigation = () => {

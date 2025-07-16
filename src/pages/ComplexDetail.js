@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, updateDoc, collection } from "firebase/firestore";
+import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
 import { useLanguage } from "../lib/LanguageContext";
@@ -9,9 +9,7 @@ import { translations } from "../lib/translations";
 import { translateDistrict } from "../lib/utils";
 import {
   Building2,
-  MapPin,
   FileText,
-  Calendar,
   Layers,
   ArrowLeft,
   Edit2,
@@ -20,11 +18,13 @@ import {
   Video,
   Globe,
   Building,
-  Home,
-  Users,
   BarChart3,
   Camera,
-  Plus
+  Plus,
+  Sparkles,
+  Utensils,
+  Dumbbell,
+  Baby
 } from "lucide-react";
 import { showError, showSuccess } from '../utils/notifications';
 import { Button } from "../components/ui/button";
@@ -141,42 +141,22 @@ function ComplexDetail() {
     }).format(price);
   };
 
-  // Получение данных о застройщике
-  const fetchDeveloperName = async (developerId) => {
-    try {
-      const developerDoc = await getDoc(doc(db, "developers", developerId));
-      if (developerDoc.exists()) {
-        return developerDoc.data().name;
-      }
-      return null;
-    } catch (err) {
-      console.error(t.complexDetail.developerLoadError, err);
-      return null;
-    }
-  };
-
-  // Функция для поиска минимальной цены объектов комплекса
-  const getMinPriceForComplex = (complexName) => {
-    if (!complexName || !properties.length) return null;
-    
-    // Ищем все объекты, привязанные к этому комплексу
-    const relatedProperties = properties.filter(property => {
-      const propertyComplexName = property.complexName || property.complex;
-      return propertyComplexName && propertyComplexName.toLowerCase() === complexName.toLowerCase();
-    });
-    
-    // Находим минимальную цену среди найденных объектов
-    if (relatedProperties.length === 0) return null;
-    
-    const prices = relatedProperties
-      .map(property => property.price)
-      .filter(price => price && price > 0);
-    
-    return prices.length > 0 ? Math.min(...prices) : null;
-  };
-
   // Загрузка данных комплекса и объектов
   useEffect(() => {
+    // Переносим fetchDeveloperName внутрь useEffect
+    const fetchDeveloperName = async (developerId) => {
+      try {
+        const developerDoc = await getDoc(doc(db, "developers", developerId));
+        if (developerDoc.exists()) {
+          return developerDoc.data().name;
+        }
+        return null;
+      } catch (err) {
+        console.error(t.complexDetail.developerLoadError, err);
+        return null;
+      }
+    };
+
     async function fetchData() {
       try {
         console.log('Загружаем комплекс с ID:', id);
@@ -248,7 +228,21 @@ function ComplexDetail() {
     if (id) {
       fetchData();
     }
-  }, [id, currentUser, role, getPropertiesList, propertiesCache]);
+  }, [id, currentUser, role, getPropertiesList, propertiesCache, t.complexDetail.complexNameLoadError, t.complexDetail.dataLoadError, t.complexDetail.developerLoadError]);
+
+  // После useEffect
+  const getMinPriceForComplex = (complexName) => {
+    if (!complexName || !properties.length) return null;
+    const relatedProperties = properties.filter(property => {
+      const propertyComplexName = property.complexName || property.complex;
+      return propertyComplexName && propertyComplexName.toLowerCase() === complexName.toLowerCase();
+    });
+    if (relatedProperties.length === 0) return null;
+    const prices = relatedProperties
+      .map(property => property.price)
+      .filter(price => price && price > 0);
+    return prices.length > 0 ? Math.min(...prices) : null;
+  };
 
   // Функция для рендеринга редактируемого поля
   const renderEditableValue = (field, value, type = 'text', label) => {
@@ -785,6 +779,103 @@ function ComplexDetail() {
               <p className="text-gray-700 leading-relaxed whitespace-pre-wrap font-mono text-sm">
                 {complex.description}
               </p>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Дополнительные опции */}
+      {(complex.spaSalon || complex.restaurant || complex.fitnessGym || complex.playground) && (
+        <Card className="p-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              На территории комплекса
+            </h3>
+            
+            {isEditing && canEdit() ? (
+              // Режим редактирования - чекбоксы
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="spaSalon"
+                    checked={editedValues.spaSalon !== undefined ? editedValues.spaSalon : complex.spaSalon || false}
+                    onChange={(e) => handleValueChange('spaSalon', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="spaSalon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    СПА салон
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="restaurant"
+                    checked={editedValues.restaurant !== undefined ? editedValues.restaurant : complex.restaurant || false}
+                    onChange={(e) => handleValueChange('restaurant', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="restaurant" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Ресторан
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="fitnessGym"
+                    checked={editedValues.fitnessGym !== undefined ? editedValues.fitnessGym : complex.fitnessGym || false}
+                    onChange={(e) => handleValueChange('fitnessGym', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="fitnessGym" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Фитнес зал
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="playground"
+                    checked={editedValues.playground !== undefined ? editedValues.playground : complex.playground || false}
+                    onChange={(e) => handleValueChange('playground', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="playground" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Детская площадка
+                  </Label>
+                </div>
+              </div>
+            ) : (
+              // Режим просмотра - бейджи
+              <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-3`}>
+                {complex.spaSalon && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Sparkles className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">СПА салон</span>
+                  </div>
+                )}
+                {complex.restaurant && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Utensils className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">Ресторан</span>
+                  </div>
+                )}
+                {complex.fitnessGym && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Dumbbell className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">Фитнес зал</span>
+                  </div>
+                )}
+                {complex.playground && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Baby className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">Детская площадка</span>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </Card>

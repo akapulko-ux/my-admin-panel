@@ -15,18 +15,9 @@ import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
 
 import {
-  Box,
   Card,
-  CardContent,
-  TextField,
-  Typography,
   Button,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  CircularProgress
+  Typography
 } from "@mui/material";
 import { showSuccess } from '../utils/notifications';
 
@@ -36,7 +27,6 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { CustomSelect } from "../components/ui/custom-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { Badge } from "../components/ui/badge";
 
 // Иконки
 import { ArrowLeft, Loader2, Save, Trash2, Upload } from "lucide-react";
@@ -115,6 +105,12 @@ function EditComplex() {
     commissionOptions.push(val.toFixed(1));
   }
 
+  // Дополнительные опции
+  const [spaSalon, setSpaSalon] = useState(false);
+  const [restaurant, setRestaurant] = useState(false);
+  const [fitnessGym, setFitnessGym] = useState(false);
+  const [playground, setPlayground] = useState(false);
+
   // Загрузка данных из Firestore
   useEffect(() => {
     async function fetchComplex() {
@@ -167,6 +163,12 @@ function EditComplex() {
             const c = parseFloat(data.commission);
             setCommission(c.toFixed(1));
           }
+
+          // Загружаем дополнительные опции
+          setSpaSalon(data.spaSalon || false);
+          setRestaurant(data.restaurant || false);
+          setFitnessGym(data.fitnessGym || false);
+          setPlayground(data.playground || false);
         }
       } catch (error) {
         console.error("Ошибка загрузки комплекса:", error);
@@ -308,7 +310,11 @@ function EditComplex() {
         legalCompanyName,
         roi,
         threeDTour,
-        commission
+        commission,
+        spaSalon,
+        restaurant,
+        fitnessGym,
+        playground
       };
       await updateDoc(doc(db, "complexes", id), updatedData);
       showSuccess("Комплекс обновлён!");
@@ -681,6 +687,64 @@ function EditComplex() {
                   onChange={(e) => setRoi(e.target.value)}
                   placeholder="Введите ROI"
                 />
+              </div>
+            </div>
+          </Card>
+
+          {/* Секция дополнительных опций */}
+          <Card className="p-6">
+            <h2 className={`text-${isMobile ? 'lg' : 'xl'} font-semibold mb-4`}>Дополнительные опции</h2>
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="spaSalon"
+                  checked={spaSalon}
+                  onChange={(e) => setSpaSalon(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <Label htmlFor="spaSalon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  СПА салон
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="restaurant"
+                  checked={restaurant}
+                  onChange={(e) => setRestaurant(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <Label htmlFor="restaurant" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Ресторан
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="fitnessGym"
+                  checked={fitnessGym}
+                  onChange={(e) => setFitnessGym(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <Label htmlFor="fitnessGym" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Фитнес зал
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="playground"
+                  checked={playground}
+                  onChange={(e) => setPlayground(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <Label htmlFor="playground" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Детская площадка
+                </Label>
               </div>
             </div>
           </Card>

@@ -43,7 +43,8 @@ const ROUTE_ACCESS = {
   user: [
     '/property/gallery',
     '/dashboard'
-  ]
+  ],
+  closed: [] // Закрытый аккаунт не имеет доступа ни к каким маршрутам
 };
 
 // Маршруты по умолчанию для разных ролей
@@ -53,7 +54,8 @@ const DEFAULT_ROUTES = {
   'premium agent': '/property/gallery',
   agent: '/property/gallery',
   застройщик: '/chessboard',
-  user: '/property/gallery'
+  user: '/property/gallery',
+  closed: '/access-closed' // Специальная страница для закрытого аккаунта
 };
 
 const ProtectedRoute = ({ children, isPublic = false }) => {
@@ -72,6 +74,11 @@ const ProtectedRoute = ({ children, isPublic = false }) => {
   // Для защищенных маршрутов
   if (!currentUser) {
     return <Navigate to="/" />;
+  }
+
+  // Проверяем, не является ли пользователь заблокированным
+  if (role === 'closed') {
+    return <Navigate to="/access-closed" />;
   }
 
   // Получаем текущий путь

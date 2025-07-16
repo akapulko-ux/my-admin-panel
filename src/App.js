@@ -74,6 +74,7 @@ import ClientFixations from "./pages/ClientFixations";
 // Прочее
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
+import AccessClosed from "./pages/AccessClosed";
 
 // Заявки на регистрацию
 import RegistrationRequests from "./pages/RegistrationRequests";
@@ -213,6 +214,7 @@ function App() {
               <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/roi-calculator" element={<RoiCalculator />} />
+              <Route path="/access-closed" element={<AccessClosed />} />
 
               {/* Лендинг для неавторизованных пользователей */}
               <Route path="/" element={

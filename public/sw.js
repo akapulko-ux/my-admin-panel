@@ -1,4 +1,4 @@
-const CACHE_NAME = 'it-agent-panel-v1';
+const CACHE_NAME = 'it-agent-panel-v2';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
@@ -17,6 +17,9 @@ self.addEventListener('install', event => {
       .then(cache => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
+      })
+      .catch(error => {
+        console.log('Cache installation failed:', error);
       })
   );
 });
@@ -62,6 +65,9 @@ self.addEventListener('fetch', event => {
               if (event.request.method === 'GET') {
                 cache.put(event.request, responseToCache);
               }
+            })
+            .catch(error => {
+              console.log('Cache put failed:', error);
             });
 
           return response;

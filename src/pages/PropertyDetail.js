@@ -1017,6 +1017,98 @@ function PropertyDetail() {
         ))}
       </div>
 
+      {/* Дополнительные опции */}
+      {isEditing ? (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Дополнительные опции</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="smartHome"
+                checked={editedValues.smartHome !== undefined ? editedValues.smartHome : property.smartHome}
+                onChange={(e) => handleValueChange('smartHome', e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="smartHome" className="text-sm font-medium text-gray-700">
+                Умный дом
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="jacuzzi"
+                checked={editedValues.jacuzzi !== undefined ? editedValues.jacuzzi : property.jacuzzi}
+                onChange={(e) => handleValueChange('jacuzzi', e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="jacuzzi" className="text-sm font-medium text-gray-700">
+                Джакузи
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="terrace"
+                checked={editedValues.terrace !== undefined ? editedValues.terrace : property.terrace}
+                onChange={(e) => handleValueChange('terrace', e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="terrace" className="text-sm font-medium text-gray-700">
+                Терраса
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="rooftop"
+                checked={editedValues.rooftop !== undefined ? editedValues.rooftop : property.rooftop}
+                onChange={(e) => handleValueChange('rooftop', e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="rooftop" className="text-sm font-medium text-gray-700">
+                Руфтоп
+              </label>
+            </div>
+          </div>
+        </div>
+      ) : (
+        (property.smartHome || property.jacuzzi || property.terrace || property.rooftop) && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Дополнительные опции</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {property.smartHome && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <Home className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Умный дом</span>
+                </div>
+              )}
+              {property.jacuzzi && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <Droplet className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Джакузи</span>
+                </div>
+              )}
+              {property.terrace && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <Star className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Терраса</span>
+                </div>
+              )}
+              {property.rooftop && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <Building2 className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Руфтоп</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      )}
+
       {/* Добавляем кнопки "Расчет ROI" после характеристик объекта */}
       {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
         <div className="mt-8">

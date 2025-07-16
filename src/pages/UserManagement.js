@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { 
   Select, 
@@ -20,7 +19,9 @@ import {
   Building,
   Users,
   AlertCircle,
-  Loader2
+  Loader2,
+  BarChart3,
+  Lock
 } from 'lucide-react';
 
 // Определение ролей и их отображения
@@ -60,6 +61,12 @@ const ROLES = {
     label: 'Застройщик',
     icon: Building,
     color: 'bg-green-500'
+  },
+  closed: {
+    value: 'closed',
+    label: 'Закрытый аккаунт',
+    icon: Lock,
+    color: 'bg-gray-700'
   }
 };
 
@@ -189,6 +196,24 @@ const UserManagement = () => {
     return developer ? developer.name : 'Не выбран';
   };
 
+  // Функция для подсчета пользователей по ролям
+  const getUsersCountByRole = () => {
+    const counts = {};
+    
+    // Инициализируем счетчики для всех ролей
+    Object.keys(ROLES).forEach(role => {
+      counts[role] = 0;
+    });
+    
+    // Подсчитываем пользователей по ролям
+    users.forEach(user => {
+      const role = user.role || 'user';
+      counts[role] = (counts[role] || 0) + 1;
+    });
+    
+    return counts;
+  };
+
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
@@ -206,6 +231,45 @@ const UserManagement = () => {
         <Users className="w-8 h-8 text-blue-600" />
         <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Управление пользователями</h1>
       </div>
+
+      {/* Счетчики пользователей по ролям */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        {Object.entries(ROLES).map(([roleKey, roleConfig]) => {
+          const Icon = roleConfig.icon;
+          const count = getUsersCountByRole()[roleKey] || 0;
+          
+          return (
+            <Card key={roleKey} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-3">
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className={`p-2 rounded-lg ${roleConfig.color.replace('bg-', 'bg-')} bg-opacity-10`}>
+                    <Icon className={`w-4 h-4 ${roleConfig.color.replace('bg-', 'text-')}`} />
+                  </div>
+                  <div className="w-full">
+                    <p className="text-xs font-medium text-gray-600 truncate">{roleConfig.label}</p>
+                    <p className="text-xl font-bold text-gray-900">{count}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Общий счетчик всех пользователей */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-100">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-600">Всего пользователей</p>
+              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {error && (
         <Card className="border-red-200 bg-red-50">

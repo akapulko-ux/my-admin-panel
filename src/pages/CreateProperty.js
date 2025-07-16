@@ -113,6 +113,12 @@ function CreateProperty() {
     commissionOptions.push(val.toFixed(1));
   }
 
+  // Дополнительные опции
+  const [smartHome, setSmartHome] = useState(false);
+  const [jacuzzi, setJacuzzi] = useState(false);
+  const [terrace, setTerrace] = useState(false);
+  const [rooftop, setRooftop] = useState(false);
+
   // Массив для Drag & Drop (фото)
   const [dndItems, setDndItems] = useState([]);
 
@@ -348,7 +354,11 @@ function CreateProperty() {
         pbg,
         slf,
         legalCompanyName,
-        commission: finalCommission
+        commission: finalCommission,
+        smartHome,
+        jacuzzi,
+        terrace,
+        rooftop
       };
 
       // Сохраняем объект в Firestore
@@ -380,6 +390,10 @@ function CreateProperty() {
       setSlf("");
       setLegalCompanyName("");
       setCommission("1.0");
+      setSmartHome(false);
+      setJacuzzi(false);
+      setTerrace(false);
+      setRooftop(false);
       setDndItems([]);
 
       showSuccess("Объект создан!");
@@ -772,6 +786,64 @@ function CreateProperty() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            {/* Секция дополнительных опций */}
+            <div className="space-y-4">
+              <Label className="text-lg font-semibold">Дополнительные опции</Label>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="smartHome"
+                    checked={smartHome}
+                    onChange={(e) => setSmartHome(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="smartHome" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Умный дом
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="jacuzzi"
+                    checked={jacuzzi}
+                    onChange={(e) => setJacuzzi(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="jacuzzi" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Джакузи
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="terrace"
+                    checked={terrace}
+                    onChange={(e) => setTerrace(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="terrace" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Терраса
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="rooftop"
+                    checked={rooftop}
+                    onChange={(e) => setRooftop(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="rooftop" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Руфтоп
+                  </Label>
+                </div>
               </div>
             </div>
 

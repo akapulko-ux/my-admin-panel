@@ -9,7 +9,8 @@ const ROLES = {
   moderator: ['moderator', 'модератор', 'mod'],
   premium_agent: ['premium_agent', 'premium agent', 'премиум агент', 'премиум-агент', 'premium'],
   agent: ['agent', 'агент'],
-  user: ['user', 'пользователь', '']
+  user: ['user', 'пользователь', ''],
+  closed: ['closed', 'закрытый аккаунт', 'закрытый', 'заблокированный']
 };
 
 // Функция для нормализации роли

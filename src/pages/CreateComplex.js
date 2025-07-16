@@ -13,22 +13,13 @@ import { convertPdfToImages } from "../utils/pdfUtils";
 import { getDistanceToNearestBeach } from "../utils/beachDistance";
 
 import {
-  Box,
   Card,
   CardContent,
-  TextField,
-  Typography,
-  Button,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  CircularProgress
+  Button
 } from "@mui/material";
 import { showSuccess } from '../utils/notifications';
 import { Building2, Upload, Save, Loader2, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
   CardHeader,
@@ -117,6 +108,12 @@ function CreateComplex() {
 
   // Поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
+
+  // Дополнительные опции
+  const [spaSalon, setSpaSalon] = useState(false);
+  const [restaurant, setRestaurant] = useState(false);
+  const [fitnessGym, setFitnessGym] = useState(false);
+  const [playground, setPlayground] = useState(false);
 
   // Массив для предпросмотра (Drag & Drop)
   const [previews, setPreviews] = useState([]);
@@ -262,6 +259,12 @@ function CreateComplex() {
         // [NEW] Ссылка на 3D Тур
         threeDTour,
 
+        // Дополнительные опции
+        spaSalon,
+        restaurant,
+        fitnessGym,
+        playground,
+
         // Результат вычисления расстояния и времени до пляжа
         beachDistanceKm,
         beachTravelTimeMin,
@@ -296,6 +299,10 @@ function CreateComplex() {
       setCommission("1.0");
       setRoi("");
       setThreeDTour("");
+      setSpaSalon(false);
+      setRestaurant(false);
+      setFitnessGym(false);
+      setPlayground(false);
 
       showSuccess("Комплекс создан!");
     } catch (error) {
@@ -636,6 +643,71 @@ function CreateComplex() {
                   onChange={(e) => setThreeDTour(e.target.value)}
                   placeholder="Ссылка на 3D тур..."
                 />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Дополнительные опции */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Дополнительные опции</CardTitle>
+            <CardDescription>
+              Выберите доступные опции на территории комплекса
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="spaSalon"
+                  checked={spaSalon}
+                  onChange={(e) => setSpaSalon(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <Label htmlFor="spaSalon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  СПА салон
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="restaurant"
+                  checked={restaurant}
+                  onChange={(e) => setRestaurant(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <Label htmlFor="restaurant" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Ресторан
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="fitnessGym"
+                  checked={fitnessGym}
+                  onChange={(e) => setFitnessGym(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <Label htmlFor="fitnessGym" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Фитнес зал
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="playground"
+                  checked={playground}
+                  onChange={(e) => setPlayground(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <Label htmlFor="playground" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Детская площадка
+                </Label>
               </div>
             </div>
           </CardContent>
