@@ -152,7 +152,7 @@ function ComplexDetail() {
         }
         return null;
       } catch (err) {
-        console.error(t.complexDetail.developerLoadError, err);
+        console.error("Ошибка загрузки данных застройщика:", err);
         return null;
       }
     };
@@ -209,7 +209,7 @@ function ComplexDetail() {
                   return { ...property, complexName: complexDoc.data().name };
                 }
               } catch (err) {
-                console.error(t.complexDetail.complexNameLoadError, err);
+                console.error("Ошибка загрузки названия комплекса:", err);
               }
             }
             return property;
@@ -219,7 +219,7 @@ function ComplexDetail() {
         setProperties(propertiesWithComplexNames);
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
-        showError(t.complexDetail.dataLoadError);
+        showError("Ошибка загрузки данных");
       } finally {
         setLoading(false);
       }
@@ -228,7 +228,7 @@ function ComplexDetail() {
     if (id) {
       fetchData();
     }
-  }, [id, currentUser, role, getPropertiesList, propertiesCache, t.complexDetail.complexNameLoadError, t.complexDetail.dataLoadError, t.complexDetail.developerLoadError]);
+  }, [id, currentUser, role, getPropertiesList, propertiesCache]);
 
   // После useEffect
   const getMinPriceForComplex = (complexName) => {
@@ -785,7 +785,7 @@ function ComplexDetail() {
       )}
 
       {/* Дополнительные опции */}
-      {(complex.spaSalon || complex.restaurant || complex.fitnessGym || complex.playground) && (
+      {(complex.spaSalon || complex.restaurant || complex.fitnessGym || complex.playground || isEditing) && (
         <Card className="p-6">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
