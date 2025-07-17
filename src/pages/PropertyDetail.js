@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Navigate, useNavigate } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
@@ -19,7 +19,6 @@ import {
   Layers,
   Bath,
   Calculator,
-  BarChart3,
   Camera,
   X,
 } from "lucide-react";
@@ -48,7 +47,6 @@ function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
   const { id } = useParams();
   console.log('PropertyDetail: Got id from params:', id);
-  const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
@@ -255,29 +253,39 @@ function PropertyDetail() {
 
   // Функция для удаления фотографии
   const handleImageDelete = async (index) => {
+    console.log("=== НАЧАЛО УДАЛЕНИЯ ФОТО ===");
+    console.log("Индекс для удаления:", index);
+    console.log("Текущий объект:", property);
+    console.log("Массив изображений:", property?.images);
+    
     if (!canEdit()) {
+      console.log("Нет прав на редактирование");
       showError(t.propertyDetail.editPermissionError);
       return;
     }
 
     if (!property.images?.[index]) {
+      console.log("Фотография не найдена по индексу:", index);
       showError("Фотография не найдена");
       return;
     }
 
     try {
       const imageUrl = property.images[index];
-      console.log("Начинаем процесс удаления фотографии:", imageUrl);
+      console.log("URL фотографии для удаления:", imageUrl);
       
       // Сначала пытаемся удалить файл из хранилища
+      console.log("Вызываем deleteFileFromFirebaseStorage...");
       await deleteFileFromFirebaseStorage(imageUrl);
       console.log("Файл успешно удален из хранилища");
 
       // После успешного удаления файла обновляем базу данных
       const newImages = [...property.images];
       newImages.splice(index, 1);
+      console.log("Новый массив изображений:", newImages);
       
       const propertyRef = doc(db, "properties", id);
+      console.log("Обновляем базу данных...");
       await updateDoc(propertyRef, { 
         images: newImages,
         updatedAt: Timestamp.now()
@@ -295,12 +303,18 @@ function PropertyDetail() {
         setCurrentImg(Math.max(0, newImages.length - 1));
       }
 
+      console.log("=== УДАЛЕНИЕ УСПЕШНО ЗАВЕРШЕНО ===");
       showSuccess(t.propertyDetail.photoDeleted);
     } catch (error) {
-      console.error("Ошибка при удалении фотографии:", error);
+      console.error("=== ОШИБКА ПРИ УДАЛЕНИИ ===");
+      console.error("Тип ошибки:", error.constructor.name);
+      console.error("Сообщение ошибки:", error.message);
+      console.error("Код ошибки:", error.code);
+      console.error("Стек ошибки:", error.stack);
       
-      if (error.message.includes("storage/object-not-found")) {
-        // Если файл не найден в storage, все равно удаляем ссылку из базы данных
+      if (error.message && (error.message.includes("storage/object-not-found") || error.message.includes("storage/unauthorized"))) {
+        console.log("Файл не найден в storage или нет прав доступа, удаляем только ссылку из БД");
+        // Если файл не найден в storage или нет прав доступа, все равно удаляем ссылку из базы данных
         try {
           const newImages = [...property.images];
           newImages.splice(index, 1);
@@ -325,9 +339,10 @@ function PropertyDetail() {
           console.error("Ошибка обновления базы данных:", dbError);
           showError(t.propertyDetail.databaseUpdateError);
         }
-              } else {
-          showError(t.propertyDetail.photoDeleteError);
-        }
+      } else {
+        console.log("Показываем общую ошибку удаления");
+        showError(t.propertyDetail.photoDeleteError);
+      }
       
       // Перезагружаем данные объекта в случае ошибки
       try {
@@ -477,33 +492,7 @@ function PropertyDetail() {
     }).format(price);
   };
 
-  // Получение имени застройщика по ID
-  const fetchDeveloperName = async (developerId) => {
-    try {
-      const developerDoc = await getDoc(doc(db, "developers", developerId));
-      if (developerDoc.exists()) {
-        return developerDoc.data().name;
-      }
-      return null;
-    } catch (err) {
-      console.error(t.propertyDetail.developerLoadError || "Ошибка загрузки застройщика:", err);
-      return null;
-    }
-  };
 
-  // Получение названия комплекса по ID
-  const fetchComplexName = async (complexId) => {
-    try {
-      const complexDoc = await getDoc(doc(db, "complexes", complexId));
-      if (complexDoc.exists()) {
-        return complexDoc.data().name;
-      }
-      return null;
-    } catch (err) {
-      console.error(t.propertyDetail.complexLoadError || "Ошибка загрузки комплекса:", err);
-      return null;
-    }
-  };
 
   // Добавляем списки значений для выпадающих списков
   const typeOptions = [
@@ -640,6 +629,34 @@ function PropertyDetail() {
   };
 
   useEffect(() => {
+    // Получение имени застройщика по ID
+    const fetchDeveloperName = async (developerId) => {
+      try {
+        const developerDoc = await getDoc(doc(db, "developers", developerId));
+        if (developerDoc.exists()) {
+          return developerDoc.data().name;
+        }
+        return null;
+      } catch (err) {
+        console.error(t.propertyDetail.developerLoadError || "Ошибка загрузки застройщика:", err);
+        return null;
+      }
+    };
+
+    // Получение названия комплекса по ID
+    const fetchComplexName = async (complexId) => {
+      try {
+        const complexDoc = await getDoc(doc(db, "complexes", complexId));
+        if (complexDoc.exists()) {
+          return complexDoc.data().name;
+        }
+        return null;
+      } catch (err) {
+        console.error(t.propertyDetail.complexLoadError || "Ошибка загрузки комплекса:", err);
+        return null;
+      }
+    };
+
     async function fetchData() {
       try {
         console.log('PropertyDetail: Starting to fetch data for id:', id);
@@ -714,7 +731,7 @@ function PropertyDetail() {
       }
     }
     fetchData();
-  }, [id, currentUser, role, getPropertyDetails, propertiesCache]);
+  }, [id, currentUser, role, getPropertyDetails, propertiesCache, t.propertyDetail.developerLoadError, t.propertyDetail.complexLoadError]);
 
   const getLatLng = () => {
     if (!property) return null;

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, getDocs, updateDoc, doc, Timestamp, addDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
+import React, { useEffect, useState, useCallback } from 'react';
+import { collection, query, where, orderBy, getDocs, updateDoc, doc, Timestamp, addDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../lib/LanguageContext';
@@ -54,6 +54,23 @@ const ClientFixations = () => {
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [selectedAgentId, setSelectedAgentId] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Функция для группировки статусов по типу (игнорируя язык)
+  const getStatusType = useCallback((status) => {
+    if (['На согласовании', 'Pending Approval', 'Menunggu Persetujuan'].includes(status)) {
+      return 'pending';
+    }
+    if (['Зафиксирован', 'Fixed', 'Diperbaiki'].includes(status)) {
+      return 'approved';
+    }
+    if (['Срок истек', 'Expired', 'Kedaluwarsa'].includes(status)) {
+      return 'expired';
+    }
+    if (['Отклонен', 'Rejected', 'Ditolak'].includes(status)) {
+      return 'rejected';
+    }
+    return 'unknown';
+  }, []);
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -208,6 +225,82 @@ const ClientFixations = () => {
       : t.clientFixations.statuses.rejected;
   };
 
+  // Функция для получения локализованного системного сообщения
+  const getLocalizedSystemMessage = useCallback((type, fixation, validUntilDate = null, rejectComment = null) => {
+    // Определяем язык фиксации
+    const fixationLanguage = fixation.language || 'ru'; // По умолчанию русский
+    
+    // Получаем переводы для нужного языка
+    let translations;
+    switch (fixationLanguage) {
+      case 'en':
+        translations = {
+          approved: 'Your client {clientName} {clientPhone} has been fixed with developer {developerName} until {validUntil}',
+          rejected: 'Your fixation request for client {clientName} {clientPhone} with developer {developerName} has been rejected. Reason: {reason}',
+          expired: 'Your fixation for client {clientName} {clientPhone} with developer {developerName} has expired on {expiredDate}'
+        };
+        break;
+      case 'id':
+        translations = {
+          approved: 'Klien Anda {clientName} {clientPhone} telah difiksasi dengan pengembang {developerName} hingga {validUntil}',
+          rejected: 'Permintaan fiksasi Anda untuk klien {clientName} {clientPhone} с pengembang {developerName} telah ditolak. Alasan: {reason}',
+          expired: 'Fiksasi Anda untuk klien {clientName} {clientPhone} с pengembang {developerName} telah kedaluwarsa pada {expiredDate}'
+        };
+        break;
+      default: // ru
+        translations = {
+          approved: 'Ваш клиент {clientName} {clientPhone} зафиксирован за вами у застройщика {developerName} до {validUntil}',
+          rejected: 'Ваша заявка на фиксацию клиента {clientName} {clientPhone} у застройщика {developerName} отклонена. Причина отклонения: {reason}',
+          expired: 'Ваша фиксация клиента {clientName} {clientPhone} у застройщика {developerName} истекла {expiredDate}'
+        };
+    }
+    
+    const template = translations[type];
+    if (!template) return '';
+    
+    // Форматируем дату в зависимости от языка
+    let validUntilFormatted = '';
+    let expiredDateFormatted = '';
+    
+    if (validUntilDate) {
+      const date = new Date(validUntilDate);
+      switch (fixationLanguage) {
+        case 'en':
+          validUntilFormatted = date.toLocaleDateString('en-US');
+          break;
+        case 'id':
+          validUntilFormatted = date.toLocaleDateString('id-ID');
+          break;
+        default: // ru
+          validUntilFormatted = date.toLocaleDateString('ru-RU');
+      }
+    }
+    
+    // Для истекших фиксаций используем дату истечения из validUntil
+    if (type === 'expired' && fixation.validUntil) {
+      const expiredDate = new Date(fixation.validUntil.seconds * 1000);
+      switch (fixationLanguage) {
+        case 'en':
+          expiredDateFormatted = expiredDate.toLocaleDateString('en-US');
+          break;
+        case 'id':
+          expiredDateFormatted = expiredDate.toLocaleDateString('id-ID');
+          break;
+        default: // ru
+          expiredDateFormatted = expiredDate.toLocaleDateString('ru-RU');
+      }
+    }
+    
+    // Заменяем плейсхолдеры
+    return template
+      .replace('{clientName}', fixation.clientName || '')
+      .replace('{clientPhone}', fixation.clientPhone || '')
+      .replace('{developerName}', fixation.developerName || '')
+      .replace('{validUntil}', validUntilFormatted)
+      .replace('{expiredDate}', expiredDateFormatted)
+      .replace('{reason}', rejectComment || '');
+  }, []);
+
   // Функция для подтверждения фиксации с выбранной датой
   const handleApproveFixation = async () => {
     if (!selectedFixation || !validUntilDate) return;
@@ -219,9 +312,8 @@ const ClientFixations = () => {
       // Обновляем статус фиксации
       await updateFixationStatus(selectedFixation.id, approvedStatus, validUntilDate);
       
-      // Отправляем системное сообщение в чат фиксации
-      const validUntilFormatted = new Date(validUntilDate).toLocaleDateString('ru-RU');
-      const systemMessage = `Ваш клиент ${selectedFixation.clientName} ${selectedFixation.clientPhone} зафиксирован за вами у застройщика ${selectedFixation.developerName} до ${validUntilFormatted}`;
+      // Отправляем локализованное системное сообщение в чат фиксации
+      const systemMessage = getLocalizedSystemMessage('approved', selectedFixation, validUntilDate);
       
       const messagesRef = collection(db, 'agents', selectedFixation.agentId, 'chats', selectedFixation.chatId, 'messages');
       await addDoc(messagesRef, {
@@ -259,8 +351,8 @@ const ClientFixations = () => {
       // Обновляем статус фиксации
       await updateFixationStatus(selectedFixation.id, rejectedStatus, null, rejectComment);
       
-      // Отправляем системное сообщение в чат фиксации
-      const systemMessage = `Ваша заявка на фиксацию клиента ${selectedFixation.clientName} ${selectedFixation.clientPhone} у застройщика ${selectedFixation.developerName} отклонена. Причина отклонения: ${rejectComment}`;
+      // Отправляем локализованное системное сообщение в чат фиксации
+      const systemMessage = getLocalizedSystemMessage('rejected', selectedFixation, null, rejectComment);
       
       const messagesRef = collection(db, 'agents', selectedFixation.agentId, 'chats', selectedFixation.chatId, 'messages');
       await addDoc(messagesRef, {
@@ -341,7 +433,7 @@ const ClientFixations = () => {
   };
 
   // Функция для проверки и обновления истекших фиксаций
-  const checkAndUpdateExpiredFixations = async (fixationsData) => {
+  const checkAndUpdateExpiredFixations = useCallback(async (fixationsData) => {
     const currentDate = new Date();
     
     for (const fixation of fixationsData) {
@@ -361,6 +453,29 @@ const ClientFixations = () => {
             status: expiredStatus
           });
           
+          // Отправляем локализованное системное сообщение об истечении срока
+          const systemMessage = getLocalizedSystemMessage('expired', fixation);
+          
+          if (systemMessage) {
+            const messagesRef = collection(db, 'agents', fixation.agentId, 'chats', fixation.chatId, 'messages');
+            await addDoc(messagesRef, {
+              text: systemMessage,
+              senderId: 'system',
+              sender_id: 'system',
+              sender_name: 'Система',
+              sender_role: 'system',
+              timestamp: Timestamp.now(),
+              isFromCurrentUser: false
+            });
+
+            // Обновляем последнее сообщение в чате
+            const chatRef = doc(db, 'agents', fixation.agentId, 'chats', fixation.chatId);
+            await updateDoc(chatRef, {
+              lastMessage: systemMessage,
+              timestamp: Timestamp.now()
+            });
+          }
+          
           // Обновляем локальное состояние
           setFixations(prev => prev.map(f => 
             f.id === fixation.id ? { ...f, status: expiredStatus } : f
@@ -370,10 +485,10 @@ const ClientFixations = () => {
         }
       }
     }
-  };
+  }, [getStatusType, t.clientFixations.statuses.expired, getLocalizedSystemMessage]);
 
   // Функция для загрузки фиксаций
-  const fetchFixations = async () => {
+  const fetchFixations = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -444,7 +559,7 @@ const ClientFixations = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser, userRole, t.clientFixations.fetchError, checkAndUpdateExpiredFixations]);
 
   // Функция для открытия чата
   const openChat = (fixation) => {
@@ -461,7 +576,7 @@ const ClientFixations = () => {
   };
 
   // Функция для фильтрации фиксаций по поисковому запросу и статусу
-  const filterFixations = (query = searchQuery, statusFilter = selectedStatusFilter) => {
+  const filterFixations = useCallback((query = searchQuery, statusFilter = selectedStatusFilter) => {
     let filtered = fixations;
 
     // Фильтр по тексту
@@ -491,7 +606,7 @@ const ClientFixations = () => {
     }
 
     setFilteredFixations(filtered);
-  };
+  }, [fixations, searchQuery, selectedStatusFilter, getStatusType]);
 
   // Обработчик изменения поискового запроса
   const handleSearchChange = (e) => {
@@ -505,23 +620,6 @@ const ClientFixations = () => {
     const newStatusFilter = selectedStatusFilter === statusType ? null : statusType;
     setSelectedStatusFilter(newStatusFilter);
     filterFixations(searchQuery, newStatusFilter);
-  };
-
-  // Функция для группировки статусов по типу (игнорируя язык)
-  const getStatusType = (status) => {
-    if (['На согласовании', 'Pending Approval', 'Menunggu Persetujuan'].includes(status)) {
-      return 'pending';
-    }
-    if (['Зафиксирован', 'Fixed', 'Diperbaiki'].includes(status)) {
-      return 'approved';
-    }
-    if (['Срок истек', 'Expired', 'Kedaluwarsa'].includes(status)) {
-      return 'expired';
-    }
-    if (['Отклонен', 'Rejected', 'Ditolak'].includes(status)) {
-      return 'rejected';
-    }
-    return 'unknown';
   };
 
   // Функция для получения отображаемого названия статуса
@@ -570,7 +668,7 @@ const ClientFixations = () => {
     if (currentUser) {
       fetchFixations();
     }
-  }, [currentUser, userRole]);
+  }, [currentUser, userRole, fetchFixations]);
 
   // useEffect для обновления фильтрованных фиксаций при изменении основного списка
   useEffect(() => {
@@ -579,7 +677,7 @@ const ClientFixations = () => {
     } else {
       filterFixations(searchQuery, selectedStatusFilter);
     }
-  }, [fixations, searchQuery, selectedStatusFilter]);
+  }, [fixations, searchQuery, selectedStatusFilter, filterFixations]);
 
   if (isLoading) {
     return (

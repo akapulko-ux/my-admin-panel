@@ -216,7 +216,14 @@ export const translations = {
       fetchError: 'Error loading fixations',
       commentTooShort: 'Comment must contain at least 10 characters',
       validDateRequired: 'Please select a valid date',
-      cancel: 'Cancel'
+      cancel: 'Cancel',
+      
+      // System messages for fixation status changes
+      systemMessages: {
+        approved: 'Your client {clientName} {clientPhone} has been fixed with developer {developerName} until {validUntil}',
+        rejected: 'Your fixation request for client {clientName} {clientPhone} with developer {developerName} has been rejected. Reason: {reason}',
+        expired: 'Your fixation for client {clientName} {clientPhone} with developer {developerName} has expired on {expiredDate}'
+      }
     },
 
     // Fixation Chat
@@ -1267,7 +1274,14 @@ _________________               _________________
       validDateRequired: 'Пожалуйста, выберите действительную дату',
       cancel: 'Отмена',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      
+      // System messages for fixation status changes
+      systemMessages: {
+        approved: 'Ваш клиент {clientName} {clientPhone} зафиксирован за вами у застройщика {developerName} до {validUntil}',
+        rejected: 'Ваша заявка на фиксацию клиента {clientName} {clientPhone} у застройщика {developerName} отклонена. Причина отклонения: {reason}',
+        expired: 'Ваша фиксация клиента {clientName} {clientPhone} у застройщика {developerName} истекла {expiredDate}'
+      }
     },
 
     // Fixation Chat
@@ -2324,7 +2338,14 @@ _________________               _________________
       validDateRequired: 'Harap pilih tanggal yang valid',
       cancel: 'Batal',
       createdAt: 'Dibuat',
-      updatedAt: 'Diperbarui'
+      updatedAt: 'Diperbarui',
+      
+      // System messages for fixation status changes
+      systemMessages: {
+        approved: 'Klien Anda {clientName} {clientPhone} telah difiksasi dengan pengembang {developerName} hingga {validUntil}',
+        rejected: 'Permintaan fiksasi Anda untuk klien {clientName} {clientPhone} dengan pengembang {developerName} telah ditolak. Alasan: {reason}',
+        expired: 'Fiksasi Anda untuk klien {clientName} {clientPhone} dengan pengembang {developerName} telah kedaluwarsa pada {expiredDate}'
+      }
     },
 
     // Fixation Chat

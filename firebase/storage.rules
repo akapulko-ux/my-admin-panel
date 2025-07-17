@@ -47,6 +47,17 @@ service firebase.storage {
       allow write, delete: if hasRequiredRole();
     }
 
+    // === Правила для фотографий объектов ===
+    match /properties/{fileName} {
+      allow read: if true;
+      allow write, delete: if hasRequiredRole();
+    }
+    
+    match /properties/images/{fileName} {
+      allow read: if true;
+      allow write, delete: if hasRequiredRole();
+    }
+
     // === Правила для изображений (из админки, увеличены лимиты) ===
     match /images/{imageId} {
       allow read: if request.auth != null;
