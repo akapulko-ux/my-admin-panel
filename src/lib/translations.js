@@ -245,6 +245,7 @@ export const translations = {
         description: 'Manage your profile settings',
         name: 'Name',
         email: 'Email',
+        role: 'Role',
         password: 'Password',
         updateProfile: 'Update Profile',
         updatePassword: 'Update Password',
@@ -256,7 +257,23 @@ export const translations = {
         updating: 'Updating...',
         profileUpdated: 'Profile updated successfully',
         passwordsNotMatch: 'Passwords do not match',
-        passwordUpdated: 'Password updated successfully'
+        passwordUpdated: 'Password updated successfully',
+        editProfileTitle: 'Edit Profile',
+        userName: 'Username',
+        userNamePlaceholder: 'Enter username',
+        emailCannotBeChanged: 'Email cannot be changed',
+        changePassword: 'Change Password',
+        changePasswordDescription: 'Leave fields empty if you don\'t want to change password',
+        newPasswordPlaceholder: 'Enter new password',
+        confirmPasswordPlaceholder: 'Confirm new password',
+        saving: 'Saving...',
+        notSpecified: 'Not specified',
+        notSpecifiedEmail: 'Not specified',
+        roleNotDefined: 'Not defined',
+        noSignedContracts: 'No signed contracts yet',
+        user: 'User',
+        signDate: 'Sign Date',
+        developer: 'Developer'
       },
       telegram: {
         title: 'Telegram Integration',
@@ -473,7 +490,17 @@ _________________               _________________
       developerLoadError: 'Error loading developer',
       complexNameLoadError: 'Error loading complex name',
       createdAt: 'Created',
-      updatedAt: 'Updated'
+      updatedAt: 'Updated',
+      
+      // Additional Options
+      additionalOptions: 'Additional Options',
+      onComplexTerritory: 'On Complex Territory',
+      
+      // Option badges
+      spaSalon: 'SPA Salon',
+      restaurant: 'Restaurant',
+      fitnessGym: 'Fitness Gym',
+      playground: 'Playground'
     },
 
     // Properties Gallery
@@ -625,7 +652,21 @@ _________________               _________________
       photo: 'Photo',
       photoCounter: '{current} / {total}',
       createdAt: 'Created',
-      updatedAt: 'Updated'
+      updatedAt: 'Updated',
+      
+      // Additional Options
+      additionalOptions: 'Additional Options',
+      onComplexTerritory: 'On Complex Territory',
+      
+      // Option badges
+      smartHome: 'Smart Home',
+      jacuzzi: 'Jacuzzi',
+      terrace: 'Terrace',
+      rooftop: 'Rooftop',
+      spaSalon: 'SPA Salon',
+      restaurant: 'Restaurant',
+      fitnessGym: 'Fitness Gym',
+      playground: 'Playground'
     },
 
     // Chessboards
@@ -1305,6 +1346,7 @@ _________________               _________________
         description: 'Управление настройками профиля',
         name: 'Имя',
         email: 'Email',
+        role: 'Роль',
         password: 'Пароль',
         updateProfile: 'Обновить профиль',
         updatePassword: 'Изменить пароль',
@@ -1318,7 +1360,23 @@ _________________               _________________
         passwordsNotMatch: 'Пароли не совпадают',
         passwordUpdated: 'Пароль успешно обновлен',
         createdAt: 'Создан',
-        updatedAt: 'Обновлен'
+        updatedAt: 'Обновлен',
+        editProfileTitle: 'Редактирование профиля',
+        userName: 'Имя пользователя',
+        userNamePlaceholder: 'Введите имя пользователя',
+        emailCannotBeChanged: 'Email нельзя изменить',
+        changePassword: 'Смена пароля',
+        changePasswordDescription: 'Оставьте поля пустыми, если не хотите менять пароль',
+        newPasswordPlaceholder: 'Введите новый пароль',
+        confirmPasswordPlaceholder: 'Подтвердите новый пароль',
+        saving: 'Сохранение...',
+        notSpecified: 'Не указано',
+        notSpecifiedEmail: 'Не указан',
+        roleNotDefined: 'Не определена',
+        noSignedContracts: 'Пока нет подписанных договоров',
+        user: 'Пользователь',
+        signDate: 'Дата подписания',
+        developer: 'Застройщик'
       },
       telegram: {
         title: 'Интеграция с Telegram',
@@ -1537,7 +1595,17 @@ _________________               _________________
       developerLoadError: 'Ошибка загрузки застройщика',
       complexNameLoadError: 'Ошибка при загрузке названия комплекса',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      
+      // Additional Options
+      additionalOptions: 'Дополнительные опции',
+      onComplexTerritory: 'На территории комплекса',
+      
+      // Option badges
+      spaSalon: 'СПА салон',
+      restaurant: 'Ресторан',
+      fitnessGym: 'Фитнес зал',
+      playground: 'Детская площадка'
     },
 
     // Properties Gallery
@@ -1689,7 +1757,21 @@ _________________               _________________
       photo: 'Фото',
       photoCounter: '{current} / {total}',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      
+      // Additional Options
+      additionalOptions: 'Дополнительные опции',
+      onComplexTerritory: 'На территории комплекса',
+      
+      // Option badges
+      smartHome: 'Умный дом',
+      jacuzzi: 'Джакузи',
+      terrace: 'Терраса',
+      rooftop: 'Руфтоп',
+      spaSalon: 'СПА салон',
+      restaurant: 'Ресторан',
+      fitnessGym: 'Фитнес зал',
+      playground: 'Детская площадка'
     },
 
     // Chessboards
@@ -2369,6 +2451,7 @@ _________________               _________________
         description: 'Kelola pengaturan profil Anda',
         name: 'Nama',
         email: 'Email',
+        role: 'Peran',
         password: 'Kata Sandi',
         updateProfile: 'Perbarui Profil',
         updatePassword: 'Ubah Kata Sandi',
@@ -2382,7 +2465,23 @@ _________________               _________________
         passwordsNotMatch: 'Kata sandi tidak cocok',
         passwordUpdated: 'Kata sandi berhasil diperbarui',
         createdAt: 'Dibuat',
-        updatedAt: 'Diperbarui'
+        updatedAt: 'Diperbarui',
+        editProfileTitle: 'Edit Profil',
+        userName: 'Nama Pengguna',
+        userNamePlaceholder: 'Masukkan nama pengguna',
+        emailCannotBeChanged: 'Email tidak dapat diubah',
+        changePassword: 'Ubah Kata Sandi',
+        changePasswordDescription: 'Biarkan kolom kosong jika Anda tidak ingin mengubah kata sandi',
+        newPasswordPlaceholder: 'Masukkan kata sandi baru',
+        confirmPasswordPlaceholder: 'Konfirmasi kata sandi baru',
+        saving: 'Menyimpan...',
+        notSpecified: 'Tidak ditentukan',
+        notSpecifiedEmail: 'Tidak ditentukan',
+        roleNotDefined: 'Tidak didefinisikan',
+        noSignedContracts: 'Belum ada kontrak yang ditandatangani',
+        user: 'Pengguna',
+        signDate: 'Tanggal Tandatangan',
+        developer: 'Pengembang'
       },
       telegram: {
         title: 'Integrasi Telegram',
@@ -2601,7 +2700,17 @@ _________________               _________________
       developerLoadError: 'Kesalahan memuat pengembang',
       complexNameLoadError: 'Kesalahan memuat nama kompleks',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      
+      // Additional Options
+      additionalOptions: 'Opsi Tambahan',
+      onComplexTerritory: 'Di Wilayah Kompleks',
+      
+      // Option badges
+      spaSalon: 'Salon SPA',
+      restaurant: 'Restoran',
+      fitnessGym: 'Gym Fitness',
+      playground: 'Taman Bermain'
     },
 
     // Properties Gallery
@@ -2753,7 +2862,21 @@ _________________               _________________
       photo: 'Foto',
       photoCounter: '{current} / {total}',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      
+      // Additional Options
+      additionalOptions: 'Opsi Tambahan',
+      onComplexTerritory: 'Di Wilayah Kompleks',
+      
+      // Option badges
+      smartHome: 'Rumah Pintar',
+      jacuzzi: 'Jacuzzi',
+      terrace: 'Teras',
+      rooftop: 'Atap',
+      spaSalon: 'Salon SPA',
+      restaurant: 'Restoran',
+      fitnessGym: 'Gym Fitness',
+      playground: 'Taman Bermain'
     },
 
     // Chessboards

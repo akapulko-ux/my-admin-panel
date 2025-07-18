@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, deleteDoc, doc, orderBy, query, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
@@ -30,51 +30,8 @@ const ListChessboards = () => {
   const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, chessboard: null });
   const [isMobile, setIsMobile] = useState(false);
 
-  // Детектор мобильного устройства
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-    
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
-
-  // Загрузка списка шахматок
-  useEffect(() => {
-    fetchChessboards();
-  }, [role, currentUser]);
-
-  // Загрузка имен комплексов
-  useEffect(() => {
-    const loadComplexNames = async () => {
-      try {
-        const complexIds = [...new Set(chessboards
-          .map(board => board.complexId)
-          .filter(Boolean))];
-
-        if (complexIds.length === 0) return;
-
-        const names = {};
-        for (const complexId of complexIds) {
-          const docSnap = await getDoc(doc(db, "complexes", complexId));
-          if (docSnap.exists()) {
-            names[complexId] = docSnap.data().name;
-          }
-        }
-        setComplexNames(names);
-      } catch (error) {
-        console.error(t.chessboards.complexLoadError || "Ошибка загрузки имен комплексов:", error);
-      }
-    };
-
-    loadComplexNames();
-  }, [chessboards]);
-
   // Функция для получения имени застройщика по ID
-  const fetchDeveloperName = async (developerId) => {
+  const fetchDeveloperName = useCallback(async (developerId) => {
     try {
       const developerDoc = await getDoc(doc(db, "developers", developerId));
       if (developerDoc.exists()) {
@@ -85,9 +42,9 @@ const ListChessboards = () => {
       console.error(t.chessboards.complexLoadError || "Ошибка загрузки застройщика:", err);
       return null;
     }
-  };
+  }, [t.chessboards.complexLoadError]);
 
-  const fetchChessboards = async () => {
+  const fetchChessboards = useCallback(async () => {
     setLoading(true);
     try {
       // Если пользователь - застройщик, получаем его название застройщика
@@ -142,7 +99,50 @@ const ListChessboards = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [role, currentUser, t.chessboards.complexLoadError, t.chessboards.loadError, fetchDeveloperName]);
+
+  // Детектор мобильного устройства
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Загрузка списка шахматок
+  useEffect(() => {
+    fetchChessboards();
+  }, [fetchChessboards]);
+
+  // Загрузка имен комплексов
+  useEffect(() => {
+    const loadComplexNames = async () => {
+      try {
+        const complexIds = [...new Set(chessboards
+          .map(board => board.complexId)
+          .filter(Boolean))];
+
+        if (complexIds.length === 0) return;
+
+        const names = {};
+        for (const complexId of complexIds) {
+          const docSnap = await getDoc(doc(db, "complexes", complexId));
+          if (docSnap.exists()) {
+            names[complexId] = docSnap.data().name;
+          }
+        }
+        setComplexNames(names);
+      } catch (error) {
+        console.error(t.chessboards.complexLoadError || "Ошибка загрузки имен комплексов:", error);
+      }
+    };
+
+    loadComplexNames();
+  }, [chessboards, t.chessboards.complexLoadError]);
 
   // Удаление шахматки
   const handleDelete = async (id, name, complexId) => {
@@ -155,7 +155,7 @@ const ListChessboards = () => {
   const confirmDelete = async () => {
     if (!deleteDialog.chessboard) return;
     
-    const { id, name, complexId } = deleteDialog.chessboard;
+    const { id, complexId } = deleteDialog.chessboard;
     try {
       // Если шахматка привязана к комплексу, удаляем все ссылки на шахматку
       if (complexId) {
@@ -248,8 +248,8 @@ const ListChessboards = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <ConfirmDialog
-        isOpen={deleteDialog.isOpen}
-        onClose={() => setDeleteDialog({ isOpen: false, chessboard: null })}
+        open={deleteDialog.isOpen}
+        onOpenChange={() => setDeleteDialog({ isOpen: false, chessboard: null })}
         onConfirm={confirmDelete}
         title={t.chessboards.deleteConfirmTitle}
         description={t.chessboards.deleteConfirmText.replace('{name}', deleteDialog.chessboard?.name || '')}

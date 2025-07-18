@@ -499,19 +499,19 @@ const Settings = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{t.profile.name}:</span>
                 <span className="text-sm text-muted-foreground">
-                  {userName || 'Не указано'}
+                  {userName || t.profile.notSpecified}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{t.profile.email}:</span>
                 <span className="text-sm text-muted-foreground">
-                  {userEmail || 'Не указан'}
+                  {userEmail || t.profile.notSpecifiedEmail}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Роль:</span>
+                <span className="text-sm font-medium">{t.profile.role}:</span>
                 <Badge variant="secondary" className="text-xs">
-                  {role || 'Не определена'}
+                  {role || t.profile.roleNotDefined}
                 </Badge>
               </div>
             </div>
@@ -598,7 +598,7 @@ const Settings = () => {
                 </div>
               ) : allContracts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Пока нет подписанных договоров
+                  {t.profile.noSignedContracts}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -842,23 +842,23 @@ const Settings = () => {
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium">Пользователь:</span> {selectedContractUser?.userName}
+                  <span className="font-medium">{t.profile.user}:</span> {selectedContractUser?.userName}
                 </div>
                 <div>
-                  <span className="font-medium">Email:</span> {selectedContractUser?.userEmail}
+                  <span className="font-medium">{t.profile.email}:</span> {selectedContractUser?.userEmail}
                 </div>
                 <div>
-                  <span className="font-medium">Роль:</span> {selectedContractUser?.role}
+                  <span className="font-medium">{t.profile.role}:</span> {selectedContractUser?.role}
                 </div>
                 <div>
-                  <span className="font-medium">Дата подписания:</span> {
+                  <span className="font-medium">{t.profile.signDate}:</span> {
                     selectedContractUser?.contractSignDate?.toDate ? 
                       selectedContractUser.contractSignDate.toDate().toLocaleDateString('ru-RU') : 
                       new Date(selectedContractUser?.contractSignDate || 0).toLocaleDateString('ru-RU')
                   }
                 </div>
                 <div className="col-span-2">
-                  <span className="font-medium">Застройщик:</span> {selectedContractUser?.developerName}
+                  <span className="font-medium">{t.profile.developer}:</span> {selectedContractUser?.developerName}
                 </div>
               </div>
             </div>
@@ -883,16 +883,16 @@ const Settings = () => {
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Редактирование профиля</DialogTitle>
+            <DialogTitle>{t.profile.editProfileTitle}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="userName">Имя пользователя</Label>
+              <Label htmlFor="userName">{t.profile.userName}</Label>
               <Input
                 id="userName"
                 type="text"
-                placeholder="Введите имя пользователя"
+                placeholder={t.profile.userNamePlaceholder}
                 value={newUserName}
                 onChange={(e) => setNewUserName(e.target.value)}
               />
@@ -908,34 +908,34 @@ const Settings = () => {
                 className="bg-gray-50"
               />
               <p className="text-xs text-muted-foreground">
-                Email нельзя изменить
+                {t.profile.emailCannotBeChanged}
               </p>
             </div>
             
             <div className="border-t pt-4">
-              <h4 className="font-medium mb-3">Смена пароля</h4>
+              <h4 className="font-medium mb-3">{t.profile.changePassword}</h4>
               <p className="text-sm text-muted-foreground mb-3">
-                Оставьте поля пустыми, если не хотите менять пароль
+                {t.profile.changePasswordDescription}
               </p>
               
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword">Новый пароль</Label>
+                  <Label htmlFor="newPassword">{t.profile.newPassword}</Label>
                   <Input
                     id="newPassword"
                     type="password"
-                    placeholder="Введите новый пароль"
+                    placeholder={t.profile.newPasswordPlaceholder}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Подтверждение пароля</Label>
+                  <Label htmlFor="confirmPassword">{t.profile.confirmPassword}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Подтвердите новый пароль"
+                    placeholder={t.profile.confirmPasswordPlaceholder}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
@@ -952,7 +952,7 @@ const Settings = () => {
               {isUpdatingProfile ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Сохранение...
+                  {t.profile.saving}
                 </div>
               ) : (
                 <div className="flex items-center">

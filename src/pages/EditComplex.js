@@ -20,6 +20,8 @@ import {
   Typography
 } from "@mui/material";
 import { showSuccess } from '../utils/notifications';
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
 
 // Импорт компонентов shadcn
 import { Input } from "../components/ui/input";
@@ -34,6 +36,8 @@ import { ArrowLeft, Loader2, Save, Trash2, Upload } from "lucide-react";
 function EditComplex() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = translations[language];
 
   // Мобильная детекция
   const [isMobile, setIsMobile] = useState(false);
@@ -693,7 +697,7 @@ function EditComplex() {
 
           {/* Секция дополнительных опций */}
           <Card className="p-6">
-            <h2 className={`text-${isMobile ? 'lg' : 'xl'} font-semibold mb-4`}>Дополнительные опции</h2>
+            <h2 className={`text-${isMobile ? 'lg' : 'xl'} font-semibold mb-4`}>{t.complexDetail.additionalOptions}</h2>
             <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
               <div className="flex items-center space-x-2">
                 <input
@@ -703,9 +707,9 @@ function EditComplex() {
                   onChange={(e) => setSpaSalon(e.target.checked)}
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
-                <Label htmlFor="spaSalon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  СПА салон
-                </Label>
+                                  <Label htmlFor="spaSalon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.spaSalon}
+                  </Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -716,9 +720,9 @@ function EditComplex() {
                   onChange={(e) => setRestaurant(e.target.checked)}
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
-                <Label htmlFor="restaurant" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Ресторан
-                </Label>
+                                  <Label htmlFor="restaurant" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.restaurant}
+                  </Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -729,9 +733,9 @@ function EditComplex() {
                   onChange={(e) => setFitnessGym(e.target.checked)}
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
-                <Label htmlFor="fitnessGym" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Фитнес зал
-                </Label>
+                                  <Label htmlFor="fitnessGym" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.fitnessGym}
+                  </Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -742,9 +746,9 @@ function EditComplex() {
                   onChange={(e) => setPlayground(e.target.checked)}
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
-                <Label htmlFor="playground" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Детская площадка
-                </Label>
+                                  <Label htmlFor="playground" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.playground}
+                  </Label>
               </div>
             </div>
           </Card>

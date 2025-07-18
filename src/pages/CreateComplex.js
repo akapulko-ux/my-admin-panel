@@ -20,6 +20,8 @@ import {
 import { showSuccess } from '../utils/notifications';
 import { Building2, Upload, Save, Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
 
 import {
   CardHeader,
@@ -33,6 +35,8 @@ import { Textarea } from "../components/ui/textarea";
 
 function CreateComplex() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = translations[language];
   
   // Мобильная детекция
   const [isMobile, setIsMobile] = useState(false);
@@ -651,9 +655,9 @@ function CreateComplex() {
         {/* Дополнительные опции */}
         <Card>
           <CardHeader>
-            <CardTitle>Дополнительные опции</CardTitle>
+            <CardTitle>{t.complexDetail.additionalOptions}</CardTitle>
             <CardDescription>
-              Выберите доступные опции на территории комплекса
+              {t.complexDetail.onComplexTerritory}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -667,7 +671,7 @@ function CreateComplex() {
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
                 <Label htmlFor="spaSalon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  СПА салон
+                  {t.complexDetail.spaSalon}
                 </Label>
               </div>
 
@@ -680,7 +684,7 @@ function CreateComplex() {
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
                 <Label htmlFor="restaurant" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Ресторан
+                  {t.complexDetail.restaurant}
                 </Label>
               </div>
 
@@ -693,7 +697,7 @@ function CreateComplex() {
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
                 <Label htmlFor="fitnessGym" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Фитнес зал
+                  {t.complexDetail.fitnessGym}
                 </Label>
               </div>
 
@@ -706,7 +710,7 @@ function CreateComplex() {
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
                 <Label htmlFor="playground" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Детская площадка
+                  {t.complexDetail.playground}
                 </Label>
               </div>
             </div>

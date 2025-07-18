@@ -15,9 +15,8 @@ import {
   where,
   deleteDoc
 } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { 
   Plus, 
   Trash2, 
@@ -85,20 +84,7 @@ const initialData = {
   sections: [createDefaultSection()]
 };
 
-// Стили статусов (яркие цвета)
-const getStatusBadge = (status, translations) => {
-  const t = translations;
-  switch (status) {
-    case 'free':
-      return <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg">✓ {t.chessboards.statuses.free}</Badge>;
-    case 'booked':
-      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg">⏳ {t.chessboards.statuses.booked}</Badge>;
-    case 'sold':
-      return <Badge className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-lg">✖ {t.chessboards.statuses.sold}</Badge>;
-    default:
-      return <Badge className="bg-gray-500 text-white">❓ Неизвестно</Badge>;
-  }
-};
+
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -113,43 +99,9 @@ const getStatusColor = (status) => {
   }
 };
 
-const getPropertyTypeBadge = (propertyType, translations) => {
-  const t = translations;
-  switch (propertyType) {
-    case 'Апартаменты':
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🏢 {t.chessboards.propertyTypes.apartments}</Badge>;
-    case 'Вилла':
-      return <Badge className="bg-purple-500 hover:bg-purple-600 text-white text-xs">🏖️ {t.chessboards.propertyTypes.villa}</Badge>;
-    case 'Апарт-вилла':
-      return <Badge className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs">🏘️ {t.chessboards.propertyTypes.apartVilla}</Badge>;
-    case 'Таунхаус':
-      return <Badge className="bg-teal-500 hover:bg-teal-600 text-white text-xs">🏘️ {t.chessboards.propertyTypes.townhouse}</Badge>;
-    default:
-      return <Badge className="bg-gray-500 text-white text-xs">🏢 {t.chessboards.propertyTypes.apartments}</Badge>;
-  }
-};
 
-const getViewBadge = (view, translations) => {
-  const t = translations;
-  switch (view) {
-    case 'Океан':
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 {t.chessboards.views.ocean}</Badge>;
-    case 'Река':
-      return <Badge className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs">🌊 {t.chessboards.views.river}</Badge>;
-    case 'Джунгли':
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">🌳 {t.chessboards.views.jungle}</Badge>;
-    case 'Бассейн':
-      return <Badge className="bg-sky-500 hover:bg-sky-600 text-white text-xs">🏊‍♂️ {t.chessboards.views.pool}</Badge>;
-    case 'Двор':
-      return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs">🏡 {t.chessboards.views.yard}</Badge>;
-    case 'Вулкан':
-      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">🌋 {t.chessboards.views.volcano}</Badge>;
-    case 'Рисовые террасы':
-      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">🌾 {t.chessboards.views.riceTerraces}</Badge>;
-    default:
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">🌊 {t.chessboards.views.ocean}</Badge>;
-  }
-};
+
+
 
 // Новые функции валидации
 // eslint-disable-next-line no-unused-vars
@@ -774,7 +726,6 @@ const Chessboard = () => {
   const [name, setName] = useState("");
   const [sections, setSections] = useState([]);
   const [exchangeRate, setExchangeRate] = useState(16000);
-  const [isEditingRate, setIsEditingRate] = useState(false);
 
   // Состояния для работы с комплексами
   const [complexes, setComplexes] = useState([]);
@@ -896,7 +847,7 @@ const Chessboard = () => {
   };
 
   // Функция для получения имени застройщика по ID
-  const fetchDeveloperName = async (developerId) => {
+  const fetchDeveloperName = useCallback(async (developerId) => {
     try {
       const developerDoc = await getDoc(doc(db, "developers", developerId));
       if (developerDoc.exists()) {
@@ -907,7 +858,7 @@ const Chessboard = () => {
       console.error(t.chessboards.complexLoadError || "Ошибка загрузки застройщика:", err);
       return null;
     }
-  };
+  }, [t.chessboards.complexLoadError]);
 
   // Загрузка списка доступных комплексов
   useEffect(() => {
@@ -964,7 +915,7 @@ const Chessboard = () => {
     if (!id || id === 'new') {
       loadComplexes();
     }
-  }, [id, role, currentUser]);
+  }, [id, role, currentUser, fetchDeveloperName, t.chessboards.complexLoadError, t.chessboards.noComplexesForDeveloper]);
 
   // Загрузка данных шахматки
   useEffect(() => {
@@ -1265,19 +1216,12 @@ const Chessboard = () => {
 
   const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, id: null, name: null });
 
-  // Обновляем handleDelete для удаления ссылки из комплекса
-  const handleDelete = async (id, name) => {
-    setDeleteDialog({
-      isOpen: true,
-      id,
-      name
-    });
-  };
+
 
   const confirmDelete = async () => {
     if (!deleteDialog.id || !deleteDialog.name) return;
     
-    const { id, name } = deleteDialog;
+    const { id } = deleteDialog;
     try {
       // Получаем данные шахматки
       const chessboardRef = doc(db, "chessboards", id);
@@ -1392,8 +1336,8 @@ const Chessboard = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <ConfirmDialog
-        isOpen={deleteDialog.isOpen}
-        onClose={() => setDeleteDialog({ isOpen: false, id: null, name: null })}
+        open={deleteDialog.isOpen}
+        onOpenChange={() => setDeleteDialog({ isOpen: false, id: null, name: null })}
         onConfirm={confirmDelete}
         title={t.chessboards.deleteConfirmTitle}
         description={t.chessboards.deleteConfirmText.replace('{name}', deleteDialog.name || '')}

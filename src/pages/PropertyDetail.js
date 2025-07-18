@@ -1037,7 +1037,7 @@ function PropertyDetail() {
       {/* Дополнительные опции */}
       {isEditing ? (
         <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Дополнительные опции</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.additionalOptions}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center space-x-2">
               <input
@@ -1048,7 +1048,7 @@ function PropertyDetail() {
                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
               />
               <label htmlFor="smartHome" className="text-sm font-medium text-gray-700">
-                Умный дом
+                {t.propertyDetail.smartHome}
               </label>
             </div>
 
@@ -1061,7 +1061,7 @@ function PropertyDetail() {
                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
               />
               <label htmlFor="jacuzzi" className="text-sm font-medium text-gray-700">
-                Джакузи
+                {t.propertyDetail.jacuzzi}
               </label>
             </div>
 
@@ -1074,7 +1074,7 @@ function PropertyDetail() {
                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
               />
               <label htmlFor="terrace" className="text-sm font-medium text-gray-700">
-                Терраса
+                {t.propertyDetail.terrace}
               </label>
             </div>
 
@@ -1087,7 +1087,7 @@ function PropertyDetail() {
                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
               />
               <label htmlFor="rooftop" className="text-sm font-medium text-gray-700">
-                Руфтоп
+                {t.propertyDetail.rooftop}
               </label>
             </div>
           </div>
@@ -1095,30 +1095,30 @@ function PropertyDetail() {
       ) : (
         (property.smartHome || property.jacuzzi || property.terrace || property.rooftop) && (
           <div className="mt-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Дополнительные опции</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.additionalOptions}</h3>
             <div className="grid grid-cols-2 gap-3">
               {property.smartHome && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                   <Home className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">Умный дом</span>
+                  <span className="text-sm font-medium text-gray-700">{t.propertyDetail.smartHome}</span>
                 </div>
               )}
               {property.jacuzzi && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                   <Droplet className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">Джакузи</span>
+                  <span className="text-sm font-medium text-gray-700">{t.propertyDetail.jacuzzi}</span>
                 </div>
               )}
               {property.terrace && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                   <Star className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">Терраса</span>
+                  <span className="text-sm font-medium text-gray-700">{t.propertyDetail.terrace}</span>
                 </div>
               )}
               {property.rooftop && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                   <Building2 className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">Руфтоп</span>
+                  <span className="text-sm font-medium text-gray-700">{t.propertyDetail.rooftop}</span>
                 </div>
               )}
             </div>

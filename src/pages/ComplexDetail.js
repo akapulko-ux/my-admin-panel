@@ -790,7 +790,7 @@ function ComplexDetail() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Building className="h-5 w-5" />
-              На территории комплекса
+              {t.complexDetail.onComplexTerritory}
             </h3>
             
             {isEditing && canEdit() ? (
@@ -805,7 +805,7 @@ function ComplexDetail() {
                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                   />
                   <Label htmlFor="spaSalon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    СПА салон
+                    {t.complexDetail.spaSalon}
                   </Label>
                 </div>
 
@@ -818,7 +818,7 @@ function ComplexDetail() {
                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                   />
                   <Label htmlFor="restaurant" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Ресторан
+                    {t.complexDetail.restaurant}
                   </Label>
                 </div>
 
@@ -831,7 +831,7 @@ function ComplexDetail() {
                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                   />
                   <Label htmlFor="fitnessGym" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Фитнес зал
+                    {t.complexDetail.fitnessGym}
                   </Label>
                 </div>
 
@@ -844,7 +844,7 @@ function ComplexDetail() {
                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                   />
                   <Label htmlFor="playground" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Детская площадка
+                    {t.complexDetail.playground}
                   </Label>
                 </div>
               </div>
@@ -854,25 +854,25 @@ function ComplexDetail() {
                 {complex.spaSalon && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                     <Sparkles className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium">СПА салон</span>
+                    <span className="text-sm font-medium">{t.complexDetail.spaSalon}</span>
                   </div>
                 )}
                 {complex.restaurant && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                     <Utensils className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium">Ресторан</span>
+                    <span className="text-sm font-medium">{t.complexDetail.restaurant}</span>
                   </div>
                 )}
                 {complex.fitnessGym && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                     <Dumbbell className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium">Фитнес зал</span>
+                    <span className="text-sm font-medium">{t.complexDetail.fitnessGym}</span>
                   </div>
                 )}
                 {complex.playground && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                     <Baby className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium">Детская площадка</span>
+                    <span className="text-sm font-medium">{t.complexDetail.playground}</span>
                   </div>
                 )}
               </div>
