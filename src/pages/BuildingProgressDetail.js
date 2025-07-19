@@ -179,37 +179,34 @@ function BuildingProgressDetail() {
       {/* Заголовок */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate(`/building-progress/complex/${id}`)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {monthData.month} {monthData.year}
-                </h1>
-                <p className="text-gray-600">
-                  {monthData.photos?.length || 0} {t.buildingProgress.photos}, {monthData.videos?.length || 0} {t.buildingProgress.videos}
-                </p>
-                {monthData.description && (
-                  <p className="text-sm text-gray-500 mt-1 max-w-2xl">
-                    {monthData.description}
+                      <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => navigate(`/building-progress/complex/${id}`)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {monthData.month} {monthData.year}
+                  </h1>
+                  <p className="text-gray-600">
+                    {monthData.photos?.length || 0} {t.buildingProgress.photos}, {monthData.videos?.length || 0} {t.buildingProgress.videos}
                   </p>
-                )}
+                  {data?.name && (
+                    <p className="text-lg font-semibold text-gray-800 mt-2">
+                      {data.name}
+                    </p>
+                  )}
+                  {monthData.description && (
+                    <p className="text-sm text-gray-500 mt-1 max-w-2xl">
+                      {monthData.description}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-            
-            {data && (
-              <div className="text-right">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  {data.name}
-                </h2>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 

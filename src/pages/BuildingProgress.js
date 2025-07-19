@@ -249,37 +249,37 @@ function BuildingProgress() {
     setDescriptionText('');
   };
 
-  // Удаление файла
-  const handleFileDelete = async (monthKey, fileUrl, fileType) => {
-    if (!canEdit()) {
-      showError(t.buildingProgress.noAccessDelete);
-      return;
-    }
+  // Удаление файла (используется в BuildingProgressDetail.js)
+  // const handleFileDelete = async (monthKey, fileUrl, fileType) => {
+  //   if (!canEdit()) {
+  //     showError(t.buildingProgress.noAccessDelete);
+  //     return;
+  //   }
 
-    try {
-      const updatedProgressData = progressData.map(item => {
-        if (item.monthKey === monthKey) {
-          return {
-            ...item,
-            [fileType === 'photo' ? 'photos' : 'videos']: 
-              item[fileType === 'photo' ? 'photos' : 'videos'].filter(file => file.url !== fileUrl)
-          };
-        }
-        return item;
-      });
+  //   try {
+  //     const updatedProgressData = progressData.map(item => {
+  //       if (item.monthKey === monthKey) {
+  //         return {
+  //           ...item,
+  //           [fileType === 'photo' ? 'photos' : 'videos']: 
+  //             item[fileType === 'photo' ? 'photos' : 'videos'].filter(file => file.url !== fileUrl)
+  //         };
+  //       }
+  //       return item;
+  //     });
 
-      setProgressData(updatedProgressData);
+  //     setProgressData(updatedProgressData);
 
-      await updateDoc(doc(db, 'complexes', id), {
-        buildingProgress: updatedProgressData
-      });
+  //     await updateDoc(doc(db, 'complexes', id), {
+  //       buildingProgress: updatedProgressData
+  //     });
 
-      showSuccess(t.buildingProgress.successDelete);
-    } catch (error) {
-      console.error('Ошибка удаления файла:', error);
-      showError(t.buildingProgress.errorDelete);
-    }
-  };
+  //     showSuccess(t.buildingProgress.successDelete);
+  //   } catch (error) {
+  //     console.error('Ошибка удаления файла:', error);
+  //     showError(t.buildingProgress.errorDelete);
+  //   }
+  // };
 
   if (loading) {
     return (

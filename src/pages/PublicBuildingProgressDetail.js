@@ -74,6 +74,11 @@ function PublicBuildingProgressDetail() {
               <p className="text-gray-600">
                 {progressData.photos?.length || 0} photos, {progressData.videos?.length || 0} videos
               </p>
+              {data?.name && (
+                <p className="text-xl font-semibold text-gray-800 mt-2">
+                  {data.name}
+                </p>
+              )}
               {progressData.description && (
                 <p className="text-sm text-gray-500 mt-1 max-w-2xl">
                   {progressData.description}
@@ -81,14 +86,6 @@ function PublicBuildingProgressDetail() {
               )}
             </div>
           </div>
-          
-          {data && (
-            <div className="text-right">
-              <h2 className="text-xl font-semibold text-gray-800">
-                {data.name}
-              </h2>
-            </div>
-          )}
         </div>
 
         {/* Сетка медиафайлов */}
@@ -104,7 +101,7 @@ function PublicBuildingProgressDetail() {
             >
               <img
                 src={photo.url}
-                alt={`Photo ${index + 1}`}
+                alt={`${index + 1}`}
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-2 right-2 bg-black bg-opacity-60 rounded-lg px-2 py-1">
@@ -146,7 +143,7 @@ function PublicBuildingProgressDetail() {
               {mediaType === 'photo' ? (
                 <img
                   src={selectedMedia}
-                  alt="View photo"
+                  alt="View"
                   className="w-full h-auto max-h-screen object-contain"
                 />
               ) : (
