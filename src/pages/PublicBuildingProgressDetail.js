@@ -74,6 +74,11 @@ function PublicBuildingProgressDetail() {
               <p className="text-gray-600">
                 {progressData.photos?.length || 0} photos, {progressData.videos?.length || 0} videos
               </p>
+              {progressData.description && (
+                <p className="text-sm text-gray-500 mt-1 max-w-2xl">
+                  {progressData.description}
+                </p>
+              )}
             </div>
           </div>
           

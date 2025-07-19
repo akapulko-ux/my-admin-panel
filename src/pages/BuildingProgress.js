@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import { 
   ChevronLeft, 
-  ChevronRight, 
   Plus, 
-  Upload,
   X,
   Calendar,
   Camera,
-  Video
+  Video,
+  Edit3,
+  Save
 } from 'lucide-react';
 import { uploadToFirebaseStorageInFolder } from '../utils/firebaseStorage';
 import { showError, showSuccess } from '../utils/notifications';
@@ -32,6 +32,8 @@ function BuildingProgress() {
   const [uploading, setUploading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [additionalMonths, setAdditionalMonths] = useState(0);
+  const [editingDescription, setEditingDescription] = useState(null);
+  const [descriptionText, setDescriptionText] = useState('');
   const initialMonthsCount = 12;
 
   // Проверка прав доступа
@@ -113,7 +115,8 @@ function BuildingProgress() {
           month: months[month],
           year,
           photos: existingData?.photos || [],
-          videos: existingData?.videos || []
+          videos: existingData?.videos || [],
+          description: existingData?.description || ''
         });
       }
     }
@@ -165,7 +168,8 @@ function BuildingProgress() {
           month: monthData.month,
           year: monthData.year,
           photos: uploadedFiles.filter(f => f.type === 'photo'),
-          videos: uploadedFiles.filter(f => f.type === 'video')
+          videos: uploadedFiles.filter(f => f.type === 'video'),
+          description: monthData.description || ''
         });
       }
 
@@ -184,6 +188,65 @@ function BuildingProgress() {
     } finally {
       setUploading(false);
     }
+  };
+
+  // Сохранение описания альбома
+  const handleSaveDescription = async (monthKey) => {
+    if (!canEdit()) {
+      showError(t.buildingProgress.noAccessUpload);
+      return;
+    }
+
+    try {
+      const updatedProgressData = progressData.map(item => {
+        if (item.monthKey === monthKey) {
+          return {
+            ...item,
+            description: descriptionText.trim()
+          };
+        }
+        return item;
+      });
+
+      // Если месяц не существует, создаем новый
+      if (!progressData.find(item => item.monthKey === monthKey)) {
+        const monthData = generateMonthsData().find(m => m.monthKey === monthKey);
+        updatedProgressData.push({
+          monthKey,
+          month: monthData.month,
+          year: monthData.year,
+          photos: [],
+          videos: [],
+          description: descriptionText.trim()
+        });
+      }
+
+      setProgressData(updatedProgressData);
+
+      // Сохраняем в базу данных
+      await updateDoc(doc(db, 'complexes', id), {
+        buildingProgress: updatedProgressData
+      });
+
+      showSuccess(t.buildingProgress.descriptionSaved);
+      setEditingDescription(null);
+      setDescriptionText('');
+    } catch (error) {
+      console.error('Ошибка сохранения описания:', error);
+      showError(t.buildingProgress.descriptionError);
+    }
+  };
+
+  // Начало редактирования описания
+  const handleStartEditDescription = (monthKey, currentDescription = '') => {
+    setEditingDescription(monthKey);
+    setDescriptionText(currentDescription);
+  };
+
+  // Отмена редактирования описания
+  const handleCancelEditDescription = () => {
+    setEditingDescription(null);
+    setDescriptionText('');
   };
 
   // Удаление файла
@@ -317,6 +380,56 @@ function BuildingProgress() {
                   </div>
 
                   <div className="p-3">
+                    {/* Секция описания */}
+                    <div className="mb-3">
+                      {editingDescription === monthData.monthKey ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={descriptionText}
+                            onChange={(e) => setDescriptionText(e.target.value)}
+                            placeholder={t.buildingProgress.descriptionPlaceholder}
+                            className="w-full p-2 text-xs border border-gray-300 rounded-md resize-none"
+                            rows="3"
+                          />
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleSaveDescription(monthData.monthKey)}
+                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+                            >
+                              <Save className="w-3 h-3" />
+                              {t.buildingProgress.saveDescription}
+                            </button>
+                            <button
+                              onClick={handleCancelEditDescription}
+                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600"
+                            >
+                              <X className="w-3 h-3" />
+                              {t.buildingProgress.cancelEdit}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            {monthData.description ? (
+                              <p className="text-xs text-gray-700 leading-relaxed">{monthData.description}</p>
+                            ) : (
+                              <p className="text-xs text-gray-400 italic">{t.buildingProgress.albumDescription}</p>
+                            )}
+                          </div>
+                          {canEdit() && (
+                            <button
+                              onClick={() => handleStartEditDescription(monthData.monthKey, monthData.description)}
+                              className="ml-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Кнопки действий */}
                     {hasContent ? (
                       <div className="space-y-2">
                         <button

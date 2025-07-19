@@ -989,6 +989,16 @@ _________________               _________________
       photo: 'photo',
       video: 'video',
       
+      // Album description
+      albumDescription: 'Album Description',
+      addDescription: 'Add Description',
+      editDescription: 'Edit Description',
+      saveDescription: 'Save Description',
+      cancelEdit: 'Cancel Edit',
+      descriptionPlaceholder: 'Enter description for this album...',
+      descriptionSaved: 'Description saved',
+      descriptionError: 'Error saving description',
+      
       // Confirm dialog
       confirmDelete: 'Are you sure you want to delete this file?',
       
@@ -1690,7 +1700,7 @@ _________________               _________________
       landRightsCertificate: 'Сертификат права на землю (SHGB):',
       buildingPermit: 'Разрешение на строительство (PBG):',
       buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
-      layout: 'Тонировка:',
+      layout: 'Планировка:',
       dueDiligence: 'Due Diligence:',
       pkkprFile: 'Файл PKKPR:',
       
@@ -2093,6 +2103,16 @@ _________________               _________________
       videos: 'видео',
       photo: 'фото',
       video: 'видео',
+      
+      // Album description
+      albumDescription: 'Описание альбома',
+      addDescription: 'Добавить описание',
+      editDescription: 'Редактировать описание',
+      saveDescription: 'Сохранить описание',
+      cancelEdit: 'Отменить редактирование',
+      descriptionPlaceholder: 'Введите описание для этого альбома...',
+      descriptionSaved: 'Описание сохранено',
+      descriptionError: 'Ошибка сохранения описания',
       
       // Confirm dialog
       confirmDelete: 'Вы уверены, что хотите удалить этот файл?',
@@ -3198,6 +3218,16 @@ _________________               _________________
       videos: 'video',
       photo: 'foto',
       video: 'video',
+      
+      // Album description
+      albumDescription: 'Deskripsi Album',
+      addDescription: 'Tambah Deskripsi',
+      editDescription: 'Edit Deskripsi',
+      saveDescription: 'Simpan Deskripsi',
+      cancelEdit: 'Batal Edit',
+      descriptionPlaceholder: 'Masukkan deskripsi untuk album ini...',
+      descriptionSaved: 'Deskripsi disimpan',
+      descriptionError: 'Kesalahan menyimpan deskripsi',
       
       // Confirm dialog
       confirmDelete: 'Apakah Anda yakin ingin menghapus file ini?',
