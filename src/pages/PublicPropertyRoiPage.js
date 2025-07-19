@@ -7,8 +7,6 @@ import { AdaptiveTooltip } from '../components/ui/tooltip';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -28,7 +26,7 @@ const formatCurrency = (number) => {
 
 const formatPercentage = (number) => {
   if (!number && number !== 0) return '0%';
-  return `${number.toFixed(1)}%`;
+  return `${number.toFixed(2)}%`;
 };
 
 // Функция для расчета оптимального масштаба графика
@@ -65,12 +63,30 @@ const calculateOptimalDomain = (data, dataKey, padding = 0.15) => {
   
   if (finalRange < minDesiredRange) {
     const center = (domainMin + domainMax) / 2;
-    const expansion = (minDesiredRange - finalRange) / 2;
     domainMin = center - minDesiredRange / 2;
     domainMax = center + minDesiredRange / 2;
   }
   
   return [Math.floor(domainMin), Math.ceil(domainMax)];
+};
+
+// Коэффициенты для разных сценариев
+const scenarioMultipliers = {
+  pessimistic: {
+    occupancyRate: 0.8, // 80% от базового значения
+    rentGrowthRate: 0.7, // 70% от базового значения
+    annualAppreciation: 0.7, // 70% от базового значения
+  },
+  realistic: {
+    occupancyRate: 1, // 100% - базовое значение
+    rentGrowthRate: 1,
+    annualAppreciation: 1,
+  },
+  optimistic: {
+    occupancyRate: 1.1, // 110% от базового значения
+    rentGrowthRate: 1.3, // 130% от базового значения
+    annualAppreciation: 1.3,
+  },
 };
 
 const PublicPropertyRoiPage = () => {
@@ -95,25 +111,6 @@ const PublicPropertyRoiPage = () => {
   const handleLanguageChange = (newLang) => {
     console.log('Changing language to:', newLang);
     changeLanguage(newLang);
-  };
-
-  // Коэффициенты для разных сценариев
-  const scenarioMultipliers = {
-    pessimistic: {
-      occupancyRate: 0.8, // 80% от базового значения
-      rentGrowthRate: 0.7, // 70% от базового значения
-      annualAppreciation: 0.7, // 70% от базового значения
-    },
-    realistic: {
-      occupancyRate: 1, // 100% - базовое значение
-      rentGrowthRate: 1,
-      annualAppreciation: 1,
-    },
-    optimistic: {
-      occupancyRate: 1.1, // 110% от базового значения
-      rentGrowthRate: 1.3, // 130% от базового значения
-      annualAppreciation: 1.3,
-    },
   };
 
   useEffect(() => {
@@ -219,13 +216,7 @@ const PublicPropertyRoiPage = () => {
       const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
       const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100);
       
-      // Операционные расходы (без налогов)
-      const initialOperationalExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
-      const initialProfitBeforeTax = initialAnnualRentalIncome - initialOperationalExpenses;
-      
-      // Налоги рассчитываются от прибыли до налогов
-      const initialTaxes = initialProfitBeforeTax * (annualTax / 100);
-      const initialAnnualExpenses = initialOperationalExpenses + initialTaxes;
+
 
       // Пересчет для выбранного периода
       const graphData = [];
@@ -235,7 +226,6 @@ const PublicPropertyRoiPage = () => {
       let cumulativeIncome = 0;
       let totalSpend = totalInvestment;
       let cumulativeCashflow = -totalInvestment;
-      let cumulativeAppreciation = 0;
       
       for (let year = 1; year <= years; year++) {
         // Расчет удорожания для текущего года
@@ -252,7 +242,6 @@ const PublicPropertyRoiPage = () => {
         const previousPropertyValue = currentPropertyValue;
         currentPropertyValue = currentPropertyValue * (1 + yearlyAppreciationRate / 100);
         const yearlyAppreciation = currentPropertyValue - previousPropertyValue;
-        cumulativeAppreciation += yearlyAppreciation;
 
         // Расчет дохода от аренды
         const rentalIncome = year <= operationStartYear ? 0 :
@@ -628,10 +617,8 @@ const PublicPropertyRoiPage = () => {
             <p className="text-sm text-muted-foreground">{t.roiShort}</p>
             <p className="text-lg font-semibold">
               {(() => {
-                if (!currentData.detailedProjection || currentData.detailedProjection.length === 0) return '0%';
-                const annualNetProfit = currentData.detailedProjection.reduce((sum, row) => sum + row.cashflow, 0) / currentData.investmentPeriod;
-                const roi = (annualNetProfit / currentData.unitPrice) * 100;
-                return roi.toFixed(2) + '%';
+                if (!currentData.averageROI) return '0%';
+                return currentData.averageROI.toFixed(2) + '%';
               })()}
             </p>
           </Card>

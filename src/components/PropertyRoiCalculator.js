@@ -12,8 +12,6 @@ import {
   SelectValue,
 } from "./ui/select";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -29,6 +27,7 @@ import { db } from "../firebaseConfig";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
+import { useAuth } from "../AuthContext";
 
 // Функция форматирования больших чисел
 const formatLargeNumber = (number) => {
@@ -105,7 +104,6 @@ const calculateOptimalDomain = (data, dataKey, padding = 0.15) => {
   
   if (finalRange < minDesiredRange) {
     const center = (domainMin + domainMax) / 2;
-    const expansion = (minDesiredRange - finalRange) / 2;
     domainMin = center - minDesiredRange / 2;
     domainMax = center + minDesiredRange / 2;
   }
@@ -113,57 +111,11 @@ const calculateOptimalDomain = (data, dataKey, padding = 0.15) => {
   return [Math.floor(domainMin), Math.ceil(domainMax)];
 };
 
-// Функция для экспорта данных в CSV
-const exportToCSV = (data, filename) => {
-  // Заголовки для CSV
-  const headers = [
-    'Параметр',
-    'Значение',
-    '',
-    'Год',
-    'Прибыль за год',
-    'Накопленная прибыль'
-  ].join(',');
 
-  // Данные инвестиций
-  const investmentData = [
-    ['Общие инвестиции', data.totalInvestment],
-    ['Годовой доход от аренды', data.annualRentalIncome],
-    ['Годовые расходы', data.annualExpenses],
-    ['Чистая прибыль в год', data.annualNetProfit],
-    ['ROI', `${data.roi.toFixed(2)}%`],
-    ['Срок окупаемости', `${data.paybackPeriod.toFixed(1)} лет`],
-  ].map(row => row.join(','));
-
-  // Пустая строка для разделения
-  const separator = ['', '', '', '', '', ''].join(',');
-
-  // Данные графика
-  const graphData = data.graphData.map(item => 
-    ['', '', '', item.year, item.profit, item.accumulatedProfit].join(',')
-  );
-
-  // Объединяем все данные
-  const csvContent = [
-    headers,
-    ...investmentData,
-    separator,
-    ...graphData
-  ].join('\n');
-
-  // Создаем и скачиваем файл
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
 
 const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
   const { language } = useLanguage();
+  const { currentUser } = useAuth();
   const t = translations[language];
   
   // Состояния для всех входных данных
@@ -192,7 +144,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     appreciationYear3: '',
   });
 
-  const [scenario, setScenario] = useState('base');
+  const [scenario, setScenario] = useState('realistic');
   const [calculationResults, setCalculationResults] = useState(null);
   const [pdfLanguage, setPdfLanguage] = useState('en');
   const [hasSavedData, setHasSavedData] = useState(false);
@@ -256,34 +208,69 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
 
   // Функция сохранения расчета
   const saveCalculation = async () => {
-    if (!calculationResults) return;
+    if (!calculationResults) {
+      showNotification(t.roiCalculator.calculateFirstError || 'Сначала выполните расчет', 'error');
+      return;
+    }
+
+    if (!currentUser) {
+      showNotification('Необходимо войти в систему для сохранения расчета', 'error');
+      return;
+    }
 
     try {
+      // Фильтруем undefined значения из данных
+      const cleanCostData = Object.fromEntries(
+        Object.entries(costData).filter(([_, value]) => value !== undefined)
+      );
+      const cleanRentalData = Object.fromEntries(
+        Object.entries(rentalData).filter(([_, value]) => value !== undefined)
+      );
+      const cleanExpensesData = Object.fromEntries(
+        Object.entries(expensesData).filter(([_, value]) => value !== undefined)
+      );
+
       const calculationData = {
-        costData,
-        rentalData,
-        expensesData,
-        scenario,
+        costData: cleanCostData,
+        rentalData: cleanRentalData,
+        expensesData: cleanExpensesData,
+        scenario: scenario || 'realistic',
         results: calculationResults,
         updatedAt: new Date(),
+        userId: currentUser.uid,
+        userEmail: currentUser.email
       };
 
       await setDoc(doc(db, "properties", propertyId, "calculations", "roi"), calculationData);
       setHasSavedData(true);
-      // Уведомление об успешном сохранении
-      setNotification({ type: 'success', message: t.roiCalculator.calculationSaved });
-      setTimeout(() => setNotification(null), 3000);
+      showNotification(t.roiCalculator.calculationSaved || 'Расчет успешно сохранен', 'success');
     } catch (error) {
       console.error("Ошибка при сохранении расчета:", error);
-      setNotification({ type: 'error', message: t.roiCalculator.calculationSaveError });
-      setTimeout(() => setNotification(null), 3000);
+      
+      // Более подробная обработка ошибок
+      let errorMessage = t.roiCalculator.calculationSaveError || 'Ошибка при сохранении расчета';
+      
+      if (error.code === 'permission-denied') {
+        errorMessage = 'Недостаточно прав для сохранения. Обратитесь к администратору.';
+      } else if (error.code === 'unauthenticated') {
+        errorMessage = 'Необходимо войти в систему';
+      } else if (error.code === 'not-found') {
+        errorMessage = 'Объект не найден';
+      }
+      
+      showNotification(errorMessage, 'error');
     }
   };
 
   // Функция создания публичной страницы
   const generatePublicPage = async () => {
     if (!calculationResults) {
-      showNotification(t.roiCalculator.calculateFirstError, 'error');
+      showNotification(t.roiCalculator.calculateFirstError || 'Сначала выполните расчет', 'error');
+      return;
+    }
+
+    if (!currentUser) {
+      showNotification('Необходимо войти в систему для создания публичной страницы', 'error');
       return;
     }
     
@@ -291,16 +278,30 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       // Сохраняем данные в Firestore для публичной страницы
       const roiDocRef = doc(db, 'properties', propertyId, 'calculations', 'roi');
       
+      // Фильтруем undefined значения из данных
+      const cleanCostData = Object.fromEntries(
+        Object.entries(costData).filter(([_, value]) => value !== undefined)
+      );
+      const cleanRentalData = Object.fromEntries(
+        Object.entries(rentalData).filter(([_, value]) => value !== undefined)
+      );
+      const cleanExpensesData = Object.fromEntries(
+        Object.entries(expensesData).filter(([_, value]) => value !== undefined)
+      );
+      
       const publicData = {
-        costData,
-        rentalData,
-        expensesData,
+        costData: cleanCostData,
+        rentalData: cleanRentalData,
+        expensesData: cleanExpensesData,
+        scenario: scenario || 'realistic',
         results: {
           ...calculationResults,
           maxInvestmentPeriod: Number(costData.investmentPeriod) || 5
         },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        userId: currentUser.uid,
+        userEmail: currentUser.email
       };
       
       await setDoc(roiDocRef, publicData);
@@ -309,10 +310,22 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       const url = `/public-roi/property/${propertyId}`;
       window.open(url, '_blank');
       
-      showNotification(t.roiCalculator.publicPageCreated, 'success');
+      showNotification(t.roiCalculator.publicPageCreated || 'Публичная страница создана', 'success');
     } catch (error) {
       console.error('Ошибка при создании публичной страницы:', error);
-      showNotification(t.roiCalculator.publicPageError, 'error');
+      
+      // Более подробная обработка ошибок
+      let errorMessage = t.roiCalculator.publicPageError || 'Ошибка при создании публичной страницы';
+      
+      if (error.code === 'permission-denied') {
+        errorMessage = 'Недостаточно прав для создания публичной страницы. Обратитесь к администратору.';
+      } else if (error.code === 'unauthenticated') {
+        errorMessage = 'Необходимо войти в систему';
+      } else if (error.code === 'not-found') {
+        errorMessage = 'Объект не найден';
+      }
+      
+      showNotification(errorMessage, 'error');
     }
   };
 
@@ -418,7 +431,54 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     const annualNetProfit = (totalProfit / investmentPeriod);
     const totalAppreciation = currentPropertyValue - totalInvestment;
     const totalReturnWithAppreciation = accumulatedProfit + totalAppreciation;
-    const roi = (annualNetProfit / totalInvestment) * 100;
+    
+    // Расчет среднего годового ROI с учетом удорожания (как в публичных страницах)
+    // Создаем массив с точными данными для расчета
+    const detailedProjection = [];
+    let currentPropertyValueForCalc = totalInvestment;
+    
+    for (let year = 1; year <= investmentPeriod; year++) {
+      // Расчет удорожания для текущего года
+      let yearlyAppreciationRate = 0;
+      if (year === 1) {
+        yearlyAppreciationRate = appreciationYear1;
+      } else if (year === 2) {
+        yearlyAppreciationRate = appreciationYear2;
+      } else if (year === 3) {
+        yearlyAppreciationRate = appreciationYear3;
+      }
+      
+      const previousPropertyValue = currentPropertyValueForCalc;
+      currentPropertyValueForCalc = currentPropertyValueForCalc * (1 + yearlyAppreciationRate / 100);
+      const yearlyAppreciation = currentPropertyValueForCalc - previousPropertyValue;
+      
+      // Расчет дохода от аренды
+      const rentalIncome = year <= operationStartYear ? 0 : 
+        initialAnnualRentalIncome * 
+        Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear) * 
+        scenarioMultiplier;
+      
+      // Операционные расходы (без налогов)
+      const operationalExpenses = rentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
+      const profitBeforeTax = rentalIncome - operationalExpenses;
+      
+      // Налоги рассчитываются от прибыли до налогов
+      const taxes = profitBeforeTax * (annualTax / 100);
+      const expenses = operationalExpenses + taxes;
+      const yearlyProfit = rentalIncome - expenses;
+      const totalReturn = yearlyProfit + yearlyAppreciation;
+      
+      detailedProjection.push({
+        totalReturn: totalReturn
+      });
+    }
+    
+    // Расчет среднего годового ROI
+    const averageROI = detailedProjection.length > 0 
+      ? (detailedProjection.reduce((sum, year) => sum + year.totalReturn, 0) / detailedProjection.length) / totalInvestment * 100
+      : 0;
+    
+    const roi = averageROI; // Используем средний годовой ROI
     const totalRoi = (totalReturnWithAppreciation / totalInvestment) * 100;
     const paybackPeriod = totalInvestment / annualNetProfit;
 
@@ -439,7 +499,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       appreciationYear3,
       maxInvestmentPeriod: investmentPeriod
     });
-  }, [costData, rentalData, expensesData, scenario]);
+  }, [costData, rentalData, expensesData, scenario, t.roiCalculator.year]);
 
   // Автоматический расчет при изменении данных
   useEffect(() => {
@@ -669,7 +729,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pessimistic">{t.roiCalculator.pessimistic}</SelectItem>
-                  <SelectItem value="base">{t.roiCalculator.realistic}</SelectItem>
+                  <SelectItem value="realistic">{t.roiCalculator.realistic}</SelectItem>
                   <SelectItem value="optimistic">{t.roiCalculator.optimistic}</SelectItem>
                 </SelectContent>
               </Select>
@@ -694,6 +754,18 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
           </div>
         )}
 
+        {/* Информационное сообщение для неавторизованных пользователей */}
+        {!currentUser && (
+          <div className="mt-8 p-6 bg-yellow-50 rounded-lg border border-yellow-200">
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+              Вход в систему
+            </h3>
+            <p className="text-yellow-700">
+              Для сохранения расчетов и создания публичных страниц необходимо войти в систему.
+            </p>
+          </div>
+        )}
+
         {calculationResults && (
           <div className="mt-8 p-6 bg-white rounded-2xl shadow-lg">
             <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-start'} mb-6`}>
@@ -704,7 +776,9 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 {/* Группа 1: Сохранение расчета */}
                 <Button 
                   onClick={saveCalculation} 
+                  disabled={!currentUser}
                   className={`bg-green-600 hover:bg-green-700 ${isMobile ? 'w-full h-12' : ''}`}
+                  title={!currentUser ? 'Войдите в систему для сохранения' : ''}
                 >
                   {hasSavedData ? t.roiCalculator.updateCalculation : t.roiCalculator.saveCalculation}
                 </Button>
@@ -713,8 +787,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex flex-col gap-2'}`}>
                   <Button 
                     onClick={generatePublicPage}
+                    disabled={!currentUser}
                     variant="outline"
                     className={isMobile ? 'w-full h-12' : ''}
+                    title={!currentUser ? 'Войдите в систему для создания публичной страницы' : ''}
                   >
                     <Share2 className="mr-2 h-4 w-4" /> {t.roiCalculator.createPublicPage}
                   </Button>

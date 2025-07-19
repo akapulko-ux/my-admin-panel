@@ -25,7 +25,7 @@ const formatCurrency = (number) => {
 
 const formatPercentage = (number) => {
   if (!number && number !== 0) return '0%';
-  return `${number.toFixed(1)}%`;
+  return `${number.toFixed(2)}%`;
 };
 
 // Функция для расчета оптимального масштаба графика
