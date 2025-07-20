@@ -33,6 +33,21 @@ const LandingPage = () => {
   const { language, changeLanguage } = useLanguage();
   const t = landingTranslations[language];
 
+  // Видео в зависимости от языка
+  const getVideoUrl = () => {
+    if (language === 'ru') {
+      return 'https://youtu.be/T4lz_MFMefI';
+    } else {
+      return 'https://youtu.be/6DqVRzyNUmU';
+    }
+  };
+
+  // Функция для извлечения ID видео из YouTube URL
+  const getYouTubeEmbedUrl = (url) => {
+    const videoId = url.split('v=')[1] || url.split('youtu.be/')[1];
+    return `https://www.youtube.com/embed/${videoId}`;
+  };
+
   const features = [
     {
       icon: Building2,
@@ -107,6 +122,30 @@ const LandingPage = () => {
             {t.getStarted}
             <ArrowRight className="h-4 w-4" />
           </Button>
+        </div>
+      </section>
+
+      {/* Video Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-4">
+            {t.videoTitle}
+          </h2>
+          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+            {t.videoDescription}
+          </p>
+          <div className="max-w-4xl mx-auto">
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                src={getYouTubeEmbedUrl(getVideoUrl())}
+                title="Platform Demo Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
         </div>
       </section>
 

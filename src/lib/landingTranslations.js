@@ -6,6 +6,9 @@ export const landingTranslations = {
     heroTitle: "Property Management System for Developers",
     heroDescription: "Modern solution for efficient property management, sales control and customer interaction",
     getStarted: "Get Started",
+    // Video Section
+    videoTitle: "See how it works",
+    videoDescription: "Watch our demo video to learn more about the platform capabilities",
     // Features Section
     platformBenefits: "Platform Benefits",
     features: {
@@ -88,6 +91,9 @@ export const landingTranslations = {
     heroTitle: "Система управления недвижимостью для застройщиков",
     heroDescription: "Современное решение для эффективного управления объектами недвижимости, контроля продаж и взаимодействия с клиентами",
     getStarted: "Начать работу",
+    // Video Section
+    videoTitle: "Посмотрите, как это работает",
+    videoDescription: "Посмотрите наше демо-видео, чтобы узнать больше о возможностях платформы",
     // Features Section
     platformBenefits: "Преимущества платформы",
     features: {
@@ -170,6 +176,9 @@ export const landingTranslations = {
     heroTitle: "Sistem Manajemen Properti untuk Pengembang",
     heroDescription: "Solusi modern untuk manajemen properti yang efisien, kontrol penjualan, dan interaksi pelanggan",
     getStarted: "Mulai",
+    // Video Section
+    videoTitle: "Lihat cara kerjanya",
+    videoDescription: "Tonton video demo kami untuk mempelajari lebih lanjut tentang kemampuan platform",
     // Features Section
     platformBenefits: "Keuntungan Platform",
     features: {
