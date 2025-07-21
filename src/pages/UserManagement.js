@@ -62,6 +62,12 @@ const ROLES = {
     icon: Building,
     color: 'bg-green-500'
   },
+  'премиум застройщик': {
+    value: 'премиум застройщик',
+    label: 'Премиум застройщик',
+    icon: Star,
+    color: 'bg-orange-500'
+  },
   closed: {
     value: 'closed',
     label: 'Закрытый аккаунт',
@@ -131,7 +137,7 @@ const UserManagement = () => {
       const updateData = { role: newRole };
       
       // Если меняем роль с застройщика на другую, удаляем developerId
-      if (newRole !== 'застройщик') {
+      if (!['застройщик', 'премиум застройщик'].includes(newRole)) {
         updateData.developerId = null;
       }
       
@@ -337,7 +343,7 @@ const UserManagement = () => {
                   {/* Застройщик */}
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-500">Застройщик</p>
-                    {user.role === 'застройщик' ? (
+                    {['застройщик', 'премиум застройщик'].includes(user.role) ? (
                       <Select 
                         value={user.developerId || 'unselected'} 
                         onValueChange={(value) => handleDeveloperChange(user.id, value)}
@@ -366,7 +372,7 @@ const UserManagement = () => {
                   {/* Текущий застройщик */}
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-500">Текущий застройщик</p>
-                    {user.role === 'застройщик' && user.developerId ? (
+                    {['застройщик', 'премиум застройщик'].includes(user.role) && user.developerId ? (
                       <Badge className="bg-green-500 text-white flex items-center gap-1 w-fit">
                         <Building className="w-3 h-3" />
                         {getDeveloperName(user.developerId)}

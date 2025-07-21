@@ -49,7 +49,7 @@ const ListChessboards = () => {
     try {
       // Если пользователь - застройщик, получаем его название застройщика
       let userDeveloperName = null;
-      if (role === 'застройщик' && currentUser) {
+      if (['застройщик', 'премиум застройщик'].includes(role) && currentUser) {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (userDoc.exists() && userDoc.data().developerId) {
           userDeveloperName = await fetchDeveloperName(userDoc.data().developerId);
@@ -65,7 +65,7 @@ const ListChessboards = () => {
 
       // Если пользователь - застройщик, фильтруем шахматки по его комплексам
       let filteredChessboards = allChessboards;
-      if (role === 'застройщик' && userDeveloperName) {
+      if (['застройщик', 'премиум застройщик'].includes(role) && userDeveloperName) {
         // Получаем данные о комплексах для каждой шахматки
         const chessboardsWithComplexData = await Promise.all(
           allChessboards.map(async (chessboard) => {

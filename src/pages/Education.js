@@ -13,7 +13,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 
-const ALL_ROLES = ['admin', 'модератор', 'застройщик', 'agent', 'premium agent', 'user'];
+const ALL_ROLES = ['admin', 'модератор', 'застройщик', 'премиум застройщик', 'agent', 'premium agent', 'user'];
 
 const Education = () => {
   const { role } = useAuth();

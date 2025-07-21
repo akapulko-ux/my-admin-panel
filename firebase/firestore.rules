@@ -43,8 +43,16 @@ service cloud.firestore {
       return isAgent() || isPremiumAgent();
     }
 
+    function isPremiumDeveloper() {
+      return hasRoleInToken('премиум застройщик') || hasRoleInFirestore('премиум застройщик');
+    }
+
+    function isAnyDeveloper() {
+      return isDeveloper() || isPremiumDeveloper();
+    }
+
     function canManageProperties() {
-      return isAdmin() || isAnyAgent() || isDeveloper();
+      return isAdmin() || isAnyAgent() || isAnyDeveloper();
     }
 
     // === ADMIN ИМЕЕТ ПОЛНЫЕ ПРАВА НА ВСЁ ===
@@ -67,7 +75,7 @@ service cloud.firestore {
       // Чтение разрешено всем (для публичных ссылок)
       allow read: if true;
       // Создание/изменение/удаление для админов, модераторов и застройщиков
-      allow create, update, delete: if isAdmin() || isModerator() || isDeveloper();
+      allow create, update, delete: if isAdmin() || isModerator() || isAnyDeveloper();
     }
 
     // === Коллекция агентов и всё внутри неё ===
@@ -75,19 +83,19 @@ service cloud.firestore {
       // Админ имеет полные права
       allow read, write, delete: if isAdmin();
       // админ может всё, агент (обычный, премиум) или застройщик — только свои данные  
-      allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+      allow read, write: if isAdmin() || ((isAnyAgent() || isAnyDeveloper()) && request.auth.uid == agentId);
 
       // чаты
       match /chats/{chatId} {
         // Админ имеет полные права
         allow read, write, delete: if isAdmin();
-        allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+        allow read, write: if isAdmin() || ((isAnyAgent() || isAnyDeveloper()) && request.auth.uid == agentId);
 
         // support внутри чатов
         match /support/{supportId} {
           // Админ имеет полные права
           allow read, write, delete: if isAdmin();
-          allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+          allow read, write: if isAdmin() || ((isAnyAgent() || isAnyDeveloper()) && request.auth.uid == agentId);
         }
       }
 
@@ -95,14 +103,14 @@ service cloud.firestore {
       match /favorites/{favoriteId} {
         // Админ имеет полные права
         allow read, write, delete: if isAdmin();
-        allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+        allow read, write: if isAdmin() || ((isAnyAgent() || isAnyDeveloper()) && request.auth.uid == agentId);
       }
 
       // подборки агента
       match /selections/{selectionId} {
         // Админ имеет полные права
         allow read, write, delete: if isAdmin();
-        allow read, write: if isAdmin() || ((isAnyAgent() || isDeveloper()) && request.auth.uid == agentId);
+        allow read, write: if isAdmin() || ((isAnyAgent() || isAnyDeveloper()) && request.auth.uid == agentId);
       }
     }
 
@@ -259,7 +267,7 @@ service cloud.firestore {
       // Агенты могут читать и создавать свои фиксации
       allow read, create: if isAnyAgent() && request.auth.uid == resource.data.agentId;
       // Застройщики могут читать и обновлять фиксации своих объектов
-      allow read, update: if isDeveloper();
+      allow read, update: if isAnyDeveloper();
       // Агенты могут создавать новые фиксации
       allow create: if isAnyAgent() && request.auth.uid == request.data.agentId;
     }

@@ -866,7 +866,7 @@ const Chessboard = () => {
       try {
         // Если пользователь - застройщик, получаем его developerId и название застройщика
         let userDeveloperName = null;
-        if (role === 'застройщик' && currentUser) {
+        if (['застройщик', 'премиум застройщик'].includes(role) && currentUser) {
           const userDoc = await getDoc(doc(db, "users", currentUser.uid));
           if (userDoc.exists() && userDoc.data().developerId) {
             userDeveloperName = await fetchDeveloperName(userDoc.data().developerId);
@@ -883,7 +883,7 @@ const Chessboard = () => {
 
         // Фильтруем комплексы по застройщику для роли "застройщик"
         let filteredByDeveloper = allComplexes;
-        if (role === 'застройщик' && userDeveloperName) {
+        if (['застройщик', 'премиум застройщик'].includes(role) && userDeveloperName) {
           filteredByDeveloper = allComplexes.filter(complex => 
             complex.developer === userDeveloperName
           );
@@ -903,7 +903,7 @@ const Chessboard = () => {
         setComplexes(availableComplexes);
 
         // Если нет доступных комплексов для застройщика, показываем специальное сообщение
-        if (role === 'застройщик' && userDeveloperName && availableComplexes.length === 0) {
+        if (['застройщик', 'премиум застройщик'].includes(role) && userDeveloperName && availableComplexes.length === 0) {
           setComplexError(t.chessboards.noComplexesForDeveloper.replace('{name}', userDeveloperName));
         }
       } catch (error) {

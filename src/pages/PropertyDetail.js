@@ -25,6 +25,8 @@ import {
 import { showError, showSuccess } from '../utils/notifications';
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
 import PropertyRoiCalculator from "../components/PropertyRoiCalculator";
+import { Badge } from "../components/ui/badge";
+import { AdaptiveTooltip } from "../components/ui/tooltip";
 // Импорт для сжатия изображений и конвертации PDF
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
@@ -95,8 +97,28 @@ function PropertyDetail() {
     });
     
     if (role === 'admin') return true;
-    if (role === 'застройщик') return true; // Временно разрешим всем застройщикам для проверки
+    if (['застройщик', 'премиум застройщик'].includes(role)) return true;
     return false;
+  };
+
+  // Функция для определения статуса бейджа "Проверено сервисом"
+  const getServiceVerificationStatus = () => {
+    if (role === 'премиум застройщик') {
+      return {
+        isActive: true,
+        color: 'bg-green-100 text-green-800 border-green-200',
+        icon: '✓',
+        tooltip: null
+      };
+    } else if (role === 'застройщик') {
+      return {
+        isActive: false,
+        color: 'bg-gray-500 text-white border-gray-600',
+        icon: '○',
+        tooltip: t.propertyDetail.premiumOnlyTooltip
+      };
+    }
+    return null;
   };
 
   // Функция для обработки изменений значений
@@ -719,7 +741,7 @@ function PropertyDetail() {
         
         // Если пользователь - застройщик, получаем его developerId
         let userDeveloperName = null;
-        if (role === 'застройщик' && currentUser) {
+        if (['застройщик', 'премиум застройщик'].includes(role) && currentUser) {
           console.log('PropertyDetail: Fetching developer info for user:', currentUser.uid);
           const userDoc = await getDoc(doc(db, "users", currentUser.uid));
           if (userDoc.exists() && userDoc.data().developerId) {
@@ -764,7 +786,7 @@ function PropertyDetail() {
           }
           
           // Проверяем права доступа для застройщика
-          if (role === 'застройщик') {
+          if (['застройщик', 'премиум застройщик'].includes(role)) {
             console.log('PropertyDetail: Checking access for developer');
             console.log('PropertyDetail: Property developer:', propertyData.developer);
             console.log('PropertyDetail: User developer name:', userDeveloperName);
@@ -1097,6 +1119,25 @@ function PropertyDetail() {
         )}
       </div>
 
+                  {/* Бейдж "Проверено сервисом" */}
+            {getServiceVerificationStatus() && (
+              <div className="mb-4">
+                {getServiceVerificationStatus().tooltip ? (
+                  <AdaptiveTooltip content={getServiceVerificationStatus().tooltip}>
+                    <Badge className={`${getServiceVerificationStatus().color} border flex items-center gap-1 w-fit`}>
+                      <span className="text-sm font-medium">{getServiceVerificationStatus().icon}</span>
+                      <span className="text-sm">{t.propertyDetail.serviceVerified}</span>
+                    </Badge>
+                  </AdaptiveTooltip>
+                ) : (
+                  <Badge className={`${getServiceVerificationStatus().color} border flex items-center gap-1 w-fit`}>
+                    <span className="text-sm font-medium">{getServiceVerificationStatus().icon}</span>
+                    <span className="text-sm">{t.propertyDetail.serviceVerified}</span>
+                  </Badge>
+                )}
+              </div>
+            )}
+
       {property.description && (
         <p className="text-gray-600 mb-6 whitespace-pre-line">{property.description}</p>
       )}
@@ -1210,7 +1251,7 @@ function PropertyDetail() {
       )}
 
       {/* Добавляем кнопки "Расчет ROI" после характеристик объекта */}
-      {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+      {['admin', 'модератор', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
         <div className="mt-8">
           <div className="mt-6 flex gap-4">
             <button
@@ -1225,7 +1266,7 @@ function PropertyDetail() {
       )}
 
       {/* Модальное окно с калькулятором ROI */}
-      {showRoiCalculator && ['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+      {showRoiCalculator && ['admin', 'модератор', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
         <PropertyRoiCalculator
           propertyId={id}
           propertyData={property}

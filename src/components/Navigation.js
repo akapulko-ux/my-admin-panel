@@ -6,6 +6,7 @@ import { translations } from '../lib/translations';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
 import LanguageSwitcher from './LanguageSwitcher';
+import { AdaptiveTooltip } from './ui/tooltip';
 import {
   Home,
   Building2,
@@ -22,7 +23,10 @@ import {
   ClipboardList,
   Network,
   Settings,
-  GraduationCap
+  GraduationCap,
+  Star,
+  Bell,
+  Globe
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -47,6 +51,14 @@ const ROUTE_ACCESS = {
     '/building-progress/*'
   ],
   застройщик: [
+    '/property/gallery',
+    '/property/*',
+    '/chessboard',
+    '/chessboard/*',
+    '/client-fixations',
+    '/building-progress/*'
+  ],
+  'премиум застройщик': [
     '/property/gallery',
     '/property/*',
     '/chessboard',
@@ -182,7 +194,7 @@ const Navigation = () => {
 
             {/* Навигационные элементы */}
             <nav className="space-y-2">
-              {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+              {['admin', 'модератор', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/property/gallery" 
                   icon={Home}
@@ -192,7 +204,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+              {['admin', 'модератор', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/complex/gallery" 
                   icon={Building2}
@@ -242,7 +254,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'модератор', 'застройщик'].includes(role) && (
+              {['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/chessboard" 
                   icon={LayoutGrid}
@@ -272,7 +284,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'модератор', 'застройщик'].includes(role) && (
+              {['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/client-fixations" 
                   icon={UserCheck}
@@ -302,7 +314,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {role === 'admin' && (
+              {['admin', 'модератор'].includes(role) && (
                 <NavItem 
                   to="/referral-map" 
                   icon={Network}
@@ -312,7 +324,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'модератор', 'застройщик'].includes(role) && (
+              {['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/education" 
                   icon={GraduationCap}
@@ -322,7 +334,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'модератор', 'застройщик'].includes(role) && (
+              {['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/settings" 
                   icon={Settings}
@@ -330,6 +342,55 @@ const Navigation = () => {
                 >
                   {nav.settings}
                 </NavItem>
+              )}
+
+              {/* Новые разделы для застройщиков */}
+              {['застройщик', 'премиум застройщик'].includes(role) && (
+                <NavItem 
+                  to="/premium-features" 
+                  icon={Star}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.premiumFeatures}
+                </NavItem>
+              )}
+
+              {/* Уведомления - активны только для премиум застройщика */}
+              {role === 'премиум застройщик' && (
+                <NavItem 
+                  to="/notifications" 
+                  icon={Bell}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.notifications}
+                </NavItem>
+              )}
+              {role === 'застройщик' && (
+                <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
+                  <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
+                    <Bell className="h-4 w-4" />
+                    <span>{nav.notifications}</span>
+                  </div>
+                </AdaptiveTooltip>
+              )}
+
+              {/* Публичная страница - активна только для премиум застройщика */}
+              {role === 'премиум застройщик' && (
+                <NavItem 
+                  to="/public-page" 
+                  icon={Globe}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.publicPage}
+                </NavItem>
+              )}
+              {role === 'застройщик' && (
+                <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
+                  <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
+                    <Globe className="h-4 w-4" />
+                    <span>{nav.publicPage}</span>
+                  </div>
+                </AdaptiveTooltip>
               )}
             </nav>
           </div>
@@ -368,13 +429,13 @@ const Navigation = () => {
       )}
 
       <nav className="space-y-1">
-        {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+        {['admin', 'модератор', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/property/gallery" icon={Home}>
             {nav.propertyGallery}
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+        {['admin', 'модератор', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/complex/gallery" icon={Building2}>
             {nav.complexGallery}
           </NavItem>
@@ -404,7 +465,7 @@ const Navigation = () => {
             </NavItem>
         )}
 
-        {['admin', 'модератор', 'застройщик'].includes(role) && (
+        {['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/chessboard" icon={LayoutGrid}>
             {nav.chessboards}
           </NavItem>
@@ -422,7 +483,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'застройщик'].includes(role) && (
+        {['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/client-fixations" icon={UserCheck}>
             {nav.clientFixations}
           </NavItem>
@@ -440,22 +501,59 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {role === 'admin' && (
+        {['admin', 'модератор'].includes(role) && (
           <NavItem to="/referral-map" icon={Network}>
             {nav.referralMap}
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'застройщик'].includes(role) && (
+        {['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/education" icon={GraduationCap}>
             {nav.education}
           </NavItem>
         )}
 
-        {['admin', 'модератор', 'застройщик'].includes(role) && (
+        {['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/settings" icon={Settings}>
             {nav.settings}
           </NavItem>
+        )}
+
+        {/* Новые разделы для застройщиков */}
+        {['застройщик', 'премиум застройщик'].includes(role) && (
+          <NavItem to="/premium-features" icon={Star}>
+            {nav.premiumFeatures}
+          </NavItem>
+        )}
+
+        {/* Уведомления - активны только для премиум застройщика */}
+        {role === 'премиум застройщик' && (
+          <NavItem to="/notifications" icon={Bell}>
+            {nav.notifications}
+          </NavItem>
+        )}
+        {role === 'застройщик' && (
+          <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
+            <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
+              <Bell className="h-4 w-4" />
+              <span>{nav.notifications}</span>
+            </div>
+          </AdaptiveTooltip>
+        )}
+
+        {/* Публичная страница - активна только для премиум застройщика */}
+        {role === 'премиум застройщик' && (
+          <NavItem to="/public-page" icon={Globe}>
+            {nav.publicPage}
+          </NavItem>
+        )}
+        {role === 'застройщик' && (
+          <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
+            <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
+              <Globe className="h-4 w-4" />
+              <span>{nav.publicPage}</span>
+            </div>
+          </AdaptiveTooltip>
         )}
       </nav>
     </div>

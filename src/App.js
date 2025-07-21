@@ -85,6 +85,11 @@ import ReferralMap from "./pages/ReferralMap";
 // Настройки
 import Settings from "./pages/Settings";
 
+// Новые разделы для застройщиков
+import PremiumFeatures from "./pages/PremiumFeatures";
+import Notifications from "./pages/Notifications";
+import PublicPage from "./pages/PublicPage";
+
 const AdminLayout = ({ children }) => {
   const { currentUser, logout, role } = useAuth();
   const { language } = useLanguage();
@@ -105,7 +110,7 @@ const AdminLayout = ({ children }) => {
 
   useEffect(() => {
     const fetchDeveloperName = async () => {
-      if (role === 'застройщик' && currentUser) {
+      if (['застройщик', 'премиум застройщик'].includes(role) && currentUser) {
         try {
           // Получаем developerId из профиля пользователя
           const userRef = doc(db, 'users', currentUser.uid);
@@ -166,7 +171,7 @@ const AdminLayout = ({ children }) => {
               )}
             >
               {isMobile ? "IT Agent" : "IT Agent Admin Panel"}
-              {role === 'застройщик' && developerName && !isMobile && (
+              {['застройщик', 'премиум застройщик'].includes(role) && developerName && !isMobile && (
                 <span className="text-gray-500">({developerName})</span>
               )}
             </Link>
@@ -403,6 +408,23 @@ function App() {
                     <Route path="/settings" element={
                       <ProtectedRoute>
                         <Settings />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Новые разделы для застройщиков */}
+                    <Route path="/premium-features" element={
+                      <ProtectedRoute>
+                        <PremiumFeatures />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/notifications" element={
+                      <ProtectedRoute>
+                        <Notifications />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/public-page" element={
+                      <ProtectedRoute>
+                        <PublicPage />
                       </ProtectedRoute>
                     } />
 

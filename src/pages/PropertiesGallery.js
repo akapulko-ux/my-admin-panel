@@ -28,7 +28,7 @@ function PropertiesGallery() {
   const [loading, setLoading] = useState(true);
   const [developerName, setDeveloperName] = useState(null);
   const { currentUser, role } = useAuth();
-  const { getPropertiesList, propertiesCache, forceRefreshPropertiesList } = useCache();
+  const { forceRefreshPropertiesList } = useCache();
   const { language } = useLanguage();
   const t = translations[language];
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -79,7 +79,7 @@ function PropertiesGallery() {
   // Проверка доступа к редактированию
   const hasEditAccess = useMemo(() => {
     // Разрешаем редактирование только админам, модераторам и застройщикам
-    return ['admin', 'moderator', 'застройщик'].includes(role);
+    return ['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role);
   }, [role]);
 
   // Безопасное отображение любых типов значений
@@ -91,7 +91,7 @@ function PropertiesGallery() {
   };
 
   // Получение имени застройщика по ID
-  const fetchDeveloperName = async (developerId) => {
+  const fetchDeveloperName = useCallback(async (developerId) => {
     try {
       const developerDoc = await getDoc(doc(db, "developers", developerId));
       if (developerDoc.exists()) {
@@ -102,10 +102,10 @@ function PropertiesGallery() {
       console.error(t.propertiesGallery.developerLoadError, err);
       return null;
     }
-  };
+  }, [t.propertiesGallery.developerLoadError]);
 
   // Получение названия комплекса по ID
-  const fetchComplexName = async (complexId) => {
+  const fetchComplexName = useCallback(async (complexId) => {
     try {
       const complexDoc = await getDoc(doc(db, "complexes", complexId));
       if (complexDoc.exists()) {
@@ -116,14 +116,14 @@ function PropertiesGallery() {
       console.error(t.propertiesGallery.complexLoadError, err);
       return null;
     }
-  };
+  }, [t.propertiesGallery.complexLoadError]);
 
   // Загрузка данных из кеша или Firestore
   const fetchProperties = useCallback(async () => {
     try {
       // Если пользователь - застройщик, получаем его developerId из Firestore
       let developerNameToFilter = null;
-      if (role === 'застройщик' && currentUser) {
+      if (['застройщик', 'премиум застройщик'].includes(role) && currentUser) {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (userDoc.exists() && userDoc.data().developerId) {
           developerNameToFilter = await fetchDeveloperName(userDoc.data().developerId);
@@ -136,7 +136,7 @@ function PropertiesGallery() {
 
       // Фильтруем объекты для застройщика
       let filteredData = data;
-      if (role === 'застройщик' && developerNameToFilter) {
+      if (['застройщик', 'премиум застройщик'].includes(role) && developerNameToFilter) {
         filteredData = data.filter(property => property.developer === developerNameToFilter);
       }
 
@@ -169,7 +169,7 @@ function PropertiesGallery() {
     } finally {
       setLoading(false);
     }
-  }, [currentUser, role, getPropertiesList, propertiesCache]);
+  }, [currentUser, role, fetchDeveloperName, fetchComplexName, forceRefreshPropertiesList, t.propertiesGallery.complexLoadError, t.propertiesGallery.dataLoadError]);
 
   useEffect(() => {
     fetchProperties();
@@ -319,7 +319,7 @@ function PropertiesGallery() {
     <div className="bg-white min-h-screen">
       {/* Заголовок и поиск */}
       <div className={`mx-auto space-y-4 p-4 ${isMobile ? 'max-w-full' : 'max-w-4xl'}`}>
-        {role === 'застройщик' && developerName ? (
+        {['застройщик', 'премиум застройщик'].includes(role) && developerName ? (
           <h1 className={`font-bold text-gray-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
             {t.propertiesGallery.developerPropertiesTitle}: {developerName}
           </h1>
@@ -482,7 +482,7 @@ function PropertiesGallery() {
         {filteredProperties.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             {properties.length === 0 
-              ? (role === 'застройщик' 
+              ? (['застройщик', 'премиум застройщик'].includes(role) 
                   ? t.propertiesGallery.emptyStateNoDeveloperProperties
                   : t.propertiesGallery.emptyStateNoProperties)
               : t.propertiesGallery.emptyStateNoMatches}

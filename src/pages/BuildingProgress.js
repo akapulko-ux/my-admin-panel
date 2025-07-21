@@ -38,7 +38,7 @@ function BuildingProgress() {
 
   // Проверка прав доступа
   const canEdit = () => {
-    return ['admin', 'модератор', 'застройщик'].includes(role);
+    return ['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role);
   };
 
   // Загрузка данных комплекса

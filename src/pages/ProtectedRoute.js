@@ -15,7 +15,8 @@ const ROUTE_ACCESS = {
     '/client-fixations',
     '/building-progress/*',
     '/settings',
-    '/education/*'
+    '/education/*',
+    '/referral-map',
   ],
   'premium agent': [
     '/property/gallery',
@@ -37,8 +38,27 @@ const ROUTE_ACCESS = {
     '/dashboard',
     '/building-progress/*',
     '/settings',
-    '/education', // добавлено
-    '/education/*'
+    '/education',
+    '/education/*',
+    '/premium-features',
+    '/notifications',
+    '/public-page'
+  ],
+  'премиум застройщик': [
+    '/property/gallery',
+    '/property/*',
+    '/complex/*',
+    '/chessboard',
+    '/chessboard/*',
+    '/client-fixations',
+    '/dashboard',
+    '/building-progress/*',
+    '/settings',
+    '/education',
+    '/education/*',
+    '/premium-features',
+    '/notifications',
+    '/public-page'
   ],
   user: [
     '/property/gallery',
@@ -54,6 +74,7 @@ const DEFAULT_ROUTES = {
   'premium agent': '/property/gallery',
   agent: '/property/gallery',
   застройщик: '/chessboard',
+  'премиум застройщик': '/chessboard',
   user: '/property/gallery',
   closed: '/access-closed' // Специальная страница для закрытого аккаунта
 };

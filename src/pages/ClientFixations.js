@@ -501,7 +501,7 @@ const ClientFixations = () => {
           collection(db, 'clientFixations'),
           orderBy('dateTime', 'desc')
         );
-      } else if (userRole === 'застройщик') {
+      } else if (['застройщик', 'премиум застройщик'].includes(userRole)) {
         // Застройщики видят фиксации только своих объектов
         const userRef = doc(db, 'users', currentUser.uid);
         const userDoc = await getDoc(userRef);
@@ -878,7 +878,7 @@ const ClientFixations = () => {
               <div>
                 {/* Проверяем статус "на согласовании" на всех языках */}
                 {getStatusType(fixation.status) === 'pending' && 
-                  (userRole === 'admin' || userRole === 'застройщик') && (
+                  (userRole === 'admin' || ['застройщик', 'премиум застройщик'].includes(userRole)) && (
                   <div className={`${isMobile ? 'flex flex-col gap-2' : 'space-x-2'}`}>
                     <Button
                       onClick={() => openApproveDialog(fixation)}

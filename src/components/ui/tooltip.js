@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export const AdaptiveTooltip = ({ content }) => {
+export const AdaptiveTooltip = ({ content, children }) => {
   const [position, setPosition] = useState({ top: false, left: false });
   const tooltipRef = useRef(null);
   const containerRef = useRef(null);
@@ -9,7 +9,6 @@ export const AdaptiveTooltip = ({ content }) => {
     const updatePosition = () => {
       if (!tooltipRef.current || !containerRef.current) return;
 
-      const tooltip = tooltipRef.current;
       const container = containerRef.current;
       const rect = container.getBoundingClientRect();
       
@@ -40,11 +39,11 @@ export const AdaptiveTooltip = ({ content }) => {
   }, []);
 
   return (
-    <div className="relative group" ref={containerRef}>
-      <div className="cursor-help text-xs">ⓘ</div>
+    <div className="relative group inline-block" ref={containerRef}>
+      {children}
       <div
         ref={tooltipRef}
-        className={`hidden group-hover:block absolute z-50 w-48 sm:w-64 p-2 bg-white border rounded-lg shadow-lg text-xs sm:text-sm
+        className={`pointer-events-none hidden group-hover:block absolute z-50 w-48 sm:w-64 p-2 bg-white border rounded-lg shadow-lg text-xs sm:text-sm
           ${position.top ? 'bottom-full mb-1' : 'top-full mt-1'}
           ${position.left ? 'right-0' : 'left-0'}`}
       >

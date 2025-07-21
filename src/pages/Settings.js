@@ -75,7 +75,7 @@ const Settings = () => {
         }
         
         // Загружаем название застройщика для роли застройщик
-        if (role === 'застройщик' && userData.developerId) {
+        if (['застройщик', 'премиум застройщик'].includes(role) && userData.developerId) {
           const developerRef = doc(db, 'developers', userData.developerId);
           const developerDoc = await getDoc(developerRef);
           if (developerDoc.exists()) {
@@ -432,16 +432,16 @@ const Settings = () => {
     
     // Обычная логика для текущего пользователя
     // Заменяем локализованное слово "Застройщик"/"Developer"/"Pengembang" на реальное название
-    if (role === 'застройщик' && developerName) {
+    if (['застройщик', 'премиум застройщик'].includes(role) && developerName) {
       const developerPlaceholder = language === 'en' ? 'Developer' : language === 'id' ? 'Pengembang' : 'Застройщик';
       contractText = contractText.replace(new RegExp(developerPlaceholder, 'g'), developerName);
     }
     
-    // Если договор подписан, заменяем подписи на названия сторон
-    if (contractSigned) {
-      const developerNameForSignature = (role === 'застройщик' && developerName) ? 
-        developerName : 
-        (language === 'en' ? 'Developer' : language === 'id' ? 'Pengembang' : 'Застройщик');
+          // Если договор подписан, заменяем подписи на названия сторон
+      if (contractSigned) {
+        const developerNameForSignature = (['застройщик', 'премиум застройщик'].includes(role) && developerName) ? 
+          developerName : 
+          (language === 'en' ? 'Developer' : language === 'id' ? 'Pengembang' : 'Застройщик');
       
       // Заменяем подчеркивания на отцентрованные названия сторон
       let signatureCount = 0;
@@ -640,7 +640,7 @@ const Settings = () => {
       )}
 
       {/* Агентский договор */}
-      {role === 'застройщик' && (
+      {['застройщик', 'премиум застройщик'].includes(role) && (
         <Card className="p-6">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-green-100 rounded-lg">

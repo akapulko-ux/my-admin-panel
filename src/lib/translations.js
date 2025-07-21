@@ -145,7 +145,11 @@ export const translations = {
       registrationRequests: 'Registration Requests',
       referralMap: 'Referral Map',
       settings: 'Settings',
-      education: 'Education'
+      education: 'Education',
+      premiumFeatures: 'Premium Subscription',
+      notifications: 'Notifications',
+      publicPage: 'Public Page',
+      premiumSubscriptionTooltip: 'Available in premium subscription'
     },
 
     // Client Fixations
@@ -639,6 +643,10 @@ _________________               _________________
       photoUploaded: 'Photos uploaded successfully',
       photoDeleted: 'Photo deleted successfully',
       photoLinkDeleted: 'Photo link removed from database',
+      
+      // Service verification badge
+      serviceVerified: 'Service Verified',
+      premiumOnlyTooltip: 'This option is available only for premium accounts',
       
       // Error messages
       editPermissionError: 'You do not have permission to edit this property',
@@ -1255,6 +1263,10 @@ _________________               _________________
       referralMap: 'Карта рефералов',
       settings: 'Настройки',
       education: 'Обучение',
+      premiumFeatures: 'Премиум подписка',
+      notifications: 'Рассылка уведомлений',
+      publicPage: 'Публичная страница',
+      premiumSubscriptionTooltip: 'Доступно в премиум подписке',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
     },
@@ -1461,51 +1473,51 @@ _________________               _________________
 2.1.1. Предоставить доступ к IT-платформе для размещения объектов недвижимости;
 2.1.2. Обеспечивать техническое функционирование платформы;
 2.1.3. Организовывать получение и обработку заявок от агентов;
-2.1.4. Menyediakan alat untuk interaksi dengan agen real estat.
+2.1.4. Предоставлять инструменты для взаимодействия с агентами по недвижимости.
 
 2.2. Заказчик обязуется:
-2.2.1. Tepat waktu menyediakan informasi terkini dan terpercaya tentang objek real estat;
-2.2.2. Menjaga informasi tentang objek tetap terkini;
-2.2.3. Tepat waktu membayar layanan sesuai dengan syarat Perjanjian ini;
-2.2.4. Memberitahu Kontraktor tentang penjualan objek real estat melalui platform.
+2.2.1. Своевременно предоставлять актуальную и достоверную информацию об объектах недвижимости;
+2.2.2. Поддерживать информацию об объектах в актуальном состоянии;
+2.2.3. Своевременно оплачивать услуги в соответствии с условиями настоящего Договора;
+2.2.4. Уведомлять Исполнителя о продаже объектов недвижимости через платформу.
 
-3. PROSEDUR PEMBAYARAN
+3. ПОРЯДОК ОПЛАТЫ
 
-3.1. Biaya layanan Kontraktor adalah 0,5% (nol koma lima persen) dari harga setiap objek real estat yang dijual melalui platform IT.
+3.1. Стоимость услуг Исполнителя составляет 0,5% (ноль целых пять десятых процента) от цены каждого объекта недвижимости, проданного через IT-платформу.
 
-3.2. Komisi yang ditentukan dalam pasal 3.1 dibayar oleh Klien sebagai tambahan dari komisi standar kepada agen real estat (5%).
+3.2. Комиссия, указанная в пункте 3.1, оплачивается Заказчиком дополнительно к стандартной комиссии агентам по недвижимости (5%).
 
-3.3. Pembayaran dilakukan dalam waktu 10 (sepuluh) hari perbankan sejak saat penandatanganan perjanjian jual beli real estat antara Klien dan pembeli yang didapat melalui platform IT.
+3.3. Оплата производится в течение 10 (десяти) банковских дней с момента подписания договора купли-продажи недвижимости между Заказчиком и покупателем, найденным через IT-платформу.
 
-3.4. Dasar untuk pembayaran adalah perjanjian jual beli yang ditandatangani dan pemberitahuan dari Klien tentang transaksi yang diselesaikan.
+3.4. Основанием для оплаты является подписанный договор купли-продажи и уведомление от Заказчика о завершенной сделке.
 
-4. TANGGUNG JAWAB PARA PIHAK
+4. ОТВЕТСТВЕННОСТЬ СТОРОН
 
-4.1. Untuk tidak melaksanakan atau melaksanakan dengan tidak benar kewajiban berdasarkan Perjanjian ini, para pihak memikul tanggung jawab sesuai dengan hukum yang berlaku.
+4.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору стороны несут ответственность в соответствии с действующим законодательством.
 
-4.2. Dalam hal keterlambatan pembayaran, Klien membayar denda sebesar 0,1% dari jumlah pembayaran yang tertunggak untuk setiap hari keterlambatan.
+4.2. В случае просрочки оплаты Заказчик уплачивает пеню в размере 0,1% от просроченной суммы за каждый день просрочки.
 
-5. TERM OF THE AGREEMENT
+5. СРОК ДЕЙСТВИЯ ДОГОВОРА
 
-5.1. Perjanjian ini mulai berlaku sejak saat penandatanganan dan berlaku selama satu tahun.
+5.1. Настоящий Договор вступает в силу с момента подписания и действует в течение одного года.
 
-5.2. Perjanjian diperpanjang secara otomatis untuk periode yang sama jika salah satu pihak tidak memberitahu pihak lain tentang penghentian 30 hari sebelum tanggal kedaluwarsa.
+5.2. Договор автоматически продлевается на такой же срок, если одна из сторон не уведомит другую сторону о прекращении за 30 дней до даты истечения.
 
-6. PROSEDUR PENYELESAIAN SENGKETA
+6. ПОРЯДОК РАЗРЕШЕНИЯ СПОРОВ
 
-6.1. Semua sengketa dan perselisihan diselesaikan melalui negosiasi.
+6.1. Все споры и разногласия разрешаются путем переговоров.
 
-6.2. Jika tidak mungkin mencapai kesepakatan, sengketa diselesaikan di pengadilan di lokasi Kontraktor.
+6.2. В случае невозможности достижения соглашения споры разрешаются в суде по месту нахождения Исполнителя.
 
-7. KETENTUAN AKHIR
+7. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ
 
-7.1. Perjanjian ini dibuat dalam dua salinan, memiliki kekuatan hukum yang sama, satu untuk setiap pihak.
+7.1. Настоящий Договор составлен в двух экземплярах, имеющих равную юридическую силу, по одному для каждой из сторон.
 
-7.2. Perubahan dan penambahan pada Perjanjian hanya berlaku jika dilakukan secara tertulis dan ditandatangani oleh kedua belah pihak.
+7.2. Изменения и дополнения к Договору действительны только в том случае, если они совершены в письменной форме и подписаны обеими сторонами.
 
-8. TANDA TANGAN PARA PIHAK
+8. ПОДПИСИ СТОРОН
 
-KONTRAKTOR:                     KLIEN:
+ИСПОЛНИТЕЛЬ:                     ЗАКАЗЧИК:
      IT Agent                                         Застройщик
 
 
@@ -1758,6 +1770,10 @@ _________________               _________________
       photoUploaded: 'Фотографии успешно загружены',
       photoDeleted: 'Фотография успешно удалена',
       photoLinkDeleted: 'Ссылка на фотографию удалена из базы данных',
+      
+      // Service verification badge
+      serviceVerified: 'Проверено сервисом',
+      premiumOnlyTooltip: 'Данная опция доступна только для премиум аккаунтов',
       
       // Error messages
       editPermissionError: 'У вас нет прав для редактирования объекта',
@@ -2374,6 +2390,10 @@ _________________               _________________
       referralMap: 'Peta Referral',
       settings: 'Pengaturan',
       education: 'Pendidikan',
+      premiumFeatures: 'Langganan Premium',
+      notifications: 'Pengiriman Notifikasi',
+      publicPage: 'Halaman Publik',
+      premiumSubscriptionTooltip: 'Tersedia dalam langganan premium',
       createdAt: 'Dibuat',
       updatedAt: 'Diperbarui'
     },
@@ -2877,6 +2897,10 @@ _________________               _________________
       photoUploaded: 'Foto berhasil diunggah',
       photoDeleted: 'Foto berhasil dihapus',
       photoLinkDeleted: 'Tautan foto dihapus dari database',
+      
+      // Service verification badge
+      serviceVerified: 'Diverifikasi Layanan',
+      premiumOnlyTooltip: 'Opsi ini hanya tersedia untuk akun premium',
       
       // Error messages
       editPermissionError: 'Anda tidak memiliki izin untuk mengedit properti ini',

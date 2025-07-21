@@ -22,7 +22,7 @@ function ComplexesGallery() {
   const [loading, setLoading] = useState(true);
   const [developerName, setDeveloperName] = useState(null);
   const { currentUser, role } = useAuth();
-  const { getPropertiesList, propertiesCache, forceRefreshPropertiesList } = useCache();
+  const { forceRefreshPropertiesList } = useCache();
   const { language } = useLanguage();
   const t = translations[language];
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -117,7 +117,7 @@ function ComplexesGallery() {
     try {
       // Если пользователь - застройщик, получаем его developerId из Firestore
       let developerNameToFilter = null;
-      if (role === 'застройщик' && currentUser) {
+      if (['застройщик', 'премиум застройщик'].includes(role) && currentUser) {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (userDoc.exists() && userDoc.data().developerId) {
           developerNameToFilter = await fetchDeveloperName(userDoc.data().developerId);
@@ -134,7 +134,7 @@ function ComplexesGallery() {
       }));
 
       // Фильтруем комплексы для застройщика
-      if (role === 'застройщик' && developerNameToFilter) {
+      if (['застройщик', 'премиум застройщик'].includes(role) && developerNameToFilter) {
         complexesData = complexesData.filter(complex => complex.developer === developerNameToFilter);
       }
 
@@ -173,7 +173,7 @@ function ComplexesGallery() {
     } finally {
       setLoading(false);
     }
-  }, [currentUser, role, getPropertiesList, propertiesCache]);
+  }, [currentUser, role, forceRefreshPropertiesList]);
 
   useEffect(() => {
     fetchData();
@@ -452,7 +452,7 @@ function ComplexesGallery() {
         {filteredComplexes.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             {complexes.length === 0 
-              ? (role === 'застройщик' 
+              ? (['застройщик', 'премиум застройщик'].includes(role) 
                   ? t.complexesGallery.emptyStateNoDeveloperComplexes
                   : t.complexesGallery.emptyStateNoComplexes)
               : t.complexesGallery.emptyStateNoMatches}

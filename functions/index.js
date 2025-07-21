@@ -71,7 +71,7 @@ const ROLES = {
   premium_agent: ['premium_agent', 'premium agent', 'премиум агент', 'премиум-агент', 'premium'],
   agent: ['agent', 'агент'],
   user: ['user', 'пользователь', ''],
-  застройщик: ['застройщик'],
+  застройщик: ['застройщик', 'премиум застройщик'],
   closed: ['closed', 'закрытый аккаунт', 'закрытый', 'заблокированный']
 };
 
@@ -190,7 +190,7 @@ exports.createUserRoleClaims = onDocumentCreated("users/{userId}", async (event)
     const claims = { role: role };
     
     // Если роль - застройщик и указан developerId, добавляем его в claims
-    if (role === 'застройщик' && newData.developerId) {
+    if (['застройщик', 'премиум застройщик'].includes(role) && newData.developerId) {
       claims.developerId = newData.developerId;
     }
     
@@ -217,12 +217,12 @@ exports.updateUserRoleClaims = onDocumentUpdated("users/{userId}", async (event)
 
   // Проверяем изменение роли или developerId
   if (newData.role !== previousData.role || 
-      (newData.role === 'застройщик' && newData.developerId !== previousData.developerId)) {
+      (['застройщик', 'премиум застройщик'].includes(newData.role) && newData.developerId !== previousData.developerId)) {
     try {
       const claims = { role: newData.role };
       
       // Если роль - застройщик и указан developerId, добавляем его в claims
-      if (newData.role === 'застройщик' && newData.developerId) {
+      if (['застройщик', 'премиум застройщик'].includes(newData.role) && newData.developerId) {
         claims.developerId = newData.developerId;
       }
       
@@ -349,8 +349,8 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
       } else if (userRole === 'модератор') {
         hasAccess = true; // Модератор видит все
         accessReason = 'Модератор имеет доступ ко всем фиксациям';
-      } else if (userRole === 'застройщик') {
-        // Застройщик видит только свои объекты
+      } else if (['застройщик', 'премиум застройщик'].includes(userRole)) {
+        // Застройщик и премиум застройщик видят только свои объекты
         const userDeveloperId = userData.developerId;
         const fixationDeveloperId = fixationData.developerId;
         
@@ -361,9 +361,9 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
         
         if (developerIdsMatch) {
           hasAccess = true;
-          accessReason = 'Застройщик имеет доступ к своим объектам';
+          accessReason = `${userRole} имеет доступ к своим объектам`;
         } else {
-          accessReason = `Застройщик не имеет доступа: developerId не совпадают (пользователь: ${userDeveloperId}, фиксация: ${fixationDeveloperId})`;
+          accessReason = `${userRole} не имеет доступа: developerId не совпадают (пользователь: ${userDeveloperId}, фиксация: ${fixationDeveloperId})`;
         }
       } else {
         accessReason = `Роль ${userRole} не имеет доступа к фиксациям`;

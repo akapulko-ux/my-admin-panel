@@ -74,7 +74,7 @@ function ComplexDetail() {
   // Функция для проверки, может ли пользователь редактировать комплекс
   const canEdit = () => {
     if (role === 'admin' || role === 'модератор') return true;
-    if (role === 'застройщик') {
+    if (['застройщик', 'премиум застройщик'].includes(role)) {
       // Застройщик может редактировать только свои комплексы
       return complex?.developer && complex.developer === complex.userDeveloperName;
     }
@@ -173,7 +173,7 @@ function ComplexDetail() {
         let complexData = { id: complexSnap.id, ...complexSnap.data() };
 
         // Проверяем доступ для застройщика
-        if (role === 'застройщик' && currentUser) {
+        if (['застройщик', 'премиум застройщик'].includes(role) && currentUser) {
           const userDoc = await getDoc(doc(db, "users", currentUser.uid));
           if (userDoc.exists() && userDoc.data().developerId) {
             const userDeveloperName = await fetchDeveloperName(userDoc.data().developerId);
