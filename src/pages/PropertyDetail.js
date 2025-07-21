@@ -161,6 +161,12 @@ function PropertyDetail() {
         }
       });
       
+      // Для agentCommission: всегда сохранять с %
+      if (processedValues.hasOwnProperty('agentCommission') && processedValues.agentCommission) {
+        let val = String(processedValues.agentCommission).replace(/[%\s]/g, '');
+        processedValues.agentCommission = val ? val + '%' : '';
+      }
+
       await updateDoc(propertyRef, processedValues);
       setProperty(prev => ({ ...prev, ...processedValues }));
       setEditedValues({});
@@ -553,6 +559,28 @@ function PropertyDetail() {
     { value: "Freehold", label: t.propertyDetail.ownershipOptions.freehold }
   ];
 
+  // Функция для форматирования суммы комиссии
+  const parseCommission = (val) => {
+    if (!val) return '';
+    // Убираем %, пробелы, запятые
+    return parseFloat(String(val).replace(/[%\s,]/g, '').replace(',', '.'));
+  };
+  const getAgentCommissionDisplay = () => {
+    const commissionRaw = isEditing
+      ? (editedValues.agentCommission !== undefined ? editedValues.agentCommission : property.agentCommission)
+      : property.agentCommission;
+    const price = isEditing
+      ? (editedValues.price !== undefined ? editedValues.price : property.price)
+      : property.price;
+    const commission = parseCommission(commissionRaw);
+    const commissionDisplay = commissionRaw ? String(commissionRaw).replace(/[%\s]/g, '') : '';
+    if (!commission || isNaN(Number(commission)) || !price || isNaN(Number(price))) {
+      return commissionDisplay ? commissionDisplay + '%' : '';
+    }
+    const sum = Math.round(Number(price) * Number(commission) / 100);
+    return `${commissionDisplay}% (${sum.toLocaleString()})`;
+  };
+
   // Обновляем функцию рендеринга значения
   const renderEditableValue = (field, value, type, options) => {
     if (isEditing && !nonEditableFields.includes(field)) {
@@ -609,6 +637,33 @@ function PropertyDetail() {
               className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
               placeholder="Введите площадь"
             />
+          );
+        }
+        if (field === 'agentCommission') {
+          const commissionRaw = editedValues.agentCommission !== undefined ? editedValues.agentCommission : property.agentCommission;
+          const price = editedValues.price !== undefined ? editedValues.price : property.price;
+          const commission = parseCommission(commissionRaw);
+          const commissionDisplay = commissionRaw ? String(commissionRaw).replace(/[%\s]/g, '') : '';
+          let sum = '';
+          if (commission && !isNaN(Number(commission)) && price && !isNaN(Number(price))) {
+            sum = `${Math.round(Number(price) * Number(commission) / 100).toLocaleString()}`;
+          }
+          const options = ['4', '5', '6', '7', '8', '9', '10'];
+          return (
+            <div>
+              <select
+                value={commissionDisplay}
+                onChange={e => handleValueChange('agentCommission', e.target.value)}
+                className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+              >
+                {options.map(opt => (
+                  <option key={opt} value={opt}>{opt}%</option>
+                ))}
+              </select>
+              {sum && (
+                <div className="text-xs text-gray-500 mt-1">{commissionDisplay}% ({sum})</div>
+              )}
+            </div>
           );
         }
         return (
@@ -778,7 +833,7 @@ function PropertyDetail() {
     );
   }
 
-  const attributes = [
+  const attributesBase = [
     {
       label: property.bedrooms === 0 ? t.propertyDetail.studio : t.propertyDetail.bedrooms,
       value: property.bedrooms === 0 ? t.propertyDetail.studio : safeDisplay(property.bedrooms),
@@ -872,6 +927,33 @@ function PropertyDetail() {
       field: "completionDate",
       icon: Calendar,
       type: "date"
+    },
+  ];
+
+  const showTotalArea = isEditing || (!!property.totalArea && property.totalArea !== '');
+  const showManagementCompany = isEditing || (!!property.managementCompany && property.managementCompany !== '');
+  const attributes = [
+    ...attributesBase,
+    ...(showTotalArea ? [{
+      label: t.propertyDetail.totalArea,
+      value: safeDisplay(property.totalArea),
+      field: "totalArea",
+      icon: Ruler,
+      type: "number"
+    }] : []),
+    ...(showManagementCompany ? [{
+      label: t.propertyDetail.managementCompany,
+      value: safeDisplay(property.managementCompany),
+      field: "managementCompany",
+      icon: Building2,
+      type: "text"
+    }] : []),
+    {
+      label: t.propertyDetail.agentCommission,
+      value: getAgentCommissionDisplay(),
+      field: "agentCommission",
+      icon: Star,
+      type: "text"
     },
   ];
 
@@ -1038,6 +1120,7 @@ function PropertyDetail() {
       {isEditing ? (
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.additionalOptions}</h3>
+          
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center space-x-2">
               <input

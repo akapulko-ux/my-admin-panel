@@ -86,6 +86,7 @@ const RegistrationRequests = () => {
                 <div className="space-y-2">
                   <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>{request.companyName}</h3>
                   <div className="text-sm text-muted-foreground">
+                    <p>Имя: {request.name}</p>
                     <p>Email: {request.email}</p>
                     <p>Телефон: {request.phone}</p>
                     <p>Дата заявки: {format(request.createdAt, 'dd.MM.yyyy HH:mm')}</p>

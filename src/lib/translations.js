@@ -563,9 +563,11 @@ _________________               _________________
       // Field labels
       bedrooms: 'Bedrooms',
       studio: 'Studio',
-      area: 'Area',
+      area: 'Living Area',
+      totalArea: 'Total Area',
       developer: 'Developer',
       complex: 'Complex',
+      managementCompany: 'Management Company',
       bathrooms: 'Bathrooms',
       floors: 'Floors',
       district: 'District',
@@ -666,7 +668,8 @@ _________________               _________________
       spaSalon: 'SPA Salon',
       restaurant: 'Restaurant',
       fitnessGym: 'Fitness Gym',
-      playground: 'Playground'
+      playground: 'Playground',
+      agentCommission: 'Agent Commission'
     },
 
     // Chessboards
@@ -852,8 +855,9 @@ _________________               _________________
       
       // Sections
       costsInvestmentsTitle: 'Costs and Investments',
+      calculationOptionsTitle: 'Calculation Options',
       rentalIncomeTitle: 'Rental Income',
-      operationalMetricsTitle: 'Operational Metrics',
+      operationalMetricsTitle: 'Operating Expenses',
       calculationResults: 'Calculation Results',
       
       // Cost and Investment Fields
@@ -1457,51 +1461,51 @@ _________________               _________________
 2.1.1. Предоставить доступ к IT-платформе для размещения объектов недвижимости;
 2.1.2. Обеспечивать техническое функционирование платформы;
 2.1.3. Организовывать получение и обработку заявок от агентов;
-2.1.4. Предоставлять инструменты для взаимодействия с агентами по недвижимости.
+2.1.4. Menyediakan alat untuk interaksi dengan agen real estat.
 
 2.2. Заказчик обязуется:
-2.2.1. Своевременно предоставлять актуальную и достоверную информацию об объектах недвижимости;
-2.2.2. Поддерживать информацию об объектах в актуальном состоянии;
-2.2.3. Своевременно оплачивать услуги согласно условиям настоящего Договора;
-2.2.4. Уведомлять Исполнителя о продаже объектов недвижимости через платформу.
+2.2.1. Tepat waktu menyediakan informasi terkini dan terpercaya tentang objek real estat;
+2.2.2. Menjaga informasi tentang objek tetap terkini;
+2.2.3. Tepat waktu membayar layanan sesuai dengan syarat Perjanjian ini;
+2.2.4. Memberitahu Kontraktor tentang penjualan objek real estat melalui platform.
 
-3. ПОРЯДОК ОПЛАТЫ
+3. PROSEDUR PEMBAYARAN
 
-3.1. Стоимость услуг Исполнителя составляет 0,5% (ноль целых пять десятых процента) от цены каждого объекта недвижимости, проданного через IT-платформу.
+3.1. Biaya layanan Kontraktor adalah 0,5% (nol koma lima persen) dari harga setiap objek real estat yang dijual melalui platform IT.
 
-3.2. Комиссия, указанная в пункте 3.1, оплачивается Заказчиком дополнительно к стандартной комиссии агентам по недвижимости (5%).
+3.2. Komisi yang ditentukan dalam pasal 3.1 dibayar oleh Klien sebagai tambahan dari komisi standar kepada agen real estat (5%).
 
-3.3. Оплата производится в течение 10 (десяти) банковских дней с момента заключения договора купли-продажи недвижимости между Заказчиком и покупателем, привлеченным через IT-платформу.
+3.3. Pembayaran dilakukan dalam waktu 10 (sepuluh) hari perbankan sejak saat penandatanganan perjanjian jual beli real estat antara Klien dan pembeli yang didapat melalui platform IT.
 
-3.4. Основанием для оплаты является подписанный договор купли-продажи и уведомление от Заказчика о совершенной сделке.
+3.4. Dasar untuk pembayaran adalah perjanjian jual beli yang ditandatangani dan pemberitahuan dari Klien tentang transaksi yang diselesaikan.
 
-4. ОТВЕТСТВЕННОСТЬ СТОРОН
+4. TANGGUNG JAWAB PARA PIHAK
 
-4.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору стороны несут ответственность в соответствии с действующим законодательством.
+4.1. Untuk tidak melaksanakan atau melaksanakan dengan tidak benar kewajiban berdasarkan Perjanjian ini, para pihak memikul tanggung jawab sesuai dengan hukum yang berlaku.
 
-4.2. В случае просрочки оплаты Заказчик уплачивает пеню в размере 0,1% от суммы просроченного платежа за каждый день просрочки.
+4.2. Dalam hal keterlambatan pembayaran, Klien membayar denda sebesar 0,1% dari jumlah pembayaran yang tertunggak untuk setiap hari keterlambatan.
 
-5. СРОК ДЕЙСТВИЯ ДОГОВОРА
+5. TERM OF THE AGREEMENT
 
-5.1. Настоящий Договор вступает в силу с момента его подписания и действует в течение одного года.
+5.1. Perjanjian ini mulai berlaku sejak saat penandatanganan dan berlaku selama satu tahun.
 
-5.2. Договор автоматически продлевается на тот же срок, если ни одна из сторон не уведомит другую о расторжении за 30 дней до истечения срока.
+5.2. Perjanjian diperpanjang secara otomatis untuk periode yang sama jika salah satu pihak tidak memberitahu pihak lain tentang penghentian 30 hari sebelum tanggal kedaluwarsa.
 
-6. ПОРЯДОК РАЗРЕШЕНИЯ СПОРОВ
+6. PROSEDUR PENYELESAIAN SENGKETA
 
-6.1. Все споры и разногласия разрешаются путем переговоров.
+6.1. Semua sengketa dan perselisihan diselesaikan melalui negosiasi.
 
-6.2. При невозможности достижения соглашения споры разрешаются в суде по месту нахождения Исполнителя.
+6.2. Jika tidak mungkin mencapai kesepakatan, sengketa diselesaikan di pengadilan di lokasi Kontraktor.
 
-7. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ
+7. KETENTUAN AKHIR
 
-7.1. Настоящий Договор составлен в двух экземплярах, имеющих равную юридическую силу, по одному для каждой из сторон.
+7.1. Perjanjian ini dibuat dalam dua salinan, memiliki kekuatan hukum yang sama, satu untuk setiap pihak.
 
-7.2. Изменения и дополнения к Договору действительны только при оформлении в письменном виде и подписании обеими сторонами.
+7.2. Perubahan dan penambahan pada Perjanjian hanya berlaku jika dilakukan secara tertulis dan ditandatangani oleh kedua belah pihak.
 
-8. ПОДПИСИ СТОРОН
+8. TANDA TANGAN PARA PIHAK
 
-ИСПОЛНИТЕЛЬ:                     ЗАКАЗЧИК:
+KONTRAKTOR:                     KLIEN:
      IT Agent                                         Застройщик
 
 
@@ -1627,7 +1631,7 @@ _________________               _________________
       priceLabel: 'Цена (USD)',
       pricePlaceholderFrom: 'От',
       pricePlaceholderTo: 'До',
-      areaLabel: 'Площадь (м²)',
+      areaLabel: 'Жилая площадь (м²)',
       bedroomsLabel: 'Спальни',
       allBedrooms: 'Все',
       studio: 'Студия',
@@ -1678,9 +1682,11 @@ _________________               _________________
       // Field labels
       bedrooms: 'Спален',
       studio: 'Студия',
-      area: 'Площадь',
+      area: 'Жилая площадь',
+      totalArea: 'Общая площадь',
       developer: 'Застройщик',
       complex: 'Комплекс',
+      managementCompany: 'Управляющая компания',
       bathrooms: 'Санузлы',
       floors: 'Этажность',
       district: 'Район',
@@ -1781,7 +1787,8 @@ _________________               _________________
       spaSalon: 'СПА салон',
       restaurant: 'Ресторан',
       fitnessGym: 'Фитнес зал',
-      playground: 'Детская площадка'
+      playground: 'Детская площадка',
+      agentCommission: 'Агентское вознаграждение'
     },
 
     // Chessboards
@@ -1879,7 +1886,7 @@ _________________               _________________
         river: 'Река',
         yard: 'Двор',
         volcano: 'Вулкан',
-        riceTerraces: 'Рисовые террасы'
+        riceTerraces: 'Терасерing Padi'
       },
       
       statuses: {
@@ -1913,7 +1920,7 @@ _________________               _________________
       invalidPrice: 'Некорректная цена',
       
       // Additional editing texts
-      editingChessboard: 'Редактирование шахматки',
+      editingChessboard: 'Mengedit Papan Catur',
       backToList: 'К списку',
       noAvailableComplexes: 'Нет доступных комплексов без шахматки',
       floorButton: 'Этаж',
@@ -1926,10 +1933,10 @@ _________________               _________________
       chessboardBathrooms: 'Санузлы',
       chessboardView: 'Вид из окна',
       side: 'Сторона',
-      priceWithRate: 'Цена (USD → IDR)',
-      enterPrice: 'Введите цену',
-      showPriceOnPublic: 'Показывать цену на публичной странице',
-      showPrice: 'Показывать',
+      priceWithRate: 'Harga (USD → IDR)',
+      enterPrice: 'Masukkan harga',
+      showPriceOnPublic: 'Tampilkan harga di halaman publik',
+      showPrice: 'Tampilkan harga',
       
       // Floor form labels
       noNumber: 'Без номера',
@@ -1967,8 +1974,9 @@ _________________               _________________
       
       // Sections
       costsInvestmentsTitle: 'Затраты и инвестиции',
+      calculationOptionsTitle: 'Опции расчета',
       rentalIncomeTitle: 'Арендный доход',
-      operationalMetricsTitle: 'Операционные показатели',
+      operationalMetricsTitle: 'Операционные расходы',
       calculationResults: 'Результаты расчета',
       
       // Cost and Investment Fields
@@ -2096,23 +2104,23 @@ _________________               _________________
       // Upload modal
       uploadFiles: 'Загрузить файлы',
       uploadingFiles: 'Загрузка файлов...',
-      supportedFormats: 'Поддерживаются изображения и видео файлы',
+      supportedFormats: 'Gambar dan file video didukung',
       
       // Media counts
-      photos: 'фото',
-      videos: 'видео',
-      photo: 'фото',
-      video: 'видео',
+      photos: 'foto',
+      videos: 'video',
+      photo: 'foto',
+      video: 'video',
       
       // Album description
       albumDescription: 'Описание альбома',
       addDescription: 'Добавить описание',
-      editDescription: 'Редактировать описание',
+      editDescription: 'Edit Deskripsi',
       saveDescription: 'Сохранить описание',
       cancelEdit: 'Отменить редактирование',
-      descriptionPlaceholder: 'Введите описание для этого альбома...',
-      descriptionSaved: 'Описание сохранено',
-      descriptionError: 'Ошибка сохранения описания',
+      descriptionPlaceholder: 'Masukkan deskripsi untuk album ini...',
+      descriptionSaved: 'Deskripsi disimpan',
+      descriptionError: 'Kesalahan menyimpan deskripsi',
       
       // Confirm dialog
       confirmDelete: 'Вы уверены, что хотите удалить этот файл?',
@@ -2170,7 +2178,7 @@ _________________               _________________
       order: 'Порядок',
       save: 'Сохранить',
       cancel: 'Отмена',
-      loading: 'Загрузка...',
+      loading: 'Loading...',
       noTopics: 'Темы не найдены',
       noLessons: 'В этой теме нет уроков',
       topicCreated: 'Тема успешно создана',
@@ -2179,25 +2187,25 @@ _________________               _________________
       lessonCreated: 'Урок успешно создан',
       lessonUpdated: 'Урок успешно обновлен',
       lessonDeleted: 'Урок успешно удален',
-      confirmDeleteTopic: 'Вы уверены, что хотите удалить эту тему? Все уроки также будут удалены.',
-      confirmDeleteLesson: 'Вы уверены, что хотите удалить этот урок?',
-      errorLoading: 'Ошибка загрузки данных',
-      errorSaving: 'Ошибка сохранения данных',
-      errorDeleting: 'Ошибка удаления данных',
-      noPermission: 'У вас нет прав для выполнения этого действия',
-      watchVideo: 'Смотреть видео',
-      backToTopics: 'Назад к темам',
-      backToLessons: 'Назад к урокам',
-      viewLessons: 'Смотреть уроки',
-      goToEducation: 'Перейти к обучению',
-      backToSection: 'Назад к разделу',
-      addVideoUrl: 'Добавить ссылку на видео',
+      confirmDeleteTopic: 'Are you sure you want to delete this topic? All lessons will also be deleted.',
+      confirmDeleteLesson: 'Are you sure you want to delete this lesson?',
+      errorLoading: 'Error loading data',
+      errorSaving: 'Error saving data',
+      errorDeleting: 'Error deleting data',
+      noPermission: 'You do not have permission to perform this action',
+      watchVideo: 'Watch Video',
+      backToTopics: 'Back to Topics',
+      backToLessons: 'Back to Lessons',
+      viewLessons: 'View Lessons',
+      goToEducation: 'Go to Education',
+      backToSection: 'Back to Section',
+      addVideoUrl: 'Add video URL',
       videoNotAvailable: 'Video tidak tersedia dalam bahasa Anda',
-      selectLanguage: 'Выберите язык',
-      english: 'Английский',
-      russian: 'Русский',
-      indonesian: 'Индонезийский',
-      infoSection: 'Информация',
+      selectLanguage: 'Select language',
+      english: 'English',
+      russian: 'Russian',
+      indonesian: 'Indonesian',
+      infoSection: 'Informasi',
       navigationSection: 'Навигация',
       lessonDescriptionSection: 'Описание урока',
       createdAt: 'Создан',
@@ -2596,7 +2604,7 @@ untuk menyediakan layanan informasi dan teknis
 
 4.2. Dalam hal keterlambatan pembayaran, Klien membayar denda sebesar 0,1% dari jumlah pembayaran yang tertunggak untuk setiap hari keterlambatan.
 
-5. JANGKA WAKTU PERJANJIAN
+5. TERM OF THE AGREEMENT
 
 5.1. Perjanjian ini mulai berlaku sejak saat penandatanganan dan berlaku selama satu tahun.
 
@@ -2793,9 +2801,11 @@ _________________               _________________
       // Field labels
       bedrooms: 'Kamar Tidur',
       studio: 'Studio',
-      area: 'Luas',
+      area: 'Luas Hunian',
+      totalArea: 'Luas Total',
       developer: 'Pengembang',
       complex: 'Kompleks',
+      managementCompany: 'Perusahaan Manajemen',
       bathrooms: 'Kamar Mandi',
       floors: 'Lantai',
       district: 'Distrik',
@@ -2896,7 +2906,8 @@ _________________               _________________
       spaSalon: 'Salon SPA',
       restaurant: 'Restoran',
       fitnessGym: 'Gym Fitness',
-      playground: 'Taman Bermain'
+      playground: 'Taman Bermain',
+      agentCommission: 'Komisi Agen'
     },
 
     // Chessboards
@@ -3082,8 +3093,9 @@ _________________               _________________
       
       // Sections
       costsInvestmentsTitle: 'Biaya dan Investasi',
+      calculationOptionsTitle: 'Opsi Perhitungan',
       rentalIncomeTitle: 'Pendapatan Sewa',
-      operationalMetricsTitle: 'Metrik Operasional',
+      operationalMetricsTitle: 'Biaya Operasional',
       calculationResults: 'Hasil Perhitungan',
       
       // Cost and Investment Fields
@@ -3285,7 +3297,7 @@ _________________               _________________
       order: 'Urutan',
       save: 'Simpan',
       cancel: 'Batal',
-      loading: 'Memuat...',
+      loading: 'Loading...',
       noTopics: 'Tidak ada topik yang tersedia',
       noLessons: 'Tidak ada pelajaran dalam topik ini',
       topicCreated: 'Topik berhasil dibuat',
@@ -3313,8 +3325,8 @@ _________________               _________________
       russian: 'Bahasa Rusia',
       indonesian: 'Bahasa Indonesia',
       infoSection: 'Informasi',
-      navigationSection: 'Navigasi',
-      lessonDescriptionSection: 'Deskripsi Pelajaran',
+      navigationSection: 'Навигация',
+      lessonDescriptionSection: 'Описание урока',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
     },

@@ -717,18 +717,6 @@ function ComplexDetail() {
             ) : null;
           })()}
 
-          {/* Вознаграждение */}
-          {complex.commission && (
-            <div>
-              <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-600">{t.complexDetail.commissionLabel}</Label>
-                <div className="text-lg font-bold text-green-600">
-                  <span>{safeDisplay(complex.commission)}%</span>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Остальные поля в одну линию */}
           <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-4 gap-4'}`}>
             {/* Застройщик */}

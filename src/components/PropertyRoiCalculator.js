@@ -579,6 +579,8 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
               />
             </div>
 
+            <h3 className="text-lg font-semibold mt-6 mb-4">{t.roiCalculator.calculationOptionsTitle}</h3>
+
             <div className="space-y-2">
               <Label htmlFor="investmentPeriod">{t.roiCalculator.investmentPeriod}</Label>
               <Select
@@ -593,6 +595,20 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                   <SelectItem value="10">{t.roiCalculator.years10}</SelectItem>
                   <SelectItem value="20">{t.roiCalculator.years20}</SelectItem>
                   <SelectItem value="30">{t.roiCalculator.years30}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t.roiCalculator.calculationScenario}</Label>
+              <Select value={scenario} onValueChange={setScenario}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t.roiCalculator.selectScenario} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pessimistic">{t.roiCalculator.pessimistic}</SelectItem>
+                  <SelectItem value="realistic">{t.roiCalculator.realistic}</SelectItem>
+                  <SelectItem value="optimistic">{t.roiCalculator.optimistic}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -642,6 +658,39 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 onChange={(e) => setRentalData({...rentalData, operationStartYear: e.target.value})}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appreciationYear1">{t.roiCalculator.appreciationYear1}</Label>
+              <Input
+                id="appreciationYear1"
+                type="number"
+                value={expensesData.appreciationYear1}
+                onChange={(e) => setExpensesData({...expensesData, appreciationYear1: e.target.value})}
+                placeholder={t.roiCalculator.examplePlaceholder}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appreciationYear2">{t.roiCalculator.appreciationYear2}</Label>
+              <Input
+                id="appreciationYear2"
+                type="number"
+                value={expensesData.appreciationYear2}
+                onChange={(e) => setExpensesData({...expensesData, appreciationYear2: e.target.value})}
+                placeholder={t.roiCalculator.examplePlaceholder2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appreciationYear3">{t.roiCalculator.appreciationYear3}</Label>
+              <Input
+                id="appreciationYear3"
+                type="number"
+                value={expensesData.appreciationYear3}
+                onChange={(e) => setExpensesData({...expensesData, appreciationYear3: e.target.value})}
+                placeholder={t.roiCalculator.examplePlaceholder3}
+              />
+            </div>
           </Card>
 
           {/* Блок операционных показателей */}
@@ -686,53 +735,6 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                 value={expensesData.propertyManagementFee}
                 onChange={(e) => setExpensesData({...expensesData, propertyManagementFee: e.target.value})}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="appreciationYear1">{t.roiCalculator.appreciationYear1}</Label>
-              <Input
-                id="appreciationYear1"
-                type="number"
-                value={expensesData.appreciationYear1}
-                onChange={(e) => setExpensesData({...expensesData, appreciationYear1: e.target.value})}
-                placeholder={t.roiCalculator.examplePlaceholder}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="appreciationYear2">{t.roiCalculator.appreciationYear2}</Label>
-              <Input
-                id="appreciationYear2"
-                type="number"
-                value={expensesData.appreciationYear2}
-                onChange={(e) => setExpensesData({...expensesData, appreciationYear2: e.target.value})}
-                placeholder={t.roiCalculator.examplePlaceholder2}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="appreciationYear3">{t.roiCalculator.appreciationYear3}</Label>
-              <Input
-                id="appreciationYear3"
-                type="number"
-                value={expensesData.appreciationYear3}
-                onChange={(e) => setExpensesData({...expensesData, appreciationYear3: e.target.value})}
-                placeholder={t.roiCalculator.examplePlaceholder3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t.roiCalculator.calculationScenario}</Label>
-              <Select value={scenario} onValueChange={setScenario}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t.roiCalculator.selectScenario} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pessimistic">{t.roiCalculator.pessimistic}</SelectItem>
-                  <SelectItem value="realistic">{t.roiCalculator.realistic}</SelectItem>
-                  <SelectItem value="optimistic">{t.roiCalculator.optimistic}</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </Card>
         </div>
