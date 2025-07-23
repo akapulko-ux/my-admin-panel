@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { Building2, Plus, Pencil } from "lucide-react";
+import { Building2, Plus, Pencil, Check } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
+import { showSuccess, showError } from '../utils/notifications';
 
 import {
   Card,
@@ -55,7 +56,8 @@ function ListDevelopers() {
               id: docSnap.id, // чтобы знать, какой документ редактировать
               name: data.name,
               description: data.description || "",
-              logo: data.logo || null
+              logo: data.logo || null,
+              approved: data.approved || false
             });
           }
         });
@@ -73,6 +75,28 @@ function ListDevelopers() {
 
     loadDevelopers();
   }, []);
+
+  // Функция для обновления статуса approved
+  const handleToggleApproved = async (developerId, currentStatus) => {
+    try {
+      const newStatus = !currentStatus;
+      await updateDoc(doc(db, "developers", developerId), {
+        approved: newStatus
+      });
+      
+      // Обновляем локальное состояние
+      setDevelopers(prev => prev.map(dev => 
+        dev.id === developerId 
+          ? { ...dev, approved: newStatus }
+          : dev
+      ));
+      
+      showSuccess(newStatus ? "Застройщик проверен" : "Статус проверки снят");
+    } catch (error) {
+      console.error("Ошибка при обновлении статуса:", error);
+      showError("Ошибка при обновлении статуса");
+    }
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -106,7 +130,20 @@ function ListDevelopers() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {developers.map((dev) => (
-            <Card key={dev.id} className="overflow-hidden">
+            <Card key={dev.id} className="overflow-hidden relative">
+              {/* Кнопка с галочкой в правом верхнем углу */}
+              <button
+                onClick={() => handleToggleApproved(dev.id, dev.approved)}
+                className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-200 ${
+                  dev.approved 
+                    ? 'bg-green-500 text-white hover:bg-green-600' 
+                    : 'bg-gray-300 text-gray-500 hover:bg-gray-400'
+                }`}
+                title={dev.approved ? "Снять проверку" : "Проверить застройщика"}
+              >
+                <Check className="w-4 h-4" />
+              </button>
+              
               <CardHeader className="space-y-4">
                 <div className="flex items-center space-x-4">
                   {dev.logo ? (

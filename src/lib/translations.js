@@ -590,6 +590,7 @@ _________________               _________________
       landUsePermit: 'Land Use Permit (PKKPR):',
       landRightsCertificate: 'Land Rights Certificate (SHGB):',
       buildingPermit: 'Building Permit (PBG):',
+      buildingPermitIMB: 'Building Permit (IMB):',
       buildingReadinessCertificate: 'Building Readiness Certificate (SLF):',
       layout: 'Layout:',
       dueDiligence: 'Due Diligence:',
@@ -657,6 +658,8 @@ _________________               _________________
       databaseUpdateError: 'Could not update database information',
       developerLoadError: 'Error loading developer',
       complexLoadError: 'Error loading complex',
+      documentValidationError: 'Only numbers, commas, dots, and dashes are allowed',
+      documentValidationPlaceholder: 'Only numbers, commas, dots, dashes',
       
       // Lightbox
       photo: 'Photo',
@@ -1801,6 +1804,7 @@ _________________               _________________
       landUsePermit: 'Разрешение на использование земли (PKKPR):',
       landRightsCertificate: 'Сертификат права на землю (SHGB):',
       buildingPermit: 'Разрешение на строительство (PBG):',
+      buildingPermitIMB: 'Разрешение на строительство (IMB):',
       buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
       layout: 'Планировка:',
       dueDiligence: 'Due Diligence:',
@@ -1868,6 +1872,8 @@ _________________               _________________
       databaseUpdateError: 'Не удалось обновить информацию в базе данных',
       developerLoadError: 'Ошибка загрузки застройщика',
       complexLoadError: 'Ошибка загрузки комплекса',
+      documentValidationError: 'Разрешены только цифры, запятые, точки и тире',
+      documentValidationPlaceholder: 'Только цифры, запятые, точки, тире',
       
       // Lightbox
       photo: 'Фото',
@@ -3012,6 +3018,7 @@ _________________               _________________
       landUsePermit: 'Izin Penggunaan Tanah (PKKPR):',
       landRightsCertificate: 'Sertifikat Hak Tanah (SHGB):',
       buildingPermit: 'Izin Bangunan (PBG):',
+      buildingPermitIMB: 'Izin Bangunan (IMB):',
       buildingReadinessCertificate: 'Sertifikat Kesiapan Bangunan (SLF):',
       layout: 'Tata Letak:',
       dueDiligence: 'Due Diligence:',
@@ -3079,6 +3086,8 @@ _________________               _________________
       databaseUpdateError: 'Tidak dapat memperbarui informasi database',
       developerLoadError: 'Kesalahan memuat pengembang',
       complexLoadError: 'Kesalahan memuat kompleks',
+      documentValidationError: 'Hanya angka, koma, titik, dan tanda hubung yang diizinkan',
+      documentValidationPlaceholder: 'Hanya angka, koma, titik, tanda hubung',
       
       // Lightbox
       photo: 'Foto',

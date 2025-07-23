@@ -19,6 +19,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
+import { Checkbox } from "../components/ui/checkbox";
 
 function EditDeveloper() {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ function EditDeveloper() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [approved, setApproved] = useState(false);
 
   // Логотип: File (для загрузки) и URL (для предпросмотра)
   const [logoFile, setLogoFile] = useState(null);
@@ -62,6 +64,7 @@ function EditDeveloper() {
           const data = snap.data();
           setName(data.name || "");
           setDescription(data.description || "");
+          setApproved(data.approved || false);
           if (data.logo) {
             setLogoPreview(data.logo);
           }
@@ -113,6 +116,7 @@ function EditDeveloper() {
       const newData = {
         name: name.trim(),
         description: description.trim(),
+        approved: approved,
         logo: newLogoUrl || ""
       };
 
@@ -183,6 +187,17 @@ function EditDeveloper() {
                 placeholder="Введите описание застройщика"
                 rows={4}
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="approved"
+                checked={approved}
+                onCheckedChange={setApproved}
+              />
+              <Label htmlFor="approved" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Проверено сервисом
+              </Label>
             </div>
 
             {logoPreview && (

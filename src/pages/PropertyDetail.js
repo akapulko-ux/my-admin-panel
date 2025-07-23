@@ -67,6 +67,9 @@ function PropertyDetail() {
   // Состояния для загрузки файлов
   const [uploading, setUploading] = useState({});
   const [uploadingImages, setUploadingImages] = useState(false);
+  
+  // Состояние для валидации документов
+  const [documentValidationErrors, setDocumentValidationErrors] = useState({});
 
   // Добавляем состояние для модального окна
   const [showRoiCalculator, setShowRoiCalculator] = useState(false);
@@ -122,11 +125,36 @@ function PropertyDetail() {
   };
 
   // Функция для обработки изменений значений
+  // Функция валидации для документов
+  const validateDocumentField = (value) => {
+    // Разрешаем только цифры, запятые, точки, тире
+    const allowedChars = /^[\d,.-]*$/;
+    return allowedChars.test(value);
+  };
+
   const handleValueChange = (field, value) => {
     let processedValue = value;
     
+    // Валидация для полей документов
+    if (['npwp', 'shgb', 'pbg', 'imb', 'slf'].includes(field)) {
+      // Проверяем валидацию
+      const isValid = validateDocumentField(value);
+      
+      // Обновляем состояние ошибок валидации
+      setDocumentValidationErrors(prev => ({
+        ...prev,
+        [field]: !isValid && value !== ''
+      }));
+      
+      // Если невалидное значение и не пустое, не обновляем
+      if (!isValid && value !== '') {
+        return;
+      }
+      
+      processedValue = value;
+    }
     // Специальная обработка для поля площади
-    if (field === 'area') {
+    else if (field === 'area') {
       // Разрешаем цифры, точки и пустые значения
       processedValue = value.replace(/[^\d.]/g, '');
       // Убираем множественные точки
@@ -194,6 +222,7 @@ function PropertyDetail() {
       setEditedValues({});
       setHasChanges(false);
       setIsEditing(false);
+      setDocumentValidationErrors({});
       showSuccess(t.propertyDetail.changesSaved);
     } catch (error) {
       console.error("Ошибка при сохранении изменений:", error);
@@ -206,6 +235,7 @@ function PropertyDetail() {
     setEditedValues({});
     setHasChanges(false);
     setIsEditing(false);
+    setDocumentValidationErrors({});
   };
 
   // Функция для загрузки новых фотографий (с сжатием и поддержкой PDF)
@@ -688,6 +718,31 @@ function PropertyDetail() {
             </div>
           );
         }
+        // Специальная обработка для полей документов с валидацией
+        if (['npwp', 'shgb', 'pbg', 'imb', 'slf'].includes(field)) {
+          const hasError = documentValidationErrors[field];
+          return (
+            <div className="w-full">
+              <input
+                type={type || "text"}
+                value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+                onChange={(e) => handleValueChange(field, e.target.value)}
+                className={`text-sm font-medium leading-none whitespace-pre-line w-full border rounded px-2 py-1 ${
+                  hasError 
+                    ? 'border-red-500 text-red-600 bg-red-50' 
+                    : 'border-gray-300 text-gray-900'
+                }`}
+                placeholder={t.propertyDetail.documentValidationPlaceholder}
+              />
+              {hasError && (
+                <div className="text-xs text-red-500 mt-1">
+                  {t.propertyDetail.documentValidationError}
+                </div>
+              )}
+            </div>
+          );
+        }
+        
         return (
           <input
             type={type || "text"}
@@ -1306,6 +1361,12 @@ function PropertyDetail() {
             <span className="text-sm text-gray-600">{t.propertyDetail.buildingPermit}</span>
             <div className="flex-1 ml-4">
               {renderEditableValue('pbg', safeDisplay(property.pbg), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.buildingPermitIMB}</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('imb', safeDisplay(property.imb), 'text')}
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
