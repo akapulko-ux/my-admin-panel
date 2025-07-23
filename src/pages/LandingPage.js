@@ -45,7 +45,21 @@ const LandingPage = () => {
   // Функция для извлечения ID видео из YouTube URL
   const getYouTubeEmbedUrl = (url) => {
     const videoId = url.split('v=')[1] || url.split('youtu.be/')[1];
-    return `https://www.youtube.com/embed/${videoId}`;
+    // Добавляем параметры для максимальной очистки интерфейса YouTube
+    // controls=1 - показывать элементы управления
+    // modestbranding=1 - скрыть логотип YouTube
+    // rel=0 - не показывать связанные видео в конце
+    // showinfo=0 - скрыть информацию о видео
+    // iv_load_policy=3 - скрыть аннотации
+    // cc_load_policy=0 - скрыть субтитры по умолчанию
+    // fs=1 - разрешить полноэкранный режим
+    // disablekb=1 - отключить управление с клавиатуры
+    // autohide=1 - скрыть элементы управления после паузы
+    // color=white - белый цвет элементов управления
+    // theme=light - светлая тема
+    // loop=0 - не зацикливать видео
+    // playlist=${videoId} - для совместимости с loop
+    return `https://www.youtube.com/embed/${videoId}?controls=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&cc_load_policy=0&fs=1&disablekb=1&autohide=1&color=white&theme=light&loop=0&playlist=${videoId}`;
   };
 
   const features = [
@@ -143,7 +157,23 @@ const LandingPage = () => {
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+                style={{
+                  // Дополнительные стили для скрытия элементов YouTube
+                  pointerEvents: 'auto'
+                }}
               ></iframe>
+              {/* CSS для скрытия элементов YouTube */}
+              <style jsx>{`
+                iframe {
+                  position: relative;
+                  z-index: 1;
+                }
+                /* Скрываем возможные оверлеи YouTube */
+                iframe::before,
+                iframe::after {
+                  display: none !important;
+                }
+              `}</style>
             </div>
           </div>
         </div>

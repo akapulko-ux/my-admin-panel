@@ -1041,18 +1041,34 @@ _________________               _________________
     education: {
       title: 'Education',
       description: 'Learning materials and training courses',
+      sections: 'Sections',
       topics: 'Topics',
       lessons: 'Lessons',
+      createSection: 'Create Section',
+      editSection: 'Edit Section',
+      deleteSection: 'Delete Section',
       createTopic: 'Create Topic',
       editTopic: 'Edit Topic',
       deleteTopic: 'Delete Topic',
       createLesson: 'Create Lesson',
       editLesson: 'Edit Lesson',
       deleteLesson: 'Delete Lesson',
+      sectionName: 'Section Name',
+      sectionNameEn: 'Section Name (English)',
+      sectionNameRu: 'Section Name (Russian)',
+      sectionNameId: 'Section Name (Indonesian)',
+      sectionDescription: 'Section Description',
+      sectionDescriptionEn: 'Section Description (English)',
+      sectionDescriptionRu: 'Section Description (Russian)',
+      sectionDescriptionId: 'Section Description (Indonesian)',
       topicName: 'Topic Name',
       topicNameEn: 'Topic Name (English)',
       topicNameRu: 'Topic Name (Russian)',
       topicNameId: 'Topic Name (Indonesian)',
+      topicDescription: 'Topic Description',
+      topicDescriptionEn: 'Topic Description (English)',
+      topicDescriptionRu: 'Topic Description (Russian)',
+      topicDescriptionId: 'Topic Description (Indonesian)',
       lessonName: 'Lesson Name',
       lessonNameEn: 'Lesson Name (English)',
       lessonNameRu: 'Lesson Name (Russian)',
@@ -1068,27 +1084,36 @@ _________________               _________________
       save: 'Save',
       cancel: 'Cancel',
       loading: 'Loading...',
+      noSections: 'No sections available',
       noTopics: 'No topics available',
       noLessons: 'No lessons in this topic',
+      sectionCreated: 'Section created successfully',
+      sectionUpdated: 'Section updated successfully',
+      sectionDeleted: 'Section deleted successfully',
       topicCreated: 'Topic created successfully',
       topicUpdated: 'Topic updated successfully',
       topicDeleted: 'Topic deleted successfully',
       lessonCreated: 'Lesson created successfully',
       lessonUpdated: 'Lesson updated successfully',
       lessonDeleted: 'Lesson deleted successfully',
+      confirmDeleteSection: 'Are you sure you want to delete this section? All topics and lessons will also be deleted.',
       confirmDeleteTopic: 'Are you sure you want to delete this topic? All lessons will also be deleted.',
       confirmDeleteLesson: 'Are you sure you want to delete this lesson?',
       errorLoading: 'Error loading data',
       errorSaving: 'Error saving data',
       errorDeleting: 'Error deleting data',
       noPermission: 'You do not have permission to perform this action',
+      topicNotFound: 'Topic not found',
+      lessonNotFound: 'Lesson not found',
+      enterLessonName: 'Enter lesson name in at least one language',
+      addVideoUrl: 'Add at least one video URL',
       watchVideo: 'Watch Video',
+      backToSections: 'Back to Sections',
       backToTopics: 'Back to Topics',
       backToLessons: 'Back to Lessons',
       viewLessons: 'View Lessons',
       goToEducation: 'Go to Education',
       backToSection: 'Back to Section',
-      addVideoUrl: 'Add video URL',
       videoNotAvailable: 'Video not available in your language',
       selectLanguage: 'Select language',
       english: 'English',
@@ -1097,6 +1122,9 @@ _________________               _________________
       infoSection: 'Information',
       navigationSection: 'Navigation',
       lessonDescriptionSection: 'Lesson Description',
+      moveTopic: 'Move Topic',
+      moveTopicToSection: 'Move topic to another section',
+      availableRoles: 'Available Roles',
       createdAt: 'Created',
       updatedAt: 'Updated'
     },
@@ -1112,6 +1140,62 @@ _________________               _________________
       errorLoading: 'Error loading developers',
       createdAt: 'Created',
       updatedAt: 'Updated'
+    },
+
+    // Premium Features
+    premiumFeatures: {
+      title: 'Premium Subscription for Developers',
+      subtitle: 'Maximum visibility of your properties among real estate agents and increased sales through the IT Agent platform',
+      
+      // Features
+      features: {
+        iosAppPlacement: {
+          title: 'Placement on iOS app homepage',
+          description: 'Your properties and complexes will be displayed on the IT Agent app homepage for all real estate agents, significantly increasing the visibility of your offerings.',
+          benefit: 'Increased visibility among agents'
+        },
+        pushNotifications: {
+          title: 'Push notifications to all agents',
+          description: 'Send notifications about new properties, promotions and important events directly to all real estate agents in the IT Agent app.',
+          benefit: 'Direct communication with agents'
+        },
+        verifiedBadge: {
+          title: '"Service Verified" badge',
+          description: 'Special badge on your property and complex pages that increases trust and conversion among agents and clients.',
+          benefit: 'Increased trust and conversion'
+        },
+        publicWebPage: {
+          title: 'Public web page',
+          description: 'Full web page with information about your properties that can be used outside the app and shared with clients and partners.',
+          benefit: 'Expanded sales channels'
+        }
+      },
+
+      // Additional benefits
+      additionalBenefits: 'Additional Benefits',
+      benefits: [
+        'Increased number of views of your properties',
+        'Direct access to real estate agent database',
+        'Increased brand trust and authority',
+        'Automation of property promotion process',
+        'Analytics and statistics on views',
+        'Priority support from IT Agent team'
+      ],
+
+      // Statistics
+      statistics: {
+        agents: 'Real estate agents',
+        viewsIncrease: 'Increase in views',
+        availability: 'Availability'
+      },
+
+      // CTA section
+      cta: {
+        title: 'Ready to increase sales?',
+        subtitle: 'Join premium developers and get maximum visibility of your properties among real estate agents',
+        subscribeButton: 'Subscribe to premium',
+        footer: 'No hidden fees • Cancel anytime • Priority support'
+      }
     }
   },
   ru: {
@@ -2168,18 +2252,34 @@ _________________               _________________
     education: {
       title: 'Обучение',
       description: 'Обучающие материалы и курсы',
+      sections: 'Разделы',
       topics: 'Темы',
       lessons: 'Уроки',
+      createSection: 'Создать раздел',
+      editSection: 'Редактировать раздел',
+      deleteSection: 'Удалить раздел',
       createTopic: 'Создать тему',
       editTopic: 'Редактировать тему',
       deleteTopic: 'Удалить тему',
       createLesson: 'Создать урок',
       editLesson: 'Редактировать урок',
       deleteLesson: 'Удалить урок',
+      sectionName: 'Название раздела',
+      sectionNameEn: 'Название раздела (Английский)',
+      sectionNameRu: 'Название раздела (Русский)',
+      sectionNameId: 'Название раздела (Индонезийский)',
+      sectionDescription: 'Описание раздела',
+      sectionDescriptionEn: 'Описание раздела (Английский)',
+      sectionDescriptionRu: 'Описание раздела (Русский)',
+      sectionDescriptionId: 'Описание раздела (Индонезийский)',
       topicName: 'Название темы',
       topicNameEn: 'Название темы (Английский)',
       topicNameRu: 'Название темы (Русский)',
       topicNameId: 'Название темы (Индонезийский)',
+      topicDescription: 'Описание темы',
+      topicDescriptionEn: 'Описание темы (Английский)',
+      topicDescriptionRu: 'Описание темы (Русский)',
+      topicDescriptionId: 'Описание темы (Индонезийский)',
       lessonName: 'Название урока',
       lessonNameEn: 'Название урока (Английский)',
       lessonNameRu: 'Название урока (Русский)',
@@ -2194,36 +2294,48 @@ _________________               _________________
       order: 'Порядок',
       save: 'Сохранить',
       cancel: 'Отмена',
-      loading: 'Loading...',
+      loading: 'Загрузка...',
+      noSections: 'Разделы не найдены',
       noTopics: 'Темы не найдены',
       noLessons: 'В этой теме нет уроков',
+      sectionCreated: 'Раздел успешно создан',
+      sectionUpdated: 'Раздел успешно обновлен',
+      sectionDeleted: 'Раздел успешно удален',
       topicCreated: 'Тема успешно создана',
       topicUpdated: 'Тема успешно обновлена',
       topicDeleted: 'Тема успешно удалена',
       lessonCreated: 'Урок успешно создан',
       lessonUpdated: 'Урок успешно обновлен',
       lessonDeleted: 'Урок успешно удален',
-      confirmDeleteTopic: 'Are you sure you want to delete this topic? All lessons will also be deleted.',
-      confirmDeleteLesson: 'Are you sure you want to delete this lesson?',
-      errorLoading: 'Error loading data',
-      errorSaving: 'Error saving data',
-      errorDeleting: 'Error deleting data',
-      noPermission: 'You do not have permission to perform this action',
-      watchVideo: 'Watch Video',
-      backToTopics: 'Back to Topics',
-      backToLessons: 'Back to Lessons',
-      viewLessons: 'View Lessons',
-      goToEducation: 'Go to Education',
-      backToSection: 'Back to Section',
-      addVideoUrl: 'Add video URL',
-      videoNotAvailable: 'Video tidak tersedia dalam bahasa Anda',
-      selectLanguage: 'Select language',
-      english: 'English',
-      russian: 'Russian',
-      indonesian: 'Indonesian',
-      infoSection: 'Informasi',
+      confirmDeleteSection: 'Вы уверены, что хотите удалить этот раздел? Все темы и уроки также будут удалены.',
+      confirmDeleteTopic: 'Вы уверены, что хотите удалить эту тему? Все уроки также будут удалены.',
+      confirmDeleteLesson: 'Вы уверены, что хотите удалить этот урок?',
+      errorLoading: 'Ошибка загрузки данных',
+      errorSaving: 'Ошибка сохранения данных',
+      errorDeleting: 'Ошибка удаления данных',
+      noPermission: 'У вас нет прав для выполнения этого действия',
+      topicNotFound: 'Тема не найдена',
+      lessonNotFound: 'Урок не найден',
+      enterLessonName: 'Введите название урока хотя бы на одном языке',
+      addVideoUrl: 'Добавьте хотя бы одну ссылку на видео',
+      watchVideo: 'Смотреть видео',
+      backToSections: 'Назад к разделам',
+      backToTopics: 'Назад к темам',
+      backToLessons: 'Назад к урокам',
+      viewLessons: 'Просмотр уроков',
+      goToEducation: 'Перейти к обучению',
+      backToSection: 'Назад к разделу',
+      videoNotAvailable: 'Видео недоступно на вашем языке',
+      selectLanguage: 'Выберите язык',
+      english: 'Английский',
+      russian: 'Русский',
+      indonesian: 'Индонезийский',
+      infoSection: 'Информация',
       navigationSection: 'Навигация',
       lessonDescriptionSection: 'Описание урока',
+      moveTopic: 'Переместить тему',
+      moveTopicToSection: 'Переместить тему в другой раздел',
+      availableRoles: 'Доступные роли',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
     },
@@ -2239,6 +2351,62 @@ _________________               _________________
       errorLoading: 'Ошибка при загрузке застройщиков',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
+    },
+
+    // Premium Features
+    premiumFeatures: {
+      title: 'Премиум подписка для застройщиков',
+      subtitle: 'Максимальная видимость ваших объектов среди агентов недвижимости и увеличение продаж через платформу IT Agent',
+      
+      // Features
+      features: {
+        iosAppPlacement: {
+          title: 'Размещение на главной странице iOS приложения',
+          description: 'Ваши объекты и комплексы будут отображаться на главной странице приложения IT Agent для всех агентов недвижимости, что значительно увеличит видимость ваших предложений.',
+          benefit: 'Повышение видимости среди агентов'
+        },
+        pushNotifications: {
+          title: 'Пуш-уведомления всей базе агентов',
+          description: 'Отправляйте уведомления о новых объектах, акциях и важных событиях напрямую всем агентам недвижимости в приложении IT Agent.',
+          benefit: 'Прямая коммуникация с агентами'
+        },
+        verifiedBadge: {
+          title: 'Бейдж "Проверено сервисом"',
+          description: 'Специальный бейдж на страницах ваших объектов и комплексов, который повышает доверие агентов и клиентов к вашим предложениям.',
+          benefit: 'Повышение доверия и конверсии'
+        },
+        publicWebPage: {
+          title: 'Публичная веб-страница',
+          description: 'Полноценная веб-страница с информацией о ваших объектах, которую можно использовать вне приложения и делиться ссылкой с клиентами и партнерами.',
+          benefit: 'Расширение каналов продаж'
+        }
+      },
+
+      // Additional benefits
+      additionalBenefits: 'Дополнительные преимущества',
+      benefits: [
+        'Увеличение количества показов ваших объектов',
+        'Прямой доступ к базе агентов недвижимости',
+        'Повышение доверия и авторитета бренда',
+        'Автоматизация процесса продвижения объектов',
+        'Аналитика и статистика по просмотрам',
+        'Приоритетная поддержка от команды IT Agent'
+      ],
+
+      // Statistics
+      statistics: {
+        agents: 'Агентов недвижимости',
+        viewsIncrease: 'Увеличение показов',
+        availability: 'Доступность'
+      },
+
+      // CTA section
+      cta: {
+        title: 'Готовы увеличить продажи?',
+        subtitle: 'Присоединяйтесь к премиум застройщикам и получите максимальную видимость ваших объектов среди агентов недвижимости',
+        subscribeButton: 'Подписаться на премиум',
+        footer: 'Без скрытых комиссий • Отмена в любое время • Приоритетная поддержка'
+      }
     }
   },
   id: {
@@ -3295,18 +3463,34 @@ _________________               _________________
     education: {
       title: 'Pendidikan',
       description: 'Materi pembelajaran dan kursus pelatihan',
+      sections: 'Bagian',
       topics: 'Topik',
       lessons: 'Pelajaran',
+      createSection: 'Buat Bagian',
+      editSection: 'Edit Bagian',
+      deleteSection: 'Hapus Bagian',
       createTopic: 'Buat Topik',
       editTopic: 'Edit Topik',
       deleteTopic: 'Hapus Topik',
       createLesson: 'Buat Pelajaran',
       editLesson: 'Edit Pelajaran',
       deleteLesson: 'Hapus Pelajaran',
+      sectionName: 'Nama Bagian',
+      sectionNameEn: 'Nama Bagian (Bahasa Inggris)',
+      sectionNameRu: 'Nama Bagian (Bahasa Rusia)',
+      sectionNameId: 'Nama Bagian (Bahasa Indonesia)',
+      sectionDescription: 'Deskripsi Bagian',
+      sectionDescriptionEn: 'Deskripsi Bagian (Bahasa Inggris)',
+      sectionDescriptionRu: 'Deskripsi Bagian (Bahasa Rusia)',
+      sectionDescriptionId: 'Deskripsi Bagian (Bahasa Indonesia)',
       topicName: 'Nama Topik',
       topicNameEn: 'Nama Topik (Bahasa Inggris)',
       topicNameRu: 'Nama Topik (Bahasa Rusia)',
       topicNameId: 'Nama Topik (Bahasa Indonesia)',
+      topicDescription: 'Deskripsi Topik',
+      topicDescriptionEn: 'Deskripsi Topik (Bahasa Inggris)',
+      topicDescriptionRu: 'Deskripsi Topik (Bahasa Rusia)',
+      topicDescriptionId: 'Deskripsi Topik (Bahasa Indonesia)',
       lessonName: 'Nama Pelajaran',
       lessonNameEn: 'Nama Pelajaran (Bahasa Inggris)',
       lessonNameRu: 'Nama Pelajaran (Bahasa Rusia)',
@@ -3322,37 +3506,49 @@ _________________               _________________
       save: 'Simpan',
       cancel: 'Batal',
       loading: 'Loading...',
+      noSections: 'Tidak ada bagian yang tersedia',
       noTopics: 'Tidak ada topik yang tersedia',
       noLessons: 'Tidak ada pelajaran dalam topik ini',
+      sectionCreated: 'Bagian berhasil dibuat',
+      sectionUpdated: 'Bagian berhasil diperbarui',
+      sectionDeleted: 'Bagian berhasil dihapus',
       topicCreated: 'Topik berhasil dibuat',
       topicUpdated: 'Topik berhasil diperbarui',
       topicDeleted: 'Topik berhasil dihapus',
       lessonCreated: 'Pelajaran berhasil dibuat',
       lessonUpdated: 'Pelajaran berhasil diperbarui',
       lessonDeleted: 'Pelajaran berhasil dihapus',
+      confirmDeleteSection: 'Apakah Anda yakin ingin menghapus bagian ini? Semua topik dan pelajaran juga akan dihapus.',
       confirmDeleteTopic: 'Apakah Anda yakin ingin menghapus topik ini? Semua pelajaran juga akan dihapus.',
       confirmDeleteLesson: 'Apakah Anda yakin ingin menghapus pelajaran ini?',
       errorLoading: 'Kesalahan memuat data',
       errorSaving: 'Kesalahan menyimpan data',
       errorDeleting: 'Kesalahan menghapus data',
       noPermission: 'Anda tidak memiliki izin untuk melakukan tindakan ini',
+      topicNotFound: 'Topik tidak ditemukan',
+      lessonNotFound: 'Pelajaran tidak ditemukan',
+      enterLessonName: 'Masukkan nama pelajaran dalam setidaknya satu bahasa',
+      addVideoUrl: 'Tambahkan setidaknya satu URL video',
       watchVideo: 'Tonton Video',
+      backToSections: 'Kembali ke Bagian',
       backToTopics: 'Kembali ke Topik',
       backToLessons: 'Kembali ke Pelajaran',
       viewLessons: 'Lihat Pelajaran',
       goToEducation: 'Pergi ke Pendidikan',
       backToSection: 'Kembali ke Bagian',
-      addVideoUrl: 'Tambahkan URL video',
       videoNotAvailable: 'Video tidak tersedia dalam bahasa Anda',
       selectLanguage: 'Pilih bahasa',
       english: 'Bahasa Inggris',
       russian: 'Bahasa Rusia',
       indonesian: 'Bahasa Indonesia',
       infoSection: 'Informasi',
-      navigationSection: 'Навигация',
-      lessonDescriptionSection: 'Описание урока',
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      navigationSection: 'Navigasi',
+      lessonDescriptionSection: 'Deskripsi Pelajaran',
+      moveTopic: 'Pindahkan Topik',
+      moveTopicToSection: 'Pindahkan topik ke bagian lain',
+      availableRoles: 'Peran yang Tersedia',
+      createdAt: 'Dibuat',
+      updatedAt: 'Diperbarui'
     },
 
     // Список застройщиков
@@ -3366,6 +3562,62 @@ _________________               _________________
       errorLoading: 'Ошибка при загрузке застройщиков',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
+    },
+
+    // Premium Features
+    premiumFeatures: {
+      title: 'Langganan Premium untuk Pengembang',
+      subtitle: 'Visibilitas maksimum properti Anda di kalangan agen real estate dan peningkatan penjualan melalui platform IT Agent',
+      
+      // Features
+      features: {
+        iosAppPlacement: {
+          title: 'Penempatan di halaman utama aplikasi iOS',
+          description: 'Properti dan kompleks Anda akan ditampilkan di halaman utama aplikasi IT Agent untuk semua agen real estate, yang secara signifikan meningkatkan visibilitas penawaran Anda.',
+          benefit: 'Peningkatan visibilitas di kalangan agen'
+        },
+        pushNotifications: {
+          title: 'Notifikasi push ke semua agen',
+          description: 'Kirim notifikasi tentang properti baru, promosi dan acara penting langsung ke semua agen real estate di aplikasi IT Agent.',
+          benefit: 'Komunikasi langsung dengan agen'
+        },
+        verifiedBadge: {
+          title: 'Lencana "Diverifikasi Layanan"',
+          description: 'Lencana khusus di halaman properti dan kompleks Anda yang meningkatkan kepercayaan dan konversi di kalangan agen dan klien.',
+          benefit: 'Peningkatan kepercayaan dan konversi'
+        },
+        publicWebPage: {
+          title: 'Halaman web publik',
+          description: 'Halaman web lengkap dengan informasi tentang properti Anda yang dapat digunakan di luar aplikasi dan dibagikan dengan klien dan mitra.',
+          benefit: 'Perluasan saluran penjualan'
+        }
+      },
+
+      // Additional benefits
+      additionalBenefits: 'Manfaat Tambahan',
+      benefits: [
+        'Peningkatan jumlah tampilan properti Anda',
+        'Akses langsung ke database agen real estate',
+        'Peningkatan kepercayaan dan otoritas merek',
+        'Otomatisasi proses promosi properti',
+        'Analitik dan statistik tampilan',
+        'Dukungan prioritas dari tim IT Agent'
+      ],
+
+      // Statistics
+      statistics: {
+        agents: 'Agen real estate',
+        viewsIncrease: 'Peningkatan tampilan',
+        availability: 'Ketersediaan'
+      },
+
+      // CTA section
+      cta: {
+        title: 'Siap meningkatkan penjualan?',
+        subtitle: 'Bergabunglah dengan pengembang premium dan dapatkan visibilitas maksimum properti Anda di kalangan agen real estate',
+        subscribeButton: 'Berlangganan premium',
+        footer: 'Tidak ada biaya tersembunyi • Batal kapan saja • Dukungan prioritas'
+      }
     }
   }
 }; 

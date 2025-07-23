@@ -80,6 +80,7 @@ function EditProperty() {
   const [pool, setPool] = useState("");
   const [description, setDescription] = useState("");
   const [developer, setDeveloper] = useState("");
+  const [propertyName, setPropertyName] = useState("");
   const [complex, setComplex] = useState("");
   const [area, setArea] = useState("");
   const [areaError, setAreaError] = useState("");
@@ -145,6 +146,7 @@ function EditProperty() {
           setDistrict(data.district || "");
           setDescription(data.description || "");
           setDeveloper(data.developer || "");
+          setPropertyName(data.propertyName || "");
           setComplex(data.complex || "");
           setBuildingType(data.buildingType || "");
           setBedrooms(data.bedrooms || "");
@@ -319,6 +321,7 @@ function EditProperty() {
         district,
         description,
         developer,
+        propertyName,
         complex,
         buildingType,
         bedrooms,
@@ -509,6 +512,15 @@ function EditProperty() {
                     id="developer"
                     value={developer}
                     onChange={(e) => setDeveloper(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="propertyName">Название объекта</Label>
+                  <Input
+                    id="propertyName"
+                    value={propertyName}
+                    onChange={(e) => setPropertyName(e.target.value)}
                   />
                 </div>
 

@@ -33,7 +33,7 @@ const EducationLesson = () => {
       // Загружаем тему
       const topicDoc = await getDoc(doc(db, 'educationTopics', topicId));
       if (!topicDoc.exists()) {
-        toast.error('Тема не найдена');
+        toast.error(t.topicNotFound);
         navigate('/education');
         return;
       }
@@ -42,7 +42,7 @@ const EducationLesson = () => {
       // Загружаем урок
       const lessonDoc = await getDoc(doc(db, 'educationTopics', topicId, 'lessons', lessonId));
       if (!lessonDoc.exists()) {
-        toast.error('Урок не найден');
+        toast.error(t.lessonNotFound);
         navigate(`/education/topic/${topicId}`);
         return;
       }
@@ -125,7 +125,21 @@ const EducationLesson = () => {
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match) {
-        return `https://www.youtube.com/embed/${match[1]}`;
+        // Добавляем параметры для максимальной очистки интерфейса YouTube
+        // controls=1 - показывать элементы управления
+        // modestbranding=1 - скрыть логотип YouTube
+        // rel=0 - не показывать связанные видео в конце
+        // showinfo=0 - скрыть информацию о видео
+        // iv_load_policy=3 - скрыть аннотации
+        // cc_load_policy=0 - скрыть субтитры по умолчанию
+        // fs=1 - разрешить полноэкранный режим
+        // disablekb=1 - отключить управление с клавиатуры
+        // autohide=1 - скрыть элементы управления после паузы
+        // color=white - белый цвет элементов управления
+        // theme=light - светлая тема
+        // loop=0 - не зацикливать видео
+        // playlist=${match[1]} - для совместимости с loop
+        return `https://www.youtube.com/embed/${match[1]}?controls=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&cc_load_policy=0&fs=1&disablekb=1&autohide=1&color=white&theme=light&loop=0&playlist=${match[1]}`;
       }
     }
     
@@ -148,7 +162,7 @@ const EducationLesson = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Урок не найден</h3>
+          <h3 className="text-lg font-semibold mb-2">{t.lessonNotFound}</h3>
           <Button onClick={() => navigate(`/education/topic/${topicId}`)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t.backToLessons}
@@ -195,7 +209,7 @@ const EducationLesson = () => {
             </CardHeader>
             <CardContent>
               {embedUrl ? (
-                <div className="aspect-video w-full">
+                <div className="aspect-video w-full relative">
                   <iframe
                     src={embedUrl}
                     title={lesson.name}
@@ -203,16 +217,29 @@ const EducationLesson = () => {
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
+                    style={{
+                      // Дополнительные стили для скрытия элементов YouTube
+                      pointerEvents: 'auto'
+                    }}
                   ></iframe>
+                  {/* CSS для скрытия элементов YouTube */}
+                  <style jsx>{`
+                    iframe {
+                      position: relative;
+                      z-index: 1;
+                    }
+                    /* Скрываем возможные оверлеи YouTube */
+                    iframe::before,
+                    iframe::after {
+                      display: none !important;
+                    }
+                  `}</style>
                 </div>
               ) : (
                 <div className="aspect-video w-full bg-gray-100 rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">{t.videoNotAvailable}</h3>
-                    <p className="text-muted-foreground">
-                      Видео недоступно для выбранного языка
-                    </p>
                   </div>
                 </div>
               )}

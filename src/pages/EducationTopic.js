@@ -59,7 +59,7 @@ const EducationTopic = () => {
       // Загружаем тему
       const topicDoc = await getDoc(doc(db, 'educationTopics', topicId));
       if (!topicDoc.exists()) {
-        toast.error('Тема не найдена');
+        toast.error(t.topicNotFound);
         navigate('/education');
         return;
       }
@@ -90,12 +90,12 @@ const EducationTopic = () => {
 
   const handleCreateLesson = async () => {
     if (!lessonNameEn.trim() && !lessonNameRu.trim() && !lessonNameId.trim()) {
-      toast.error('Введите название урока хотя бы на одном языке');
+      toast.error(t.enterLessonName);
       return;
     }
 
     if (!videoUrlEn && !videoUrlRu && !videoUrlId) {
-      toast.error('Добавьте хотя бы одну ссылку на видео');
+      toast.error(t.addVideoUrl);
       return;
     }
 
@@ -131,12 +131,12 @@ const EducationTopic = () => {
 
   const handleEditLesson = async () => {
     if (!lessonNameEn.trim() && !lessonNameRu.trim() && !lessonNameId.trim()) {
-      toast.error('Введите название урока хотя бы на одном языке');
+      toast.error(t.enterLessonName);
       return;
     }
 
     if (!videoUrlEn && !videoUrlRu && !videoUrlId) {
-      toast.error('Добавьте хотя бы одну ссылку на видео');
+      toast.error(t.addVideoUrl);
       return;
     }
 
@@ -294,7 +294,7 @@ const EducationTopic = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Тема не найдена</h3>
+          <h3 className="text-lg font-semibold mb-2">{t.topicNotFound}</h3>
           <Button onClick={() => navigate(`/education/section/${topic.sectionId}`)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t.backToTopics}

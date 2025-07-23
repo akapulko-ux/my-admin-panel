@@ -44,6 +44,7 @@ const FilterSection = ({
   const filterFields = [
     { key: 'price', label: 'Цена', placeholder: 'Введите цену...' },
     { key: 'type', label: 'Тип', placeholder: 'Тип недвижимости...' },
+    { key: 'propertyName', label: 'Название объекта', placeholder: 'Название объекта...' },
     { key: 'district', label: 'Район', placeholder: 'Район...' },
     { key: 'buildingType', label: 'Тип постройки', placeholder: 'Тип постройки...' },
     { key: 'bedrooms', label: 'Спальни', placeholder: 'Количество спален...' },
@@ -133,6 +134,7 @@ const MassEditSection = ({
   const editFields = [
     { key: 'price', label: 'Цена', placeholder: 'Новая цена...' },
     { key: 'type', label: 'Тип', placeholder: 'Новый тип...' },
+    { key: 'propertyName', label: 'Название объекта', placeholder: 'Новое название...' },
     { key: 'district', label: 'Район', placeholder: 'Новый район...' },
     { key: 'developer', label: 'Застройщик', placeholder: 'Новый застройщик...' },
     { key: 'complex', label: 'Комплекс', placeholder: 'Новый комплекс...' },
@@ -287,6 +289,12 @@ const PropertyCard = ({ property, onDuplicate, isMobile }) => {
           {property.developer && (
             <div className="text-sm text-gray-600">
               Застройщик: {safeDisplay(property.developer)}
+            </div>
+          )}
+
+          {property.propertyName && (
+            <div className="text-sm text-gray-600">
+              Название: {safeDisplay(property.propertyName)}
             </div>
           )}
         </div>

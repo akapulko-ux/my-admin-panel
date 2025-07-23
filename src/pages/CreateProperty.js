@@ -70,6 +70,9 @@ function CreateProperty() {
     setDeveloper(input);
   };
 
+  // Название объекта (необязательное поле)
+  const [propertyName, setPropertyName] = useState("");
+
   // Район (обязательное)
   const [district, setDistrict] = useState("none");
   // Координаты (обязательное)
@@ -336,6 +339,7 @@ function CreateProperty() {
         type,
         complex: complex === "none" ? "" : complex,
         developer,
+        propertyName,
         district: district === "none" ? "" : district,
         latitude,
         longitude,
@@ -374,6 +378,7 @@ function CreateProperty() {
       setType("Вилла");
       setComplex("none");
       setDeveloper("");
+      setPropertyName("");
       setDistrict("none");
       setCoordinates("");
       setCity("Kab. Badung");
@@ -479,6 +484,16 @@ function CreateProperty() {
                   value={developer}
                   onChange={handleDeveloperChange}
                   required
+                />
+              </div>
+
+              {/* Название объекта */}
+              <div className="space-y-2">
+                <Label htmlFor="propertyName">Название объекта</Label>
+                <Input
+                  id="propertyName"
+                  value={propertyName}
+                  onChange={(e) => setPropertyName(e.target.value)}
                 />
               </div>
 
@@ -644,7 +659,7 @@ function CreateProperty() {
                     <SelectItem value="RDTR Kecamatan Ubud">RDTR Kecamatan Ubud</SelectItem>
                     <SelectItem value="RDTR Kuta">RDTR Kuta</SelectItem>
                     <SelectItem value="RDTR Kecamatan Kuta Utara">RDTR Kecamatan Kuta Utara</SelectItem>
-                    <SelectItem value="RDTR Kuta Selatan">RDTR Кuta Selatan</SelectItem>
+                    <SelectItem value="RDTR Кuta Selatan">RDTR Кuta Selatan</SelectItem>
                     <SelectItem value="RDTR Mengwi">RDTR Mengwi</SelectItem>
                     <SelectItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</SelectItem>
                     <SelectItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</SelectItem>
