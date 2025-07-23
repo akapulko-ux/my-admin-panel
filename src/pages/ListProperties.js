@@ -139,6 +139,7 @@ const MassEditSection = ({
     { key: 'developer', label: 'Застройщик', placeholder: 'Новый застройщик...' },
     { key: 'complex', label: 'Комплекс', placeholder: 'Новый комплекс...' },
     { key: 'area', label: 'Площадь', placeholder: 'Новая площадь...' },
+    { key: 'agentCommission', label: 'Агентское вознаграждение', placeholder: 'Например: 5%...' },
   ];
 
   const handleMassEditChange = (key, value) => {
@@ -456,6 +457,10 @@ function ListProperties() {
           if (key === 'area' || key === 'price' || key === 'commission') {
             const numValue = parseFloat(value.trim());
             updateData[key] = !isNaN(numValue) ? numValue : 0;
+          } else if (key === 'agentCommission') {
+            // Для agentCommission: убираем %, пробелы, запятые и добавляем % обратно
+            let val = String(value).replace(/[%\s,]/g, '');
+            updateData[key] = val ? val + '%' : '';
           } else {
             updateData[key] = value.trim();
           }

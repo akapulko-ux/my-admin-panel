@@ -107,12 +107,9 @@ function EditProperty() {
   // Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
-  // [NEW] Поле «Вознаграждение» (commission) — от 1 до 10, шаг 0.5
-  const [commission, setCommission] = useState("1.0");
-  const commissionOptions = [];
-  for (let val = 1; val <= 10; val += 0.5) {
-    commissionOptions.push(val.toFixed(1));
-  }
+  // [NEW] Поле «Агентское вознаграждение» (agentCommission) — от 4% до 10%
+  const [agentCommission, setAgentCommission] = useState("5");
+  const agentCommissionOptions = ["4", "5", "6", "7", "8", "9", "10"];
 
   // Дополнительные опции
   const [smartHome, setSmartHome] = useState(false);
@@ -176,11 +173,11 @@ function EditProperty() {
           setSlf(data.slf || "");
           setLegalCompanyName(data.legalCompanyName || "");
 
-          if (data.commission !== undefined) {
-            const c = parseFloat(data.commission);
-            setCommission(c.toFixed(1));
+          if (data.agentCommission !== undefined) {
+            const val = String(data.agentCommission).replace(/[%\s]/g, '');
+            setAgentCommission(val || "5");
           } else {
-            setCommission("1.0");
+            setAgentCommission("5");
           }
 
           // Загружаем дополнительные опции
@@ -310,7 +307,7 @@ function EditProperty() {
       }
 
       const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
-      const finalCommission = parseFloat(commission) || 1.0;
+      const finalAgentCommission = agentCommission ? agentCommission + '%' : '';
 
       const updatedData = {
         price: parseFloat(price) || 0,
@@ -340,7 +337,7 @@ function EditProperty() {
         pbg,
         slf,
         legalCompanyName,
-        commission: finalCommission,
+        agentCommission: finalAgentCommission,
         smartHome,
         jacuzzi,
         terrace,
@@ -750,14 +747,14 @@ function EditProperty() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="commission">Вознаграждение</Label>
-                  <Select value={commission} onValueChange={setCommission}>
-                    <SelectTrigger id="commission">
+                  <Label htmlFor="agentCommission">Агентское вознаграждение</Label>
+                  <Select value={agentCommission} onValueChange={setAgentCommission}>
+                    <SelectTrigger id="agentCommission">
                       <SelectValue placeholder="Выберите размер вознаграждения" />
                     </SelectTrigger>
                     <SelectContent>
-                      {commissionOptions.map((val) => (
-                        <SelectItem key={val} value={val}>{val}</SelectItem>
+                      {agentCommissionOptions.map((val) => (
+                        <SelectItem key={val} value={val}>{val}%</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

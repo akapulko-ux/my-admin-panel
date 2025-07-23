@@ -113,13 +113,10 @@ function CreateProperty() {
   // Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
 
-  // [NEW] Поле «Вознаграждение» (от 1 до 10, шаг 0.5)
-  const [commission, setCommission] = useState("1.0");
-  // Генерируем варианты "1.0", "1.5", ... "10.0"
-  const commissionOptions = [];
-  for (let val = 1; val <= 10; val += 0.5) {
-    commissionOptions.push(val.toFixed(1));
-  }
+  // [NEW] Поле «Агентское вознаграждение» (от 4% до 10%)
+  const [agentCommission, setAgentCommission] = useState("5");
+  // Генерируем варианты "4", "5", "6", "7", "8", "9", "10"
+  const agentCommissionOptions = ["4", "5", "6", "7", "8", "9", "10"];
 
   // Дополнительные опции
   const [smartHome, setSmartHome] = useState(false);
@@ -248,8 +245,8 @@ function CreateProperty() {
       setShgb("");
       setPbg("");
       setSlf("");
-      setLegalCompanyName("");
-      setCommission("1.0");
+              setLegalCompanyName("");
+        setAgentCommission("5");
     } else {
       const found = complexList.find((c) => c.name === chosenName);
       if (found) {
@@ -269,12 +266,12 @@ function CreateProperty() {
         if (found.slf) setSlf(found.slf);
         if (found.legalCompanyName) setLegalCompanyName(found.legalCompanyName);
 
-        // Commission
-        if (found.commission !== undefined) {
-          const c = parseFloat(found.commission);
-          setCommission(c.toFixed(1));
+        // AgentCommission
+        if (found.agentCommission !== undefined) {
+          const val = String(found.agentCommission).replace(/[%\s]/g, '');
+          setAgentCommission(val || "5");
         } else {
-          setCommission("1.0");
+          setAgentCommission("5");
         }
       }
     }
@@ -330,8 +327,8 @@ function CreateProperty() {
       // Если Leashold => leaseYears, иначе ""
       const finalLeaseYears = ownershipForm === "Leashold" ? leaseYears : "";
 
-      // Парсим commission
-      const finalCommission = parseFloat(commission) || 1.0;
+      // Парсим agentCommission
+      const finalAgentCommission = agentCommission ? agentCommission + '%' : '';
 
       // Собираем объект
       const newProp = {
@@ -363,7 +360,7 @@ function CreateProperty() {
         pbg,
         slf,
         legalCompanyName,
-        commission: finalCommission,
+        agentCommission: finalAgentCommission,
         smartHome,
         jacuzzi,
         terrace,
@@ -399,7 +396,7 @@ function CreateProperty() {
       setPbg("");
       setSlf("");
       setLegalCompanyName("");
-      setCommission("1.0");
+      setAgentCommission("5");
       setSmartHome(false);
       setJacuzzi(false);
       setTerrace(false);
@@ -791,17 +788,17 @@ function CreateProperty() {
                 />
               </div>
 
-              {/* Вознаграждение */}
+              {/* Агентское вознаграждение */}
               <div className="space-y-2">
-                <Label htmlFor="commission">Вознаграждение</Label>
-                <Select value={commission} onValueChange={setCommission}>
-                  <SelectTrigger id="commission">
+                <Label htmlFor="agentCommission">Агентское вознаграждение</Label>
+                <Select value={agentCommission} onValueChange={setAgentCommission}>
+                  <SelectTrigger id="agentCommission">
                     <SelectValue placeholder="Выберите вознаграждение" />
                   </SelectTrigger>
                   <SelectContent>
-                    {commissionOptions.map((val) => (
+                    {agentCommissionOptions.map((val) => (
                       <SelectItem key={val} value={val}>
-                        {val}
+                        {val}%
                       </SelectItem>
                     ))}
                   </SelectContent>
