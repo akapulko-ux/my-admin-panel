@@ -6,6 +6,7 @@ import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore
 // Импорт функций для загрузки и удаления из Firebase Storage
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 import { showSuccess, showError } from '../utils/notifications';
 import { validateArea } from "../lib/utils";
 import { useLanguage } from "../lib/LanguageContext";
@@ -45,6 +46,7 @@ import DraggablePreviewItem from "../components/DraggablePreviewItem";
 function EditProperty() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { role } = useAuth();
   const { language } = useLanguage();
   const t = translations[language];
 
@@ -880,15 +882,17 @@ function EditProperty() {
               </div>
 
               <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'} pt-6 border-t`}>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDelete}
-                  className={`flex items-center gap-2 ${isMobile ? 'w-full h-12' : ''}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Удалить объект
-                </Button>
+                {role === 'admin' && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDelete}
+                    className={`flex items-center gap-2 ${isMobile ? 'w-full h-12' : ''}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Удалить объект
+                  </Button>
+                )}
 
                 <div className={`flex items-center gap-4 ${isMobile ? 'w-full' : ''}`}>
                   <Button

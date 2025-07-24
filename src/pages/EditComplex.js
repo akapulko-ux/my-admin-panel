@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 // Используем функцию загрузки и удаления из Firebase Storage
@@ -36,6 +37,7 @@ import { ArrowLeft, Loader2, Save, Trash2, Upload } from "lucide-react";
 function EditComplex() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { role } = useAuth();
   const { language } = useLanguage();
   const t = translations[language];
 
@@ -367,15 +369,17 @@ function EditComplex() {
           </h1>
         </div>
         <div className={`flex items-center gap-2 ${isMobile ? 'w-full' : ''}`}>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={loading || isSaving}
-            className={`${isMobile ? 'flex-1 h-12' : ''}`}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Удалить
-          </Button>
+          {role === 'admin' && (
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading || isSaving}
+              className={`${isMobile ? 'flex-1 h-12' : ''}`}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Удалить
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             disabled={loading || isSaving}
