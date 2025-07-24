@@ -142,6 +142,7 @@ export const translations = {
       roiCalculator: 'ROI Calculator',
       clientFixations: 'Client Fixations',
       userManagement: 'User Management',
+      generalOverview: 'General Overview',
       registrationRequests: 'Registration Requests',
       referralMap: 'Referral Map',
       settings: 'Settings',
@@ -612,7 +613,9 @@ _________________               _________________
       buildingTypeOptions: {
         newComplex: 'New Complex',
         renovation: 'Renovation',
-        individual: 'Individual'
+        individual: 'Individual',
+        hotel: 'Hotel',
+        resort: 'Resort'
       },
       
       statusOptions: {
@@ -1348,6 +1351,7 @@ _________________               _________________
       roiCalculator: 'Калькулятор ROI',
       clientFixations: 'Фиксации клиентов',
       userManagement: 'Управление пользователями',
+      generalOverview: 'Общий обзор',
       registrationRequests: 'Заявки на регистрацию',
       referralMap: 'Карта рефералов',
       settings: 'Настройки',
@@ -1828,7 +1832,9 @@ _________________               _________________
       buildingTypeOptions: {
         newComplex: 'Новый комплекс',
         renovation: 'Реновация',
-        individual: 'ИЖС'
+        individual: 'ИЖС',
+        hotel: 'Отель',
+        resort: 'Резорт'
       },
       
       statusOptions: {
@@ -2564,6 +2570,7 @@ _________________               _________________
       roiCalculator: 'Kalkulator ROI',
       clientFixations: 'Fiksasi Klien',
       userManagement: 'Manajemen Pengguna',
+      generalOverview: 'Ikhtisar Umum',
       registrationRequests: 'Permintaan Registrasi',
       referralMap: 'Peta Referral',
       settings: 'Pengaturan',
@@ -3044,7 +3051,9 @@ _________________               _________________
       buildingTypeOptions: {
         newComplex: 'Kompleks Baru',
         renovation: 'Renovasi',
-        individual: 'Individu'
+        individual: 'Individu',
+        hotel: 'Hotel',
+        resort: 'Resort'
       },
       
       statusOptions: {

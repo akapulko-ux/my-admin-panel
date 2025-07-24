@@ -589,7 +589,9 @@ function PropertyDetail() {
   const buildingTypeOptions = [
     { value: "Новый комплекс", label: t.propertyDetail.buildingTypeOptions.newComplex },
     { value: "Реновация", label: t.propertyDetail.buildingTypeOptions.renovation },
-    { value: "ИЖС", label: t.propertyDetail.buildingTypeOptions.individual }
+    { value: "ИЖС", label: t.propertyDetail.buildingTypeOptions.individual },
+    { value: "Отель", label: t.propertyDetail.buildingTypeOptions.hotel },
+    { value: "Резорт", label: t.propertyDetail.buildingTypeOptions.resort }
   ];
 
   const statusOptions = [

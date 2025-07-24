@@ -26,7 +26,8 @@ import {
   GraduationCap,
   Star,
   Bell,
-  Globe
+  Globe,
+  BarChart3
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -40,7 +41,8 @@ const ROUTE_ACCESS = {
     '/gallery/*',
     '/support/*',
     '/client-fixations',
-    '/building-progress/*'
+    '/building-progress/*',
+    '/general-overview'
   ],
   'premium agent': [
     '/property/gallery',
@@ -304,6 +306,16 @@ const Navigation = () => {
                 </NavItem>
               )}
 
+              {['admin', 'moderator'].includes(role) && (
+                <NavItem 
+                  to="/general-overview" 
+                  icon={BarChart3}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.generalOverview}
+                </NavItem>
+              )}
+
               {role === 'admin' && (
                 <NavItem 
                   to="/registration-requests" 
@@ -494,6 +506,12 @@ const Navigation = () => {
         {role === 'admin' && (
           <NavItem to="/users/manage" icon={Users2}>
             {nav.userManagement}
+          </NavItem>
+        )}
+
+        {['admin', 'moderator'].includes(role) && (
+          <NavItem to="/general-overview" icon={BarChart3}>
+            {nav.generalOverview}
           </NavItem>
         )}
 

@@ -547,6 +547,8 @@ function EditProperty() {
                       <SelectItem value="Новый комплекс">Новый комплекс</SelectItem>
                       <SelectItem value="Реновация">Реновация</SelectItem>
                       <SelectItem value="ИЖС">ИЖС</SelectItem>
+                      <SelectItem value="Отель">Отель</SelectItem>
+                      <SelectItem value="Резорт">Резорт</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

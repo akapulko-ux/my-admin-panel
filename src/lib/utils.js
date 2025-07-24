@@ -111,6 +111,16 @@ export const translateBuildingType = (buildingType, language) => {
       en: 'Individual',
       ru: 'ИЖС',
       id: 'Individual'
+    },
+    'Отель': {
+      en: 'Hotel',
+      ru: 'Отель',
+      id: 'Hotel'
+    },
+    'Резорт': {
+      en: 'Resort',
+      ru: 'Резорт',
+      id: 'Resort'
     }
   };
   

@@ -76,6 +76,7 @@ import ClientFixations from "./pages/ClientFixations";
 // Прочее
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
+import GeneralOverview from "./pages/GeneralOverview";
 import AccessClosed from "./pages/AccessClosed";
 
 // Заявки на регистрацию
@@ -360,6 +361,13 @@ function App() {
                     <Route path="/users/manage" element={
                       <ProtectedRoute>
                         <UserManagement />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Общий обзор */}
+                    <Route path="/general-overview" element={
+                      <ProtectedRoute>
+                        <GeneralOverview />
                       </ProtectedRoute>
                     } />
 
