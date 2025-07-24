@@ -398,6 +398,7 @@ function CreateComplex() {
                     { value: "Джимбаран", label: "Джимбаран" },
                     { value: "Кута", label: "Кута" },
                     { value: "Кутух", label: "Кутух" },
+                    { value: "Кинтамани", label: "Кинтамани" },
                     { value: "Ловина", label: "Ловина" },
                     { value: "Нуану", label: "Нуану" },
                     { value: "Нуса Дуа", label: "Нуса Дуа" },

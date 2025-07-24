@@ -99,7 +99,7 @@ function PropertyDetail() {
       userDeveloperName: property?.userDeveloperName
     });
     
-    if (role === 'admin') return true;
+    if (role === 'admin' || role === 'moderator') return true;
     if (['застройщик', 'премиум застройщик'].includes(role)) return true;
     return false;
   };
@@ -743,6 +743,18 @@ function PropertyDetail() {
           );
         }
         
+        // Специальная обработка для поля даты окончания аренды земли
+        if (field === 'landLeaseEndDate') {
+          return (
+            <input
+              type="date"
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+            />
+          );
+        }
+        
         return (
           <input
             type={type || "text"}
@@ -933,8 +945,8 @@ function PropertyDetail() {
       icon: Building2,
     },
     {
-      label: t.propertyDetail.complex,
-      value: safeDisplay(property.complexName || property.complex),
+      label: (property.complexName || property.complex) ? t.propertyDetail.complex : t.propertyDetail.propertyName,
+      value: safeDisplay(property.complexName || property.complex || property.propertyName),
       field: "complex",
       icon: Home,
     },
@@ -1306,7 +1318,7 @@ function PropertyDetail() {
       )}
 
       {/* Добавляем кнопки "Расчет ROI" после характеристик объекта */}
-      {['admin', 'модератор', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+              {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
         <div className="mt-8">
           <div className="mt-6 flex gap-4">
             <button
@@ -1321,7 +1333,7 @@ function PropertyDetail() {
       )}
 
       {/* Модальное окно с калькулятором ROI */}
-      {showRoiCalculator && ['admin', 'модератор', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+              {showRoiCalculator && ['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
         <PropertyRoiCalculator
           propertyId={id}
           propertyData={property}
@@ -1355,6 +1367,12 @@ function PropertyDetail() {
             <span className="text-sm text-gray-600">{t.propertyDetail.landRightsCertificate}</span>
             <div className="flex-1 ml-4">
               {renderEditableValue('shgb', safeDisplay(property.shgb), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.landLeaseEndDate}</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('landLeaseEndDate', safeDisplay(property.landLeaseEndDate), 'date')}
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">

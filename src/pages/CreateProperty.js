@@ -109,6 +109,9 @@ function CreateProperty() {
   const [shgb, setShgb] = useState("");
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
+  
+  // Дата окончания аренды земли
+  const [landLeaseEndDate, setLandLeaseEndDate] = useState("");
 
   // Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
@@ -359,6 +362,7 @@ function CreateProperty() {
         shgb,
         pbg,
         slf,
+        landLeaseEndDate,
         legalCompanyName,
         agentCommission: finalAgentCommission,
         smartHome,
@@ -395,6 +399,7 @@ function CreateProperty() {
       setShgb("");
       setPbg("");
       setSlf("");
+      setLandLeaseEndDate("");
       setLegalCompanyName("");
       setAgentCommission("5");
       setSmartHome(false);
@@ -512,6 +517,7 @@ function CreateProperty() {
                     <SelectItem value="Джимбаран">Джимбаран</SelectItem>
                     <SelectItem value="Кута">Кута</SelectItem>
                     <SelectItem value="Кутух">Кутух</SelectItem>
+                    <SelectItem value="Кинтамани">Кинтамани</SelectItem>
                     <SelectItem value="Ловина">Ловина</SelectItem>
                     <SelectItem value="Нуану">Нуану</SelectItem>
                     <SelectItem value="Нуса Дуа">Нуса Дуа</SelectItem>
@@ -755,6 +761,17 @@ function CreateProperty() {
                   id="shgb"
                   value={shgb}
                   onChange={(e) => setShgb(e.target.value)}
+                />
+              </div>
+
+              {/* Дата окончания аренды земли */}
+              <div className="space-y-2">
+                <Label htmlFor="landLeaseEndDate">Дата окончания аренды земли</Label>
+                <Input
+                  id="landLeaseEndDate"
+                  type="date"
+                  value={landLeaseEndDate}
+                  onChange={(e) => setLandLeaseEndDate(e.target.value)}
                 />
               </div>
 

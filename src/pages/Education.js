@@ -13,7 +13,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 
-const ALL_ROLES = ['admin', 'модератор', 'застройщик', 'премиум застройщик', 'agent', 'premium agent', 'user'];
+const ALL_ROLES = ['admin', 'moderator', 'застройщик', 'премиум застройщик', 'agent', 'premium agent', 'user'];
 
 const Education = () => {
   const { role } = useAuth();
@@ -33,7 +33,7 @@ const Education = () => {
   const [sectionDescriptionEn, setSectionDescriptionEn] = useState('');
   const [sectionDescriptionRu, setSectionDescriptionRu] = useState('');
   const [sectionDescriptionId, setSectionDescriptionId] = useState('');
-  const [sectionRoles, setSectionRoles] = useState(['admin', 'модератор']);
+  const [sectionRoles, setSectionRoles] = useState(['admin', 'moderator']);
   const [saving, setSaving] = useState(false);
 
   const loadSections = useCallback(async () => {
@@ -123,7 +123,7 @@ const Education = () => {
     setSectionDescriptionEn('');
     setSectionDescriptionRu('');
     setSectionDescriptionId('');
-    setSectionRoles(['admin', 'модератор']);
+            setSectionRoles(['moderator']);
   };
 
   const getSectionName = (section) => {
@@ -139,7 +139,7 @@ const Education = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t.sections}</h1>
-        {role === 'admin' && (
+        {(role === 'admin' || role === 'moderator') && (
           <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             {t.createSection}
@@ -158,11 +158,11 @@ const Education = () => {
                 </CardTitle>
                 <div className="flex gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" title={section.roles?.join(', ')} />
+                  {(role === 'admin' || role === 'moderator') && (
+                    <Button size="icon" variant="ghost" onClick={() => openEditDialog(section)}><Edit3 className="h-4 w-4" /></Button>
+                  )}
                   {role === 'admin' && (
-                    <>
-                      <Button size="icon" variant="ghost" onClick={() => openEditDialog(section)}><Edit3 className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => openDeleteDialog(section)}><Trash2 className="h-4 w-4" /></Button>
-                    </>
+                    <Button size="icon" variant="ghost" onClick={() => openDeleteDialog(section)}><Trash2 className="h-4 w-4" /></Button>
                   )}
                 </div>
               </CardHeader>
@@ -170,7 +170,7 @@ const Education = () => {
                 <div className="text-muted-foreground text-sm line-clamp-2 mb-4">
                   {section[`description${language.charAt(0).toUpperCase() + language.slice(1)}`] || ''}
                 </div>
-                {(role === 'admin' || role === 'модератор') ? (
+                {(role === 'admin' || role === 'moderator') ? (
                   <div className="flex flex-wrap gap-1">
                     {section.roles?.map(r => (
                       <span key={r} className="bg-gray-100 text-xs rounded px-2 py-0.5 border border-gray-200">{r}</span>
@@ -235,7 +235,7 @@ const Education = () => {
           <div>
             <Label className="mb-2 block">{t.availableRoles}</Label>
             <div className="flex flex-wrap gap-3">
-              {ALL_ROLES.map(r => (
+              {ALL_ROLES.filter(r => r !== 'admin').map(r => (
                 <label key={r} className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={sectionRoles.includes(r)} onChange={e => {
                     if (e.target.checked) setSectionRoles([...sectionRoles, r]);
@@ -292,7 +292,7 @@ const Education = () => {
           <div>
             <Label className="mb-2 block">{t.availableRoles}</Label>
             <div className="flex flex-wrap gap-3">
-              {ALL_ROLES.map(r => (
+              {ALL_ROLES.filter(r => r !== 'admin').map(r => (
                 <label key={r} className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={sectionRoles.includes(r)} onChange={e => {
                     if (e.target.checked) setSectionRoles([...sectionRoles, r]);

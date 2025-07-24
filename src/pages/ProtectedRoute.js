@@ -5,7 +5,7 @@ import { Navigate } from "react-router-dom";
 // Определяем доступ к маршрутам для разных ролей
 const ROUTE_ACCESS = {
   admin: ['*'], // Админ имеет доступ ко всем маршрутам
-  модератор: [
+  moderator: [
     '/property/*',
     '/complex/*',
     '/developers/*',
@@ -15,8 +15,12 @@ const ROUTE_ACCESS = {
     '/client-fixations',
     '/building-progress/*',
     '/settings',
+    '/education',
     '/education/*',
+    '/chessboard',
+    '/chessboard/*',
     '/referral-map',
+    '/dashboard',
   ],
   'premium agent': [
     '/property/gallery',
@@ -70,7 +74,7 @@ const ROUTE_ACCESS = {
 // Маршруты по умолчанию для разных ролей
 const DEFAULT_ROUTES = {
   admin: '/complex/list',
-  модератор: '/complex/list',
+  moderator: '/complex/list',
   'premium agent': '/property/gallery',
   agent: '/property/gallery',
   застройщик: '/chessboard',
@@ -104,6 +108,13 @@ const ProtectedRoute = ({ children, isPublic = false }) => {
 
   // Получаем текущий путь
   const currentPath = window.location.pathname;
+  
+  // Добавляем отладочную информацию
+  console.log('ProtectedRoute Debug:', {
+    role,
+    currentPath,
+    allowedPaths: ROUTE_ACCESS[role] || ROUTE_ACCESS.user
+  });
   
   // Проверяем доступ для роли
   const allowedPaths = ROUTE_ACCESS[role] || ROUTE_ACCESS.user;

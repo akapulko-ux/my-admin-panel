@@ -141,8 +141,8 @@ const ReferralMap = () => {
   const tree = buildReferralTree(filteredUsers);
   const stats = calculateStats(users);
 
-  // Проверка доступа только для админов
-  if (role !== 'admin') {
+  // Проверка доступа только для админов и модераторов
+  if (role !== 'admin' && role !== 'moderator') {
     return <Navigate to="/dashboard" />;
   }
 

@@ -73,7 +73,7 @@ function ComplexDetail() {
 
   // Функция для проверки, может ли пользователь редактировать комплекс
   const canEdit = () => {
-    if (role === 'admin' || role === 'модератор') return true;
+    if (role === 'admin' || role === 'moderator') return true;
     if (['застройщик', 'премиум застройщик'].includes(role)) {
       // Застройщик может редактировать только свои комплексы
       return complex?.developer && complex.developer === complex.userDeveloperName;
@@ -946,7 +946,7 @@ function ComplexDetail() {
         </div>
 
         {/* Кнопка "Прогресс строительства" */}
-        {['admin', 'модератор', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+        {['admin', 'moderator', 'premium agent', 'agent', 'застройщик'].includes(role) && (
           <div className="mt-6">
             <Button
               onClick={() => navigate(`/building-progress/complex/${id}`)}

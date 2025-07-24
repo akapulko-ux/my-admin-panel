@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Agent API - Документация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <style>
+        .api-section { scroll-margin-top: 2rem; }
+        .method-get { @apply bg-green-100 text-green-800; }
+        .method-post { @apply bg-blue-100 text-blue-800; }
+        .method-put { @apply bg-yellow-100 text-yellow-800; }
+        .method-delete { @apply bg-red-100 text-red-800; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">IT Agent API</h1>
+                        <p class="text-gray-600">Документация по интеграции с внешними системами</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500">Версия API: v1</p>
+                        <p class="text-sm text-gray-500">Базовый URL: <code class="bg-gray-100 px-2 py-1 rounded">https://us-central1-bali-estate-1130f.cloudfunctions.net/api/v1</code></p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <nav class="sticky top-8">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Содержание</h2>
+                        <ul class="space-y-2">
+                            <li><a href="#authentication" class="text-blue-600 hover:text-blue-800">Аутентификация</a></li>
+                            <li><a href="#rate-limits" class="text-blue-600 hover:text-blue-800">Лимиты запросов</a></li>
+                            <li><a href="#fixations" class="text-blue-600 hover:text-blue-800">Фиксации клиентов</a></li>
+                            <li><a href="#properties" class="text-blue-600 hover:text-blue-800">Объекты недвижимости</a></li>
+                            <li><a href="#complexes" class="text-blue-600 hover:text-blue-800">Комплексы</a></li>
+                            <li><a href="#webhooks" class="text-blue-600 hover:text-blue-800">Webhook</a></li>
+                            <li><a href="#analytics" class="text-blue-600 hover:text-blue-800">Аналитика</a></li>
+                            <li><a href="#errors" class="text-blue-600 hover:text-blue-800">Обработка ошибок</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <!-- Main content -->
+                <div class="lg:col-span-3 space-y-8">
+                    <!-- Authentication -->
+                    <section id="authentication" class="api-section">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Аутентификация</h2>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <p class="text-gray-700 mb-4">
+                                Для доступа к API необходимо использовать API ключ. Ключ должен передаваться в заголовке запроса.
+                            </p>
+                            
+                            <h3 class="text-lg font-semibold mb-2">Заголовки аутентификации</h3>
+                            <div class="bg-gray-100 rounded p-4 mb-4">
+                                <code>X-API-Key: sk_live_your_api_key_here</code>
+                            </div>
+                            
+                            <h3 class="text-lg font-semibold mb-2">Пример запроса</h3>
+                            <pre><code class="language-bash">curl -H "X-API-Key: sk_live_your_api_key_here" \
+  https://us-central1-bali-estate-1130f.cloudfunctions.net/api/v1/fixations</code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Rate Limits -->
+                    <section id="rate-limits" class="api-section">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Лимиты запросов</h2>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <p class="text-gray-700 mb-4">
+                                API имеет ограничения на количество запросов в зависимости от роли пользователя.
+                            </p>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Роль</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Лимит запросов</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Админ</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Премиум агент / Премиум застройщик</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">5,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Агент / Застройщик</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1,000</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Fixations -->
+                    <section id="fixations" class="api-section">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Фиксации клиентов</h2>
+                        
+                        <!-- GET /fixations -->
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/fixations</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение списка фиксаций клиентов с поддержкой фильтрации и пагинации.</p>
+                            
+                            <h4 class="font-semibold mb-2">Параметры запроса</h4>
+                            <div class="bg-gray-100 rounded p-4 mb-4">
+                                <ul class="space-y-1 text-sm">
+                                    <li><code>status</code> - Фильтр по статусу (pending, approved, rejected, expired)</li>
+                                    <li><code>startDate</code> - Дата начала (YYYY-MM-DD)</li>
+                                    <li><code>endDate</code> - Дата окончания (YYYY-MM-DD)</li>
+                                    <li><code>limit</code> - Количество записей на странице (по умолчанию: 20)</li>
+                                    <li><code>page</code> - Номер страницы (по умолчанию: 1)</li>
+                                </ul>
+                            </div>
+                            
+                            <h4 class="font-semibold mb-2">Пример ответа</h4>
+                            <pre><code class="language-json">{
+  "data": [
+    {
+      "id": "fixation_id",
+      "clientName": "Иван Иванов",
+      "clientPhone": "+79001234567",
+      "agentName": "Агент Петров",
+      "complexName": "ЖК Солнечный",
+      "developerName": "ООО Застройщик",
+      "propertyType": "Квартира",
+      "status": "pending",
+      "dateTime": "2024-01-15T10:30:00Z",
+      "validUntil": "2024-01-22T10:30:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "totalPages": 8
+  }
+}</code></pre>
+                        </div>
+
+                        <!-- GET /fixations/:id -->
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/fixations/{id}</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение конкретной фиксации по ID.</p>
+                            
+                            <h4 class="font-semibold mb-2">Пример ответа</h4>
+                            <pre><code class="language-json">{
+  "data": {
+    "id": "fixation_id",
+    "clientName": "Иван Иванов",
+    "clientPhone": "+79001234567",
+    "agentName": "Агент Петров",
+    "complexName": "ЖК Солнечный",
+    "developerName": "ООО Застройщик",
+    "propertyType": "Квартира",
+    "status": "pending",
+    "dateTime": "2024-01-15T10:30:00Z",
+    "validUntil": "2024-01-22T10:30:00Z",
+    "rejectComment": null,
+    "rejectedAt": null,
+    "rejectedBy": null
+  }
+}</code></pre>
+                        </div>
+
+                        <!-- GET /fixations/stats -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/fixations/stats</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение статистики по фиксациям.</p>
+                            
+                            <h4 class="font-semibold mb-2">Пример ответа</h4>
+                            <pre><code class="language-json">{
+  "data": {
+    "total": 150,
+    "byStatus": {
+      "pending": 45,
+      "approved": 80,
+      "rejected": 15,
+      "expired": 10
+    },
+    "byMonth": {
+      "2024-01": 50,
+      "2024-02": 100
+    },
+    "byComplex": {
+      "ЖК Солнечный": 80,
+      "ЖК Морской": 70
+    }
+  }
+}</code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Properties -->
+                    <section id="properties" class="api-section">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Объекты недвижимости</h2>
+                        
+                        <!-- GET /properties -->
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/properties</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение списка объектов недвижимости.</p>
+                            
+                            <h4 class="font-semibold mb-2">Параметры запроса</h4>
+                            <div class="bg-gray-100 rounded p-4 mb-4">
+                                <ul class="space-y-1 text-sm">
+                                    <li><code>complexId</code> - Фильтр по ID комплекса</li>
+                                    <li><code>propertyType</code> - Тип недвижимости</li>
+                                    <li><code>priceMin</code> - Минимальная цена</li>
+                                    <li><code>priceMax</code> - Максимальная цена</li>
+                                    <li><code>limit</code> - Количество записей на странице</li>
+                                    <li><code>page</code> - Номер страницы</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- GET /properties/:id -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/properties/{id}</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение конкретного объекта по ID.</p>
+                        </div>
+                    </section>
+
+                    <!-- Complexes -->
+                    <section id="complexes" class="api-section">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Комплексы</h2>
+                        
+                        <!-- GET /complexes -->
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/complexes</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение списка комплексов.</p>
+                        </div>
+
+                        <!-- GET /complexes/:id -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/complexes/{id}</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение конкретного комплекса по ID.</p>
+                        </div>
+                    </section>
+
+                    <!-- Webhooks -->
+                    <section id="webhooks" class="api-section">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Webhook</h2>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">Как работают Webhook</h3>
+                            <p class="text-gray-700 mb-4">
+                                Webhook позволяют получать уведомления в реальном времени о событиях в системе.
+                                При наступлении события система отправляет HTTP POST запрос на указанный URL.
+                            </p>
+                            
+                            <h4 class="font-semibold mb-2">Поддерживаемые события</h4>
+                            <ul class="space-y-2 text-sm">
+                                <li><code>fixation.created</code> - Создана новая фиксация</li>
+                                <li><code>fixation.updated</code> - Обновлена фиксация</li>
+                                <li><code>fixation.status_changed</code> - Изменен статус фиксации</li>
+                                <li><code>fixation.expired</code> - Истек срок фиксации</li>
+                                <li><code>fixation.rejected</code> - Фиксация отклонена</li>
+                            </ul>
+                        </div>
+
+                        <!-- Webhook endpoints -->
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">Webhook эндпоинты</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                        <code>/webhooks</code>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Получение списка webhook подписок</p>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="method-post px-2 py-1 rounded text-xs font-medium">POST</span>
+                                        <code>/webhooks</code>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Создание новой webhook подписки</p>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="method-post px-2 py-1 rounded text-xs font-medium">POST</span>
+                                        <code>/webhooks/{id}/test</code>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Тестирование webhook подписки</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Webhook payload example -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Пример webhook payload</h3>
+                            <pre><code class="language-json">{
+  "event": "fixation.created",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "fixationId": "fixation_id",
+    "clientName": "Иван Иванов",
+    "clientPhone": "+79001234567",
+    "agentName": "Агент Петров",
+    "complexName": "ЖК Солнечный",
+    "developerName": "ООО Застройщик",
+    "propertyType": "Квартира",
+    "status": "pending",
+    "dateTime": "2024-01-15T10:30:00Z"
+  }
+}</code></pre>
+                            
+                            <h4 class="font-semibold mt-4 mb-2">Заголовки webhook</h4>
+                            <div class="bg-gray-100 rounded p-4">
+                                <ul class="space-y-1 text-sm">
+                                    <li><code>Content-Type: application/json</code></li>
+                                    <li><code>X-Webhook-Signature: hmac_sha256_signature</code></li>
+                                    <li><code>User-Agent: IT-Agent-API/1.0</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Analytics -->
+                    <section id="analytics" class="api-section">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Аналитика</h2>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/analytics/usage</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение статистики использования API.</p>
+                            
+                            <h4 class="font-semibold mb-2">Параметры запроса</h4>
+                            <div class="bg-gray-100 rounded p-4 mb-4">
+                                <ul class="space-y-1 text-sm">
+                                    <li><code>startDate</code> - Дата начала периода (YYYY-MM-DD)</li>
+                                    <li><code>endDate</code> - Дата окончания периода (YYYY-MM-DD)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/analytics/api-keys</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение статистики по API ключам.</p>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="method-get px-2 py-1 rounded text-xs font-medium">GET</span>
+                                <code class="text-lg">/analytics/webhooks</code>
+                            </div>
+                            <p class="text-gray-700 mb-4">Получение статистики по webhook подпискам.</p>
+                        </div>
+                    </section>
+
+                    <!-- Errors -->
+                    <section id="errors" class="api-section">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Обработка ошибок</h2>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <p class="text-gray-700 mb-4">
+                                API возвращает стандартные HTTP коды состояния и JSON объекты с описанием ошибок.
+                            </p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-semibold">400 Bad Request</h4>
+                                    <p class="text-sm text-gray-600">Некорректный запрос или неверные параметры</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold">401 Unauthorized</h4>
+                                    <p class="text-sm text-gray-600">Отсутствует или неверный API ключ</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold">403 Forbidden</h4>
+                                    <p class="text-sm text-gray-600">Недостаточно прав для доступа к ресурсу</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold">404 Not Found</h4>
+                                    <p class="text-sm text-gray-600">Запрашиваемый ресурс не найден</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold">429 Too Many Requests</h4>
+                                    <p class="text-sm text-gray-600">Превышен лимит запросов</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold">500 Internal Server Error</h4>
+                                    <p class="text-sm text-gray-600">Внутренняя ошибка сервера</p>
+                                </div>
+                            </div>
+                            
+                            <h4 class="font-semibold mt-6 mb-2">Пример ответа с ошибкой</h4>
+                            <pre><code class="language-json">{
+  "error": "Invalid API key",
+  "message": "The provided API key is not valid or has expired"
+}</code></pre>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

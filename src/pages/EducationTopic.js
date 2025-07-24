@@ -50,7 +50,7 @@ const EducationTopic = () => {
   const [lessonOrder, setLessonOrder] = useState(1);
   const [saving, setSaving] = useState(false);
 
-  const canEdit = role === 'admin' || role === 'модератор';
+  const canEdit = role === 'admin' || role === 'moderator';
 
   const loadTopicAndLessons = useCallback(async () => {
     try {
@@ -383,22 +383,22 @@ const EducationTopic = () => {
                     </Button>
                     
                     {canEdit && (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => openEditDialog(lesson)}
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => openDeleteDialog(lesson)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openEditDialog(lesson)}
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {role === 'admin' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openDeleteDialog(lesson)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
                 </div>

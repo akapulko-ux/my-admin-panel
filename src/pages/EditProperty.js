@@ -103,6 +103,9 @@ function EditProperty() {
   const [shgb, setShgb] = useState("");
   const [pbg, setPbg] = useState("");
   const [slf, setSlf] = useState("");
+  
+  // Дата окончания аренды земли
+  const [landLeaseEndDate, setLandLeaseEndDate] = useState("");
 
   // Новое поле «Юридическое название компании»
   const [legalCompanyName, setLegalCompanyName] = useState("");
@@ -171,6 +174,7 @@ function EditProperty() {
           setShgb(data.shgb || "");
           setPbg(data.pbg || "");
           setSlf(data.slf || "");
+          setLandLeaseEndDate(data.landLeaseEndDate || "");
           setLegalCompanyName(data.legalCompanyName || "");
 
           if (data.agentCommission !== undefined) {
@@ -336,6 +340,7 @@ function EditProperty() {
         shgb,
         pbg,
         slf,
+        landLeaseEndDate,
         legalCompanyName,
         agentCommission: finalAgentCommission,
         smartHome,
@@ -492,7 +497,7 @@ function EditProperty() {
                     </SelectTrigger>
                     <SelectContent>
                       {[
-                        "Амед", "Берава", "Будук", "Джимбаран", "Кута", "Кутух", "Ловина", "Нуану",
+                        "Амед", "Берава", "Будук", "Джимбаран", "Кута", "Кутух", "Кинтамани", "Ловина", "Нуану",
                         "Нуса Дуа", "Пандава", "Переренан", "Санур", "Семиньяк", "Убуд",
                         "Улувату", "Умалас", "Унгасан", "Чангу", "Чемаги",
                         "Гили Траванган", "Ломбок"
@@ -716,6 +721,16 @@ function EditProperty() {
                     id="shgb"
                     value={shgb}
                     onChange={(e) => setShgb(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="landLeaseEndDate">Дата окончания аренды земли</Label>
+                  <Input
+                    id="landLeaseEndDate"
+                    type="date"
+                    value={landLeaseEndDate}
+                    onChange={(e) => setLandLeaseEndDate(e.target.value)}
                   />
                 </div>
 

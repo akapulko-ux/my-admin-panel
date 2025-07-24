@@ -803,7 +803,7 @@ const Chessboard = () => {
         createdBy: currentUser.uid,
         createdByEmail: currentUser.email,
         status: "unread",
-        forRoles: ["admin", "застройщик"]
+        forRoles: ["admin", "moderator", "застройщик"]
       });
     } catch (error) {
       console.error("Error creating notification:", error);

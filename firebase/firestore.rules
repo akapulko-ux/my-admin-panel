@@ -36,7 +36,7 @@ service cloud.firestore {
     }
 
     function isModerator() {
-      return hasRoleInFirestore('модератор');
+      return hasRoleInToken('moderator') || hasRoleInFirestore('moderator');
     }
 
     function isAnyAgent() {
@@ -277,8 +277,8 @@ service cloud.firestore {
     match /educationSections/{sectionId} {
       // Чтение: если пользователь залогинен и его роль содержится в массиве roles раздела
       allow read: if isSignedIn() && (resource.data.roles.hasAny([request.auth.token.role, get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role]));
-      // Создание/редактирование/удаление: только admin
-      allow create, update, delete: if isAdmin();
+      // Создание/редактирование/удаление: admin или модератор
+      allow create, update, delete: if isAdmin() || isModerator();
     }
 
     // === Education Topics (Темы обучения) ===

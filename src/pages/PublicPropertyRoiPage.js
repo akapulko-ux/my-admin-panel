@@ -93,6 +93,7 @@ const PublicPropertyRoiPage = () => {
   const { propertyId } = useParams();
   const { language, changeLanguage } = useLanguage();
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [chartView, setChartView] = useState('totalReturns');
   const [timeframe, setTimeframe] = useState('5 Years');
   const [scenario, setScenario] = useState('realistic');
@@ -116,6 +117,7 @@ const PublicPropertyRoiPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (propertyId) {
+        setLoading(true);
         try {
           const roiDoc = await getDoc(doc(db, 'properties', propertyId, 'calculations', 'roi'));
           if (roiDoc.exists()) {
@@ -166,7 +168,11 @@ const PublicPropertyRoiPage = () => {
           }
         } catch (error) {
           console.error('Error fetching ROI data:', error);
+        } finally {
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     };
 
@@ -175,13 +181,22 @@ const PublicPropertyRoiPage = () => {
 
   // Получаем данные для текущего выбранного периода (мемоизируем для производительности)
   const currentData = useMemo(() => {
-    if (!data || !data.data) return null;
+    console.log('currentData useMemo called, data:', data);
+    if (!data || !data.data) {
+      console.log('currentData returning null - no data');
+      return null;
+    }
     
     const roiData = data.data;
+    console.log('roiData:', roiData);
 
     // Функция для пересчета данных для выбранного периода
     const recalculateDataForPeriod = (years) => {
-      if (!roiData.inputs) return roiData;
+      console.log('recalculateDataForPeriod called with years:', years);
+      if (!roiData.inputs) {
+        console.log('recalculateDataForPeriod returning roiData - no inputs');
+        return roiData;
+      }
 
       const { costData, rentalData, expensesData } = roiData.inputs;
 
@@ -326,7 +341,9 @@ const PublicPropertyRoiPage = () => {
       }
     };
 
-    return recalculateDataForPeriod(getYearsFromTimeframe(timeframe));
+    const result = recalculateDataForPeriod(getYearsFromTimeframe(timeframe));
+    console.log('currentData useMemo returning:', result);
+    return result;
   }, [data, timeframe, scenario]);
 
   // Функция для получения доступных периодов
@@ -334,17 +351,6 @@ const PublicPropertyRoiPage = () => {
     const allPeriods = [5, 10, 20, 30];
     return allPeriods.filter(period => period <= maxPeriod);
   };
-
-  if (!data || !data.data || !currentData) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t.dataNotFound}</h2>
-          <p className="text-gray-600">{t.publicRoiNotAvailable}</p>
-        </div>
-      </div>
-    );
-  }
 
   // Подготовка данных для графика
   const getChartData = () => {
@@ -374,6 +380,29 @@ const PublicPropertyRoiPage = () => {
       default: return '#6366f1';
     }
   };
+
+  // Показываем индикатор загрузки пока данные загружаются
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Загрузка данных...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Проверяем наличие данных и currentData
+  if (!data || !data.data || !currentData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Публичная страница ROI недоступна</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden touch-none">
@@ -409,50 +438,66 @@ const PublicPropertyRoiPage = () => {
         </div>
         
         {/* Investor Highlights */}
-        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-4 sm:mb-8">
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t.investorHighlights}</h1>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
-            <div>
-              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
-                {t.unitPrice}
-                <AdaptiveTooltip content={t.tooltipUnitPrice} />
-              </div>
-              <div className="text-base sm:text-2xl font-bold text-gray-900">
-                {formatCurrency(currentData.unitPrice)}
-              </div>
-            </div>
-            
-            <div>
-              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
-                {t.averageROI}
-                <AdaptiveTooltip content={t.tooltipAverageROI} />
-              </div>
-              <div className="text-base sm:text-2xl font-bold text-gray-900">
-                {formatPercentage(currentData.averageROI)}
-              </div>
-            </div>
-            
-            <div>
-              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
-                {t.annualRentExpenseGrowth}
-                <AdaptiveTooltip content={t.tooltipAnnualGrowth} />
-              </div>
-              <div className="text-base sm:text-2xl font-bold text-gray-900">
-                +{formatPercentage(currentData.rentGrowthRate)}
-              </div>
-            </div>
-            
-            <div>
-              <div className="text-xs sm:text-sm text-gray-500 mb-1 flex items-center gap-1">
-                {t.propertyManagementFee}
-                <AdaptiveTooltip content={t.tooltipManagementFee} />
-              </div>
-              <div className="text-base sm:text-2xl font-bold text-gray-900">
-                {formatPercentage(currentData.propertyManagementFee)}
-              </div>
-            </div>
-          </div>
+        <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t.investorHighlights}</h1>
+
+        {/* Секция с карточками основных показателей */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">{t.totalInvestment}</p>
+            <p className="text-lg font-semibold">{formatCurrency(currentData.unitPrice)}</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">{t.annualRentalIncome}</p>
+            <p className="text-lg font-semibold">{formatCurrency(currentData.detailedProjection?.[currentData.detailedProjection.findIndex(row => row.income > 0)]?.income || 0)}</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">{t.annualExpenses}</p>
+            <p className="text-lg font-semibold">{formatCurrency(currentData.detailedProjection?.[currentData.detailedProjection.findIndex(row => row.spend > 0)]?.spend || 0)}</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">{t.annualNetProfit}</p>
+            <p className="text-lg font-semibold">
+              {formatCurrency(
+                currentData.detailedProjection
+                  ? currentData.detailedProjection.reduce((sum, row) => sum + row.cashflow, 0) / currentData.investmentPeriod
+                  : 0
+              )}
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">{t.roiShort}</p>
+            <p className="text-lg font-semibold">
+              {(() => {
+                if (!currentData.averageROI) return '0%';
+                return currentData.averageROI.toFixed(2) + '%';
+              })()}
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">{t.paybackPeriodShort}</p>
+            <p className="text-lg font-semibold">
+              {(() => {
+                const annualNetProfit = currentData.detailedProjection
+                  ? currentData.detailedProjection.reduce((sum, row) => sum + row.cashflow, 0) / currentData.investmentPeriod
+                  : 0;
+                return annualNetProfit > 0
+                  ? (currentData.unitPrice / annualNetProfit).toFixed(1) + ` ${t.yearsText}`
+                  : '∞';
+              })()}
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">{t.totalRoiForPeriod}</p>
+            <p className="text-lg font-semibold">
+              {(() => {
+                if (!currentData.detailedProjection || currentData.detailedProjection.length === 0) return '0%';
+                const totalProfit = currentData.detailedProjection.reduce((sum, row) => sum + row.cashflow, 0);
+                const totalAppreciation = currentData.detailedProjection[currentData.detailedProjection.length - 1].propertyValue - currentData.unitPrice;
+                const totalRoi = ((totalProfit + totalAppreciation) / currentData.unitPrice) * 100;
+                return totalRoi.toFixed(2) + '%';
+              })()}
+            </p>
+          </Card>
         </div>
 
         {/* Chart Section */}
@@ -587,66 +632,6 @@ const PublicPropertyRoiPage = () => {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
-
-        {/* Секция с карточками основных показателей */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{t.totalInvestment}</p>
-            <p className="text-lg font-semibold">{formatCurrency(currentData.unitPrice)}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{t.annualRentalIncome}</p>
-            <p className="text-lg font-semibold">{formatCurrency(currentData.detailedProjection?.[currentData.detailedProjection.findIndex(row => row.income > 0)]?.income || 0)}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{t.annualExpenses}</p>
-            <p className="text-lg font-semibold">{formatCurrency(currentData.detailedProjection?.[currentData.detailedProjection.findIndex(row => row.spend > 0)]?.spend || 0)}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{t.annualNetProfit}</p>
-            <p className="text-lg font-semibold">
-              {formatCurrency(
-                currentData.detailedProjection
-                  ? currentData.detailedProjection.reduce((sum, row) => sum + row.cashflow, 0) / currentData.investmentPeriod
-                  : 0
-              )}
-            </p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{t.roiShort}</p>
-            <p className="text-lg font-semibold">
-              {(() => {
-                if (!currentData.averageROI) return '0%';
-                return currentData.averageROI.toFixed(2) + '%';
-              })()}
-            </p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{t.paybackPeriodShort}</p>
-            <p className="text-lg font-semibold">
-              {(() => {
-                const annualNetProfit = currentData.detailedProjection
-                  ? currentData.detailedProjection.reduce((sum, row) => sum + row.cashflow, 0) / currentData.investmentPeriod
-                  : 0;
-                return annualNetProfit > 0
-                  ? (currentData.unitPrice / annualNetProfit).toFixed(1) + ` ${t.yearsText}`
-                  : '∞';
-              })()}
-            </p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{t.totalRoiForPeriod}</p>
-            <p className="text-lg font-semibold">
-              {(() => {
-                if (!currentData.detailedProjection || currentData.detailedProjection.length === 0) return '0%';
-                const totalProfit = currentData.detailedProjection.reduce((sum, row) => sum + row.cashflow, 0);
-                const totalAppreciation = currentData.detailedProjection[currentData.detailedProjection.length - 1].propertyValue - currentData.unitPrice;
-                const totalRoi = ((totalProfit + totalAppreciation) / currentData.unitPrice) * 100;
-                return totalRoi.toFixed(2) + '%';
-              })()}
-            </p>
-          </Card>
         </div>
 
         {/* Projected Cumulative Return */}

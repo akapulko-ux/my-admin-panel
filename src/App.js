@@ -71,6 +71,8 @@ import PublicPropertyRoiPage from "./pages/PublicPropertyRoiPage";
 // Фиксации клиентов
 import ClientFixations from "./pages/ClientFixations";
 
+
+
 // Прочее
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
@@ -410,6 +412,8 @@ function App() {
                         <Settings />
                       </ProtectedRoute>
                     } />
+
+
 
                     {/* Новые разделы для застройщиков */}
                     <Route path="/premium-features" element={

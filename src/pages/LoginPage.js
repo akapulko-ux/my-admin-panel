@@ -16,7 +16,7 @@ import { useLanguage } from '../lib/LanguageContext';
 // Маршруты по умолчанию для разных ролей
 const DEFAULT_ROUTES = {
   admin: '/property/gallery',
-  модератор: '/property/gallery',
+  moderator: '/property/gallery',
   'premium agent': '/property/gallery',
   agent: '/property/gallery',
   застройщик: '/property/gallery',

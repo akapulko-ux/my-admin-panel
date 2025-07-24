@@ -39,7 +39,7 @@ function BuildingProgressDetail() {
 
   // Проверка прав доступа
   const canEdit = () => {
-    return ['admin', 'модератор', 'застройщик', 'премиум застройщик'].includes(role);
+    return ['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role);
   };
 
   // Загрузка данных

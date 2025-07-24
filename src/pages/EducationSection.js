@@ -39,7 +39,7 @@ const EducationSection = () => {
   const [moveToSectionId, setMoveToSectionId] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const canEdit = role === 'admin' || role === 'модератор';
+  const canEdit = role === 'admin' || role === 'moderator';
 
   useEffect(() => {
     loadSectionAndTopics();
@@ -204,7 +204,9 @@ const EducationSection = () => {
                 {canEdit && (
                   <div className="flex gap-2">
                     <Button size="icon" variant="ghost" onClick={() => openEditDialog(topic)}><Edit3 className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => openDeleteDialog(topic)}><Trash2 className="h-4 w-4" /></Button>
+                    {role === 'admin' && (
+                      <Button size="icon" variant="ghost" onClick={() => openDeleteDialog(topic)}><Trash2 className="h-4 w-4" /></Button>
+                    )}
                     <Button size="icon" variant="ghost" onClick={() => openMoveDialog(topic)}><Move className="h-4 w-4" /></Button>
                   </div>
                 )}

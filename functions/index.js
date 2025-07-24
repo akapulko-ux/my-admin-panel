@@ -7,6 +7,7 @@ const path = require("path");
 const os = require("os");
 const fs = require("fs");
 const telegramTranslations = require("./telegramTranslations");
+const { sendFixationCreatedWebhook, sendFixationStatusChangedWebhook, sendFixationExpiredWebhook, sendFixationRejectedWebhook } = require("./webhookService");
 
 // Telegram Bot Token
 const BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM";
@@ -320,6 +321,19 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
         console.error(`❌ Ошибка при определении developerId: ${error.message}`);
       }
     }
+
+    // Отправляем webhook уведомление о создании фиксации
+    try {
+      const webhookData = {
+        id: event.params.fixationId,
+        ...fixationData
+      };
+      await sendFixationCreatedWebhook(webhookData);
+      console.log(`🔔 Webhook уведомление о создании фиксации отправлено`);
+    } catch (webhookError) {
+      console.error(`❌ Ошибка отправки webhook: ${webhookError.message}`);
+    }
+
     // Получаем всех пользователей с подключенным телеграмом
     const usersSnapshot = await admin.firestore()
       .collection("users")
@@ -466,6 +480,39 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
   }
 });
 
+// Функция для отслеживания изменений статуса фиксаций
+exports.trackFixationStatusChanges = onDocumentUpdated("clientFixations/{fixationId}", async (event) => {
+  const beforeData = event.data.before.data();
+  const afterData = event.data.after.data();
+  
+  try {
+    // Проверяем, изменился ли статус
+    if (beforeData.status !== afterData.status) {
+      console.log(`🔄 Изменение статуса фиксации ${event.params.fixationId}: ${beforeData.status} → ${afterData.status}`);
+      
+      const webhookData = {
+        id: event.params.fixationId,
+        ...afterData
+      };
+      
+      // Отправляем webhook уведомление об изменении статуса
+      await sendFixationStatusChangedWebhook(webhookData, beforeData.status);
+      
+      // Отправляем специфичные webhook в зависимости от нового статуса
+      if (afterData.status === 'Срок истек' || afterData.status === 'Expired' || afterData.status === 'Kedaluwarsa') {
+        await sendFixationExpiredWebhook(webhookData);
+      } else if (afterData.status === 'Отклонен' || afterData.status === 'Rejected' || afterData.status === 'Ditolak') {
+        await sendFixationRejectedWebhook(webhookData);
+      }
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Ошибка при отслеживании изменений статуса:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // Функция для отправки сообщений через Telegram Bot API
 const sendTelegramMessage = async (chatId, text, replyMarkup = null) => {
   try {
@@ -500,6 +547,10 @@ const sendTelegramMessage = async (chatId, text, replyMarkup = null) => {
     throw error;
   }
 };
+
+// API Function
+const apiApp = require('./api');
+exports.api = functions.https.onRequest(apiApp);
 
 // Функция для обработки webhook от Telegram Bot
 exports.telegramWebhook = functions.https.onRequest(async (req, res) => {

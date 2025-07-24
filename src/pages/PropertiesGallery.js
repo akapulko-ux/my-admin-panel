@@ -519,11 +519,11 @@ function PropertiesGallery() {
 
               {/* Текстовая информация */}
               <div className="flex flex-col text-gray-900 space-y-0.5">
-                {(p.complexName || p.complex) && (
+                {(p.complexName || p.complex || p.propertyName) && (
                   <span className={`font-semibold leading-none text-black ${
                     isMobile ? 'text-base' : 'text-lg'
                   }`}>
-                    {safeDisplay(p.complexName || p.complex)}
+                    {safeDisplay(p.complexName || p.complex || p.propertyName)}
                   </span>
                 )}
 

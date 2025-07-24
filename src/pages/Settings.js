@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { updatePassword, updateProfile } from 'firebase/auth';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
+import { Textarea } from '../components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import toast from 'react-hot-toast';
-import { Bot, Check, X, ExternalLink, FileText, User } from 'lucide-react';
+import { Bot, Check, X, ExternalLink, FileText, User, Key, Webhook, Plus, Eye, EyeOff, Copy, Trash2, Settings as SettingsIcon, AlertCircle, Clock, CheckCircle, Database, TestTube, RefreshCw, XCircle, ChevronDown, ChevronRight } from 'lucide-react';
 
 const Settings = () => {
   const { currentUser, role } = useAuth();
@@ -44,6 +46,49 @@ const Settings = () => {
   const [allContracts, setAllContracts] = useState([]);
   const [loadingContracts, setLoadingContracts] = useState(false);
   const [selectedContractUser, setSelectedContractUser] = useState(null);
+  
+  // Состояния для API интеграций
+  const [apiKeys, setApiKeys] = useState([]);
+  const [webhooks, setWebhooks] = useState([]);
+  const [isLoadingApiKeys, setIsLoadingApiKeys] = useState(false);
+  const [isLoadingWebhooks, setIsLoadingWebhooks] = useState(false);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [showWebhookDialog, setShowWebhookDialog] = useState(false);
+  const [showApiKeyVisibility, setShowApiKeyVisibility] = useState({});
+  const [newApiKeyName, setNewApiKeyName] = useState('');
+  const [newApiKeyDescription, setNewApiKeyDescription] = useState('');
+  const [newApiKeyPermissions, setNewApiKeyPermissions] = useState(['fixations']);
+  const [newWebhookName, setNewWebhookName] = useState('');
+  const [newWebhookUrl, setNewWebhookUrl] = useState('');
+  const [newWebhookEvents, setNewWebhookEvents] = useState(['fixation_created']);
+  
+  // Состояния для CRM интеграций
+  const [crmIntegrations, setCrmIntegrations] = useState([]);
+  const [isLoadingCrmIntegrations, setIsLoadingCrmIntegrations] = useState(false);
+  const [showCrmIntegrationDialog, setShowCrmIntegrationDialog] = useState(false);
+  const [showCrmTestDialog, setShowCrmTestDialog] = useState(false);
+  const [selectedCrmIntegration, setSelectedCrmIntegration] = useState(null);
+  const [crmTestResult, setCrmTestResult] = useState(null);
+
+  // Форма создания CRM интеграции
+  const [crmFormData, setCrmFormData] = useState({
+    name: '',
+    crmType: 'amo',
+    domain: '',
+    accessToken: '',
+    pipelineId: '',
+    statusId: '',
+    clientNameFieldId: '',
+    phoneFieldId: '',
+    emailFieldId: '',
+    propertyFieldId: '',
+    commentFieldId: '',
+    isActive: true
+  });
+  
+  // Состояния для сворачивания разделов
+  const [isAllContractsExpanded, setIsAllContractsExpanded] = useState(false);
+  const [isCrmIntegrationsExpanded, setIsCrmIntegrationsExpanded] = useState(false);
   
   // Telegram Bot данные
   const BOT_USERNAME = 'it_agent_admin_bot';
@@ -96,11 +141,393 @@ const Settings = () => {
   useEffect(() => {
     loadUserSettings();
     
-    // Загружаем все договора для админа
-    if (role === 'admin') {
+    // Загружаем все договора для админа и модератора
+    if (role === 'admin' || role === 'moderator') {
       loadAllContracts();
     }
+    
+    // Загружаем API ключи, webhook подписки и CRM интеграции
+    if (currentUser) {
+      loadApiKeys();
+      loadWebhooks();
+      loadCrmIntegrations();
+    }
   }, [currentUser, role, loadUserSettings]);
+
+  // Загружаем API ключи пользователя
+  const loadApiKeys = async () => {
+    if (!currentUser) return;
+    
+    setIsLoadingApiKeys(true);
+    try {
+      const apiKeysRef = collection(db, 'apiKeys');
+      const q = query(apiKeysRef, where('userId', '==', currentUser.uid));
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const keys = [];
+        snapshot.forEach((doc) => {
+          keys.push({ id: doc.id, ...doc.data() });
+        });
+        setApiKeys(keys);
+      });
+      
+      return unsubscribe;
+    } catch (error) {
+      console.error('Ошибка при загрузке API ключей:', error);
+      toast.error('Ошибка при загрузке API ключей');
+    } finally {
+      setIsLoadingApiKeys(false);
+    }
+  };
+
+  // Загружаем webhook подписки пользователя
+  const loadWebhooks = async () => {
+    if (!currentUser) return;
+    
+    setIsLoadingWebhooks(true);
+    try {
+      const webhooksRef = collection(db, 'webhooks');
+      const q = query(webhooksRef, where('userId', '==', currentUser.uid));
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const hooks = [];
+        snapshot.forEach((doc) => {
+          hooks.push({ id: doc.id, ...doc.data() });
+        });
+        setWebhooks(hooks);
+      });
+      
+      return unsubscribe;
+    } catch (error) {
+      console.error('Ошибка при загрузке webhook подписок:', error);
+      toast.error('Ошибка при загрузке webhook подписок');
+    } finally {
+      setIsLoadingWebhooks(false);
+    }
+  };
+
+  // Генерируем новый API ключ
+  const generateApiKey = async () => {
+    if (!currentUser) return;
+    
+    if (!newApiKeyName.trim()) {
+      toast.error('Введите название API ключа');
+      return;
+    }
+    
+    try {
+      const key = 'sk_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      
+      const apiKeyData = {
+        userId: currentUser.uid,
+        name: newApiKeyName.trim(),
+        description: newApiKeyDescription.trim(),
+        key: key,
+        permissions: newApiKeyPermissions,
+        isActive: true,
+        createdAt: new Date(),
+        usageCount: 0,
+        lastUsed: null
+      };
+      
+      await addDoc(collection(db, 'apiKeys'), apiKeyData);
+      
+      setNewApiKeyName('');
+      setNewApiKeyDescription('');
+      setNewApiKeyPermissions(['fixations']);
+      setShowApiKeyDialog(false);
+      
+      toast.success('API ключ успешно создан');
+    } catch (error) {
+      console.error('Ошибка при создании API ключа:', error);
+      toast.error('Ошибка при создании API ключа');
+    }
+  };
+
+  // Создаем новую webhook подписку
+  const createWebhook = async () => {
+    if (!currentUser) return;
+    
+    if (!newWebhookName.trim()) {
+      toast.error('Введите название webhook подписки');
+      return;
+    }
+    
+    if (!newWebhookUrl.trim()) {
+      toast.error('Введите URL для webhook');
+      return;
+    }
+    
+    try {
+      const webhookData = {
+        userId: currentUser.uid,
+        name: newWebhookName.trim(),
+        url: newWebhookUrl.trim(),
+        events: newWebhookEvents,
+        isActive: true,
+        createdAt: new Date(),
+        deliveryCount: 0,
+        lastDelivery: null,
+        secret: Math.random().toString(36).substring(2, 15)
+      };
+      
+      await addDoc(collection(db, 'webhooks'), webhookData);
+      
+      setNewWebhookName('');
+      setNewWebhookUrl('');
+      setNewWebhookEvents(['fixation_created']);
+      setShowWebhookDialog(false);
+      
+      toast.success('Webhook подписка успешно создана');
+    } catch (error) {
+      console.error('Ошибка при создании webhook подписки:', error);
+      toast.error('Ошибка при создании webhook подписки');
+    }
+  };
+
+  // Копируем API ключ в буфер обмена
+  const copyApiKey = async (key) => {
+    try {
+      await navigator.clipboard.writeText(key);
+      toast.success('API ключ скопирован в буфер обмена');
+    } catch (error) {
+      console.error('Ошибка при копировании:', error);
+      toast.error('Ошибка при копировании API ключа');
+    }
+  };
+
+  // Переключаем видимость API ключа
+  const toggleApiKeyVisibility = (keyId) => {
+    setShowApiKeyVisibility(prev => ({
+      ...prev,
+      [keyId]: !prev[keyId]
+    }));
+  };
+
+  // Удаляем API ключ
+  const deleteApiKey = async (keyId) => {
+    if (!window.confirm('Вы уверены, что хотите удалить этот API ключ? Это действие нельзя отменить.')) {
+      return;
+    }
+    
+    try {
+      await deleteDoc(doc(db, 'apiKeys', keyId));
+      toast.success('API ключ удален');
+    } catch (error) {
+      console.error('Ошибка при удалении API ключа:', error);
+      toast.error('Ошибка при удалении API ключа');
+    }
+  };
+
+  // Удаляем webhook подписку
+  const deleteWebhook = async (webhookId) => {
+    if (!window.confirm('Вы уверены, что хотите удалить эту webhook подписку? Это действие нельзя отменить.')) {
+      return;
+    }
+    
+    try {
+      await deleteDoc(doc(db, 'webhooks', webhookId));
+      toast.success('Webhook подписка удалена');
+    } catch (error) {
+      console.error('Ошибка при удалении webhook подписки:', error);
+      toast.error('Ошибка при удалении webhook подписки');
+    }
+  };
+
+  // Получаем лимит использования API
+  const getUsageLimit = () => {
+    const limits = {
+      'admin': 10000,
+      'agent': 1000,
+      'застройщик': 1000,
+      'default': 100
+    };
+    return limits[role] || limits.default;
+  };
+
+  // Загружаем CRM интеграции пользователя
+  const loadCrmIntegrations = async () => {
+    if (!currentUser) return;
+    
+    setIsLoadingCrmIntegrations(true);
+    try {
+      const integrationsRef = collection(db, 'crmIntegrations');
+      const q = query(integrationsRef, where('userId', '==', currentUser.uid));
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const integrations = [];
+        snapshot.forEach((doc) => {
+          integrations.push({ id: doc.id, ...doc.data() });
+        });
+        setCrmIntegrations(integrations);
+      });
+      
+      return unsubscribe;
+    } catch (error) {
+      console.error('Ошибка при загрузке CRM интеграций:', error);
+      toast.error('Ошибка при загрузке CRM интеграций');
+    } finally {
+      setIsLoadingCrmIntegrations(false);
+    }
+  };
+
+  // Создаем новую CRM интеграцию
+  const createCrmIntegration = async () => {
+    if (!currentUser) return;
+
+    if (!crmFormData.name.trim() || !crmFormData.domain.trim() || !crmFormData.accessToken.trim()) {
+      toast.error('Заполните все обязательные поля');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (selectedCrmIntegration) {
+        // Обновляем существующую интеграцию
+        const integrationRef = doc(db, 'crmIntegrations', selectedCrmIntegration.id);
+        await updateDoc(integrationRef, {
+          ...crmFormData,
+          updatedAt: new Date()
+        });
+        
+        setSelectedCrmIntegration(null);
+        toast.success('CRM интеграция успешно обновлена');
+      } else {
+        // Создаем новую интеграцию
+        const integrationData = {
+          userId: currentUser.uid,
+          ...crmFormData,
+          createdAt: new Date(),
+          lastSync: null,
+          syncCount: 0,
+          errorCount: 0,
+          lastError: null
+        };
+
+        await addDoc(collection(db, 'crmIntegrations'), integrationData);
+        toast.success('CRM интеграция успешно создана');
+      }
+      
+      setCrmFormData({
+        name: '',
+        crmType: 'amo',
+        domain: '',
+        accessToken: '',
+        pipelineId: '',
+        statusId: '',
+        clientNameFieldId: '',
+        phoneFieldId: '',
+        emailFieldId: '',
+        propertyFieldId: '',
+        commentFieldId: '',
+        isActive: true
+      });
+      setShowCrmIntegrationDialog(false);
+      
+    } catch (error) {
+      console.error('Ошибка при работе с CRM интеграцией:', error);
+      toast.error('Ошибка при работе с CRM интеграцией');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Тестируем CRM интеграцию
+  const testCrmIntegration = async (integration) => {
+    setSelectedCrmIntegration(integration);
+    setShowCrmTestDialog(true);
+    setCrmTestResult(null);
+
+    try {
+      const testResult = await testCrmConnection(integration);
+      setCrmTestResult(testResult);
+    } catch (error) {
+      setCrmTestResult({
+        success: false,
+        message: error.message
+      });
+    }
+  };
+
+  // Функция тестирования подключения к CRM
+  const testCrmConnection = async (integration) => {
+    const { crmType, domain, accessToken } = integration;
+    
+    if (crmType === 'amo') {
+      try {
+        const response = await fetch(`https://${domain}/api/v4/leads`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          return {
+            success: true,
+            message: 'Подключение к AMO CRM успешно'
+          };
+        } else {
+          return {
+            success: false,
+            message: `Ошибка подключения к AMO CRM: ${response.status}`
+          };
+        }
+      } catch (error) {
+        return {
+          success: false,
+          message: `Ошибка сети: ${error.message}`
+        };
+      }
+    }
+
+    return {
+      success: false,
+      message: 'Неподдерживаемый тип CRM'
+    };
+  };
+
+  // Удаляем CRM интеграцию
+  const deleteCrmIntegration = async (integrationId) => {
+    if (!window.confirm('Вы уверены, что хотите удалить эту CRM интеграцию?')) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'crmIntegrations', integrationId));
+      toast.success('CRM интеграция удалена');
+    } catch (error) {
+      console.error('Ошибка при удалении CRM интеграции:', error);
+      toast.error('Ошибка при удалении CRM интеграции');
+    }
+  };
+
+  // Получаем статус CRM интеграции
+  const getCrmStatusBadge = (integration) => {
+    if (!integration.isActive) {
+      return <Badge variant="secondary"><XCircle className="h-3 w-3 mr-1" />Неактивна</Badge>;
+    }
+    
+    if (integration.lastError) {
+      return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Ошибка</Badge>;
+    }
+    
+    if (integration.lastSync) {
+      return <Badge variant="default"><CheckCircle className="h-3 w-3 mr-1" />Активна</Badge>;
+    }
+    
+    return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Ожидает</Badge>;
+  };
+
+  // Получаем название CRM
+  const getCrmName = (crmType) => {
+    const crmNames = {
+      'amo': 'AMO CRM',
+      'bitrix24': 'Bitrix24',
+      'crm': 'Другая CRM'
+    };
+    return crmNames[crmType] || crmType;
+  };
 
   // Загружаем все подписанные договора (только для админа)
   const loadAllContracts = async () => {
@@ -577,8 +1004,8 @@ const Settings = () => {
         </div>
       </Card>
 
-      {/* Все подписанные договора (только для админа) */}
-      {role === 'admin' && (
+      {/* Все подписанные договора (только для админа и модератора) */}
+      {(role === 'admin' || role === 'moderator') && (
         <Card className="p-6">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-purple-100 rounded-lg">
@@ -586,53 +1013,73 @@ const Settings = () => {
             </div>
             
             <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2">{t.contract.allContracts}</h3>
-              <p className="text-muted-foreground mb-4">
-                {t.contract.description}
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">{t.contract.allContracts}</h3>
+                  <p className="text-muted-foreground">
+                    {t.contract.description}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsAllContractsExpanded(!isAllContractsExpanded)}
+                  className="p-2"
+                >
+                  {isAllContractsExpanded ? (
+                    <ChevronDown className="h-5 w-5" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
 
-              {loadingContracts ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent"></div>
-                  <span className="ml-2 text-muted-foreground">{t.contract.loading}</span>
-                </div>
-              ) : allContracts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t.profile.noSignedContracts}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {allContracts.map((contract) => (
-                    <div key={contract.userId} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="font-medium">{contract.userName}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {contract.role}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-muted-foreground space-y-1">
-                            <div>📧 {contract.userEmail}</div>
-                            <div>🏢 {contract.developerName}</div>
-                            <div>📅 {t.contract.signDate}: {contract.contractSignDate?.toDate ? 
-                              contract.contractSignDate.toDate().toLocaleDateString('ru-RU') : 
-                              new Date(contract.contractSignDate || 0).toLocaleDateString('ru-RU')
-                            }</div>
+              {isAllContractsExpanded && (
+                <>
+                  {loadingContracts ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent"></div>
+                      <span className="ml-2 text-muted-foreground">{t.contract.loading}</span>
+                    </div>
+                  ) : allContracts.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {t.profile.noSignedContracts}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {allContracts.map((contract) => (
+                        <div key={contract.userId} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="font-medium">{contract.userName}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {contract.role}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground space-y-1">
+                                <div>📧 {contract.userEmail}</div>
+                                <div>🏢 {contract.developerName}</div>
+                                <div>📅 {t.contract.signDate}: {contract.contractSignDate?.toDate ? 
+                                  contract.contractSignDate.toDate().toLocaleDateString('ru-RU') : 
+                                  new Date(contract.contractSignDate || 0).toLocaleDateString('ru-RU')
+                                }</div>
+                              </div>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setSelectedContractUser(contract)}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              {t.contract.viewContract}
+                            </Button>
                           </div>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedContractUser(contract)}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          {t.contract.viewContract}
-                        </Button>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -696,6 +1143,356 @@ const Settings = () => {
           </div>
         </Card>
       )}
+
+      {/* Интеграции с внешними CRM системами */}
+      <Card className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="p-2 bg-orange-100 rounded-lg">
+            <SettingsIcon className="h-6 w-6 text-orange-600" />
+          </div>
+          
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold">Интеграции с внешними CRM системами</h3>
+                <p className="text-muted-foreground">
+                  Настройте API ключи и webhook подписки для интеграции с внешними системами
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCrmIntegrationsExpanded(!isCrmIntegrationsExpanded)}
+                className="p-2"
+              >
+                {isCrmIntegrationsExpanded ? (
+                  <ChevronDown className="h-5 w-5" />
+                ) : (
+                  <ChevronRight className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
+
+            {isCrmIntegrationsExpanded && (
+              <>
+                {/* Информационная карточка */}
+                <Card className="bg-blue-50 border-blue-200 mb-6">
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-blue-900 mb-2">Информация об API</h4>
+                    <div className="space-y-1 text-sm text-blue-800">
+                      <p>• Базовый URL: <code className="bg-blue-100 px-2 py-1 rounded">https://us-central1-bali-estate-1130f.cloudfunctions.net/api/v1</code></p>
+                      <p>• Лимит запросов: <strong>{getUsageLimit().toLocaleString()}</strong> запросов в месяц</p>
+                      <p>• Аутентификация: используйте заголовок <code className="bg-blue-100 px-2 py-1 rounded">X-API-Key</code></p>
+                      <p>• Документация: <a href="/api-docs.html" className="underline">открыть документацию</a></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* API Ключи */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-medium">API Ключи</h4>
+                <Button onClick={() => setShowApiKeyDialog(true)} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Создать API ключ
+                </Button>
+              </div>
+
+              {isLoadingApiKeys ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+                  <span className="ml-2 text-muted-foreground">Загрузка API ключей...</span>
+                </div>
+              ) : apiKeys.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
+                  <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Нет API ключей</h3>
+                  <p className="mb-4">Создайте свой первый API ключ для интеграции с внешними системами</p>
+                  <Button onClick={() => setShowApiKeyDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Создать API ключ
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {apiKeys.map(key => (
+                    <div key={key.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h5 className="font-semibold">{key.name}</h5>
+                            <Badge variant={key.isActive ? "default" : "secondary"}>
+                              {key.isActive ? (
+                                <>
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Активен
+                                </>
+                              ) : (
+                                <>
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Неактивен
+                                </>
+                              )}
+                            </Badge>
+                          </div>
+                          
+                          {key.description && (
+                            <p className="text-muted-foreground mb-2">{key.description}</p>
+                          )}
+                          
+                          <div className="flex items-center gap-2 mb-2">
+                            <Key className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm font-mono">
+                              {showApiKeyVisibility[key.id] 
+                                ? key.key 
+                                : `${key.key.substring(0, 20)}...`
+                              }
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleApiKeyVisibility(key.id)}
+                            >
+                              {showApiKeyVisibility[key.id] ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyApiKey(key.key)}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="text-xs text-muted-foreground">
+                            Создан: {key.createdAt?.toDate ? key.createdAt.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}
+                            {key.lastUsed && ` • Последнее использование: ${key.lastUsed.toDate ? key.lastUsed.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}`}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteApiKey(key.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Webhook Подписки */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-medium">Webhook Подписки</h4>
+                <Button onClick={() => setShowWebhookDialog(true)} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Создать Webhook
+                </Button>
+              </div>
+
+              {isLoadingWebhooks ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+                  <span className="ml-2 text-muted-foreground">Загрузка webhook подписок...</span>
+                </div>
+              ) : webhooks.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
+                  <Webhook className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Нет webhook подписок</h3>
+                  <p className="mb-4">Создайте webhook подписку для получения уведомлений о событиях</p>
+                  <Button onClick={() => setShowWebhookDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Создать Webhook
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {webhooks.map(webhook => (
+                    <div key={webhook.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h5 className="font-semibold">{webhook.name}</h5>
+                            <Badge variant={webhook.isActive ? "default" : "secondary"}>
+                              {webhook.isActive ? (
+                                <>
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Активен
+                                </>
+                              ) : (
+                                <>
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Неактивен
+                                </>
+                              )}
+                            </Badge>
+                          </div>
+                          
+                          <div className="text-sm text-muted-foreground mb-2">
+                            <div className="font-mono">{webhook.url}</div>
+                          </div>
+                          
+                          <div className="text-xs text-muted-foreground">
+                            Создан: {webhook.createdAt?.toDate ? webhook.createdAt.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}
+                            {webhook.lastDelivery && ` • Последняя доставка: ${webhook.lastDelivery.toDate ? webhook.lastDelivery.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}`}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteWebhook(webhook.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* CRM Интеграции */}
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-medium">CRM Интеграции</h4>
+                <Button onClick={() => {
+                  setSelectedCrmIntegration(null);
+                  setCrmFormData({
+                    name: '',
+                    crmType: 'amo',
+                    domain: '',
+                    accessToken: '',
+                    pipelineId: '',
+                    statusId: '',
+                    clientNameFieldId: '',
+                    phoneFieldId: '',
+                    emailFieldId: '',
+                    propertyFieldId: '',
+                    commentFieldId: '',
+                    isActive: true
+                  });
+                  setShowCrmIntegrationDialog(true);
+                }} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить CRM
+                </Button>
+              </div>
+
+              {isLoadingCrmIntegrations ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+                  <span className="ml-2 text-muted-foreground">Загрузка CRM интеграций...</span>
+                </div>
+              ) : crmIntegrations.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
+                  <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Нет CRM интеграций</h3>
+                  <p className="mb-4">Создайте интеграцию с CRM для автоматической синхронизации фиксаций</p>
+                  <Button onClick={() => {
+                    setSelectedCrmIntegration(null);
+                    setCrmFormData({
+                      name: '',
+                      crmType: 'amo',
+                      domain: '',
+                      accessToken: '',
+                      pipelineId: '',
+                      statusId: '',
+                      clientNameFieldId: '',
+                      phoneFieldId: '',
+                      emailFieldId: '',
+                      propertyFieldId: '',
+                      commentFieldId: '',
+                      isActive: true
+                    });
+                    setShowCrmIntegrationDialog(true);
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добавить CRM
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {crmIntegrations.map(integration => (
+                    <div key={integration.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h5 className="font-semibold">{integration.name}</h5>
+                            {getCrmStatusBadge(integration)}
+                          </div>
+                          
+                          <div className="space-y-2 text-sm text-muted-foreground">
+                            <div>CRM: <strong>{getCrmName(integration.crmType)}</strong></div>
+                            <div>Домен: <code className="bg-gray-100 px-1 rounded">{integration.domain}</code></div>
+                            {integration.lastSync && (
+                              <div>Последняя синхронизация: {integration.lastSync.toDate ? 
+                                integration.lastSync.toDate().toLocaleString('ru-RU') : 
+                                new Date(integration.lastSync).toLocaleString('ru-RU')
+                              }</div>
+                            )}
+                            {integration.syncCount > 0 && (
+                              <div>Всего синхронизировано: <strong>{integration.syncCount}</strong> записей</div>
+                            )}
+                            {integration.lastError && (
+                              <div className="text-red-600">Последняя ошибка: {integration.lastError}</div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => testCrmIntegration(integration)}
+                          >
+                            <TestTube className="h-4 w-4 mr-2" />
+                            Тест
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setCrmFormData(integration);
+                              setShowCrmIntegrationDialog(true);
+                            }}
+                          >
+                            <SettingsIcon className="h-4 w-4 mr-2" />
+                            Настройки
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteCrmIntegration(integration.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+              </>
+            )}
+          </div>
+        </div>
+      </Card>
 
       {/* Диалог подключения телеграм */}
       <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
@@ -963,6 +1760,404 @@ const Settings = () => {
             </Button>
             <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
               {common.cancel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог создания API ключа */}
+      <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Создать новый API ключ</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="apiKeyName">Название *</Label>
+              <Input
+                id="apiKeyName"
+                type="text"
+                placeholder="Например: CRM Integration"
+                value={newApiKeyName}
+                onChange={(e) => setNewApiKeyName(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="apiKeyDescription">Описание</Label>
+              <Textarea
+                id="apiKeyDescription"
+                placeholder="Описание для чего используется этот ключ"
+                value={newApiKeyDescription}
+                onChange={(e) => setNewApiKeyDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Разрешения</Label>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newApiKeyPermissions.includes('fixations')}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setNewApiKeyPermissions([...newApiKeyPermissions, 'fixations']);
+                      } else {
+                        setNewApiKeyPermissions(newApiKeyPermissions.filter(p => p !== 'fixations'));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Фиксации клиентов</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newApiKeyPermissions.includes('properties')}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setNewApiKeyPermissions([...newApiKeyPermissions, 'properties']);
+                      } else {
+                        setNewApiKeyPermissions(newApiKeyPermissions.filter(p => p !== 'properties'));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Недвижимость</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newApiKeyPermissions.includes('complexes')}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setNewApiKeyPermissions([...newApiKeyPermissions, 'complexes']);
+                      } else {
+                        setNewApiKeyPermissions(newApiKeyPermissions.filter(p => p !== 'complexes'));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Жилые комплексы</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button onClick={generateApiKey}>
+              <Key className="h-4 w-4 mr-2" />
+              Создать API ключ
+            </Button>
+            <Button variant="outline" onClick={() => setShowApiKeyDialog(false)}>
+              Отмена
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог создания Webhook подписки */}
+      <Dialog open={showWebhookDialog} onOpenChange={setShowWebhookDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Создать новую Webhook подписку</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="webhookName">Название *</Label>
+              <Input
+                id="webhookName"
+                type="text"
+                placeholder="Например: CRM Notifications"
+                value={newWebhookName}
+                onChange={(e) => setNewWebhookName(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="webhookUrl">URL *</Label>
+              <Input
+                id="webhookUrl"
+                type="url"
+                placeholder="https://your-crm.com/webhook"
+                value={newWebhookUrl}
+                onChange={(e) => setNewWebhookUrl(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>События</Label>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newWebhookEvents.includes('fixation_created')}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setNewWebhookEvents([...newWebhookEvents, 'fixation_created']);
+                      } else {
+                        setNewWebhookEvents(newWebhookEvents.filter(e => e !== 'fixation_created'));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Создание фиксации</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newWebhookEvents.includes('fixation_updated')}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setNewWebhookEvents([...newWebhookEvents, 'fixation_updated']);
+                      } else {
+                        setNewWebhookEvents(newWebhookEvents.filter(e => e !== 'fixation_updated'));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Обновление фиксации</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button onClick={createWebhook}>
+              <Webhook className="h-4 w-4 mr-2" />
+              Создать Webhook
+            </Button>
+            <Button variant="outline" onClick={() => setShowWebhookDialog(false)}>
+              Отмена
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог создания/редактирования CRM интеграции */}
+      <Dialog open={showCrmIntegrationDialog} onOpenChange={setShowCrmIntegrationDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedCrmIntegration ? 'Редактировать CRM интеграцию' : 'Создать новую CRM интеграцию'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="crmName">Название интеграции *</Label>
+                <Input
+                  id="crmName"
+                  value={crmFormData.name}
+                  onChange={(e) => setCrmFormData({...crmFormData, name: e.target.value})}
+                  placeholder="Например: Основная CRM"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Тип CRM *</Label>
+                <Select 
+                  value={crmFormData.crmType} 
+                  onValueChange={(value) => setCrmFormData({...crmFormData, crmType: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="amo">AMO CRM</SelectItem>
+                    <SelectItem value="bitrix24">Bitrix24</SelectItem>
+                    <SelectItem value="crm">Другая CRM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="crmDomain">Домен CRM *</Label>
+              <Input
+                id="crmDomain"
+                value={crmFormData.domain}
+                onChange={(e) => setCrmFormData({...crmFormData, domain: e.target.value})}
+                placeholder="your-domain.amocrm.ru"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="crmAccessToken">Access Token *</Label>
+              <Input
+                id="crmAccessToken"
+                type="password"
+                value={crmFormData.accessToken}
+                onChange={(e) => setCrmFormData({...crmFormData, accessToken: e.target.value})}
+                placeholder="Введите токен доступа"
+              />
+            </div>
+            
+            {crmFormData.crmType === 'amo' && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="crmPipelineId">ID воронки продаж</Label>
+                    <Input
+                      id="crmPipelineId"
+                      value={crmFormData.pipelineId}
+                      onChange={(e) => setCrmFormData({...crmFormData, pipelineId: e.target.value})}
+                      placeholder="123456"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="crmStatusId">ID статуса</Label>
+                    <Input
+                      id="crmStatusId"
+                      value={crmFormData.statusId}
+                      onChange={(e) => setCrmFormData({...crmFormData, statusId: e.target.value})}
+                      placeholder="123456"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>ID полей в AMO CRM</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="crmClientNameFieldId">Имя клиента</Label>
+                      <Input
+                        id="crmClientNameFieldId"
+                        value={crmFormData.clientNameFieldId}
+                        onChange={(e) => setCrmFormData({...crmFormData, clientNameFieldId: e.target.value})}
+                        placeholder="123456"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="crmPhoneFieldId">Телефон</Label>
+                      <Input
+                        id="crmPhoneFieldId"
+                        value={crmFormData.phoneFieldId}
+                        onChange={(e) => setCrmFormData({...crmFormData, phoneFieldId: e.target.value})}
+                        placeholder="123456"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="crmEmailFieldId">Email</Label>
+                      <Input
+                        id="crmEmailFieldId"
+                        value={crmFormData.emailFieldId}
+                        onChange={(e) => setCrmFormData({...crmFormData, emailFieldId: e.target.value})}
+                        placeholder="123456"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="crmPropertyFieldId">Объект недвижимости</Label>
+                      <Input
+                        id="crmPropertyFieldId"
+                        value={crmFormData.propertyFieldId}
+                        onChange={(e) => setCrmFormData({...crmFormData, propertyFieldId: e.target.value})}
+                        placeholder="123456"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="crmCommentFieldId">ID поля комментария</Label>
+              <Input
+                id="crmCommentFieldId"
+                value={crmFormData.commentFieldId}
+                onChange={(e) => setCrmFormData({...crmFormData, commentFieldId: e.target.value})}
+                placeholder="123456"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button onClick={createCrmIntegration} disabled={isLoading}>
+              {isLoading ? (
+                <div className="flex items-center">
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Сохранение...
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {selectedCrmIntegration ? 'Обновить' : 'Создать'}
+                </div>
+              )}
+            </Button>
+            <Button variant="outline" onClick={() => {
+              setShowCrmIntegrationDialog(false);
+              setSelectedCrmIntegration(null);
+              setCrmFormData({
+                name: '',
+                crmType: 'amo',
+                domain: '',
+                accessToken: '',
+                pipelineId: '',
+                statusId: '',
+                clientNameFieldId: '',
+                phoneFieldId: '',
+                emailFieldId: '',
+                propertyFieldId: '',
+                commentFieldId: '',
+                isActive: true
+              });
+            }}>
+              Отмена
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог тестирования CRM интеграции */}
+      <Dialog open={showCrmTestDialog} onOpenChange={setShowCrmTestDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Тестирование CRM интеграции</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {selectedCrmIntegration && (
+              <div>
+                <h4 className="font-medium mb-2">{selectedCrmIntegration.name}</h4>
+                <p className="text-sm text-muted-foreground">
+                  Проверяем подключение к {getCrmName(selectedCrmIntegration.crmType)}...
+                </p>
+              </div>
+            )}
+            
+            {crmTestResult && (
+              <div className={`p-4 rounded-lg ${
+                crmTestResult.success 
+                  ? 'bg-green-50 border border-green-200' 
+                  : 'bg-red-50 border border-red-200'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {crmTestResult.success ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-600" />
+                  )}
+                  <span className={crmTestResult.success ? 'text-green-800' : 'text-red-800'}>
+                    {crmTestResult.message}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCrmTestDialog(false)}>
+              Закрыть
             </Button>
           </DialogFooter>
         </DialogContent>

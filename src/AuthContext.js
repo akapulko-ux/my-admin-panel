@@ -5,6 +5,34 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
 
+// Определение ролей и их алиасов
+const ROLES = {
+  admin: ['admin', 'administrator', 'администратор'],
+  moderator: ['moderator', 'модератор', 'mod'],
+  'premium agent': ['premium_agent', 'premium agent', 'премиум агент', 'премиум-агент', 'premium'],
+  agent: ['agent', 'агент'],
+  user: ['user', 'пользователь', ''],
+  застройщик: ['застройщик', 'премиум застройщик'],
+  closed: ['closed', 'закрытый аккаунт', 'закрытый', 'заблокированный']
+};
+
+// Функция для нормализации роли
+function normalizeRole(role) {
+  if (!role) return 'user';
+  
+  const normalizedRole = role.toLowerCase().trim();
+  
+  // Ищем соответствие в алиасах
+  for (const [roleKey, aliases] of Object.entries(ROLES)) {
+    if (aliases.includes(normalizedRole)) {
+      return roleKey;
+    }
+  }
+  
+  console.warn(`Неизвестная роль "${role}" будет заменена на "user"`);
+  return 'user';
+}
+
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [role, setRole] = useState(null); // "admin", "moderator", "agent", etc.
@@ -18,7 +46,10 @@ export function AuthProvider({ children }) {
         const docRef = doc(db, "users", user.uid);
         const snap = await getDoc(docRef);
         if (snap.exists()) {
-          setRole(snap.data().role || "agent");
+          const rawRole = snap.data().role || "agent";
+          const normalizedRoleValue = normalizeRole(rawRole);
+          setRole(normalizedRoleValue);
+          console.log(`Role normalized: "${rawRole}" -> "${normalizedRoleValue}"`);
         } else {
           // Если документ пользователя не существует, создаем его с ролью agent
           try {
@@ -56,7 +87,9 @@ export function AuthProvider({ children }) {
       let userRole = "agent";
       
       if (snap.exists()) {
-        userRole = snap.data().role || "agent";
+        const rawRole = snap.data().role || "agent";
+        userRole = normalizeRole(rawRole);
+        console.log(`Login - Role normalized: "${rawRole}" -> "${userRole}"`);
       } else {
         // Если документ пользователя не существует, создаем его с ролью agent
         try {

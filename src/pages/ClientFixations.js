@@ -495,8 +495,8 @@ const ClientFixations = () => {
     try {
       let fixationsQuery;
       
-      if (userRole === 'admin') {
-        // Админы видят все фиксации
+      if (userRole === 'admin' || userRole === 'moderator') {
+        // Админы и модераторы видят все фиксации
         fixationsQuery = query(
           collection(db, 'clientFixations'),
           orderBy('dateTime', 'desc')
@@ -878,7 +878,7 @@ const ClientFixations = () => {
               <div>
                 {/* Проверяем статус "на согласовании" на всех языках */}
                 {getStatusType(fixation.status) === 'pending' && 
-                  (userRole === 'admin' || ['застройщик', 'премиум застройщик'].includes(userRole)) && (
+                  (userRole === 'admin' || userRole === 'moderator' || ['застройщик', 'премиум застройщик'].includes(userRole)) && (
                   <div className={`${isMobile ? 'flex flex-col gap-2' : 'space-x-2'}`}>
                     <Button
                       onClick={() => openApproveDialog(fixation)}
@@ -904,7 +904,7 @@ const ClientFixations = () => {
                 >
                   {t.clientFixations.chatWithAgent}
                 </Button>
-                {userRole === 'admin' && (
+                {(userRole === 'admin' || userRole === 'moderator') && (
                   <Button
                     onClick={() => openDeleteDialog(fixation)}
                     variant="outline"
