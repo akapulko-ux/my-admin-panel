@@ -24,7 +24,12 @@ import {
   Sparkles,
   Utensils,
   Dumbbell,
-  Baby
+  Baby,
+  ShoppingBag,
+  Film,
+  Monitor,
+  Music,
+  Car
 } from "lucide-react";
 import { showError, showSuccess } from '../utils/notifications';
 import { Button } from "../components/ui/button";
@@ -773,7 +778,7 @@ function ComplexDetail() {
       )}
 
       {/* Дополнительные опции */}
-      {(complex.spaSalon || complex.restaurant || complex.fitnessGym || complex.playground || isEditing) && (
+      {(complex.spaSalon || complex.restaurant || complex.fitnessGym || complex.playground || complex.shop || complex.cinema || complex.coworking || complex.concertHall || complex.parking || isEditing) && (
         <Card className="p-6">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -835,6 +840,71 @@ function ComplexDetail() {
                     {t.complexDetail.playground}
                   </Label>
                 </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="shop"
+                    checked={editedValues.shop !== undefined ? editedValues.shop : complex.shop || false}
+                    onChange={(e) => handleValueChange('shop', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="shop" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.shop}
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="cinema"
+                    checked={editedValues.cinema !== undefined ? editedValues.cinema : complex.cinema || false}
+                    onChange={(e) => handleValueChange('cinema', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="cinema" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.cinema}
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="coworking"
+                    checked={editedValues.coworking !== undefined ? editedValues.coworking : complex.coworking || false}
+                    onChange={(e) => handleValueChange('coworking', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="coworking" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.coworking}
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="concertHall"
+                    checked={editedValues.concertHall !== undefined ? editedValues.concertHall : complex.concertHall || false}
+                    onChange={(e) => handleValueChange('concertHall', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="concertHall" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.concertHall}
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="parking"
+                    checked={editedValues.parking !== undefined ? editedValues.parking : complex.parking || false}
+                    onChange={(e) => handleValueChange('parking', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="parking" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.parking}
+                  </Label>
+                </div>
               </div>
             ) : (
               // Режим просмотра - бейджи
@@ -861,6 +931,36 @@ function ComplexDetail() {
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                     <Baby className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium">{t.complexDetail.playground}</span>
+                  </div>
+                )}
+                {complex.shop && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <ShoppingBag className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">{t.complexDetail.shop}</span>
+                  </div>
+                )}
+                {complex.cinema && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Film className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">{t.complexDetail.cinema}</span>
+                  </div>
+                )}
+                {complex.coworking && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Monitor className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">{t.complexDetail.coworking}</span>
+                  </div>
+                )}
+                {complex.concertHall && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Music className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">{t.complexDetail.concertHall}</span>
+                  </div>
+                )}
+                {complex.parking && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Car className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">{t.complexDetail.parking}</span>
                   </div>
                 )}
               </div>

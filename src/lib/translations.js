@@ -506,7 +506,12 @@ _________________               _________________
       spaSalon: 'SPA Salon',
       restaurant: 'Restaurant',
       fitnessGym: 'Fitness Gym',
-      playground: 'Playground'
+      playground: 'Playground',
+      shop: 'Shop',
+      cinema: 'Cinema',
+      coworking: 'Coworking',
+      concertHall: 'Concert Hall',
+      parking: 'Parking'
     },
 
     // Properties Gallery
@@ -685,10 +690,17 @@ _________________               _________________
       jacuzzi: 'Jacuzzi',
       terrace: 'Terrace',
       rooftop: 'Rooftop',
+      balcony: 'Balcony',
+      bbq: 'BBQ',
       spaSalon: 'SPA Salon',
       restaurant: 'Restaurant',
       fitnessGym: 'Fitness Gym',
       playground: 'Playground',
+      shop: 'Shop',
+      cinema: 'Cinema',
+      coworking: 'Coworking',
+      concertHall: 'Concert Hall',
+      parking: 'Parking',
       agentCommission: 'Agent Commission'
     },
 
@@ -1729,7 +1741,12 @@ _________________               _________________
       spaSalon: 'СПА салон',
       restaurant: 'Ресторан',
       fitnessGym: 'Фитнес зал',
-      playground: 'Детская площадка'
+      playground: 'Детская площадка',
+      shop: 'Магазин',
+      cinema: 'Кинотеатр',
+      coworking: 'Коворкинг',
+      concertHall: 'Концертный зал',
+      parking: 'Парковка'
     },
 
     // Properties Gallery
@@ -1908,6 +1925,8 @@ _________________               _________________
       jacuzzi: 'Джакузи',
       terrace: 'Терраса',
       rooftop: 'Руфтоп',
+      balcony: 'Балкон',
+      bbq: 'BBQ',
       spaSalon: 'СПА салон',
       restaurant: 'Ресторан',
       fitnessGym: 'Фитнес зал',
@@ -2952,7 +2971,12 @@ _________________               _________________
       spaSalon: 'Salon SPA',
       restaurant: 'Restoran',
       fitnessGym: 'Gym Fitness',
-      playground: 'Taman Bermain'
+      playground: 'Taman Bermain',
+      shop: 'Toko',
+      cinema: 'Bioskop',
+      coworking: 'Koworking',
+      concertHall: 'Aula Konser',
+      parking: 'Tempat Parkir'
     },
 
     // Properties Gallery
@@ -3131,10 +3155,17 @@ _________________               _________________
       jacuzzi: 'Jacuzzi',
       terrace: 'Teras',
       rooftop: 'Atap',
+      balcony: 'Balkon',
+      bbq: 'BBQ',
       spaSalon: 'Salon SPA',
       restaurant: 'Restoran',
       fitnessGym: 'Gym Fitness',
       playground: 'Taman Bermain',
+      shop: 'Toko',
+      cinema: 'Bioskop',
+      coworking: 'Koworking',
+      concertHall: 'Aula Konser',
+      parking: 'Tempat Parkir',
       agentCommission: 'Komisi Agen'
     },
 

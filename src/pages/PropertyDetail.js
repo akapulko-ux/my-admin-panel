@@ -21,6 +21,8 @@ import {
   Calculator,
   Camera,
   X,
+  Square,
+  Flame,
 } from "lucide-react";
 import { showError, showSuccess } from '../utils/notifications';
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
@@ -1304,10 +1306,36 @@ function PropertyDetail() {
                 {t.propertyDetail.rooftop}
               </label>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="balcony"
+                checked={editedValues.balcony !== undefined ? editedValues.balcony : property.balcony}
+                onChange={(e) => handleValueChange('balcony', e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="balcony" className="text-sm font-medium text-gray-700">
+                {t.propertyDetail.balcony}
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="bbq"
+                checked={editedValues.bbq !== undefined ? editedValues.bbq : property.bbq}
+                onChange={(e) => handleValueChange('bbq', e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="bbq" className="text-sm font-medium text-gray-700">
+                {t.propertyDetail.bbq}
+              </label>
+            </div>
           </div>
         </div>
       ) : (
-        (property.smartHome || property.jacuzzi || property.terrace || property.rooftop) && (
+        (property.smartHome || property.jacuzzi || property.terrace || property.rooftop || property.balcony || property.bbq) && (
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.additionalOptions}</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -1333,6 +1361,18 @@ function PropertyDetail() {
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                   <Building2 className="w-4 h-4 text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">{t.propertyDetail.rooftop}</span>
+                </div>
+              )}
+              {property.balcony && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <Square className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">{t.propertyDetail.balcony}</span>
+                </div>
+              )}
+              {property.bbq && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <Flame className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">{t.propertyDetail.bbq}</span>
                 </div>
               )}
             </div>

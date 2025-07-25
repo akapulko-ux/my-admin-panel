@@ -129,6 +129,8 @@ function CreateProperty() {
   const [jacuzzi, setJacuzzi] = useState(false);
   const [terrace, setTerrace] = useState(false);
   const [rooftop, setRooftop] = useState(false);
+  const [balcony, setBalcony] = useState(false);
+  const [bbq, setBbq] = useState(false);
 
   // Массив для Drag & Drop (фото)
   const [dndItems, setDndItems] = useState([]);
@@ -372,7 +374,9 @@ function CreateProperty() {
         smartHome,
         jacuzzi,
         terrace,
-        rooftop
+        rooftop,
+        balcony,
+        bbq
       };
 
       // Сохраняем объект в Firestore
@@ -411,6 +415,8 @@ function CreateProperty() {
       setJacuzzi(false);
       setTerrace(false);
       setRooftop(false);
+      setBalcony(false);
+      setBbq(false);
       setDndItems([]);
 
       showSuccess("Объект создан!");
@@ -897,6 +903,32 @@ function CreateProperty() {
                   />
                   <Label htmlFor="rooftop" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     {t.propertyDetail.rooftop}
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="balcony"
+                    checked={balcony}
+                    onChange={(e) => setBalcony(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="balcony" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.propertyDetail.balcony}
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="bbq"
+                    checked={bbq}
+                    onChange={(e) => setBbq(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="bbq" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.propertyDetail.bbq}
                   </Label>
                 </div>
               </div>

@@ -124,6 +124,8 @@ function EditProperty() {
   const [jacuzzi, setJacuzzi] = useState(false);
   const [terrace, setTerrace] = useState(false);
   const [rooftop, setRooftop] = useState(false);
+  const [balcony, setBalcony] = useState(false);
+  const [bbq, setBbq] = useState(false);
 
   // Массив объектов для фото (старые + новые)
   // Каждый элемент: { id, url, file }
@@ -195,6 +197,8 @@ function EditProperty() {
           setJacuzzi(data.jacuzzi || false);
           setTerrace(data.terrace || false);
           setRooftop(data.rooftop || false);
+          setBalcony(data.balcony || false);
+          setBbq(data.bbq || false);
 
           const oldImages = (data.images || []).map((url) => ({
             id: crypto.randomUUID(),
@@ -353,7 +357,9 @@ function EditProperty() {
         smartHome,
         jacuzzi,
         terrace,
-        rooftop
+        rooftop,
+        balcony,
+        bbq
       };
 
       await updateDoc(doc(db, "properties", id), updatedData);
@@ -850,6 +856,32 @@ function EditProperty() {
                     />
                     <Label htmlFor="rooftop" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {t.propertyDetail.rooftop}
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="balcony"
+                      checked={balcony}
+                      onChange={(e) => setBalcony(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <Label htmlFor="balcony" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      {t.propertyDetail.balcony}
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="bbq"
+                      checked={bbq}
+                      onChange={(e) => setBbq(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <Label htmlFor="bbq" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      {t.propertyDetail.bbq}
                     </Label>
                   </div>
                 </div>

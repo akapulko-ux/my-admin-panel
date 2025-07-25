@@ -116,6 +116,11 @@ function EditComplex() {
   const [restaurant, setRestaurant] = useState(false);
   const [fitnessGym, setFitnessGym] = useState(false);
   const [playground, setPlayground] = useState(false);
+  const [shop, setShop] = useState(false);
+  const [cinema, setCinema] = useState(false);
+  const [coworking, setCoworking] = useState(false);
+  const [concertHall, setConcertHall] = useState(false);
+  const [parking, setParking] = useState(false);
 
   // Загрузка данных из Firestore
   useEffect(() => {
@@ -175,6 +180,11 @@ function EditComplex() {
           setRestaurant(data.restaurant || false);
           setFitnessGym(data.fitnessGym || false);
           setPlayground(data.playground || false);
+          setShop(data.shop || false);
+          setCinema(data.cinema || false);
+          setCoworking(data.coworking || false);
+          setConcertHall(data.concertHall || false);
+          setParking(data.parking || false);
         }
       } catch (error) {
         console.error("Ошибка загрузки комплекса:", error);
@@ -320,7 +330,12 @@ function EditComplex() {
         spaSalon,
         restaurant,
         fitnessGym,
-        playground
+        playground,
+        shop,
+        cinema,
+        coworking,
+        concertHall,
+        parking
       };
       await updateDoc(doc(db, "complexes", id), updatedData);
       showSuccess("Комплекс обновлён!");
@@ -754,6 +769,71 @@ function EditComplex() {
                 />
                                   <Label htmlFor="playground" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     {t.complexDetail.playground}
+                  </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="shop"
+                  checked={shop}
+                  onChange={(e) => setShop(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                                  <Label htmlFor="shop" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.shop}
+                  </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="cinema"
+                  checked={cinema}
+                  onChange={(e) => setCinema(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                                  <Label htmlFor="cinema" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.cinema}
+                  </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="coworking"
+                  checked={coworking}
+                  onChange={(e) => setCoworking(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                                  <Label htmlFor="coworking" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.coworking}
+                  </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="concertHall"
+                  checked={concertHall}
+                  onChange={(e) => setConcertHall(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                                  <Label htmlFor="concertHall" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.concertHall}
+                  </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="parking"
+                  checked={parking}
+                  onChange={(e) => setParking(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                                  <Label htmlFor="parking" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.parking}
                   </Label>
               </div>
             </div>
