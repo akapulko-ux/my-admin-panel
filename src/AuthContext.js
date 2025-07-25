@@ -12,7 +12,8 @@ const ROLES = {
   'premium agent': ['premium_agent', 'premium agent', 'премиум агент', 'премиум-агент', 'premium'],
   agent: ['agent', 'агент'],
   user: ['user', 'пользователь', ''],
-  застройщик: ['застройщик', 'премиум застройщик'],
+  'премиум застройщик': ['премиум застройщик', 'premium developer'],
+  застройщик: ['застройщик', 'developer'],
   closed: ['closed', 'закрытый аккаунт', 'закрытый', 'заблокированный']
 };
 
@@ -20,7 +21,7 @@ const ROLES = {
 function normalizeRole(role) {
   if (!role) return 'user';
   
-  const normalizedRole = role.toLowerCase().trim();
+  const normalizedRole = role.trim();
   
   // Ищем соответствие в алиасах
   for (const [roleKey, aliases] of Object.entries(ROLES)) {
@@ -129,7 +130,7 @@ export function AuthProvider({ children }) {
   const logout = () => signOut(auth);
 
   return (
-    <AuthContext.Provider value={{ currentUser, role, login, logout, loading }}>
+    <AuthContext.Provider value={{ currentUser, role, login, logout, loading, auth }}>
       {!loading ? children : <div>Загрузка...</div>}
     </AuthContext.Provider>
   );

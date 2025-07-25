@@ -653,3 +653,146 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Функция для отправки уведомлений от премиум застройщиков всем агентам
+exports.sendDeveloperNotification = functions.https.onCall(async (data, context) => {
+  try {
+    const { title, body, developerId } = data;
+    
+    console.log('🔍 sendDeveloperNotification - Входные данные:', { title, body, developerId });
+    console.log('🔍 sendDeveloperNotification - Auth context:', context.auth);
+    
+    if (!title || !body || !developerId) {
+      console.log('❌ sendDeveloperNotification - Отсутствуют обязательные поля:', { title, body, developerId });
+      throw new functions.https.HttpsError('invalid-argument', 'Title, body and developerId are required');
+    }
+    
+    // Проверяем права доступа (только премиум застройщики могут отправлять уведомления)
+    if (!context.auth) {
+      console.log('❌ sendDeveloperNotification - Пользователь не аутентифицирован');
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+    
+    const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
+    if (!userDoc.exists) {
+      console.log('❌ sendDeveloperNotification - Пользователь не найден в Firestore:', context.auth.uid);
+      throw new functions.https.HttpsError('permission-denied', 'User not found');
+    }
+    
+    const userData = userDoc.data();
+    console.log('🔍 sendDeveloperNotification - Данные пользователя:', userData);
+    
+    if (userData.role !== 'премиум застройщик') {
+      console.log('❌ sendDeveloperNotification - Неправильная роль:', userData.role);
+      throw new functions.https.HttpsError('permission-denied', 'Only premium developers can send notifications');
+    }
+    
+    // Проверяем, что developerId совпадает с ID застройщика
+    console.log('🔍 sendDeveloperNotification - Сравнение developerId:', {
+      userDeveloperId: userData.developerId,
+      requestDeveloperId: developerId,
+      match: userData.developerId === developerId
+    });
+    
+    if (userData.developerId !== developerId) {
+      console.log('❌ sendDeveloperNotification - Несовпадение developerId');
+      throw new functions.https.HttpsError('permission-denied', 'Developer ID mismatch');
+    }
+    
+    // Получаем информацию о застройщике
+    const developerDoc = await admin.firestore().collection('developers').doc(developerId).get();
+    if (!developerDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Developer not found');
+    }
+    
+    const developerData = developerDoc.data();
+    
+    // Получаем все FCM токены агентов (роли agent и premium_agent)
+    const tokensSnapshot = await admin.firestore()
+      .collection('userTokens')
+      .get();
+    
+    // Фильтруем токены только для агентов
+    const agentTokens = [];
+    for (const doc of tokensSnapshot.docs) {
+      const tokenData = doc.data();
+      const userId = doc.id;
+      
+      // Получаем информацию о пользователе
+      const userDoc = await admin.firestore().collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        if (['agent', 'premium_agent'].includes(userData.role) && tokenData.fcmToken) {
+          agentTokens.push(tokenData.fcmToken);
+        }
+      }
+    }
+    
+    console.log(`Found ${agentTokens.length} agent tokens for notification`);
+    
+    if (agentTokens.length === 0) {
+      return { success: true, message: 'No agent tokens found', sent: 0, failed: 0 };
+    }
+    
+    // Отправляем уведомления
+    const notification = {
+      title: title,
+      body: body
+    };
+    
+    const messageData = {
+      type: 'developer_notification',
+      developerId: developerId,
+      developerName: developerData.name || 'Застройщик',
+      timestamp: Date.now().toString()
+    };
+    
+    const message = {
+      notification: notification,
+      data: messageData,
+      tokens: agentTokens
+    };
+    
+    const response = await admin.messaging().sendMulticast(message);
+    
+    // Сохраняем запись об отправке уведомления
+    await admin.firestore().collection('developerNotifications').add({
+      developerId: developerId,
+      developerName: developerData.name,
+      title: title,
+      body: body,
+      sentBy: context.auth.uid,
+      sentByEmail: userData.email,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      totalTokens: agentTokens.length
+    });
+    
+    console.log(`Developer notification sent: ${response.successCount} success, ${response.failureCount} failed`);
+    
+    return {
+      success: true,
+      sent: response.successCount,
+      failed: response.failureCount,
+      total: agentTokens.length
+    };
+    
+  } catch (error) {
+    console.error('Error sending developer notification:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to send notification: ' + error.message);
+  }
+});
+
+// Простая тестовая функция для проверки работы Firebase Functions
+exports.testFunction = functions.https.onCall(async (data, context) => {
+  console.log('🔍 testFunction - Входные данные:', data);
+  console.log('🔍 testFunction - Auth context:', context.auth);
+  
+  return {
+    success: true,
+    message: 'Test function works!',
+    receivedData: data,
+    authUid: context.auth?.uid || 'no-auth'
+  };
+});
