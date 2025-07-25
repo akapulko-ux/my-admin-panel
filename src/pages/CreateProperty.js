@@ -121,6 +121,9 @@ function CreateProperty() {
   // Генерируем варианты "4", "5", "6", "7", "8", "9", "10"
   const agentCommissionOptions = ["4", "5", "6", "7", "8", "9", "10"];
 
+  // Поле «Количество юнитов»
+  const [unitsCount, setUnitsCount] = useState("");
+
   // Дополнительные опции
   const [smartHome, setSmartHome] = useState(false);
   const [jacuzzi, setJacuzzi] = useState(false);
@@ -365,6 +368,7 @@ function CreateProperty() {
         landLeaseEndDate,
         legalCompanyName,
         agentCommission: finalAgentCommission,
+        unitsCount: unitsCount ? parseInt(unitsCount) : null,
         smartHome,
         jacuzzi,
         terrace,
@@ -402,6 +406,7 @@ function CreateProperty() {
       setLandLeaseEndDate("");
       setLegalCompanyName("");
       setAgentCommission("5");
+      setUnitsCount("");
       setSmartHome(false);
       setJacuzzi(false);
       setTerrace(false);
@@ -623,6 +628,19 @@ function CreateProperty() {
                 )}
               </div>
 
+              {/* Количество юнитов */}
+              <div className="space-y-2">
+                <Label htmlFor="unitsCount">Количество юнитов</Label>
+                <Input
+                  id="unitsCount"
+                  type="number"
+                  min="1"
+                  value={unitsCount}
+                  onChange={(e) => setUnitsCount(e.target.value)}
+                  placeholder="Введите количество юнитов"
+                />
+              </div>
+
               {/* Провинция */}
               <div className="space-y-2">
                 <Label htmlFor="province">Провинция</Label>
@@ -667,7 +685,8 @@ function CreateProperty() {
                     <SelectItem value="RDTR Кuta Selatan">RDTR Кuta Selatan</SelectItem>
                     <SelectItem value="RDTR Mengwi">RDTR Mengwi</SelectItem>
                     <SelectItem value="RDTR Kecamatan Abiansemal">RDTR Kecamatan Abiansemal</SelectItem>
-                    <SelectItem value="RDTR Wilayah Перencания Petang">RDTR Wilayah Перencания Petang</SelectItem>
+                    <SelectItem value="RDTR Wilayah Perencanaan Pentang">RDTR Wilayah Perencanaan Pentang</SelectItem>
+                    <SelectItem value="RDTR Wilayah Perencanaan Geopark Batur">RDTR Wilayah Perencanaan Geopark Batur</SelectItem>
                     <SelectItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</SelectItem>
                     <SelectItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</SelectItem>
                     <SelectItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</SelectItem>

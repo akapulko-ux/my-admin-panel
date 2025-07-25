@@ -31,6 +31,8 @@ import {
 import { Link } from "react-router-dom";
 import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 import { showError, showSuccess } from '../utils/notifications';
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
 
 // Компонент фильтров
 const FilterSection = ({ 
@@ -215,6 +217,8 @@ const MassEditSection = ({
 
 // Компонент карточки объекта
 const PropertyCard = ({ property, onDuplicate, isMobile }) => {
+  const { language } = useLanguage();
+  const t = translations[language];
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "";
     if (value instanceof Timestamp) return value.toDate().toLocaleDateString("ru-RU");
@@ -281,9 +285,15 @@ const PropertyCard = ({ property, onDuplicate, isMobile }) => {
             </div>
           )}
           
-          {property.bedrooms !== undefined && property.bedrooms !== null && (
+          {property.bedrooms !== undefined && property.bedrooms !== null && property.bedrooms !== "" && (
             <div className="text-sm text-gray-600">
               Спален: {safeDisplay(property.bedrooms)}
+            </div>
+          )}
+
+          {property.unitsCount !== undefined && property.unitsCount !== null && property.unitsCount !== "" && (
+            <div className="text-sm text-gray-600">
+              {t.propertiesGallery.unitsCountText}: {safeDisplay(property.unitsCount)}
             </div>
           )}
 

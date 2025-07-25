@@ -116,6 +116,9 @@ function EditProperty() {
   const [agentCommission, setAgentCommission] = useState("5");
   const agentCommissionOptions = ["4", "5", "6", "7", "8", "9", "10"];
 
+  // Поле «Количество юнитов»
+  const [unitsCount, setUnitsCount] = useState("");
+
   // Дополнительные опции
   const [smartHome, setSmartHome] = useState(false);
   const [jacuzzi, setJacuzzi] = useState(false);
@@ -178,6 +181,7 @@ function EditProperty() {
           setSlf(data.slf || "");
           setLandLeaseEndDate(data.landLeaseEndDate || "");
           setLegalCompanyName(data.legalCompanyName || "");
+          setUnitsCount(data.unitsCount ? data.unitsCount.toString() : "");
 
           if (data.agentCommission !== undefined) {
             const val = String(data.agentCommission).replace(/[%\s]/g, '');
@@ -345,6 +349,7 @@ function EditProperty() {
         landLeaseEndDate,
         legalCompanyName,
         agentCommission: finalAgentCommission,
+        unitsCount: unitsCount ? parseInt(unitsCount) : null,
         smartHome,
         jacuzzi,
         terrace,
@@ -585,6 +590,18 @@ function EditProperty() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="unitsCount">Количество юнитов</Label>
+                  <Input
+                    id="unitsCount"
+                    type="number"
+                    min="1"
+                    value={unitsCount}
+                    onChange={(e) => setUnitsCount(e.target.value)}
+                    placeholder="Введите количество юнитов"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="province">Провинция</Label>
                   <Input
                     id="province"
@@ -623,7 +640,7 @@ function EditProperty() {
                         "RDTR Kecamatan Ubud", "RDTR Kuta",
                         "RDTR Kecamatan Kuta Utara", "RDTR Kuta Selatan",
                         "RDTR Mengwi", "RDTR Kecamatan Abiansemal",
-                        "RDTR Wilayah Перенцания Petang", "RDTR Kecamatan Sukawati",
+                        "RDTR Wilayah Perencanaan Pentang", "RDTR Wilayah Perencanaan Geopark Batur", "RDTR Kecamatan Sukawati",
                         "RDTR Kecamatan Payangan", "RDTR Kecamatan Tegallalang"
                       ].map((item) => (
                         <SelectItem key={item} value={item}>{item}</SelectItem>

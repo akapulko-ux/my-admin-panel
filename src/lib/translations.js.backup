@@ -100,7 +100,6 @@ export const translations = {
       'Берава': 'Berawa', 
       'Будук': 'Buduk',
       'Джимбаран': 'Jimbaran',
-      'Кинтамани': 'Kintamani',
       'Кута': 'Kuta',
       'Кутух': 'Kutuh',
       'Ловина': 'Lovina',
@@ -149,9 +148,45 @@ export const translations = {
       settings: 'Settings',
       education: 'Education',
       premiumFeatures: 'Premium Subscription',
-      notifications: 'Notifications',
+      notifications: 'Send Notifications',
       publicPage: 'Public Page',
       premiumSubscriptionTooltip: 'Available in premium subscription'
+    },
+
+    // Notifications
+    notifications: {
+      title: 'Send Notifications',
+      subtitle: 'Send informational messages to agents via iOS app',
+      sendMessage: 'Send message to agents',
+      titleLabel: 'Title',
+      titlePlaceholder: 'Enter message title',
+      bodyLabel: 'Message text',
+      bodyPlaceholder: 'Enter message text for agents',
+      recipientsLabel: 'Recipients',
+      recipients: 'Recipients',
+      agents: 'Agents',
+      premiumAgents: 'Premium Agents',
+      admins: 'Administrators',
+      moderators: 'Moderators',
+      sendButton: 'Send message',
+      sending: 'Sending...',
+      userStats: 'Recipients statistics',
+      recipientsStats: 'Recipients statistics',
+      iosDevices: 'iOS devices',
+      byLanguage: 'By languages:',
+      history: 'Sent messages history',
+      noNotifications: 'No sent messages',
+      loadingStats: 'Loading statistics...',
+      recipients: 'recipients',
+      success: 'success',
+      failed: 'failed',
+      fillRequired: 'Please fill in title and message text',
+      sendError: 'Error sending notifications',
+      statsError: 'Error loading statistics',
+      sendSuccess: 'Notifications sent: {success} success, {failed} failed',
+      russian: 'Russian',
+      english: 'English',
+      indonesia: 'Indonesia'
     },
 
     // Client Fixations
@@ -523,7 +558,6 @@ _________________               _________________
       allBedrooms: 'All',
       studio: 'Studio',
       bedroomsText: 'Bedrooms',
-      unitsCountText: 'Units Count',
       districtLabel: 'District',
       allDistricts: 'All districts',
       typeLabel: 'Type',
@@ -570,7 +604,6 @@ _________________               _________________
       // Field labels
       bedrooms: 'Bedrooms',
       studio: 'Studio',
-      unitsCount: 'Units Count',
       area: 'Living Area',
       totalArea: 'Total Area',
       developer: 'Developer',
@@ -600,7 +633,6 @@ _________________               _________________
       buildingReadinessCertificate: 'Building Readiness Certificate (SLF):',
       layout: 'Layout:',
       dueDiligence: 'Due Diligence:',
-      unbrandedPresentation: 'Unbranded Presentation:',
       pkkprFile: 'PKKPR File:',
       
       // Options
@@ -1311,7 +1343,6 @@ _________________               _________________
       'Берава': 'Берава', 
       'Будук': 'Будук',
       'Джимбаран': 'Джимбаран',
-      'Кинтамани': 'Кинтамани',
       'Кута': 'Кута',
       'Кутух': 'Кутух',
       'Ловина': 'Ловина',
@@ -1367,6 +1398,42 @@ _________________               _________________
       premiumSubscriptionTooltip: 'Доступно в премиум подписке',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
+    },
+
+    // Notifications
+    notifications: {
+      title: 'Рассылка уведомлений',
+      subtitle: 'Отправка информационных сообщений агентам через iOS приложение',
+      sendMessage: 'Отправить сообщение агентам',
+      titleLabel: 'Заголовок',
+      titlePlaceholder: 'Введите заголовок сообщения',
+      bodyLabel: 'Текст сообщения',
+      bodyPlaceholder: 'Введите текст сообщения для агентов',
+      recipientsLabel: 'Получатели',
+      recipients: 'Получателей',
+      agents: 'Агенты',
+      premiumAgents: 'Премиум агенты',
+      admins: 'Администраторы',
+      moderators: 'Модераторы',
+      sendButton: 'Отправить сообщение',
+      sending: 'Отправка...',
+      userStats: 'Статистика получателей',
+      recipientsStats: 'Статистика получателей',
+      iosDevices: 'iOS устройств',
+      byLanguage: 'По языкам:',
+      history: 'История отправленных сообщений',
+      noNotifications: 'Нет отправленных сообщений',
+      loadingStats: 'Загрузка статистики...',
+      recipients: 'получателей',
+      success: 'успешно',
+      failed: 'неудачно',
+      fillRequired: 'Заполните заголовок и текст уведомления',
+      sendError: 'Ошибка отправки уведомлений',
+      statsError: 'Ошибка загрузки статистики',
+      sendSuccess: 'Уведомления отправлены: {success} успешно, {failed} неудачно',
+      russian: 'Русский',
+      english: 'English',
+      indonesia: 'Indonesia'
     },
 
     // Client Fixations
@@ -1746,7 +1813,6 @@ _________________               _________________
       allBedrooms: 'Все',
       studio: 'Студия',
       bedroomsText: 'Спален',
-      unitsCountText: 'Количество юнитов',
       districtLabel: 'Район',
       allDistricts: 'Все районы',
       typeLabel: 'Тип',
@@ -1793,7 +1859,6 @@ _________________               _________________
       // Field labels
       bedrooms: 'Спален',
       studio: 'Студия',
-      unitsCount: 'Количество юнитов',
       area: 'Жилая площадь',
       totalArea: 'Общая площадь',
       developer: 'Застройщик',
@@ -1823,7 +1888,6 @@ _________________               _________________
       buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
       layout: 'Планировка:',
       dueDiligence: 'Due Diligence:',
-      unbrandedPresentation: 'Небрендированная презентация:',
       pkkprFile: 'Файл PKKPR:',
       
       // Options
@@ -2534,7 +2598,6 @@ _________________               _________________
       'Берава': 'Berawa', 
       'Будук': 'Buduk',
       'Джимбаран': 'Jimbaran',
-      'Кинтамани': 'Kintamani',
       'Кута': 'Kuta',
       'Кутух': 'Kutuh',
       'Ловина': 'Lovina',
@@ -2589,6 +2652,44 @@ _________________               _________________
       publicPage: 'Halaman Publik',
       premiumSubscriptionTooltip: 'Tersedia dalam langganan premium',
       createdAt: 'Dibuat',
+      updatedAt: 'Diperbarui'
+    },
+
+    // Notifications
+    notifications: {
+      title: 'Pengiriman Notifikasi',
+      subtitle: 'Kirim pesan informasi ke agen melalui aplikasi iOS',
+      sendMessage: 'Kirim pesan ke agen',
+      titleLabel: 'Judul',
+      titlePlaceholder: 'Masukkan judul pesan',
+      bodyLabel: 'Teks pesan',
+      bodyPlaceholder: 'Masukkan teks pesan untuk agen',
+      recipientsLabel: 'Penerima',
+      recipients: 'Penerima',
+      agents: 'Agen',
+      premiumAgents: 'Agen Premium',
+      admins: 'Administrator',
+      moderators: 'Moderator',
+      sendButton: 'Kirim pesan',
+      sending: 'Mengirim...',
+      userStats: 'Statistik penerima',
+      recipientsStats: 'Statistik penerima',
+      iosDevices: 'Perangkat iOS',
+      byLanguage: 'Berdasarkan bahasa:',
+      history: 'Riwayat pesan terkirim',
+      noNotifications: 'Tidak ada pesan terkirim',
+      loadingStats: 'Memuat statistik...',
+      recipients: 'penerima',
+      success: 'berhasil',
+      failed: 'gagal',
+      fillRequired: 'Silakan isi judul dan teks pesan',
+      sendError: 'Error mengirim notifikasi',
+      statsError: 'Error memuat statistik',
+      sendSuccess: 'Notifikasi terkirim: {success} berhasil, {failed} gagal',
+      russian: 'Rusia',
+      english: 'Inggris',
+      indonesia: 'Indonesia'
+    },
       updatedAt: 'Diperbarui'
     },
 
@@ -2969,7 +3070,6 @@ _________________               _________________
       allBedrooms: 'Semua',
       studio: 'Studio',
       bedroomsText: 'Kamar Tidur',
-      unitsCountText: 'Jumlah Unit',
       districtLabel: 'Distrik',
       allDistricts: 'Semua distrik',
       typeLabel: 'Tipe',
@@ -3016,7 +3116,6 @@ _________________               _________________
       // Field labels
       bedrooms: 'Kamar Tidur',
       studio: 'Studio',
-      unitsCount: 'Jumlah Unit',
       area: 'Luas Hunian',
       totalArea: 'Luas Total',
       developer: 'Pengembang',
@@ -3046,7 +3145,6 @@ _________________               _________________
       buildingReadinessCertificate: 'Sertifikat Kesiapan Bangunan (SLF):',
       layout: 'Tata Letak:',
       dueDiligence: 'Due Diligence:',
-      unbrandedPresentation: 'Presentasi Tanpa Brand:',
       pkkprFile: 'File PKKPR:',
       
       // Options
@@ -3656,4 +3754,4 @@ _________________               _________________
       }
     }
   }
-}; 
+};

@@ -585,9 +585,14 @@ function PropertiesGallery() {
 
                 {p.type && <span className="text-sm">{translatePropertyType(safeDisplay(p.type), language)}</span>}
                 {p.area && <span className="text-sm">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>}
-                {p.bedrooms !== undefined && p.bedrooms !== null && (
+                {p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== "" && (
                   <span className="text-sm">
                     {p.bedrooms === 0 ? t.propertiesGallery.studio : `${t.propertiesGallery.bedroomsText}: ${safeDisplay(p.bedrooms)}`}
+                  </span>
+                )}
+                {p.unitsCount !== undefined && p.unitsCount !== null && p.unitsCount !== "" && (
+                  <span className="text-sm">
+                    {t.propertiesGallery.unitsCountText}: {safeDisplay(p.unitsCount)}
                   </span>
                 )}
                 {p.district && <span className="text-sm">{translateDistrict(safeDisplay(p.district), language)}</span>}

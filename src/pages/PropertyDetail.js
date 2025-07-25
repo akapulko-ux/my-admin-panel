@@ -168,7 +168,7 @@ function PropertyDetail() {
       }
     }
     // Обработка других числовых полей
-    else if (['price', 'bedrooms', 'bathrooms', 'leaseYears'].includes(field)) {
+    else if (['price', 'bedrooms', 'bathrooms', 'leaseYears', 'unitsCount'].includes(field)) {
       // Убираем все нечисловые символы, кроме цифр
       processedValue = value.replace(/[^\d]/g, '');
       // Разрешаем пустые значения для возможности полного удаления
@@ -204,7 +204,7 @@ function PropertyDetail() {
       }
       
       // Для других числовых полей: если пустая строка, сохраняем как null
-      const numericFields = ['price', 'bedrooms', 'bathrooms', 'leaseYears'];
+      const numericFields = ['price', 'bedrooms', 'bathrooms', 'leaseYears', 'unitsCount'];
       numericFields.forEach(field => {
         if (processedValues.hasOwnProperty(field) && processedValues[field] === '') {
           processedValues[field] = null;
@@ -443,6 +443,8 @@ function PropertyDetail() {
           folder = 'documents/due-diligence';
         } else if (fieldName === 'pkkprFileURL') {
           folder = 'documents/pkkpr';
+        } else if (fieldName === 'unbrandedPresentationFileURL') {
+          folder = 'documents/unbranded-presentation';
         } else if (fieldName === 'roiFileURL') {
           folder = 'documents/roi';
         } else {
@@ -503,6 +505,8 @@ function PropertyDetail() {
           folder = 'documents/due-diligence';
         } else if (fieldName === 'pkkprFileURL') {
           folder = 'documents/pkkpr';
+        } else if (fieldName === 'unbrandedPresentationFileURL') {
+          folder = 'documents/unbranded-presentation';
         } else if (fieldName === 'roiFileURL') {
           folder = 'documents/roi';
         } else {
@@ -745,6 +749,20 @@ function PropertyDetail() {
           );
         }
         
+        // Специальная обработка для поля количества юнитов
+        if (field === 'unitsCount') {
+          return (
+            <input
+              type="number"
+              min="1"
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+              placeholder="Введите количество юнитов"
+            />
+          );
+        }
+        
         // Специальная обработка для поля даты окончания аренды земли
         if (field === 'landLeaseEndDate') {
           return (
@@ -924,14 +942,17 @@ function PropertyDetail() {
     );
   }
 
+  // Определяем, показывать ли поле "Количество юнитов" вместо "Спальни"
+  const shouldShowUnitsCount = property.buildingType === "Отель" || property.buildingType === "Резорт";
+  
   const attributesBase = [
     {
-      label: property.bedrooms === 0 ? t.propertyDetail.studio : t.propertyDetail.bedrooms,
-      value: property.bedrooms === 0 ? t.propertyDetail.studio : safeDisplay(property.bedrooms),
-      field: "bedrooms",
+      label: shouldShowUnitsCount ? t.propertyDetail.unitsCount : (property.bedrooms === 0 ? t.propertyDetail.studio : t.propertyDetail.bedrooms),
+      value: shouldShowUnitsCount ? safeDisplay(property.unitsCount) : (property.bedrooms === 0 ? t.propertyDetail.studio : safeDisplay(property.bedrooms)),
+      field: shouldShowUnitsCount ? "unitsCount" : "bedrooms",
       icon: Bed,
-      type: "select",
-      options: bedroomsOptions
+      type: shouldShowUnitsCount ? "number" : "select",
+      options: shouldShowUnitsCount ? undefined : bedroomsOptions
     },
     {
       label: t.propertyDetail.area,
@@ -1482,6 +1503,52 @@ function PropertyDetail() {
                       } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
                     >
                                               {uploading.dueDiligenceFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.unbrandedPresentation}</span>
+            <div className="flex gap-2">
+              {property.unbrandedPresentationFileURL ? (
+                <>
+                  <button 
+                    onClick={() => window.open(property.unbrandedPresentationFileURL, '_blank')}
+                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                  >
+                    {t.propertyDetail.viewButton}
+                  </button>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpdate('unbrandedPresentationFileURL')}
+                      disabled={uploading.unbrandedPresentationFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.unbrandedPresentationFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.unbrandedPresentationFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('unbrandedPresentationFileURL')}
+                      disabled={uploading.unbrandedPresentationFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.unbrandedPresentationFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.unbrandedPresentationFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
                     </button>
                   )}
                 </>

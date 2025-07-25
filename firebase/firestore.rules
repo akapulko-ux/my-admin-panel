@@ -52,7 +52,7 @@ service cloud.firestore {
     }
 
     function canManageProperties() {
-      return isAdmin() || isAnyAgent() || isAnyDeveloper();
+      return isAdmin() || isAnyAgent() || isAnyDeveloper() || isModerator();
     }
 
     // === ADMIN ИМЕЕТ ПОЛНЫЕ ПРАВА НА ВСЁ ===
@@ -74,7 +74,7 @@ service cloud.firestore {
       allow read, write, delete: if isAdmin();
       // Чтение разрешено всем (для публичных ссылок)
       allow read: if true;
-      // Создание/изменение/удаление для админов, модераторов и застройщиков
+      // Создание/изменение/удаление для админов, moderator'ов и застройщиков
       allow create, update, delete: if isAdmin() || isModerator() || isAnyDeveloper();
     }
 
@@ -277,7 +277,7 @@ service cloud.firestore {
     match /educationSections/{sectionId} {
       // Чтение: если пользователь залогинен и его роль содержится в массиве roles раздела
       allow read: if isSignedIn() && (resource.data.roles.hasAny([request.auth.token.role, get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role]));
-      // Создание/редактирование/удаление: admin или модератор
+      // Создание/редактирование/удаление: admin или moderator
       allow create, update, delete: if isAdmin() || isModerator();
     }
 
@@ -290,14 +290,14 @@ service cloud.firestore {
       }
       // Чтение: если есть доступ к разделу
       allow read: if isSignedIn() && sectionHasAccess();
-      // Создание/редактирование/удаление: только admin или модератор
+      // Создание/редактирование/удаление: только admin или moderator
       allow create, update, delete: if isAdmin() || isModerator();
 
       // === Уроки внутри темы ===
       match /lessons/{lessonId} {
         // Чтение: если есть доступ к разделу
         allow read: if isSignedIn() && sectionHasAccess();
-        // Создание/редактирование/удаление: только admin или модератор
+        // Создание/редактирование/удаление: только admin или moderator
         allow create, update, delete: if isAdmin() || isModerator();
       }
     }

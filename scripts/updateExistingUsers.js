@@ -6,7 +6,7 @@ const serviceAccountPath = '../bali-estate-1130f-firebase-adminsdk-fbsvc-15f3730
 // Определение ролей и их алиасов
 const ROLES = {
   admin: ['admin', 'administrator', 'администратор'],
-  moderator: ['moderator', 'модератор', 'mod'],
+  moderator: ['moderator', 'mod'],
   premium_agent: ['premium_agent', 'premium agent', 'премиум агент', 'премиум-агент', 'premium'],
   agent: ['agent', 'агент'],
   user: ['user', 'пользователь', ''],

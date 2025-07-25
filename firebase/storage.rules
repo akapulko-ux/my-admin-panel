@@ -12,7 +12,7 @@ service firebase.storage {
     }
     
     function isModerator() {
-      return hasRole('модератор');
+      return hasRole('moderator');
     }
     
     function isDeveloper() {

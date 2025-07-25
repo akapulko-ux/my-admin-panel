@@ -547,7 +547,8 @@ function EditComplex() {
                     { value: "RDTR Kuta Selatan", label: "RDTR Кuta Selatan" },
                     { value: "RDTR Mengwi", label: "RDTR Mengwi" },
                     { value: "RDTR Kecamatan Abiansemal", label: "RDTR Kecamatan Abiansemal" },
-                    { value: "RDTR Wilayah Перencания Petang", label: "RDTR Wilayah Перencания Petang" },
+                    { value: "RDTR Wilayah Perencanaan Pentang", label: "RDTR Wilayah Perencanaan Pentang" },
+                    { value: "RDTR Wilayah Perencanaan Geopark Batur", label: "RDTR Wilayah Perencanaan Geopark Batur" },
                     { value: "RDTR Kecamatan Sukawati", label: "RDTR Kecamatan Sukawati" },
                     { value: "RDTR Kecamatan Payangan", label: "RDTR Kecamatan Payangan" },
                     { value: "RDTR Kecamatan Tegallalang", label: "RDTR Kecamatan Tegallalang" }

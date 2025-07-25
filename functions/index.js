@@ -68,7 +68,7 @@ const gcs = new Storage();
 // Определение ролей и их алиасов
 const ROLES = {
   admin: ['admin', 'administrator', 'администратор'],
-  moderator: ['moderator', 'модератор', 'mod'],
+  moderator: ['moderator', 'mod'],
   premium_agent: ['premium_agent', 'premium agent', 'премиум агент', 'премиум-агент', 'premium'],
   agent: ['agent', 'агент'],
   user: ['user', 'пользователь', ''],
@@ -360,7 +360,7 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
       if (userRole === 'admin') {
         hasAccess = true; // Админ видит все
         accessReason = 'Админ имеет доступ ко всем фиксациям';
-      } else if (userRole === 'модератор') {
+      } else if (userRole === 'moderator') {
         hasAccess = true; // Модератор видит все
         accessReason = 'Модератор имеет доступ ко всем фиксациям';
       } else if (['застройщик', 'премиум застройщик'].includes(userRole)) {
