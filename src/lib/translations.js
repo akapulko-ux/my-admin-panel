@@ -240,7 +240,18 @@ export const translations = {
       messageSent: 'Message sent',
       messageError: 'Failed to send message',
       chatDataError: 'Failed to load chat data',
-      messagesError: 'Failed to load messages'
+      messagesError: 'Failed to load messages',
+      // Image viewing
+      imageError: 'Image loading error',
+      imageLoadError: 'Try again',
+      downloadImage: 'Download',
+      shareImage: 'Share',
+      deleteImage: 'Delete',
+      closeImage: 'Close',
+      imageShareTitle: 'Image from chat',
+      imageShareText: 'Check out this image',
+      messageDeleted: 'Message deleted',
+      deleteMessageError: 'Failed to delete message'
     },
 
     // Settings Page
@@ -692,6 +703,8 @@ _________________               _________________
       rooftop: 'Rooftop',
       balcony: 'Balcony',
       bbq: 'BBQ',
+      furniture: 'Full Furnishing',
+      washingMachine: 'Washing Machine',
       spaSalon: 'SPA Salon',
       restaurant: 'Restaurant',
       fitnessGym: 'Fitness Gym',
@@ -1471,7 +1484,18 @@ _________________               _________________
       chatDataError: 'Не удалось загрузить данные чата',
       messagesError: 'Не удалось загрузить сообщения',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      // Image viewing
+      imageError: 'Ошибка загрузки изображения',
+      imageLoadError: 'Попробуйте еще раз',
+      downloadImage: 'Скачать',
+      shareImage: 'Поделиться',
+      deleteImage: 'Удалить',
+      closeImage: 'Закрыть',
+      imageShareTitle: 'Изображение из чата',
+      imageShareText: 'Посмотрите это изображение',
+      messageDeleted: 'Сообщение удалено',
+      deleteMessageError: 'Не удалось удалить сообщение'
     },
 
     // Settings Page
@@ -1927,6 +1951,8 @@ _________________               _________________
       rooftop: 'Руфтоп',
       balcony: 'Балкон',
       bbq: 'BBQ',
+      furniture: 'Полная мебелировка',
+      washingMachine: 'Стиральная машина',
       spaSalon: 'СПА салон',
       restaurant: 'Ресторан',
       fitnessGym: 'Фитнес зал',
@@ -2701,7 +2727,18 @@ _________________               _________________
       chatDataError: 'Gagal memuat data chat',
       messagesError: 'Gagal memuat pesan',
       createdAt: 'Dibuat',
-      updatedAt: 'Diperbarui'
+      updatedAt: 'Diperbarui',
+      // Image viewing
+      imageError: 'Kesalahan memuat gambar',
+      imageLoadError: 'Coba lagi',
+      downloadImage: 'Unduh',
+      shareImage: 'Bagikan',
+      deleteImage: 'Hapus',
+      closeImage: 'Tutup',
+      imageShareTitle: 'Gambar dari chat',
+      imageShareText: 'Lihat gambar ini',
+      messageDeleted: 'Pesan dihapus',
+      deleteMessageError: 'Gagal menghapus pesan'
     },
 
     // Settings Page
@@ -3157,6 +3194,8 @@ _________________               _________________
       rooftop: 'Atap',
       balcony: 'Balkon',
       bbq: 'BBQ',
+      furniture: 'Furnitur Lengkap',
+      washingMachine: 'Mesin Cuci',
       spaSalon: 'Salon SPA',
       restaurant: 'Restoran',
       fitnessGym: 'Gym Fitness',

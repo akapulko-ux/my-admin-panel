@@ -126,6 +126,8 @@ function EditProperty() {
   const [rooftop, setRooftop] = useState(false);
   const [balcony, setBalcony] = useState(false);
   const [bbq, setBbq] = useState(false);
+  const [furniture, setFurniture] = useState(false);
+  const [washingMachine, setWashingMachine] = useState(false);
 
   // Массив объектов для фото (старые + новые)
   // Каждый элемент: { id, url, file }
@@ -199,6 +201,8 @@ function EditProperty() {
           setRooftop(data.rooftop || false);
           setBalcony(data.balcony || false);
           setBbq(data.bbq || false);
+          setFurniture(data.furniture || false);
+          setWashingMachine(data.washingMachine || false);
 
           const oldImages = (data.images || []).map((url) => ({
             id: crypto.randomUUID(),
@@ -359,7 +363,9 @@ function EditProperty() {
         terrace,
         rooftop,
         balcony,
-        bbq
+        bbq,
+        furniture,
+        washingMachine
       };
 
       await updateDoc(doc(db, "properties", id), updatedData);
@@ -882,6 +888,32 @@ function EditProperty() {
                     />
                     <Label htmlFor="bbq" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {t.propertyDetail.bbq}
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="furniture"
+                      checked={furniture}
+                      onChange={(e) => setFurniture(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <Label htmlFor="furniture" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      {t.propertyDetail.furniture}
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="washingMachine"
+                      checked={washingMachine}
+                      onChange={(e) => setWashingMachine(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <Label htmlFor="washingMachine" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      {t.propertyDetail.washingMachine}
                     </Label>
                   </div>
                 </div>

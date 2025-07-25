@@ -131,6 +131,8 @@ function CreateProperty() {
   const [rooftop, setRooftop] = useState(false);
   const [balcony, setBalcony] = useState(false);
   const [bbq, setBbq] = useState(false);
+  const [furniture, setFurniture] = useState(false);
+  const [washingMachine, setWashingMachine] = useState(false);
 
   // Массив для Drag & Drop (фото)
   const [dndItems, setDndItems] = useState([]);
@@ -376,7 +378,9 @@ function CreateProperty() {
         terrace,
         rooftop,
         balcony,
-        bbq
+        bbq,
+        furniture,
+        washingMachine
       };
 
       // Сохраняем объект в Firestore
@@ -417,6 +421,8 @@ function CreateProperty() {
       setRooftop(false);
       setBalcony(false);
       setBbq(false);
+      setFurniture(false);
+      setWashingMachine(false);
       setDndItems([]);
 
       showSuccess("Объект создан!");
@@ -929,6 +935,32 @@ function CreateProperty() {
                   />
                   <Label htmlFor="bbq" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     {t.propertyDetail.bbq}
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="furniture"
+                    checked={furniture}
+                    onChange={(e) => setFurniture(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="furniture" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.propertyDetail.furniture}
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="washingMachine"
+                    checked={washingMachine}
+                    onChange={(e) => setWashingMachine(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="washingMachine" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.propertyDetail.washingMachine}
                   </Label>
                 </div>
               </div>
