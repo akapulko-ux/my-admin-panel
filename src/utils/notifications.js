@@ -43,6 +43,15 @@ export const sendDeveloperNotification = async (notificationData) => {
     throw new Error('Пользователь не авторизован. Пожалуйста, войдите в систему.');
   }
 
+  // Обновляем токен авторизации для корректной передачи в функцию
+  try {
+    await currentUser.getIdToken(true); // Принудительно обновляем токен
+    console.log('✅ Auth token refreshed successfully');
+  } catch (tokenError) {
+    console.error('❌ Error refreshing auth token:', tokenError);
+    throw new Error('Ошибка обновления токена авторизации');
+  }
+
   const sendNotification = httpsCallable(functions, 'sendDeveloperNotification');
   
   try {
@@ -70,6 +79,15 @@ export const getDeveloperNotificationHistory = async (limit = 20) => {
     throw new Error('Пользователь не авторизован. Пожалуйста, войдите в систему.');
   }
 
+  // Обновляем токен авторизации для корректной передачи в функцию
+  try {
+    await currentUser.getIdToken(true); // Принудительно обновляем токен
+    console.log('✅ Auth token refreshed for history request');
+  } catch (tokenError) {
+    console.error('❌ Error refreshing auth token for history:', tokenError);
+    throw new Error('Ошибка обновления токена авторизации');
+  }
+
   const getHistory = httpsCallable(functions, 'getDeveloperNotificationHistory');
   
   try {
@@ -94,11 +112,29 @@ export const getDeveloperNotificationStats = async () => {
     throw new Error('Пользователь не авторизован. Пожалуйста, войдите в систему.');
   }
 
+  // Обновляем токен авторизации для корректной передачи в функцию
+  try {
+    await currentUser.getIdToken(true); // Принудительно обновляем токен
+    console.log('✅ Auth token refreshed for stats request');
+  } catch (tokenError) {
+    console.error('❌ Error refreshing auth token for stats:', tokenError);
+    throw new Error('Ошибка обновления токена авторизации');
+  }
+
   const getStats = httpsCallable(functions, 'getDeveloperNotificationStats');
   
   try {
     const result = await getStats();
-    return result.data.stats;
+    const stats = result.data.stats;
+    
+    // Приводим к ожидаемой структуре данных
+    return {
+      sentToday: stats.today?.sent || 0,
+      totalSent: stats.total?.sent || 0,
+      totalSuccess: stats.total?.successCount || 0,
+      totalFailure: stats.total?.failureCount || 0,
+      lastSent: stats.lastSent // уже строка в ISO формате
+    };
   } catch (error) {
     console.error('❌ Error getting notification stats:', error);
     throw new Error(error.message || 'Ошибка при получении статистики');
@@ -162,15 +198,42 @@ export const validateNotificationData = (title, body) => {
 export const formatNotificationDate = (date) => {
   if (!date) return 'Не указано';
   
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  return new Intl.DateTimeFormat('ru-RU', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(dateObj);
+  try {
+    let dateObj;
+    
+    // Обрабатываем различные типы дат
+    if (typeof date === 'string') {
+      dateObj = new Date(date);
+    } else if (date instanceof Date) {
+      dateObj = date;
+    } else if (date && typeof date === 'object' && date.seconds) {
+      // Firestore Timestamp на клиенте
+      dateObj = new Date(date.seconds * 1000);
+    } else if (date && typeof date.toDate === 'function') {
+      // Firestore Timestamp объект
+      dateObj = date.toDate();
+    } else {
+      // Пытаемся привести к Date
+      dateObj = new Date(date);
+    }
+    
+    // Проверяем валидность даты
+    if (!dateObj || isNaN(dateObj.getTime())) {
+      console.warn('Некорректная дата для форматирования:', { original: date, converted: dateObj });
+      return 'Некорректная дата';
+    }
+    
+    return new Intl.DateTimeFormat('ru-RU', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(dateObj);
+  } catch (error) {
+    console.warn('Ошибка форматирования даты:', { error, originalDate: date });
+    return 'Некорректная дата';
+  }
 };
 
 /**

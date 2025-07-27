@@ -181,7 +181,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "developerId",
+          "fieldPath": "senderId",
           "order": "ASCENDING"
         },
         {

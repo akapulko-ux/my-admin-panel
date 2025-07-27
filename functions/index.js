@@ -659,13 +659,33 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
 // Функция для отправки пуш-уведомлений от премиум застройщиков
 exports.sendDeveloperNotification = functions.https.onCall(async (data, context) => {
   try {
-    // Проверяем, что пользователь авторизован
-    if (!context.auth) {
+    // Диагностика контекста авторизации
+    console.log('🔍 Auth context debug:', {
+      contextExists: !!context,
+      authExists: !!context?.auth,
+      authUid: context?.auth?.uid,
+      authToken: context?.auth?.token ? 'TOKEN_EXISTS' : 'NO_TOKEN',
+      rawData: data
+    });
+
+    // Временное решение: извлекаем UID из rawData если context.auth пустой
+    let userId;
+    if (context.auth && context.auth.uid) {
+      userId = context.auth.uid;
+      console.log('✅ Using context.auth.uid:', userId);
+    } else if (data.rawRequest?.auth?.uid) {
+      userId = data.rawRequest.auth.uid;
+      console.log('✅ Using rawRequest.auth.uid:', userId);
+    } else if (data.auth?.uid) {
+      userId = data.auth.uid;
+      console.log('✅ Using data.auth.uid:', userId);
+    } else {
+      console.error('❌ No user ID found in any auth source');
       throw new functions.https.HttpsError('unauthenticated', 'Пользователь не авторизован');
     }
 
-    const userId = context.auth.uid;
-    const { title, body } = data;
+    // Исправлено: данные приходят в data.data
+    const { title, body } = data.data || data;
 
     // Валидация входных данных
     if (!title || !body) {
@@ -845,7 +865,7 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
     };
 
     // Отправляем уведомление
-    const response = await admin.messaging().sendMulticast(message);
+    const response = await admin.messaging().sendEachForMulticast(message);
 
     // Сохраняем информацию об отправке
     const notificationRecord = {
@@ -917,11 +937,29 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
 // Функция для получения истории отправленных уведомлений
 exports.getDeveloperNotificationHistory = functions.https.onCall(async (data, context) => {
   try {
-    if (!context.auth) {
+    // Диагностика контекста авторизации
+    console.log('🔍 History auth context debug:', {
+      contextExists: !!context,
+      authExists: !!context?.auth,
+      authUid: context?.auth?.uid,
+      authToken: context?.auth?.token ? 'TOKEN_EXISTS' : 'NO_TOKEN'
+    });
+
+    // Временное решение: извлекаем UID из rawData если context.auth пустой
+    let userId;
+    if (context.auth && context.auth.uid) {
+      userId = context.auth.uid;
+      console.log('✅ History using context.auth.uid:', userId);
+    } else if (data.rawRequest?.auth?.uid) {
+      userId = data.rawRequest.auth.uid;
+      console.log('✅ History using rawRequest.auth.uid:', userId);
+    } else if (data.auth?.uid) {
+      userId = data.auth.uid;
+      console.log('✅ History using data.auth.uid:', userId);
+    } else {
+      console.error('❌ No user ID found in history function');
       throw new functions.https.HttpsError('unauthenticated', 'Пользователь не авторизован');
     }
-
-    const userId = context.auth.uid;
     const { limit = 20 } = data;
 
     // Получаем данные пользователя для проверки роли
@@ -976,11 +1014,29 @@ exports.getDeveloperNotificationHistory = functions.https.onCall(async (data, co
 // Функция для получения статистики уведомлений
 exports.getDeveloperNotificationStats = functions.https.onCall(async (data, context) => {
   try {
-    if (!context.auth) {
+    // Диагностика контекста авторизации
+    console.log('🔍 Stats auth context debug:', {
+      contextExists: !!context,
+      authExists: !!context?.auth,
+      authUid: context?.auth?.uid,
+      authToken: context?.auth?.token ? 'TOKEN_EXISTS' : 'NO_TOKEN'
+    });
+
+    // Временное решение: извлекаем UID из rawData если context.auth пустой
+    let userId;
+    if (context.auth && context.auth.uid) {
+      userId = context.auth.uid;
+      console.log('✅ Stats using context.auth.uid:', userId);
+    } else if (data.rawRequest?.auth?.uid) {
+      userId = data.rawRequest.auth.uid;
+      console.log('✅ Stats using rawRequest.auth.uid:', userId);
+    } else if (data.auth?.uid) {
+      userId = data.auth.uid;
+      console.log('✅ Stats using data.auth.uid:', userId);
+    } else {
+      console.error('❌ No user ID found in stats function');
       throw new functions.https.HttpsError('unauthenticated', 'Пользователь не авторизован');
     }
-
-    const userId = context.auth.uid;
 
     // Получаем данные пользователя для проверки роли
     const userDoc = await admin.firestore().collection('users').doc(userId).get();
@@ -1020,12 +1076,24 @@ exports.getDeveloperNotificationStats = functions.https.onCall(async (data, cont
     let totalSent = 0;
     let totalSuccess = 0;
     let totalFailure = 0;
+    let lastSentDate = null;
 
     totalSnapshot.forEach(doc => {
       const data = doc.data();
       totalSent++;
       totalSuccess += data.successCount || 0;
       totalFailure += data.failureCount || 0;
+      
+      // Находим последнюю дату отправки
+      if (data.createdAt && (!lastSentDate || data.createdAt > lastSentDate)) {
+        lastSentDate = data.createdAt;
+      }
+    });
+
+    console.log('🔍 Last sent date debug:', {
+      lastSentDate: lastSentDate,
+      lastSentDateType: typeof lastSentDate,
+      lastSentToDate: lastSentDate ? lastSentDate.toDate() : null
     });
 
     return {
@@ -1036,7 +1104,8 @@ exports.getDeveloperNotificationStats = functions.https.onCall(async (data, cont
           sent: totalSent,
           successCount: totalSuccess,
           failureCount: totalFailure
-        }
+        },
+        lastSent: lastSentDate ? lastSentDate.toDate().toISOString() : null
       }
     };
 

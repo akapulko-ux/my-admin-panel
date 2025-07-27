@@ -39,12 +39,32 @@ function Notifications() {
   const [history, setHistory] = useState([]);
   const [errors, setErrors] = useState({});
   const [warnings, setWarnings] = useState([]);
+  
+  // Состояние для уведомлений
+  const [notification, setNotification] = useState(null);
+  
+  // Автоматическое скрытие уведомления
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000); // Скрываем через 5 секунд
+      
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   // Загрузка данных при монтировании компонента
   useEffect(() => {
-    loadStats();
-    loadHistory();
-  }, []);
+    // Вызываем функции только если пользователь авторизован
+    if (currentUser) {
+      console.log('🔄 User authenticated, loading notification data...');
+      loadStats();
+      loadHistory();
+    } else {
+      console.log('⏳ Waiting for user authentication...');
+    }
+  }, [currentUser]); // Зависимость от currentUser
 
   // Функции загрузки данных
   const loadStats = async () => {
@@ -77,6 +97,16 @@ function Notifications() {
   const handleSendNotification = async (e) => {
     e.preventDefault();
     
+    // Проверяем авторизацию перед отправкой
+    if (!currentUser) {
+      setNotification({
+        type: 'error',
+        title: 'Ошибка авторизации',
+        message: 'Пользователь не авторизован. Пожалуйста, перезагрузите страницу.'
+      });
+      return;
+    }
+    
     if (!validateForm()) return;
     
     setIsLoading(true);
@@ -91,8 +121,12 @@ function Notifications() {
       const result = await sendDeveloperNotification(notificationData);
       
       if (result.success) {
-        // Показываем успех
-        alert(`✅ Уведомление отправлено успешно!\n📊 Доставлено: ${result.delivered}\n❌ Ошибок: ${result.failed}`);
+        // Показываем красивое уведомление об успехе
+        setNotification({
+          type: 'success',
+          title: 'Уведомление отправлено успешно!',
+          message: `Доставлено: ${result.successCount || 0}, Ошибок: ${result.failureCount || 0}`
+        });
         
         // Очищаем форму
         setTitle('');
@@ -102,11 +136,19 @@ function Notifications() {
         loadStats();
         loadHistory();
       } else {
-        alert(`❌ Ошибка отправки: ${result.error}`);
+        setNotification({
+          type: 'error',
+          title: 'Ошибка отправки',
+          message: result.error || 'Неизвестная ошибка'
+        });
       }
     } catch (error) {
       console.error('Send notification error:', error);
-      alert(`❌ Ошибка: ${error.message}`);
+      setNotification({
+        type: 'error',
+        title: 'Ошибка',
+        message: error.message || 'Произошла неожиданная ошибка'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -116,6 +158,28 @@ function Notifications() {
 
   return (
     <div className="space-y-6">
+      {/* Уведомления */}
+      {notification && (
+        <div className={`p-4 rounded-lg border ${
+          notification.type === 'success' 
+            ? 'bg-green-50 border-green-200 text-green-800' 
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <div className="flex items-start justify-between">
+            <div>
+              <h4 className="font-semibold">{notification.title}</h4>
+              <p className="text-sm mt-1">{notification.message}</p>
+            </div>
+            <button
+              onClick={() => setNotification(null)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div>
         <h1 className="text-3xl font-bold">{t.navigation.notifications}</h1>
         <p className="text-muted-foreground">
@@ -310,11 +374,11 @@ function Notifications() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>{formatNotificationDate(notification.createdAt)}</span>
                         <span>Отправлено всем пользователям</span>
-                        {notification.delivered !== undefined && (
-                          <span>Доставлено: {notification.delivered}</span>
+                        {notification.successCount !== undefined && (
+                          <span>Доставлено: {notification.successCount}</span>
                         )}
-                        {notification.failed !== undefined && notification.failed > 0 && (
-                          <span className="text-red-500">Ошибок: {notification.failed}</span>
+                        {notification.failureCount !== undefined && notification.failureCount > 0 && (
+                          <span className="text-red-500">Ошибок: {notification.failureCount}</span>
                         )}
                       </div>
                     </div>
