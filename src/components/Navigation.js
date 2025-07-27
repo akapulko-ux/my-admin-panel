@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth, isPremiumDeveloper, isDeveloper, isAnyDeveloper, ROLE_NAMES } from '../AuthContext';
+import { useAuth, isPremiumDeveloper, isDeveloper, isAnyDeveloper } from '../AuthContext';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import { Button } from './ui/button';

@@ -27,12 +27,21 @@ const Alert = ({ className, variant, ...props }) => (
   />
 );
 
-const AlertTitle = ({ className, ...props }) => (
-  <h5
-    className={cn('mb-1 font-medium leading-none tracking-tight', className)}
-    {...props}
-  />
-);
+const AlertTitle = ({ className, children, ...props }) => {
+  // Не рендерим заголовок, если нет содержимого для доступности
+  if (!children && !props.dangerouslySetInnerHTML) {
+    return null;
+  }
+  
+  return (
+    <h5
+      className={cn('mb-1 font-medium leading-none tracking-tight', className)}
+      {...props}
+    >
+      {children}
+    </h5>
+  );
+};
 
 const AlertDescription = ({ className, ...props }) => (
   <div

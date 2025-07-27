@@ -11,7 +11,7 @@ import { Textarea } from '../components/ui/textarea';
 // Select компоненты убраны - отправляем всем пользователям
 import { Badge } from '../components/ui/badge';
 import { Alert, AlertDescription } from '../components/ui/alert';
-import { Bell, Send, Clock, Users, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Bell, Send, Clock, Users, AlertTriangle } from 'lucide-react';
 import { 
   sendDeveloperNotification,
   getDeveloperNotificationHistory,

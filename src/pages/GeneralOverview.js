@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -13,8 +13,107 @@ import {
   Phone, 
   MessageCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  Check,
+  X,
+  MoreHorizontal
 } from 'lucide-react';
+import { showSuccess, showError } from '../utils/notifications';
+
+// Компонент для отображения комментария (минималистичный дизайн)
+const CommentSection = ({ 
+  userId, 
+  userType, 
+  comments, 
+  editingComment, 
+  commentText, 
+  setCommentText, 
+  savingComment, 
+  saveComment, 
+  deleteComment, 
+  startEditComment, 
+  cancelEditComment 
+}) => {
+  const commentKey = `${userType}_${userId}`;
+  const currentComment = comments[commentKey] || '';
+  const isEditing = editingComment === commentKey;
+  const isSaving = savingComment === userId;
+
+  if (isEditing) {
+    return (
+      <div className="mt-2">
+        <div className="flex items-start gap-2">
+          <textarea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            className="flex-1 p-2 border border-gray-300 rounded text-xs resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            rows="2"
+            placeholder="Введите комментарий..."
+            autoFocus
+          />
+          <div className="flex flex-col gap-1">
+            <button
+              onClick={() => saveComment(userId, userType, commentText)}
+              disabled={isSaving}
+              className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
+              title="Сохранить"
+            >
+              {isSaving ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Check className="h-3 w-3" />
+              )}
+            </button>
+            <button
+              onClick={cancelEditComment}
+              disabled={isSaving}
+              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-colors"
+              title="Отмена"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentComment) {
+    return (
+      <div className="mt-2">
+        <div className="flex items-start gap-2 group">
+          <p className="flex-1 text-xs text-gray-600 leading-relaxed">
+            {currentComment}
+          </p>
+          <button
+            onClick={() => deleteComment(userId, userType)}
+            disabled={isSaving}
+            className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-all disabled:opacity-50"
+            title="Удалить комментарий"
+          >
+            {isSaving ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <X className="h-3 w-3" />
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => startEditComment(userId, userType)}
+        className="p-1 text-gray-300 hover:text-gray-500 hover:bg-gray-50 rounded transition-colors"
+        title="Добавить комментарий"
+      >
+        <MoreHorizontal className="h-3 w-3" />
+      </button>
+    </div>
+  );
+};
 
 const GeneralOverview = () => {
   // eslint-disable-next-line no-unused-vars
@@ -24,6 +123,12 @@ const GeneralOverview = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Состояния для комментариев
+  const [comments, setComments] = useState({});
+  const [editingComment, setEditingComment] = useState(null);
+  const [commentText, setCommentText] = useState('');
+  const [savingComment, setSavingComment] = useState(null);
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -36,6 +141,74 @@ const GeneralOverview = () => {
     
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
+
+  // Функции для работы с комментариями
+  const loadComments = async () => {
+    try {
+      const commentsDoc = await getDoc(doc(db, 'overview_comments', 'all'));
+      if (commentsDoc.exists()) {
+        setComments(commentsDoc.data().comments || {});
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки комментариев:', error);
+    }
+  };
+
+  const saveComment = async (userId, userType, comment) => {
+    setSavingComment(userId);
+    try {
+      const commentKey = `${userType}_${userId}`;
+      const newComments = { ...comments, [commentKey]: comment };
+      
+      await setDoc(doc(db, 'overview_comments', 'all'), {
+        comments: newComments
+      }, { merge: true });
+      
+      setComments(newComments);
+      setEditingComment(null);
+      setCommentText('');
+      showSuccess('Комментарий сохранен');
+    } catch (error) {
+      console.error('Ошибка сохранения комментария:', error);
+      showError('Ошибка сохранения комментария');
+    } finally {
+      setSavingComment(null);
+    }
+  };
+
+  const deleteComment = async (userId, userType) => {
+    setSavingComment(userId);
+    try {
+      const commentKey = `${userType}_${userId}`;
+      const newComments = { ...comments };
+      delete newComments[commentKey];
+      
+      await setDoc(doc(db, 'overview_comments', 'all'), {
+        comments: newComments
+      }, { merge: true });
+      
+      setComments(newComments);
+      setEditingComment(null);
+      setCommentText('');
+      showSuccess('Комментарий удален');
+    } catch (error) {
+      console.error('Ошибка удаления комментария:', error);
+      showError('Ошибка удаления комментария');
+    } finally {
+      setSavingComment(null);
+    }
+  };
+
+  const startEditComment = (userId, userType) => {
+    const commentKey = `${userType}_${userId}`;
+    setEditingComment(commentKey);
+    setCommentText(comments[commentKey] || '');
+  };
+
+  const cancelEditComment = () => {
+    setEditingComment(null);
+    setCommentText('');
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,6 +300,9 @@ const GeneralOverview = () => {
         setAgents(agentsData);
         setDevelopers(enrichedDevelopersData);
         setError(null);
+        
+        // Загружаем комментарии
+        await loadComments();
       } catch (error) {
         console.error('Ошибка при загрузке данных:', error);
         setError('Ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
@@ -137,6 +313,8 @@ const GeneralOverview = () => {
 
     fetchData();
   }, []);
+
+
 
   const getRoleBadge = (role) => {
     const roleConfig = {
@@ -240,6 +418,21 @@ const GeneralOverview = () => {
                           </div>
                         )}
                       </div>
+                      
+                      {/* Секция комментария */}
+                      <CommentSection 
+                        userId={agent.id} 
+                        userType="agent"
+                        comments={comments}
+                        editingComment={editingComment}
+                        commentText={commentText}
+                        setCommentText={setCommentText}
+                        savingComment={savingComment}
+                        saveComment={saveComment}
+                        deleteComment={deleteComment}
+                        startEditComment={startEditComment}
+                        cancelEditComment={cancelEditComment}
+                      />
                     </div>
                   </Card>
                 ))
@@ -318,6 +511,21 @@ const GeneralOverview = () => {
                           </div>
                         )}
                       </div>
+                      
+                      {/* Секция комментария */}
+                      <CommentSection 
+                        userId={developer.id} 
+                        userType="developer"
+                        comments={comments}
+                        editingComment={editingComment}
+                        commentText={commentText}
+                        setCommentText={setCommentText}
+                        savingComment={savingComment}
+                        saveComment={saveComment}
+                        deleteComment={deleteComment}
+                        startEditComment={startEditComment}
+                        cancelEditComment={cancelEditComment}
+                      />
                     </div>
                   </Card>
                 ))

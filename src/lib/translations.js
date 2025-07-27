@@ -522,7 +522,8 @@ _________________               _________________
       cinema: 'Cinema',
       coworking: 'Coworking',
       concertHall: 'Concert Hall',
-      parking: 'Parking'
+      parking: 'Parking',
+      artificialWave: 'Artificial Wave'
     },
 
     // Properties Gallery
@@ -1770,7 +1771,8 @@ _________________               _________________
       cinema: 'Кинотеатр',
       coworking: 'Коворкинг',
       concertHall: 'Концертный зал',
-      parking: 'Парковка'
+      parking: 'Парковка',
+      artificialWave: 'Искусственная волна'
     },
 
     // Properties Gallery
@@ -1957,6 +1959,7 @@ _________________               _________________
       restaurant: 'Ресторан',
       fitnessGym: 'Фитнес зал',
       playground: 'Детская площадка',
+      artificialWave: 'Искусственная волна',
       agentCommission: 'Агентское вознаграждение'
     },
 
@@ -3013,7 +3016,8 @@ _________________               _________________
       cinema: 'Bioskop',
       coworking: 'Koworking',
       concertHall: 'Aula Konser',
-      parking: 'Tempat Parkir'
+      parking: 'Tempat Parkir',
+      artificialWave: 'Gelombang Buatan'
     },
 
     // Properties Gallery
