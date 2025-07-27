@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import { useAuth, isPremiumDeveloper, isDeveloper, isAnyDeveloper, ROLE_NAMES } from '../AuthContext';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import { Button } from './ui/button';
@@ -358,46 +358,46 @@ const Navigation = () => {
 
 
 
-              {/* Новые разделы для застройщиков */}
-              {['застройщик', 'премиум застройщик'].includes(role) && (
-                <NavItem 
-                  to="/premium-features" 
-                  icon={Star}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {nav.premiumFeatures}
-                </NavItem>
-              )}
+                      {/* Новые разделы для застройщиков */}
+        {isAnyDeveloper(role) && (
+          <NavItem 
+            to="/premium-features" 
+            icon={Star}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            {nav.premiumFeatures}
+          </NavItem>
+        )}
 
-              {/* Уведомления - активны только для премиум застройщика */}
-              {role === 'премиум застройщик' && (
-                <NavItem 
-                  to="/notifications" 
-                  icon={Bell}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {nav.notifications}
-                </NavItem>
-              )}
-              {role === 'застройщик' && (
-                <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
-                  <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
-                    <Bell className="h-4 w-4" />
-                    <span>{nav.notifications}</span>
-                  </div>
-                </AdaptiveTooltip>
-              )}
+        {/* ⚠️ КРИТИЧЕСКИ ВАЖНО: Уведомления - активны только для премиум застройщика */}
+        {isPremiumDeveloper(role) && (
+          <NavItem 
+            to="/notifications" 
+            icon={Bell}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            {nav.notifications}
+          </NavItem>
+        )}
+        {isDeveloper(role) && (
+          <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
+            <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
+              <Bell className="h-4 w-4" />
+              <span>{nav.notifications}</span>
+            </div>
+          </AdaptiveTooltip>
+        )}
 
-              {/* Публичная страница - активна только для премиум застройщика */}
-              {role === 'премиум застройщик' && (
-                <NavItem 
-                  to="/public-page" 
-                  icon={Globe}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {nav.publicPage}
-                </NavItem>
-              )}
+        {/* ⚠️ КРИТИЧЕСКИ ВАЖНО: Публичная страница - активна только для премиум застройщика */}
+        {isPremiumDeveloper(role) && (
+          <NavItem 
+            to="/public-page" 
+            icon={Globe}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            {nav.publicPage}
+          </NavItem>
+        )}
               {role === 'застройщик' && (
                 <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
                   <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
@@ -479,7 +479,7 @@ const Navigation = () => {
             </NavItem>
         )}
 
-        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
+        {(['admin', 'moderator'].includes(role) || isAnyDeveloper(role)) && (
           <NavItem to="/chessboard" icon={LayoutGrid}>
             {nav.chessboards}
           </NavItem>
@@ -497,7 +497,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
+        {(['admin', 'moderator'].includes(role) || isAnyDeveloper(role)) && (
           <NavItem to="/client-fixations" icon={UserCheck}>
             {nav.clientFixations}
           </NavItem>
@@ -542,19 +542,19 @@ const Navigation = () => {
 
 
         {/* Новые разделы для застройщиков */}
-        {['застройщик', 'премиум застройщик'].includes(role) && (
+        {isAnyDeveloper(role) && (
           <NavItem to="/premium-features" icon={Star}>
             {nav.premiumFeatures}
           </NavItem>
         )}
 
-        {/* Уведомления - активны только для премиум застройщика */}
-        {role === 'премиум застройщик' && (
+        {/* ⚠️ КРИТИЧЕСКИ ВАЖНО: Уведомления - активны только для премиум застройщика */}
+        {isPremiumDeveloper(role) && (
           <NavItem to="/notifications" icon={Bell}>
             {nav.notifications}
           </NavItem>
         )}
-        {role === 'застройщик' && (
+        {isDeveloper(role) && (
           <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
             <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
               <Bell className="h-4 w-4" />
@@ -563,20 +563,20 @@ const Navigation = () => {
           </AdaptiveTooltip>
         )}
 
-        {/* Публичная страница - активна только для премиум застройщика */}
-        {role === 'премиум застройщик' && (
+        {/* ⚠️ КРИТИЧЕСКИ ВАЖНО: Публичная страница - активна только для премиум застройщика */}
+        {isPremiumDeveloper(role) && (
           <NavItem to="/public-page" icon={Globe}>
             {nav.publicPage}
           </NavItem>
         )}
-        {role === 'застройщик' && (
-          <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
-            <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
-              <Globe className="h-4 w-4" />
-              <span>{nav.publicPage}</span>
-            </div>
-          </AdaptiveTooltip>
-        )}
+                       {isDeveloper(role) && (
+                 <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
+                   <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
+                     <Globe className="h-4 w-4" />
+                     <span>{nav.publicPage}</span>
+                   </div>
+                 </AdaptiveTooltip>
+               )}
       </nav>
     </div>
   );

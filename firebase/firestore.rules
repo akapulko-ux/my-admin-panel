@@ -312,6 +312,40 @@ service cloud.firestore {
         (request.data == null || request.data.userId == request.auth.uid);
     }
 
+    // === Push Notifications Collections ===
+    
+    // === Developer Notifications (История уведомлений застройщиков) ===
+    match /developerNotifications/{notificationId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Премиум застройщики могут читать только свои уведомления
+      allow read: if isPremiumDeveloper() && resource.data.developerId == request.auth.uid;
+      // Только система может создавать записи (через Firebase Functions)
+      allow create: if false;
+      // Обновление и удаление запрещены
+      allow update, delete: if false;
+    }
+
+    // === Audit Logs (Аудит действий) ===
+    match /auditLogs/{logId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Только система может создавать записи (через Firebase Functions)
+      allow create: if false;
+      // Чтение и изменение запрещены для обычных пользователей
+      allow read, update, delete: if false;
+    }
+
+    // === User FCM Tokens (FCM токены пользователей) ===
+    match /userTokens/{userId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Пользователи могут читать и обновлять только свои токены
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      // Удаление токенов разрешено только пользователю и админу
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+
     // === Фоллбэк для любых новых коллекций ===
     match /{path=**} {
       // Админ имеет АБСОЛЮТНО ПОЛНЫЕ права на всё

@@ -653,3 +653,400 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// MARK: - Developer Push Notifications
+
+// Функция для отправки пуш-уведомлений от премиум застройщиков
+exports.sendDeveloperNotification = functions.https.onCall(async (data, context) => {
+  try {
+    // Проверяем, что пользователь авторизован
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Пользователь не авторизован');
+    }
+
+    const userId = context.auth.uid;
+    const { title, body } = data;
+
+    // Валидация входных данных
+    if (!title || !body) {
+      throw new functions.https.HttpsError('invalid-argument', 'Заголовок и текст сообщения обязательны');
+    }
+
+    if (title.length > 100) {
+      throw new functions.https.HttpsError('invalid-argument', 'Заголовок не должен превышать 100 символов');
+    }
+
+    if (body.length > 500) {
+      throw new functions.https.HttpsError('invalid-argument', 'Текст сообщения не должен превышать 500 символов');
+    }
+
+    // Получаем данные отправителя
+    const senderDoc = await admin.firestore().collection('users').doc(userId).get();
+    if (!senderDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Пользователь не найден');
+    }
+
+    const senderData = senderDoc.data();
+    const senderRole = senderData.role;
+    const senderDeveloperId = senderData.developerId;
+
+    // Проверяем права: только премиум застройщики могут отправлять уведомления
+    if (senderRole !== 'премиум застройщик') {
+      throw new functions.https.HttpsError('permission-denied', 'Только премиум застройщики могут отправлять уведомления');
+    }
+
+    if (!senderDeveloperId) {
+      throw new functions.https.HttpsError('permission-denied', 'У пользователя не указан ID застройщика');
+    }
+
+    // Проверяем лимиты отправки (не более 10 уведомлений в день)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const sentTodaySnapshot = await admin.firestore()
+      .collection('developerNotifications')
+      .where('senderId', '==', userId)
+      .where('createdAt', '>=', today)
+      .where('createdAt', '<', tomorrow)
+      .get();
+
+    if (sentTodaySnapshot.size >= 10) {
+      throw new functions.https.HttpsError('resource-exhausted', 'Превышен лимит отправки уведомлений (10 в день)');
+    }
+
+    // Проверяем частоту отправки (не более 1 уведомления в 5 минут)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const recentNotificationsSnapshot = await admin.firestore()
+      .collection('developerNotifications')
+      .where('senderId', '==', userId)
+      .where('createdAt', '>=', fiveMinutesAgo)
+      .get();
+
+    if (recentNotificationsSnapshot.size > 0) {
+      throw new functions.https.HttpsError('resource-exhausted', 'Слишком частая отправка. Подождите 5 минут между отправками.');
+    }
+
+    // Базовая фильтрация контента на спам
+    const spamKeywords = ['кредит', 'займ', 'бесплатно', 'срочно', 'успей', 'акция заканчивается', 'только сегодня'];
+    const lowerTitle = title.toLowerCase();
+    const lowerBody = body.toLowerCase();
+    
+    const containsSpam = spamKeywords.some(keyword => 
+      lowerTitle.includes(keyword) || lowerBody.includes(keyword)
+    );
+
+    if (containsSpam) {
+      // Логируем подозрительный контент, но не блокируем полностью
+      console.warn(`Potential spam content detected from user ${userId}: "${title}" - "${body}"`);
+      
+      // Можно добавить дополнительные ограничения для подозрительного контента
+      await admin.firestore().collection('suspiciousNotifications').add({
+        senderId: userId,
+        senderEmail: senderData.email,
+        title: title,
+        body: body,
+        detectedKeywords: spamKeywords.filter(keyword => 
+          lowerTitle.includes(keyword) || lowerBody.includes(keyword)
+        ),
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        ipAddress: context.rawRequest?.ip || 'unknown'
+      });
+    }
+
+    // Проверяем длину и качество контента
+    if (title.length < 3) {
+      throw new functions.https.HttpsError('invalid-argument', 'Заголовок слишком короткий (минимум 3 символа)');
+    }
+
+    if (body.length < 10) {
+      throw new functions.https.HttpsError('invalid-argument', 'Текст сообщения слишком короткий (минимум 10 символов)');
+    }
+
+    // Проверяем на повторяющийся контент
+    const duplicateSnapshot = await admin.firestore()
+      .collection('developerNotifications')
+      .where('senderId', '==', userId)
+      .where('title', '==', title)
+      .where('body', '==', body)
+      .limit(1)
+      .get();
+
+    if (!duplicateSnapshot.empty) {
+      throw new functions.https.HttpsError('already-exists', 'Уведомление с таким содержимым уже было отправлено');
+    }
+
+    // Получаем список FCM токенов всех пользователей iOS приложения
+    let targetTokens = [];
+    let targetUserIds = [];
+
+    // Отправляем всем пользователям iOS приложения
+    const tokensSnapshot = await admin.firestore()
+      .collection('userTokens')
+      .where('platform', '==', 'iOS')
+      .get();
+
+    tokensSnapshot.forEach(doc => {
+      const tokenData = doc.data();
+      if (tokenData.fcmToken) {
+        targetTokens.push(tokenData.fcmToken);
+        targetUserIds.push(tokenData.userId);
+      }
+    });
+
+    if (targetTokens.length === 0) {
+      throw new functions.https.HttpsError('failed-precondition', 'Не найдено получателей для отправки уведомления');
+    }
+
+    // Ограничиваем количество получателей (максимум 1000 за раз)
+    if (targetTokens.length > 1000) {
+      targetTokens = targetTokens.slice(0, 1000);
+      targetUserIds = targetUserIds.slice(0, 1000);
+    }
+
+    // Формируем данные уведомления
+    const notification = {
+      title: title,
+      body: body
+    };
+
+    const messageData = {
+      type: 'developer_message',
+      senderId: userId,
+      senderName: senderData.name || senderData.email,
+      developerId: senderDeveloperId,
+      timestamp: Date.now().toString()
+    };
+
+    // Создаем сообщение для отправки
+    const message = {
+      notification: notification,
+      data: messageData,
+      apns: {
+        payload: {
+          aps: {
+            alert: {
+              title: notification.title,
+              body: notification.body
+            },
+            sound: 'default',
+            badge: 1,
+            'content-available': 1
+          },
+          type: 'developer_message',
+          senderId: userId,
+          senderName: senderData.name || senderData.email,
+          developerId: senderDeveloperId,
+          timestamp: Date.now().toString()
+        }
+      },
+      tokens: targetTokens
+    };
+
+    // Отправляем уведомление
+    const response = await admin.messaging().sendMulticast(message);
+
+    // Сохраняем информацию об отправке
+    const notificationRecord = {
+      senderId: userId,
+      senderName: senderData.name || senderData.email,
+      senderEmail: senderData.email,
+      developerId: senderDeveloperId,
+      title: title,
+      body: body,
+      targetTokensCount: targetTokens.length,
+      targetUserIds: targetUserIds,
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      responses: response.responses.map(r => ({
+        success: r.success,
+        error: r.error ? r.error.message : null
+      })),
+      // Дополнительные данные для аудита
+      ipAddress: context.rawRequest?.ip || 'unknown',
+      userAgent: context.rawRequest?.headers?.['user-agent'] || 'unknown',
+      contentLength: title.length + body.length,
+      hasSpamKeywords: containsSpam
+    };
+
+    const docRef = await admin.firestore().collection('developerNotifications').add(notificationRecord);
+
+    // Логируем действие в системный лог для аудита
+    await admin.firestore().collection('auditLogs').add({
+      action: 'send_notification',
+      userId: userId,
+      userEmail: senderData.email,
+      userRole: senderRole,
+      developerId: senderDeveloperId,
+      details: {
+        notificationId: docRef.id,
+        title: title,
+        targetCount: targetTokens.length,
+        successCount: response.successCount,
+        failureCount: response.failureCount
+      },
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      ipAddress: context.rawRequest?.ip || 'unknown',
+      userAgent: context.rawRequest?.headers?.['user-agent'] || 'unknown'
+    });
+
+    console.log(`Developer notification sent: ${response.successCount}/${targetTokens.length} successful`);
+
+    return {
+      success: true,
+      notificationId: docRef.id,
+      targetCount: targetTokens.length,
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      message: `Уведомление отправлено ${response.successCount} из ${targetTokens.length} получателей`
+    };
+
+  } catch (error) {
+    console.error('Error sending developer notification:', error);
+    
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    
+    throw new functions.https.HttpsError('internal', 'Ошибка при отправке уведомления');
+  }
+});
+
+// Функция для получения истории отправленных уведомлений
+exports.getDeveloperNotificationHistory = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Пользователь не авторизован');
+    }
+
+    const userId = context.auth.uid;
+    const { limit = 20 } = data;
+
+    // Получаем данные пользователя для проверки роли
+    const userDoc = await admin.firestore().collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Пользователь не найден');
+    }
+
+    const userData = userDoc.data();
+    if (userData.role !== 'премиум застройщик') {
+      throw new functions.https.HttpsError('permission-denied', 'Доступ запрещен');
+    }
+
+    // Получаем историю уведомлений
+    const historySnapshot = await admin.firestore()
+      .collection('developerNotifications')
+      .where('senderId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .limit(Math.min(limit, 50))
+      .get();
+
+    const history = historySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title,
+        body: data.body,
+        targetAudience: data.targetAudience,
+        targetCount: data.targetTokensCount,
+        successCount: data.successCount,
+        failureCount: data.failureCount,
+        createdAt: data.createdAt?.toDate?.() || null
+      };
+    });
+
+    return {
+      success: true,
+      history: history
+    };
+
+  } catch (error) {
+    console.error('Error getting notification history:', error);
+    
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    
+    throw new functions.https.HttpsError('internal', 'Ошибка при получении истории');
+  }
+});
+
+// Функция для получения статистики уведомлений
+exports.getDeveloperNotificationStats = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Пользователь не авторизован');
+    }
+
+    const userId = context.auth.uid;
+
+    // Получаем данные пользователя для проверки роли
+    const userDoc = await admin.firestore().collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Пользователь не найден');
+    }
+
+    const userData = userDoc.data();
+    if (userData.role !== 'премиум застройщик') {
+      throw new functions.https.HttpsError('permission-denied', 'Доступ запрещен');
+    }
+
+    // Получаем статистику за сегодня
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todaySnapshot = await admin.firestore()
+      .collection('developerNotifications')
+      .where('senderId', '==', userId)
+      .where('createdAt', '>=', today)
+      .where('createdAt', '<', tomorrow)
+      .get();
+
+    // Получаем общую статистику
+    const totalSnapshot = await admin.firestore()
+      .collection('developerNotifications')
+      .where('senderId', '==', userId)
+      .get();
+
+    const todayStats = {
+      sent: todaySnapshot.size,
+      remaining: Math.max(0, 10 - todaySnapshot.size)
+    };
+
+    let totalSent = 0;
+    let totalSuccess = 0;
+    let totalFailure = 0;
+
+    totalSnapshot.forEach(doc => {
+      const data = doc.data();
+      totalSent++;
+      totalSuccess += data.successCount || 0;
+      totalFailure += data.failureCount || 0;
+    });
+
+    return {
+      success: true,
+      stats: {
+        today: todayStats,
+        total: {
+          sent: totalSent,
+          successCount: totalSuccess,
+          failureCount: totalFailure
+        }
+      }
+    };
+
+  } catch (error) {
+    console.error('Error getting notification stats:', error);
+    
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    
+    throw new functions.https.HttpsError('internal', 'Ошибка при получении статистики');
+  }
+});

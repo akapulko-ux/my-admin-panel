@@ -23,7 +23,6 @@ import {
   X,
   Square,
   Flame,
-  Settings,
   Sofa,
   Waves,
 } from "lucide-react";

@@ -1,0 +1,57 @@
+# Firebase Monitoring Configuration for Push Notifications
+# Конфигурация мониторинга для системы пуш-уведомлений
+
+# Alerts for Cloud Functions
+functions:
+  sendDeveloperNotification:
+    - error_rate > 5%
+    - execution_time > 30s
+    - memory_usage > 512MB
+    - invocations_per_minute > 100
+    
+  getDeveloperNotificationHistory:
+    - error_rate > 2%
+    - execution_time > 10s
+    
+  getDeveloperNotificationStats:
+    - error_rate > 2%
+    - execution_time > 5s
+
+# Firestore Collection Monitoring
+firestore:
+  collections:
+    developerNotifications:
+      - write_rate > 1000/hour per developer
+      - document_size > 1KB
+      
+    auditLogs:
+      - write_rate > 10000/hour
+      - storage_size > 10GB
+      
+    userTokens:
+      - write_rate > 1000/hour
+      - stale_tokens > 30 days
+
+# FCM Monitoring
+fcm:
+  - delivery_rate < 95%
+  - bounce_rate > 10%
+  - token_refresh_rate > 20%/day
+
+# Rate Limiting Alerts
+rate_limits:
+  developer_notifications:
+    - daily_limit_reached
+    - rate_limit_exceeded
+    
+# Security Alerts
+security:
+  - spam_content_detected
+  - suspicious_activity
+  - unauthorized_access_attempts
+
+# Performance Thresholds
+performance:
+  notification_delivery_time: < 5s
+  database_query_time: < 2s
+  function_cold_start: < 3s 
