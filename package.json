@@ -59,7 +59,9 @@
     "build": "react-scripts build",
     "build:public": "PUBLIC_URL=/public react-scripts build --entry ./src/public.js --output-path ./build/public",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "deploy:fresh": "npm run build && firebase hosting:channel:delete main && firebase deploy --only hosting"
   },
   "eslintConfig": {
     "extends": [

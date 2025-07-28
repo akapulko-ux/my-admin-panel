@@ -1066,7 +1066,7 @@ function ComplexDetail() {
         </div>
 
         {/* Кнопка "Прогресс строительства" */}
-        {['admin', 'moderator', 'premium agent', 'agent', 'застройщик'].includes(role) && (
+        {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
           <div className="mt-6">
             <Button
               onClick={() => navigate(`/building-progress/complex/${id}`)}

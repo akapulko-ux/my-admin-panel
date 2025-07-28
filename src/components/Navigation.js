@@ -82,8 +82,8 @@ const Navigation = () => {
   
   // Отладочная информация
   console.log('Navigation - Current role:', role);
-  console.log('Navigation - Available roles for education:', ['admin', 'moderator', 'застройщик']);
-  console.log('Navigation - Has education access:', ['admin', 'moderator', 'застройщик'].includes(role));
+  console.log('Navigation - Available roles for education:', ['admin', 'moderator', 'застройщик', 'премиум застройщик']);
+  console.log('Navigation - Has education access:', ['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role));
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
