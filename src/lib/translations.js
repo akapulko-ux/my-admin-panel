@@ -1969,22 +1969,22 @@ _________________               _________________
       
       // Table headers and labels
       complex: 'Комплекс:',
-      totalUnits: 'Total units:',
-      sections: 'Sections:',
-      floors: 'Floors:',
-      publicLinkAvailable: 'Public link available',
-      created: 'Created:',
-      loading: 'Loading...',
-      untitled: 'Untitled',
-      open: 'Open',
-      delete: 'Delete',
-      copyLink: 'Copy link',
-      openInNewTab: 'Open in new tab',
+      totalUnits: 'Всего юнитов:',
+      sections: 'Секций:',
+      floors: 'Этажей:',
+      publicLinkAvailable: 'Публичная ссылка доступна',
+      created: 'Создано:',
+      loading: 'Загрузка...',
+      untitled: 'Без названия',
+      open: 'Открыть',
+      delete: 'Удалить',
+      copyLink: 'Копировать ссылку',
+      openInNewTab: 'Открыть в новой вкладке',
       
       // Status badges
-      free: 'Free: {count}',
-      booked: 'Booked: {count}',
-      sold: 'Sold: {count}',
+      free: 'Свободно: {count}',
+      booked: 'Забронировано: {count}',
+      sold: 'Продано: {count}',
       
       // Chessboard page
       chessboardName: 'Название шахматки',
