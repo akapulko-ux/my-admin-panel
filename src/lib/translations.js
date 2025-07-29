@@ -151,7 +151,54 @@ export const translations = {
       premiumFeatures: 'Premium Subscription',
       notifications: 'Notifications',
       publicPage: 'Public Page',
-      premiumSubscriptionTooltip: 'Available in premium subscription'
+      premiumSubscriptionTooltip: 'Available in premium subscription',
+      // CRM System
+      crmSystem: 'CRM System',
+      deals: 'Deals',
+      tasks: 'Tasks',
+      lists: 'Lists'
+    },
+
+    // Deals (CRM)
+    deals: {
+      title: 'DEALS',
+      searchPlaceholder: 'Search and filter',
+      settings: 'SETTINGS',
+      newDeal: 'NEW DEAL',
+      
+      // Statistics
+      todayTasks: 'Today\'s tasks',
+      noTasks: 'Without tasks',
+      overdue: 'Overdue',
+      newTodayYesterday: 'New today / yesterday',
+      salesForecast: 'Sales forecast',
+      noData: 'No data',
+      
+      // Pipeline stages
+      firstContact: 'FIRST CONTACT',
+      negotiations: 'NEGOTIATIONS', 
+      decisionMaking: 'MAKING DECISION',
+      booking: 'BOOKING',
+      
+      // Deal card
+      noTask: 'No task',
+      today: 'Today',
+      
+      // Deal form
+      quickAdd: 'Quick add',
+      dealName: 'Deal name',
+      contact: 'Contact',
+      contactName: 'Contact: Name',
+      contactPhone: 'Contact: Phone',
+      contactEmail: 'Contact: Email',
+      company: 'Company',
+      companyName: 'Company: Name',
+      companyAddress: 'Company: Address',
+      add: 'Add',
+      cancel: 'Cancel',
+      
+      // Settings modal
+      dealNamePlaceholder: 'Deal name'
     },
 
     // Client Fixations
@@ -470,6 +517,9 @@ _________________               _________________
       cancelButton: 'Cancel',
       saveButton: 'Save',
       editButton: 'Edit',
+      removeFromListing: 'Remove from listing',
+      returnToListing: 'Return to listing',
+      removedFromListing: 'Removed from listing',
       addPhotoButton: 'Add Photo / PDF',
       uploadingText: 'Uploading...',
       watchVideoButton: 'Watch Video',
@@ -673,7 +723,10 @@ _________________               _________________
       
       // Service verification badge
       serviceVerified: 'Service Verified',
-      premiumOnlyTooltip: 'This option is available only for premium accounts',
+      premiumOnlyTooltip: 'Only available for premium developers',
+      removedFromListing: 'Removed from listing',
+      removeFromListing: 'Remove from listing',
+      returnToListing: 'Return to listing',
       
       // Error messages
       editPermissionError: 'You do not have permission to edit this property',
@@ -1391,8 +1444,55 @@ _________________               _________________
       notifications: 'Рассылка уведомлений',
       publicPage: 'Публичная страница',
       premiumSubscriptionTooltip: 'Доступно в премиум подписке',
+      // CRM System
+      crmSystem: 'CRM система',
+      deals: 'Сделки',
+      tasks: 'Задачи',
+      lists: 'Списки',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
+    },
+
+    // Deals (CRM)
+    deals: {
+      title: 'СДЕЛКИ',
+      searchPlaceholder: 'Поиск и фильтр',
+      settings: 'НАСТРОИТЬ',
+      newDeal: 'НОВАЯ СДЕЛКА',
+      
+      // Statistics
+      todayTasks: 'Задач на сегодня',
+      noTasks: 'Без задач',
+      overdue: 'Просроченных',
+      newTodayYesterday: 'Новых сегодня / вчера',
+      salesForecast: 'Прогноз продаж',
+      noData: 'Нет данных',
+      
+      // Pipeline stages
+      firstContact: 'ПЕРВИЧНЫЙ КОНТАКТ',
+      negotiations: 'ПЕРЕГОВОРЫ',
+      decisionMaking: 'ПРИНИМАЮТ РЕШЕНИЕ',
+      booking: 'БРОНЬ',
+      
+      // Deal card
+      noTask: 'Нет задач',
+      today: 'Сегодня',
+      
+      // Deal form
+      quickAdd: 'Быстрое добавление',
+      dealName: 'Название сделки',
+      contact: 'Контакт',
+      contactName: 'Контакт: Имя',
+      contactPhone: 'Контакт: Телефон',
+      contactEmail: 'Контакт: Email',
+      company: 'Компания',
+      companyName: 'Компания: Название',
+      companyAddress: 'Компания: Адрес',
+      add: 'Добавить',
+      cancel: 'Отменить',
+      
+      // Settings modal
+      dealNamePlaceholder: 'Название сделки'
     },
 
     // Client Fixations
@@ -1706,6 +1806,9 @@ _________________               _________________
       cancelButton: 'Отменить',
       saveButton: 'Сохранить',
       editButton: 'Редактировать',
+      removeFromListing: 'Убрать из листинга',
+      returnToListing: 'Вернуть в листинг',
+      removedFromListing: 'Убран из листинга',
       addPhotoButton: 'Добавить фото / PDF',
       uploadingText: 'Загрузка...',
       watchVideoButton: 'Посмотреть видео',
@@ -1910,6 +2013,9 @@ _________________               _________________
       // Service verification badge
       serviceVerified: 'Проверено сервисом',
       premiumOnlyTooltip: 'Данная опция доступна только для премиум аккаунтов',
+      removedFromListing: 'Убран из листинга',
+      removeFromListing: 'Убрать из листинга',
+      returnToListing: 'Вернуть в листинг',
       
       // Error messages
       editPermissionError: 'You do not have permission to edit this property',
@@ -1969,50 +2075,50 @@ _________________               _________________
       
       // Table headers and labels
       complex: 'Комплекс:',
-      totalUnits: 'Всего юнитов:',
-      sections: 'Секций:',
-      floors: 'Этажей:',
-      publicLinkAvailable: 'Публичная ссылка доступна',
-      created: 'Создано:',
-      loading: 'Загрузка...',
-      untitled: 'Без названия',
-      open: 'Открыть',
-      delete: 'Удалить',
-      copyLink: 'Копировать ссылку',
-      openInNewTab: 'Открыть в новой вкладке',
+      totalUnits: 'Total units:',
+      sections: 'Sections:',
+      floors: 'Floors:',
+      publicLinkAvailable: 'Public link available',
+      created: 'Created:',
+      loading: 'Loading...',
+      untitled: 'Untitled',
+      open: 'Open',
+      delete: 'Delete',
+      copyLink: 'Copy link',
+      openInNewTab: 'Open in new tab',
       
       // Status badges
-      free: 'Свободно: {count}',
-      booked: 'Забронировано: {count}',
-      sold: 'Продано: {count}',
+      free: 'Free: {count}',
+      booked: 'Booked: {count}',
+      sold: 'Sold: {count}',
       
       // Chessboard page
-      chessboardName: 'Название шахматки',
-      selectComplex: 'Выберите комплекс',
-      noComplexSelected: 'Комплекс не выбран',
-      nameRequired: 'Название шахматки обязательно',
-      save: 'Сохранить',
-      deleteChessboard: 'Удалить',
-      addSection: 'Добавить секцию',
-      exchangeRate: 'Курс валют (USD к IDR)',
+      chessboardName: 'Chessboard Name',
+      selectComplex: 'Select Complex',
+      noComplexSelected: 'No complex selected',
+      nameRequired: 'Chessboard name is required',
+      save: 'Save',
+      deleteChessboard: 'Delete',
+      addSection: 'Add Section',
+      exchangeRate: 'Exchange Rate (USD to IDR)',
       
       // Sections and floors
-      sectionName: 'Название секции',
-      addFloor: 'Добавить этаж',
-      floor: 'Этаж',
-      addUnit: 'Добавить юнит',
+      sectionName: 'Section Name',
+      addFloor: 'Add Floor',
+      floor: 'Floor',
+      addUnit: 'Add Unit',
       
       // Units
-      unitId: 'ID юнита',
-      rooms: 'Комнаты',
-      bathrooms: 'Санузлы',
-      area: 'Площадь (м²)',
-      priceUSD: 'Цена (USD)',
-      priceIDR: 'Цена (IDR)',
-      showIDRPrice: 'Показать цену в IDR',
-      propertyType: 'Тип недвижимости',
-      view: 'Вид',
-      status: 'Статус',
+      unitId: 'Unit ID',
+      rooms: 'Rooms',
+      bathrooms: 'Bathrooms',
+      area: 'Area (m²)',
+      priceUSD: 'Price (USD)',
+      priceIDR: 'Price (IDR)',
+      showIDRPrice: 'Show IDR price',
+      propertyType: 'Property Type',
+      view: 'View',
+      status: 'Status',
       
       // Options
       roomOptions: {
@@ -2042,20 +2148,20 @@ _________________               _________________
       },
       
       views: {
-        notSelected: 'Не указан',
-        ocean: 'Океан',
-        jungle: 'Джунгли',
-        pool: 'Бассейн',
-        river: 'Река',
-        yard: 'Двор',
-        volcano: 'Вулкан',
-        riceTerraces: 'Рисовые террасы'
+        notSelected: 'Not specified',
+        ocean: 'Ocean',
+        jungle: 'Jungle',
+        pool: 'Pool',
+        river: 'River',
+        yard: 'Yard',
+        volcano: 'Volcano',
+        riceTerraces: 'Rice Terraces'
       },
       
       statuses: {
-        free: 'Свободно',
-        booked: 'Забронировано',
-        sold: 'Продано'
+        free: 'Free',
+        booked: 'Booked',
+        sold: 'Sold'
       },
       
       // Actions
@@ -2090,44 +2196,44 @@ _________________               _________________
       noComplexesForDeveloper: 'No available complexes for developer "{name}" without chessboard',
       
       // Unit form labels
-      chessboardFloors: 'Этажность',
-      chessboardArea: 'Площадь (м²)',
-      chessboardRooms: 'Спальни',
-      chessboardBathrooms: 'Санузлы',
-      chessboardView: 'Вид из окна',
-      side: 'Сторона',
-      priceWithRate: 'Цена (USD → IDR)',
-      enterPrice: 'Введите цену',
-      showPriceOnPublic: 'Показать цену на публичной странице',
-      showPrice: 'Показать цену',
+      chessboardFloors: 'Floors',
+      chessboardArea: 'Area (m²)',
+      chessboardRooms: 'Bedrooms',
+      chessboardBathrooms: 'Bathrooms',
+      chessboardView: 'View',
+      side: 'Side',
+      priceWithRate: 'Price (USD → IDR)',
+      enterPrice: 'Enter price',
+      showPriceOnPublic: 'Show price on public page',
+      showPrice: 'Show price',
       
       // Floor form labels
-      noNumber: 'Без номера',
-      floorType: 'этаж',
-      rowType: 'ряд',
-      unitButton: 'Юнит',
+      noNumber: 'No number',
+      floorType: 'floor',
+      rowType: 'row',
+      unitButton: 'Unit',
       
       // Side options
       sideOptions: {
-        notSpecified: 'Не указана',
-        sunrise: 'Рассветная',
-        sunset: 'Закатная'
+        notSpecified: 'Not specified',
+        sunrise: 'Sunrise',
+        sunset: 'Sunset'
       },
       
       // Status options with prefixes
       statusOptions: {
-        free: '✓ Свободно',
-        booked: '⏳ Забронировано',
-        sold: '✖ Продано'
+        free: '✓ Free',
+        booked: '⏳ Booked',
+        sold: '✖ Sold'
       },
       
       // Additional features
       features: {
-        rooftop: 'Руфтоп',
-        terrace: 'Терраса'
+        rooftop: 'Rooftop',
+        terrace: 'Terrace'
       },
-      createdAt: 'Создано',
-      updatedAt: 'Обновлено'
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // ROI Calculator
@@ -2246,80 +2352,80 @@ _________________               _________________
     // Building Progress
     buildingProgress: {
       title: 'Прогресс строительства',
-      loading: 'Загрузка...',
-      errorLoading: 'Ошибка загрузки данных',
-      errorUpload: 'Ошибка загрузки файлов',
-      errorDelete: 'Ошибка удаления файла',
-      successUpload: 'Файлы успешно загружены',
-      successDelete: 'Файл удален',
-      successLinkCopied: 'Публичная ссылка скопирована в буфер обмена',
+      loading: 'Loading...',
+      errorLoading: 'Error loading data',
+      errorUpload: 'Error uploading files',
+      errorDelete: 'Error deleting file',
+      successUpload: 'Files uploaded successfully',
+      successDelete: 'File deleted',
+      successLinkCopied: 'Public link copied to clipboard',
       noAccessUpload: 'You do not have permission to upload files',
       noAccessDelete: 'You do not have permission to delete files',
       
       // Buttons
-      view: 'Просмотр',
-      add: 'Добавить',
-      addMore: 'Добавить ещё',
-      copyPublicLink: 'Скопировать публичную ссылку',
-      addPeriod: 'Добавить период',
-      backToProgress: 'Назад к прогрессу строительства',
+      view: 'View',
+      add: 'Add',
+      addMore: 'Add More',
+      copyPublicLink: 'Copy Public Link',
+      addPeriod: 'Add Period',
+      backToProgress: 'Back to building progress',
       
       // Upload modal
-      uploadFiles: 'Загрузить файлы',
-      uploadingFiles: 'Загрузка файлов...',
-      supportedFormats: 'Gambar dan file video didukung',
+      uploadFiles: 'Upload Files',
+      uploadingFiles: 'Uploading files...',
+      supportedFormats: 'Images and video files are supported',
       
       // Media counts
-      photos: 'foto',
-      videos: 'video',
-      photo: 'foto',
+      photos: 'photos',
+      videos: 'videos',
+      photo: 'photo',
       video: 'video',
       
       // Album description
-      albumDescription: 'Описание альбома',
-      addDescription: 'Добавить описание',
-      editDescription: 'Edit Deskripsi',
-      saveDescription: 'Сохранить описание',
-      cancelEdit: 'Отменить редактирование',
-      descriptionPlaceholder: 'Masukkan deskripsi untuk album ini...',
-      descriptionSaved: 'Deskripsi disimpan',
-      descriptionError: 'Kesalahan menyimpan deskripsi',
+      albumDescription: 'Album Description',
+      addDescription: 'Add Description',
+      editDescription: 'Edit Description',
+      saveDescription: 'Save Description',
+      cancelEdit: 'Cancel Edit',
+      descriptionPlaceholder: 'Enter description for this album...',
+      descriptionSaved: 'Description saved',
+      descriptionError: 'Error saving description',
       
       // Confirm dialog
-      confirmDelete: 'Вы уверены, что хотите удалить этот файл?',
+      confirmDelete: 'Are you sure you want to delete this file?',
       
       // Error messages
-      dataNotFound: 'Данные не найдены',
-      noData: 'Нет данных для этого месяца',
+      dataNotFound: 'Data not found',
+      noData: 'No data available for this month',
       
       // Months
       months: {
-        january: 'Январь',
-        february: 'Февраль',
-        march: 'Март',
-        april: 'Апрель',
-        may: 'Май',
-        june: 'Июнь',
-        july: 'Июль',
-        august: 'Август',
-        september: 'Сентябрь',
-        october: 'Октябрь',
-        november: 'Ноябрь',
-        december: 'Декабрь'
+        january: 'January',
+        february: 'February',
+        march: 'March',
+        april: 'April',
+        may: 'May',
+        june: 'June',
+        july: 'July',
+        august: 'August',
+        september: 'September',
+        october: 'October',
+        november: 'November',
+        december: 'December'
       },
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // Education
     education: {
-      title: 'Обучение',
-      description: 'Обучающие материалы и курсы',
-      sections: 'Разделы',
-      topics: 'Темы',
-      lessons: 'Уроки',
-      createSection: 'Создать раздел',
-      editSection: 'Редактировать раздел',
+      title: 'Education',
+      description: 'Learning materials and training courses',
+      sections: 'Sections',
+      topics: 'Topics',
+      lessons: 'Lessons',
+      createSection: 'Create Section',
+      editSection: 'Edit Section',
       deleteSection: 'Delete Section',
       createTopic: 'Create Topic',
       editTopic: 'Edit Topic',
@@ -2403,72 +2509,72 @@ _________________               _________________
       updatedAt: 'Updated'
     },
 
-    // Список застройщиков
+    // Developers List
     developersList: {
-      title: 'Список застройщиков',
-      addDeveloper: 'Добавить застройщика',
-      noDevelopers: 'Нет застройщиков',
-      developersFound: 'Найдено застройщиков: {count}',
-      editDeveloper: 'Редактировать',
-      loading: 'Загрузка...',
-      errorLoading: 'Ошибка при загрузке застройщиков',
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      title: 'Developers List',
+      addDeveloper: 'Add Developer',
+      noDevelopers: 'No developers',
+      developersFound: 'Developers found: {count}',
+      editDeveloper: 'Edit',
+      loading: 'Loading...',
+      errorLoading: 'Error loading developers',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // Premium Features
     premiumFeatures: {
-      title: 'Премиум подписка для застройщиков',
-      subtitle: 'Максимальная видимость ваших объектов среди агентов недвижимости и увеличение продаж через платформу IT Agent',
+      title: 'Premium Subscription for Developers',
+      subtitle: 'Maximum visibility of your properties among real estate agents and increased sales through the IT Agent platform',
       
       // Features
       features: {
         iosAppPlacement: {
-          title: 'Размещение на главной странице iOS приложения',
-          description: 'Ваши объекты и комплексы будут отображаться на главной странице приложения IT Agent для всех агентов недвижимости, что значительно увеличит видимость ваших предложений.',
-          benefit: 'Повышение видимости среди агентов'
+          title: 'Placement on iOS app homepage',
+          description: 'Your properties and complexes will be displayed on the IT Agent app homepage for all real estate agents, significantly increasing the visibility of your offerings.',
+          benefit: 'Increased visibility among agents'
         },
         pushNotifications: {
-          title: 'Пуш-уведомления всей базе агентов',
-          description: 'Отправляйте уведомления о новых объектах, акциях и важных событиях напрямую всем агентам недвижимости в приложении IT Agent.',
-          benefit: 'Прямая коммуникация с агентами'
+          title: 'Push notifications to all agents',
+          description: 'Send notifications about new properties, promotions and important events directly to all real estate agents in the IT Agent app.',
+          benefit: 'Direct communication with agents'
         },
         verifiedBadge: {
-          title: 'Бейдж "Проверено сервисом"',
-          description: 'Специальный бейдж на страницах ваших объектов и комплексов, который повышает доверие агентов и клиентов к вашим предложениям.',
+          title: '"Service Verified" badge',
+          description: 'Special badge on your property and complex pages that increases trust and conversion among agents and clients.',
           benefit: 'Increased trust and conversion'
         },
         publicWebPage: {
-          title: 'Публичная веб-страница',
-          description: 'Полноценная веб-страница с информацией о ваших объектах, которую можно использовать вне приложения и делиться ссылкой с клиентами и партнерами.',
+          title: 'Public web page',
+          description: 'Full web page with information about your properties that can be used outside the app and shared with clients and partners.',
           benefit: 'Expanded sales channels'
         }
       },
 
       // Additional benefits
-      additionalBenefits: 'Дополнительные преимущества',
+      additionalBenefits: 'Additional Benefits',
       benefits: [
-        'Увеличение количества показов ваших объектов',
-        'Прямой доступ к базе агентов недвижимости',
-        'Повышение доверия и авторитета бренда',
-        'Автоматизация процесса продвижения объектов',
-        'Аналитика и статистика по просмотрам',
-        'Приоритетная поддержка от команды IT Agent'
+        'Increased number of views of your properties',
+        'Direct access to real estate agent database',
+        'Increased brand trust and authority',
+        'Automation of property promotion process',
+        'Analytics and statistics on views',
+        'Priority support from IT Agent team'
       ],
 
       // Statistics
       statistics: {
-        agents: 'Агентов недвижимости',
-        viewsIncrease: 'Увеличение показов',
-        availability: 'Доступность'
+        agents: 'Real estate agents',
+        viewsIncrease: 'Increase in views',
+        availability: 'Availability'
       },
 
       // CTA section
       cta: {
-        title: 'Готовы увеличить продажи?',
-        subtitle: 'Присоединяйтесь к премиум застройщикам и получите максимальную видимость ваших объектов среди агентов недвижимости',
-        subscribeButton: 'Подписаться на премиум',
-        footer: 'Без скрытых комиссий • Отмена в любое время • Приоритетная поддержка'
+        title: 'Ready to increase sales?',
+        subtitle: 'Join premium developers and get maximum visibility of your properties among real estate agents',
+        subscribeButton: 'Subscribe to premium',
+        footer: 'No hidden fees • Cancel anytime • Priority support'
       }
     }
   },
@@ -2627,8 +2733,55 @@ _________________               _________________
       notifications: 'Pengiriman Notifikasi',
       publicPage: 'Halaman Publik',
       premiumSubscriptionTooltip: 'Tersedia dalam langganan premium',
+      // CRM System
+      crmSystem: 'Sistem CRM',
+      deals: 'Penawaran',
+      tasks: 'Tugas',
+      lists: 'Daftar',
       createdAt: 'Dibuat',
       updatedAt: 'Diperbarui'
+    },
+
+    // Deals (CRM)
+    deals: {
+      title: 'PENAWARAN',
+      searchPlaceholder: 'Cari dan filter',
+      settings: 'PENGATURAN',
+      newDeal: 'PENAWARAN BARU',
+      
+      // Statistics
+      todayTasks: 'Tugas hari ini',
+      noTasks: 'Tanpa tugas',
+      overdue: 'Terlambat',
+      newTodayYesterday: 'Baru hari ini / kemarin',
+      salesForecast: 'Prakiraan penjualan',
+      noData: 'Tidak ada data',
+      
+      // Pipeline stages
+      firstContact: 'KONTAK PERTAMA',
+      negotiations: 'NEGOSIASI',
+      decisionMaking: 'PENGAMBILAN KEPUTUSAN',
+      booking: 'PEMESANAN',
+      
+      // Deal card
+      noTask: 'Tidak ada tugas',
+      today: 'Hari ini',
+      
+      // Deal form
+      quickAdd: 'Tambah cepat',
+      dealName: 'Nama penawaran',
+      contact: 'Kontak',
+      contactName: 'Kontak: Nama',
+      contactPhone: 'Kontak: Telepon',
+      contactEmail: 'Kontak: Email',
+      company: 'Perusahaan',
+      companyName: 'Perusahaan: Nama',
+      companyAddress: 'Perusahaan: Alamat',
+      add: 'Tambah',
+      cancel: 'Batal',
+      
+      // Settings modal
+      dealNamePlaceholder: 'Nama penawaran'
     },
 
     // Client Fixations
@@ -2942,6 +3095,9 @@ _________________               _________________
       cancelButton: 'Batal',
       saveButton: 'Simpan',
       editButton: 'Edit',
+      removeFromListing: 'Hapus dari listing',
+      returnToListing: 'Kembalikan ke listing',
+      removedFromListing: 'Dihapus dari listing',
       addPhotoButton: 'Tambah Foto / PDF',
       uploadingText: 'Mengupload...',
       watchVideoButton: 'Tonton Video',
@@ -3052,8 +3208,8 @@ _________________               _________________
       cancelButton: 'Batal',
       addPhotoButton: 'Tambah Foto / PDF',
       viewButton: 'Lihat',
-      updateButton: 'Perbarui',
-      uploadButton: 'Unggah',
+      updateButton: 'Update',
+      uploadButton: 'Upload',
       roiCalculatorButton: 'Kalkulator ROI',
       
       // Field labels
@@ -3146,6 +3302,9 @@ _________________               _________________
       // Service verification badge
       serviceVerified: 'Diverifikasi Layanan',
       premiumOnlyTooltip: 'Opsi ini hanya tersedia untuk akun premium',
+      removedFromListing: 'Removed from listing',
+      removeFromListing: 'Remove from listing',
+      returnToListing: 'Return to listing',
       
       // Error messages
       editPermissionError: 'Anda tidak memiliki izin untuk mengedit properti ini',

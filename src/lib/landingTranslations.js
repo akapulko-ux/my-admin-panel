@@ -67,6 +67,14 @@ export const landingTranslations = {
     companyNamePlaceholder: "LLC Construction Company",
     phone: "Phone",
     phonePlaceholder: "+1 (999) 999-99-99",
+    position: "Position",
+    positionPlaceholder: "Select your position",
+    positions: {
+      owner: "Owner",
+      manager: "Manager",
+      marketer: "Marketer",
+      agent: "Agent"
+    },
     submitRequest: "Submit Request",
     // Form Validation
     required: {
@@ -74,7 +82,8 @@ export const landingTranslations = {
       companyName: "Enter company name",
       email: "Enter email",
       emailFormat: "Enter valid email",
-      phone: "Enter phone number"
+      phone: "Enter phone number",
+      position: "Select your position"
     },
     // Success Messages
     requestSent: "Request has been sent! We will contact you soon.",
@@ -152,6 +161,14 @@ export const landingTranslations = {
     companyNamePlaceholder: "ООО Строительная компания",
     phone: "Телефон",
     phonePlaceholder: "+7 (999) 999-99-99",
+    position: "Должность",
+    positionPlaceholder: "Выберите вашу должность",
+    positions: {
+      owner: "Собственник",
+      manager: "Менеджер",
+      marketer: "Маркетолог",
+      agent: "Агент"
+    },
     submitRequest: "Отправить заявку",
     // Form Validation
     required: {
@@ -159,7 +176,8 @@ export const landingTranslations = {
       companyName: "Введите название компании",
       email: "Введите email",
       emailFormat: "Введите корректный email",
-      phone: "Введите номер телефона"
+      phone: "Введите номер телефона",
+      position: "Выберите вашу должность"
     },
     // Success Messages
     requestSent: "Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.",
@@ -237,6 +255,14 @@ export const landingTranslations = {
     companyNamePlaceholder: "PT Perusahaan Konstruksi",
     phone: "Telepon",
     phonePlaceholder: "+62 (999) 999-99-99",
+    position: "Jabatan",
+    positionPlaceholder: "Pilih jabatan Anda",
+    positions: {
+      owner: "Pemilik",
+      manager: "Manajer",
+      marketer: "Pemasar",
+      agent: "Agen"
+    },
     submitRequest: "Kirim Permintaan",
     // Form Validation
     required: {
@@ -244,7 +270,8 @@ export const landingTranslations = {
       companyName: "Masukkan nama perusahaan",
       email: "Masukkan email",
       emailFormat: "Masukkan email yang valid",
-      phone: "Masukkan nomor telepon"
+      phone: "Masukkan nomor telepon",
+      position: "Pilih jabatan Anda"
     },
     // Success Messages
     requestSent: "Permintaan telah dikirim! Kami akan segera menghubungi Anda.",

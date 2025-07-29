@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { db } from "../firebaseConfig";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
-import { Building2, Plus, Pencil, Check } from "lucide-react";
-import { useLanguage } from "../lib/LanguageContext";
-import { translations } from "../lib/translations";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { db } from '../firebaseConfig';
+import { 
+  collection, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  query, 
+  where,
+  writeBatch
+} from 'firebase/firestore';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Building2, Check, Pencil, Eye, EyeOff, Plus } from 'lucide-react';
 import { showSuccess, showError } from '../utils/notifications';
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
+import toast from 'react-hot-toast';
 
 function ListDevelopers() {
   const navigate = useNavigate();
@@ -57,7 +58,8 @@ function ListDevelopers() {
               name: data.name,
               description: data.description || "",
               logo: data.logo || null,
-              approved: data.approved || false
+              approved: data.approved || false,
+              isHidden: data.isHidden || false
             });
           }
         });
@@ -98,6 +100,108 @@ function ListDevelopers() {
     }
   };
 
+  // Функция для массового переключения видимости застройщика и всех связанных объектов
+  const handleToggleVisibility = async (developerId, currentHiddenStatus, developerName) => {
+    try {
+      const newHiddenStatus = !currentHiddenStatus;
+      const batch = writeBatch(db);
+      
+      // Показываем загрузку
+      toast.loading(newHiddenStatus ? 'Скрываем застройщика и все связанные объекты...' : 'Показываем застройщика и все связанные объекты...');
+      
+      // 1. Обновляем самого застройщика
+      const developerRef = doc(db, "developers", developerId);
+      batch.update(developerRef, { isHidden: newHiddenStatus });
+      
+      // 2. Находим и обновляем все комплексы этого застройщика
+      const complexesQuery = query(
+        collection(db, "complexes"),
+        where("developerId", "==", developerId)
+      );
+      const complexesSnapshot = await getDocs(complexesQuery);
+      const complexesByIdCount = complexesSnapshot.size;
+      
+      console.log(`Найдено комплексов по developerId "${developerId}":`, complexesByIdCount);
+      
+      complexesSnapshot.forEach((docSnapshot) => {
+        batch.update(docSnapshot.ref, { isHidden: newHiddenStatus });
+      });
+      
+      // 2.1. Также ищем комплексы по имени застройщика
+      let complexesByNameCount = 0;
+      if (developerName) {
+        const complexesByNameQuery = query(
+          collection(db, "complexes"),
+          where("developer", "==", developerName)
+        );
+        const complexesByNameSnapshot = await getDocs(complexesByNameQuery);
+        complexesByNameCount = complexesByNameSnapshot.size;
+        
+        console.log(`Найдено комплексов по имени "${developerName}":`, complexesByNameCount);
+        
+        complexesByNameSnapshot.forEach((docSnapshot) => {
+          batch.update(docSnapshot.ref, { isHidden: newHiddenStatus });
+        });
+      }
+      
+      // 3. Находим и обновляем все объекты этого застройщика по developerId
+      const propertiesByIdQuery = query(
+        collection(db, "properties"),
+        where("developerId", "==", developerId)
+      );
+      const propertiesByIdSnapshot = await getDocs(propertiesByIdQuery);
+      const propertiesByIdCount = propertiesByIdSnapshot.size;
+      
+      console.log(`Найдено объектов по developerId "${developerId}":`, propertiesByIdCount);
+      
+      propertiesByIdSnapshot.forEach((docSnapshot) => {
+        batch.update(docSnapshot.ref, { isHidden: newHiddenStatus });
+      });
+      
+      // 4. Находим и обновляем все объекты этого застройщика по имени
+      let propertiesByNameCount = 0;
+      if (developerName) {
+        const propertiesByNameQuery = query(
+          collection(db, "properties"),
+          where("developer", "==", developerName)
+        );
+        const propertiesByNameSnapshot = await getDocs(propertiesByNameQuery);
+        propertiesByNameCount = propertiesByNameSnapshot.size;
+        
+        console.log(`Найдено объектов по имени "${developerName}":`, propertiesByNameCount);
+        
+        propertiesByNameSnapshot.forEach((docSnapshot) => {
+          batch.update(docSnapshot.ref, { isHidden: newHiddenStatus });
+        });
+      }
+      
+      // Выполняем все обновления
+      await batch.commit();
+      
+      // Подсчитываем общее количество обновленных записей
+      const totalUpdated = 1 + complexesByIdCount + complexesByNameCount + propertiesByIdCount + propertiesByNameCount;
+      
+      // Обновляем локальное состояние
+      setDevelopers(prev => prev.map(dev => 
+        dev.id === developerId 
+          ? { ...dev, isHidden: newHiddenStatus }
+          : dev
+      ));
+
+      toast.dismiss();
+      toast.success(
+        newHiddenStatus 
+          ? `Застройщик "${developerName}" и ${totalUpdated - 1} связанных записей скрыты из листинга`
+          : `Застройщик "${developerName}" и ${totalUpdated - 1} связанных записей возвращены в листинг`
+      );
+      
+    } catch (error) {
+      console.error("Ошибка при обновлении видимости:", error);
+      toast.dismiss();
+      toast.error("Ошибка при обновлении видимости застройщика");
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-8`}>
@@ -130,7 +234,20 @@ function ListDevelopers() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {developers.map((dev) => (
-            <Card key={dev.id} className="overflow-hidden relative">
+            <Card key={dev.id} className={`overflow-hidden relative transition-opacity duration-200 ${dev.isHidden ? 'opacity-50' : 'opacity-100'}`}>
+              {/* Кнопка переключения видимости в левом верхнем углу */}
+              <button
+                onClick={() => handleToggleVisibility(dev.id, dev.isHidden, dev.name)}
+                className={`absolute top-2 left-2 p-2 rounded-full transition-all duration-200 ${
+                  dev.isHidden 
+                    ? 'bg-red-500 text-white hover:bg-red-600' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                }`}
+                title={dev.isHidden ? "Показать застройщика и все связанные объекты" : "Скрыть застройщика и все связанные объекты"}
+              >
+                {dev.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+              
               {/* Кнопка с галочкой в правом верхнем углу */}
               <button
                 onClick={() => handleToggleApproved(dev.id, dev.approved)}
@@ -144,7 +261,7 @@ function ListDevelopers() {
                 <Check className="w-4 h-4" />
               </button>
               
-              <CardHeader className="space-y-4">
+              <CardHeader className="space-y-4 pt-12">
                 <div className="flex items-center space-x-4">
                   {dev.logo ? (
                     <img

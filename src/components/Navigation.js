@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
   LayoutGrid,
   Calculator,
   UserCheck,
@@ -27,7 +28,10 @@ import {
   Star,
   Bell,
   Globe,
-  BarChart3
+  BarChart3,
+  Briefcase,
+  CheckSquare,
+  List
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -87,6 +91,7 @@ const Navigation = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isCrmExpanded, setIsCrmExpanded] = useState(false);
 
   // Проверка размера экрана
   useEffect(() => {
@@ -149,6 +154,68 @@ const Navigation = () => {
         </span>
         {isActive && <ChevronRight className={cn("h-3 w-3 ml-auto", isMobile && "h-4 w-4")} />}
       </Link>
+    );
+  };
+
+  const CrmMenuItem = ({ onClick }) => {
+    const crmSubRoutes = ['/crm/deals', '/crm/tasks', '/crm/lists'];
+    const isAnyCrmActive = crmSubRoutes.some(route => location.pathname.startsWith(route));
+    
+    return (
+      <div>
+        <button
+          onClick={() => setIsCrmExpanded(!isCrmExpanded)}
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent touch-manipulation w-full",
+            "min-h-[44px] md:min-h-[36px]",
+            isAnyCrmActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-accent-foreground",
+            isMobile && "text-base py-3"
+          )}
+        >
+          <Briefcase className={cn("h-4 w-4", isMobile && "h-5 w-5")} />
+          <span className={cn(
+            "flex-1 truncate text-left",
+            isCollapsed && !isMobile && "hidden"
+          )}>
+            {nav.crmSystem}
+          </span>
+          <ChevronDown className={cn(
+            "h-3 w-3 transition-transform",
+            isCrmExpanded && "rotate-180",
+            isMobile && "h-4 w-4",
+            isCollapsed && !isMobile && "hidden"
+          )} />
+        </button>
+        
+        {isCrmExpanded && (
+          <div className="ml-3 mt-1 space-y-1">
+            <NavItem 
+              to="/crm/deals" 
+              icon={Briefcase}
+              isSubItem={true}
+              onClick={onClick}
+            >
+              {nav.deals}
+            </NavItem>
+            <NavItem 
+              to="/crm/tasks" 
+              icon={CheckSquare}
+              isSubItem={true}
+              onClick={onClick}
+            >
+              {nav.tasks}
+            </NavItem>
+            <NavItem 
+              to="/crm/lists" 
+              icon={List}
+              isSubItem={true}
+              onClick={onClick}
+            >
+              {nav.lists}
+            </NavItem>
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -284,6 +351,11 @@ const Navigation = () => {
                 >
                   {nav.roiCalculator}
                 </NavItem>
+              )}
+
+              {/* CRM System */}
+              {['admin', 'moderator'].includes(role) && (
+                <CrmMenuItem onClick={() => setIsMobileMenuOpen(false)} />
               )}
 
               {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
@@ -495,6 +567,11 @@ const Navigation = () => {
           <NavItem to="/roi-calculator" icon={Calculator}>
             {nav.roiCalculator}
           </NavItem>
+        )}
+
+        {/* CRM System */}
+        {['admin', 'moderator'].includes(role) && (
+          <CrmMenuItem />
         )}
 
         {(['admin', 'moderator'].includes(role) || isAnyDeveloper(role)) && (

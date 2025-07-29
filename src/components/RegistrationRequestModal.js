@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { showError } from '../utils/notifications';
@@ -13,7 +14,8 @@ const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
     name: '',
     companyName: '',
     email: '',
-    phone: ''
+    phone: '',
+    position: ''
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +45,11 @@ const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
     // Валидация телефона - только проверка на заполненность
     if (!formData.phone.trim()) {
       newErrors.phone = t.required.phone;
+    }
+
+    // Валидация должности
+    if (!formData.position.trim()) {
+      newErrors.position = t.required.position;
     }
 
     setErrors(newErrors);
@@ -75,7 +82,8 @@ const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
         name: '',
         companyName: '',
         email: '',
-        phone: ''
+        phone: '',
+        position: ''
       });
       setErrors({});
       
@@ -155,6 +163,28 @@ const RegistrationRequestModal = ({ open, onClose, language = 'ru' }) => {
             />
             {errors.phone && (
               <p className="text-sm text-destructive">{errors.phone}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="position">{t.position}</Label>
+            <Select
+              value={formData.position}
+              onValueChange={(value) => setFormData({ ...formData, position: value })}
+              disabled={isLoading}
+            >
+              <SelectTrigger className={errors.position ? 'border-destructive' : ''}>
+                <SelectValue placeholder={t.positionPlaceholder} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="owner">{t.positions.owner}</SelectItem>
+                <SelectItem value="manager">{t.positions.manager}</SelectItem>
+                <SelectItem value="marketer">{t.positions.marketer}</SelectItem>
+                <SelectItem value="agent">{t.positions.agent}</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.position && (
+              <p className="text-sm text-destructive">{errors.position}</p>
             )}
           </div>
 

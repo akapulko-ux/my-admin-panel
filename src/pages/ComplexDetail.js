@@ -37,7 +37,9 @@ import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Badge } from "../components/ui/badge";
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '../utils/firebaseStorage';
+import toast from 'react-hot-toast';
 // Импорт для сжатия изображений и конвертации PDF
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
@@ -85,6 +87,28 @@ function ComplexDetail() {
       return complex?.developer && complex.developer === complex.userDeveloperName;
     }
     return false;
+  };
+
+  // Функция для переключения статуса листинга
+  const toggleListingStatus = async () => {
+    try {
+      const newStatus = !complex.isHidden;
+      await updateDoc(doc(db, "complexes", id), {
+        isHidden: newStatus,
+        updatedAt: Timestamp.now()
+      });
+
+      // Обновляем локальное состояние
+      setComplex(prev => ({
+        ...prev,
+        isHidden: newStatus
+      }));
+
+      toast.success(newStatus ? 'Комплекс убран из листинга' : 'Комплекс возвращен в листинг');
+    } catch (error) {
+      console.error('Ошибка при изменении статуса листинга:', error);
+      toast.error('Ошибка при изменении статуса листинга');
+    }
   };
 
   // Функция для обработки изменений значений
@@ -504,6 +528,17 @@ function ComplexDetail() {
             {isEditing ? (
               <>
                 <Button
+                  onClick={toggleListingStatus}
+                  variant="outline"
+                  className={`gap-2 ${isMobile ? 'w-full h-12' : ''} ${
+                    complex.isHidden
+                      ? "text-blue-600 border-blue-600 hover:bg-blue-50"
+                      : "text-red-600 border-red-600 hover:bg-red-50"
+                  }`}
+                >
+                  {complex.isHidden ? t.complexDetail.returnToListing : t.complexDetail.removeFromListing}
+                </Button>
+                <Button
                   variant="outline"
                   onClick={handleCancel}
                   className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
@@ -533,6 +568,16 @@ function ComplexDetail() {
           </div>
         )}
       </div>
+
+      {/* Бейдж "Убран из листинга" */}
+      {complex?.isHidden && (
+        <div className="mb-4">
+          <Badge className="bg-red-600 text-white border-red-600 border flex items-center gap-1 w-fit">
+            <span className="text-sm font-medium">⚠</span>
+            <span className="text-sm">{t.complexDetail.removedFromListing}</span>
+          </Badge>
+        </div>
+      )}
 
       {/* Кнопка загрузки фотографий */}
       {canEdit() && (

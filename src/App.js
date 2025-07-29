@@ -93,6 +93,11 @@ import PremiumFeatures from "./pages/PremiumFeatures";
 import Notifications from "./pages/Notifications";
 import PublicPage from "./pages/PublicPage";
 
+// CRM система
+import CrmDeals from "./pages/CrmDeals";
+import CrmTasks from "./pages/CrmTasks";
+import CrmLists from "./pages/CrmLists";
+
 const AdminLayout = ({ children }) => {
   const { currentUser, logout, role } = useAuth();
   const { language } = useLanguage();
@@ -421,7 +426,22 @@ function App() {
                       </ProtectedRoute>
                     } />
 
-
+                    {/* CRM система */}
+                    <Route path="/crm/deals" element={
+                      <ProtectedRoute>
+                        <CrmDeals />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/crm/tasks" element={
+                      <ProtectedRoute>
+                        <CrmTasks />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/crm/lists" element={
+                      <ProtectedRoute>
+                        <CrmLists />
+                      </ProtectedRoute>
+                    } />
 
                     {/* Новые разделы для застройщиков */}
                     <Route path="/premium-features" element={

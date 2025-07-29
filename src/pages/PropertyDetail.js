@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
+import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
 import {
@@ -48,6 +48,7 @@ import {
   formatArea,
   validateArea 
 } from "../lib/utils";
+import toast from 'react-hot-toast';
 
 function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
@@ -111,11 +112,14 @@ function PropertyDetail() {
   // Функция для определения статуса бейджа "Проверено сервисом"
   const getServiceVerificationStatus = () => {
     if (role === 'премиум застройщик') {
+      // Для премиум застройщиков проверяем статус approved из коллекции developers
       return {
-        isActive: true,
-        color: 'bg-green-100 text-green-800 border-green-200',
-        icon: '✓',
-        tooltip: null
+        isActive: property?.isDeveloperApproved === true,
+        color: property?.isDeveloperApproved === true 
+          ? 'bg-green-100 text-green-800 border-green-200' 
+          : 'bg-gray-500 text-white border-gray-600',
+        icon: property?.isDeveloperApproved === true ? '✓' : '○',
+        tooltip: property?.isDeveloperApproved === true ? null : 'Застройщик не прошел проверку сервиса'
       };
     } else if (role === 'застройщик') {
       return {
@@ -126,6 +130,28 @@ function PropertyDetail() {
       };
     }
     return null;
+  };
+
+  // Функция для переключения статуса листинга
+  const toggleListingStatus = async () => {
+    try {
+      const newStatus = !property.isHidden;
+      await updateDoc(doc(db, "properties", id), {
+        isHidden: newStatus,
+        updatedAt: Timestamp.now()
+      });
+
+      // Обновляем локальное состояние
+      setProperty(prev => ({
+        ...prev,
+        isHidden: newStatus
+      }));
+
+      toast.success(newStatus ? 'Объект убран из листинга' : 'Объект возвращен в листинг');
+    } catch (error) {
+      console.error('Ошибка при изменении статуса листинга:', error);
+      toast.error('Ошибка при изменении статуса листинга');
+    }
   };
 
   // Функция для обработки изменений значений
@@ -861,9 +887,43 @@ function PropertyDetail() {
             try {
               const developerName = await fetchDeveloperName(propertyData.developerId);
               propertyData.developerName = developerName;
+              
+              // Загружаем статус проверки застройщика
+              const developerDoc = await getDoc(doc(db, "developers", propertyData.developerId));
+              if (developerDoc.exists()) {
+                propertyData.isDeveloperApproved = developerDoc.data().approved || false;
+              } else {
+                propertyData.isDeveloperApproved = false;
+              }
             } catch (err) {
               console.error(t.propertyDetail.developerLoadError || "Ошибка при загрузке имени застройщика:", err);
+              propertyData.isDeveloperApproved = false;
             }
+          } else if (propertyData.developer) {
+            // Если нет developerId, но есть поле developer (название), ищем по имени
+            try {
+              const developersQuery = query(
+                collection(db, "developers"),
+                where("name", "==", propertyData.developer)
+              );
+              const developerSnapshot = await getDocs(developersQuery);
+              
+              if (!developerSnapshot.empty) {
+                const developerDoc = developerSnapshot.docs[0];
+                propertyData.isDeveloperApproved = developerDoc.data().approved || false;
+                propertyData.developerName = developerDoc.data().name;
+                console.log('Found developer by name:', propertyData.developer, 'approved:', propertyData.isDeveloperApproved);
+              } else {
+                propertyData.isDeveloperApproved = false;
+                console.log('Developer not found by name:', propertyData.developer);
+              }
+            } catch (err) {
+              console.error('Ошибка при поиске застройщика по имени:', err);
+              propertyData.isDeveloperApproved = false;
+            }
+          } else {
+            // Если нет ни developerId, ни developer, то статус проверки false
+            propertyData.isDeveloperApproved = false;
           }
           
           // Загружаем название комплекса если есть complexId
@@ -1229,6 +1289,16 @@ function PropertyDetail() {
                     <span className="text-sm">{t.propertyDetail.serviceVerified}</span>
                   </Badge>
                 )}
+              </div>
+            )}
+
+            {/* Бейдж "Убран из листинга" */}
+            {property.isHidden && (
+              <div className="mb-4">
+                <Badge className="bg-red-600 text-white border-red-600 border flex items-center gap-1 w-fit">
+                  <span className="text-sm font-medium">⚠</span>
+                  <span className="text-sm">{t.propertyDetail.removedFromListing}</span>
+                </Badge>
               </div>
             )}
 
@@ -1691,6 +1761,16 @@ function PropertyDetail() {
         <div className={`mt-8 ${isMobile ? 'flex flex-col gap-4' : 'flex justify-end gap-4'}`}>
           {isEditing ? (
             <>
+              <button
+                onClick={toggleListingStatus}
+                className={`px-4 py-2 rounded-lg text-white ${
+                  property.isHidden
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-red-600 hover:bg-red-700"
+                } ${isMobile ? 'w-full h-12' : ''}`}
+              >
+                {property.isHidden ? t.propertyDetail.returnToListing : t.propertyDetail.removeFromListing}
+              </button>
               <button
                 onClick={handleCancel}
                 className={`px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 ${isMobile ? 'w-full h-12' : ''}`}
