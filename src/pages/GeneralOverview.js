@@ -82,9 +82,18 @@ const CommentSection = ({
     return (
       <div className="mt-2">
         <div className="flex items-start gap-2 group">
-          <p className="flex-1 text-xs text-gray-600 leading-relaxed">
-            {currentComment}
-          </p>
+          <div 
+            className="flex-1 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors group/comment"
+            onClick={() => startEditComment(userId, userType)}
+            title="Нажмите для редактирования комментария"
+          >
+            <div className="flex items-start gap-1">
+              <p className="flex-1 text-xs text-gray-600 leading-relaxed group-hover/comment:text-gray-800">
+                {currentComment}
+              </p>
+              <MoreHorizontal className="h-3 w-3 text-gray-300 opacity-0 group-hover/comment:opacity-100 transition-opacity flex-shrink-0 mt-0.5" />
+            </div>
+          </div>
           <button
             onClick={() => deleteComment(userId, userType)}
             disabled={isSaving}

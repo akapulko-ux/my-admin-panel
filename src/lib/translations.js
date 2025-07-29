@@ -653,7 +653,7 @@ _________________               _________________
       },
       
       ownershipOptions: {
-        leasehold: 'Leasehold',
+        leasehold: 'Leashold',
         freehold: 'Freehold'
       },
       
@@ -1259,8 +1259,8 @@ _________________               _________________
     page2Footer: 'Стр. 2 - Подробные данные',
     
     // Input Data Keys
-    purchasePrice: 'Стоимость покупки',
-    renovationCosts: 'Затраты на ремонт',
+    purchasePrice: 'Цена покупки',
+    renovationCosts: 'Расходы на ремонт',
     legalFees: 'Юридические расходы',
     additionalExpenses: 'Дополнительные расходы',
     investmentPeriod: 'Инвестиционный период',
@@ -1281,7 +1281,7 @@ _________________               _________________
 
     // Public ROI Page
     investorHighlights: 'Основные показатели для инвесторов',
-    unitPrice: 'Стоимость единицы',
+    unitPrice: 'Цена за единицу',
     averageROI: 'Средний ROI',
     annualRentExpenseGrowth: 'Прогнозируемый рост арендной платы',
     propertyManagementFee: 'Операционные расходы',
@@ -1480,23 +1480,10 @@ _________________               _________________
       title: 'Чат фиксации',
       messagePlaceholder: 'Введите сообщение...',
       send: 'Отправить',
-      messageSent: 'Сообщение отправлено',
+      messageSent: 'Сообщение успешно отправлено',
       messageError: 'Не удалось отправить сообщение',
       chatDataError: 'Не удалось загрузить данные чата',
-      messagesError: 'Не удалось загрузить сообщения',
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен',
-      // Image viewing
-      imageError: 'Ошибка загрузки изображения',
-      imageLoadError: 'Попробуйте еще раз',
-      downloadImage: 'Скачать',
-      shareImage: 'Поделиться',
-      deleteImage: 'Удалить',
-      closeImage: 'Закрыть',
-      imageShareTitle: 'Изображение из чата',
-      imageShareText: 'Посмотрите это изображение',
-      messageDeleted: 'Сообщение удалено',
-      deleteMessageError: 'Не удалось удалить сообщение'
+      createdAt: 'Создано',
     },
 
     // Settings Page
@@ -1594,66 +1581,66 @@ _________________               _________________
         contractText: `ДОГОВОР ЦЕССИИ
 об оказании информационно-технических услуг
 
-"IT Agent", именуемое в дальнейшем "Исполнитель", с одной стороны, и Застройщик, именуемый в дальнейшем "Заказчик", с другой стороны, заключили настоящий Договор о нижеследующем:
+"IT Agent", именуемое в дальнейшем "Исполнитель", с одной стороны, и Developer, именуемый в дальнейшем "Client", на другой стороне, заключили настоящий Договор о нижеследующем:
 
 1. ПРЕДМЕТ ДОГОВОРА
 
-1.1. Исполнитель обязуется предоставить Заказчику IT-платформу для размещения информации об объектах недвижимости и организации взаимодействия с агентами по недвижимости.
+1.1. Исполнитель обязуется предоставить Client IT-платформу для размещения информации об объектах недвижимости и организации взаимодействия с агентами по недвижимости.
 
-1.2. Заказчик обязуется оплачивать услуги Исполнителя в размере и порядке, установленном настоящим Договором.
+1.2. The Client undertakes to pay for the Contractor's services in the amount and manner established by this Agreement.
 
-2. ПРАВА И ОБЯЗАННОСТИ СТОРОН
+2. RIGHTS AND OBLIGATIONS OF THE PARTIES
 
-2.1. Исполнитель обязуется:
-2.1.1. Предоставить доступ к IT-платформе для размещения объектов недвижимости;
-2.1.2. Обеспечивать техническое функционирование платформы;
-2.1.3. Организовывать получение и обработку заявок от агентов;
-2.1.4. Предоставлять инструменты для взаимодействия с агентами по недвижимости.
+2.1. The Contractor undertakes to:
+2.1.1. Provide access to the IT platform for posting real estate objects;
+2.1.2. Ensure technical functioning of the platform;
+2.1.3. Organize receiving and processing of applications from agents;
+2.1.4. Provide tools for interaction with real estate agents.
 
-2.2. Заказчик обязуется:
-2.2.1. Своевременно предоставлять актуальную и достоверную информацию об объектах недвижимости;
-2.2.2. Поддерживать информацию об объектах в актуальном состоянии;
-2.2.3. Своевременно оплачивать услуги в соответствии с условиями настоящего Договора;
-2.2.4. Уведомлять Исполнителя о продаже объектов недвижимости через платформу.
+2.2. The Client undertakes to:
+2.2.1. Timely provide current and reliable information about real estate objects;
+2.2.2. Keep information about objects up to date;
+2.2.3. Timely pay for services according to the terms of this Agreement;
+2.2.4. Notify the Contractor about the sale of real estate objects through the platform.
 
-3. ПОРЯДОК ОПЛАТЫ
+3. PAYMENT PROCEDURE
 
-3.1. Стоимость услуг Исполнителя составляет 0,5% (ноль целых пять десятых процента) от цены каждого объекта недвижимости, проданного через IT-платформу.
+3.1. The cost of the Contractor's services is 0.5% (zero point five percent) of the price of each real estate object sold through the IT platform.
 
-3.2. Комиссия, указанная в пункте 3.1, оплачивается Заказчиком дополнительно к стандартной комиссии агентам по недвижимости (5%).
+3.2. The commission specified in clause 3.1 is paid by the Client in addition to the standard commission to real estate agents (5%).
 
-3.3. Оплата производится в течение 10 (десяти) банковских дней с момента подписания договора купли-продажи недвижимости между Заказчиком и покупателем, найденным через IT-платформу.
+3.3. Payment is made within 10 (ten) banking days from the moment of concluding a real estate purchase and sale agreement between the Client and the buyer attracted through the IT platform.
 
-3.4. Основанием для оплаты является подписанный договор купли-продажи и уведомление от Заказчика о завершенной сделке.
+3.4. The basis for payment is the signed purchase and sale agreement and notification from the Client about the completed transaction.
 
-4. ОТВЕТСТВЕННОСТЬ СТОРОН
+4. LIABILITY OF THE PARTIES
 
-4.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору стороны несут ответственность в соответствии с действующим законодательством.
+4.1. For non-performance or improper performance of obligations under this Agreement, the parties bear responsibility in accordance with applicable law.
 
-4.2. В случае просрочки оплаты Заказчик уплачивает пеню в размере 0,1% от просроченной суммы за каждый день просрочки.
+4.2. In case of payment delay, the Client pays a penalty of 0.1% of the overdue payment amount for each day of delay.
 
-5. СРОК ДЕЙСТВИЯ ДОГОВОРА
+5. TERM OF THE AGREEMENT
 
-5.1. Настоящий Договор вступает в силу с момента подписания и действует в течение одного года.
+5.1. This Agreement comes into force from the moment of its signing and is valid for one year.
 
-5.2. Договор автоматически продлевается на такой же срок, если одна из сторон не уведомит другую сторону о прекращении за 30 дней до даты истечения.
+5.2. The Agreement is automatically extended for the same period if neither party notifies the other of termination 30 days before the expiration date.
 
-6. ПОРЯДОК РАЗРЕШЕНИЯ СПОРОВ
+6. DISPUTE RESOLUTION PROCEDURE
 
-6.1. Все споры и разногласия разрешаются путем переговоров.
+6.1. All disputes and disagreements are resolved through negotiations.
 
-6.2. В случае невозможности достижения соглашения споры разрешаются в суде по месту нахождения Исполнителя.
+6.2. If it is impossible to reach an agreement, disputes are resolved in court at the location of the Contractor.
 
-7. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ
+7. FINAL PROVISIONS
 
-7.1. Настоящий Договор составлен в двух экземплярах, имеющих равную юридическую силу, по одному для каждой из сторон.
+7.1. This Agreement is made in two copies, having equal legal force, one for each party.
 
-7.2. Изменения и дополнения к Договору действительны только в том случае, если они совершены в письменной форме и подписаны обеими сторонами.
+7.2. Changes and additions to the Agreement are valid only when executed in writing and signed by both parties.
 
-8. ПОДПИСИ СТОРОН
+8. SIGNATURES OF THE PARTIES
 
-ИСПОЛНИТЕЛЬ:                     ЗАКАЗЧИК:
-     IT Agent                                         Застройщик
+CONTRACTOR:                     CLIENT:
+     IT Agent                                         Developer
 
 
 _________________               _________________
@@ -1701,8 +1688,8 @@ _________________               _________________
       noNameText: 'Без названия',
       complexNumberPrefix: 'Комплекс №',
       priceFromPrefix: 'от',
-      developerPrefix: 'Застройщик:',
-      districtPrefix: 'Район:',
+      developerPrefix: 'Developer:',
+      districtPrefix: 'District:',
       completionPrefix: 'Сдача:',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
@@ -1730,16 +1717,16 @@ _________________               _________________
       priceMinFromObjects: '(минимальная из объектов)',
       priceFromComplex: '(цена комплекса)',
       commissionLabel: 'Вознаграждение',
-      developerLabel: 'Застройщик',
-      districtLabel: 'Район',
+      developerLabel: 'Developer',
+      districtLabel: 'District',
       completionDateLabel: 'Дата сдачи',
       coordinatesLabel: 'Координаты',
       videoLabel: 'Видео',
-      tourLabel: '3D тур',
+      tourLabel: '3D Тур',
       pricePlaceholder: 'Цена в USD',
       descriptionPlaceholder: 'Описание комплекса',
       videoLinkPlaceholder: 'Ссылка на видео',
-      tourLinkPlaceholder: 'Ссылка на 3D тур',
+      tourLinkPlaceholder: '3D тур ссылка',
       photoAltText: 'Фото',
       autoCalculatedPriceText: 'Автоматически рассчитана как минимальная цена среди объектов комплекса',
       changesSaved: 'Изменения сохранены',
@@ -1750,11 +1737,11 @@ _________________               _________________
       photoNotFound: 'Фотография не найдена',
       photoDeleteSuccess: 'Фотография успешно удалена',
       photoLinkDeleted: 'Ссылка на фотографию удалена из базы данных',
-      photoDeleteError: 'Произошла ошибка при удалении фотографии',
-      databaseUpdateError: 'Не удалось обновить информацию в базе данных',
-      dataLoadError: 'Ошибка при загрузке данных комплекса',
-      developerLoadError: 'Ошибка загрузки застройщика',
-      complexNameLoadError: 'Ошибка при загрузке названия комплекса',
+      photoDeleteError: 'Error deleting photo',
+      databaseUpdateError: 'Failed to update database information',
+      dataLoadError: 'Error loading complex data',
+      developerLoadError: 'Error loading developer',
+      complexNameLoadError: 'Error loading complex name',
       createdAt: 'Создан',
       updatedAt: 'Обновлен',
       
@@ -1802,7 +1789,7 @@ _________________               _________________
       propertyAltText: 'Объект',
       newPricePlaceholder: 'Новая цена',
       areaText: 'м²',
-      developerText: 'Застройщик:',
+      developerText: 'Developer:',
       editPermissionError: 'У вас нет прав на редактирование цены',
       priceValidationError: 'Пожалуйста, введите корректную цену',
       priceUpdateSuccess: 'Цена успешно обновлена',
@@ -1828,77 +1815,77 @@ _________________               _________________
       saveButton: 'Сохранить',
       cancelButton: 'Отменить',
       addPhotoButton: 'Добавить фото / PDF',
-      viewButton: 'Просмотреть',
-      updateButton: 'Обновить',
-      uploadButton: 'Загрузить',
-      roiCalculatorButton: 'Расчет ROI',
+      viewButton: 'View',
+      updateButton: 'Update',
+      uploadButton: 'Upload',
+      roiCalculatorButton: 'ROI Calculator',
       
       // Field labels
       bedrooms: 'Спален',
       studio: 'Студия',
-      unitsCount: 'Количество юнитов',
-      area: 'Жилая площадь',
-      totalArea: 'Общая площадь',
-      developer: 'Застройщик',
-      complex: 'Комплекс',
-      propertyName: 'Название',
-      managementCompany: 'Управляющая компания',
-      bathrooms: 'Санузлы',
-      floors: 'Этажность',
-      district: 'Район',
-      buildingType: 'Тип постройки',
-      constructionStatus: 'Статус строительства',
-      landStatus: 'Статус земли',
-      pool: 'Бассейн',
-      ownership: 'Собственность',
-      completionDate: 'Дата завершения',
-      years: 'лет',
+      unitsCount: 'Units Count',
+      area: 'Living Area',
+      totalArea: 'Total Area',
+      developer: 'Developer',
+      complex: 'Complex',
+      propertyName: 'Name',
+      managementCompany: 'Management Company',
+      bathrooms: 'Bathrooms',
+      floors: 'Floors',
+      district: 'District',
+      buildingType: 'Building Type',
+      constructionStatus: 'Construction Status',
+      landStatus: 'Land Status',
+      pool: 'Pool',
+      ownership: 'Ownership',
+      completionDate: 'Completion Date',
+      years: 'years',
       
       // Document labels
-      documentsSection: 'Документы',
-      legalCompanyName: 'Юридическое название компании:',
-      taxNumber: 'Налоговый номер (NPWP):',
-      landUsePermit: 'Разрешение на использование земли (PKKPR):',
-      landRightsCertificate: 'Сертификат права на землю (SHGB):',
-      landLeaseEndDate: 'Дата окончания аренды земли:',
-      buildingPermit: 'Разрешение на строительство (PBG):',
-      buildingPermitIMB: 'Разрешение на строительство (IMB):',
-      buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
-      layout: 'Планировка:',
+      documentsSection: 'Documents',
+      legalCompanyName: 'Legal Company Name:',
+      taxNumber: 'Tax Number (NPWP):',
+      landUsePermit: 'Land Use Permit (PKKPR):',
+      landRightsCertificate: 'Land Rights Certificate (SHGB):',
+      landLeaseEndDate: 'Land Lease End Date:',
+      buildingPermit: 'Building Permit (PBG):',
+      buildingPermitIMB: 'Building Permit (IMB):',
+      buildingReadinessCertificate: 'Building Readiness Certificate (SLF):',
+      layout: 'Layout:',
       dueDiligence: 'Due Diligence:',
-      unbrandedPresentation: 'Небрендированная презентация:',
-      pkkprFile: 'Файл PKKPR:',
+      unbrandedPresentation: 'Unbranded Presentation:',
+      pkkprFile: 'PKKPR File:',
       
       // Options
       typeOptions: {
-        villa: 'Вилла',
-        apartment: 'Апартаменты',
-        house: 'Дом',
-        commercial: 'Коммерческая недвижимость',
-        apartVilla: 'Апарт-вилла',
-        townhouse: 'Таунхаус',
-        land: 'Земельный участок'
+        villa: 'Villa',
+        apartment: 'Apartment',
+        house: 'House',
+        commercial: 'Commercial Property',
+        apartVilla: 'Apart-Villa',
+        townhouse: 'Townhouse',
+        land: 'Land Plot'
       },
       
       buildingTypeOptions: {
-        newComplex: 'Новый комплекс',
-        renovation: 'Реновация',
-        individual: 'ИЖС',
-        hotel: 'Отель',
-        resort: 'Резорт'
+        newComplex: 'New Complex',
+        renovation: 'Renovation',
+        individual: 'Individual',
+        hotel: 'Hotel',
+        resort: 'Resort'
       },
       
       statusOptions: {
-        project: 'Проект',
-        underConstruction: 'Строится',
-        ready: 'Готовый',
-        fromOwner: 'От собственника'
+        project: 'Project',
+        underConstruction: 'Under Construction',
+        ready: 'Ready',
+        fromOwner: 'From Owner'
       },
       
       poolOptions: {
-        no: 'Нет',
-        private: 'Частный',
-        shared: 'Общий'
+        no: 'No',
+        private: 'Private',
+        shared: 'Shared'
       },
       
       ownershipOptions: {
@@ -1909,7 +1896,7 @@ _________________               _________________
       // Messages
       notSelected: '(не выбрано)',
       notFound: 'Объект не найден',
-      accessDenied: 'Доступ запрещен',
+      accessDenied: 'Access denied',
       fileNotUploaded: 'Файл не загружен',
       floorText: 'этаж',
       floorsText: 'этажа',
@@ -1925,42 +1912,46 @@ _________________               _________________
       premiumOnlyTooltip: 'Данная опция доступна только для премиум аккаунтов',
       
       // Error messages
-      editPermissionError: 'У вас нет прав для редактирования объекта',
-      saveError: 'Произошла ошибка при сохранении изменений',
-      photoUploadError: 'Произошла ошибка при загрузке фотографий',
-      photoDeleteError: 'Произошла ошибка при удалении фотографии',
-      fileUploadError: 'Произошла ошибка при загрузке файла',
-      databaseUpdateError: 'Не удалось обновить информацию в базе данных',
-      developerLoadError: 'Ошибка загрузки застройщика',
-      complexLoadError: 'Ошибка загрузки комплекса',
-      documentValidationError: 'Разрешены только цифры, запятые, точки и тире',
-      documentValidationPlaceholder: 'Только цифры, запятые, точки, тире',
+      editPermissionError: 'You do not have permission to edit this property',
+      saveError: 'An error occurred while saving changes',
+      photoUploadError: 'An error occurred while uploading photos',
+      photoDeleteError: 'An error occurred while deleting photo',
+      fileUploadError: 'An error occurred while uploading file',
+      databaseUpdateError: 'Could not update database information',
+      developerLoadError: 'Error loading developer',
+      complexLoadError: 'Error loading complex',
+      documentValidationError: 'Only numbers, commas, dots, and dashes are allowed',
+      documentValidationPlaceholder: 'Only numbers, commas, dots, dashes',
       
       // Lightbox
-      photo: 'Фото',
+      photo: 'Photo',
       photoCounter: '{current} / {total}',
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен',
+      createdAt: 'Created',
+      updatedAt: 'Updated',
       
       // Additional Options
-      additionalOptions: 'Дополнительные опции',
-      onComplexTerritory: 'На территории комплекса',
+      additionalOptions: 'Additional Options',
+      onComplexTerritory: 'On Complex Territory',
       
       // Option badges
-      smartHome: 'Умный дом',
-      jacuzzi: 'Джакузи',
-      terrace: 'Терраса',
-      rooftop: 'Руфтоп',
-      balcony: 'Балкон',
+      smartHome: 'Smart Home',
+      jacuzzi: 'Jacuzzi',
+      terrace: 'Terrace',
+      rooftop: 'Rooftop',
+      balcony: 'Balcony',
       bbq: 'BBQ',
-      furniture: 'Полная мебелировка',
-      washingMachine: 'Стиральная машина',
-      spaSalon: 'СПА салон',
-      restaurant: 'Ресторан',
-      fitnessGym: 'Фитнес зал',
-      playground: 'Детская площадка',
-      artificialWave: 'Искусственная волна',
-      agentCommission: 'Агентское вознаграждение'
+      furniture: 'Full Furnishing',
+      washingMachine: 'Washing Machine',
+      spaSalon: 'SPA Salon',
+      restaurant: 'Restaurant',
+      fitnessGym: 'Fitness Gym',
+      playground: 'Playground',
+      shop: 'Shop',
+      cinema: 'Cinema',
+      coworking: 'Coworking',
+      concertHall: 'Concert Hall',
+      parking: 'Parking',
+      agentCommission: 'Agent Commission'
     },
 
     // Chessboards
@@ -1973,27 +1964,27 @@ _________________               _________________
       deleteConfirmTitle: 'Подтверждение удаления',
       deleteConfirmText: 'Вы уверены, что хотите удалить шахматку "{name}"?',
       chessboardDeleted: 'Шахматка удалена!',
-      deleteError: 'Ошибка при удалении шахматки',
+      deleteError: 'Error deleting chessboard',
       publicLinkCopied: 'Публичная ссылка скопирована!',
       
       // Table headers and labels
       complex: 'Комплекс:',
-      totalUnits: 'Всего юнитов:',
-      sections: 'Секций:',
-      floors: 'Этажей:',
-      publicLinkAvailable: 'Публичная ссылка доступна',
-      created: 'Создано:',
-      loading: 'Загрузка...',
-      untitled: 'Без названия',
-      open: 'Открыть',
-      delete: 'Удалить',
-      copyLink: 'Копировать ссылку',
-      openInNewTab: 'Открыть в новой вкладке',
+      totalUnits: 'Total units:',
+      sections: 'Sections:',
+      floors: 'Floors:',
+      publicLinkAvailable: 'Public link available',
+      created: 'Created:',
+      loading: 'Loading...',
+      untitled: 'Untitled',
+      open: 'Open',
+      delete: 'Delete',
+      copyLink: 'Copy link',
+      openInNewTab: 'Open in new tab',
       
       // Status badges
-      free: 'Свободно: {count}',
-      booked: 'Забронировано: {count}',
-      sold: 'Продано: {count}',
+      free: 'Free: {count}',
+      booked: 'Booked: {count}',
+      sold: 'Sold: {count}',
       
       // Chessboard page
       chessboardName: 'Название шахматки',
@@ -2058,7 +2049,7 @@ _________________               _________________
         river: 'Река',
         yard: 'Двор',
         volcano: 'Вулкан',
-        riceTerraces: 'Терасерing Padi'
+        riceTerraces: 'Рисовые террасы'
       },
       
       statuses: {
@@ -2068,35 +2059,35 @@ _________________               _________________
       },
       
       // Actions
-      copy: 'Копировать',
-      remove: 'Удалить',
-      moveUp: 'Переместить вверх',
-      moveDown: 'Переместить вниз',
+      copy: 'Copy',
+      remove: 'Remove',
+      moveUp: 'Move Up',
+      moveDown: 'Move Down',
       
       // Messages
-      chessboardSaved: 'Шахматка успешно сохранена',
-      chessboardDeletedSuccess: 'Шахматка успешно удалена',
-      saveError: 'Ошибка при сохранении шахматки',
-      loadError: 'Ошибка при загрузке шахматки',
-      complexLoadError: 'Ошибка загрузки комплексов',
-      chessboardNotFound: 'Шахматка не найдена',
-      accessDenied: 'Доступ запрещен',
-      validationError: 'Пожалуйста, исправьте ошибки валидации перед сохранением',
+      chessboardSaved: 'Chessboard saved successfully',
+      chessboardDeletedSuccess: 'Chessboard deleted successfully',
+      saveError: 'Error saving chessboard',
+      loadError: 'Error loading chessboard',
+      complexLoadError: 'Error loading complexes',
+      chessboardNotFound: 'Chessboard not found',
+      accessDenied: 'Access denied',
+      validationError: 'Please fix validation errors before saving',
       
       // Validation messages
-      nameRequiredError: 'Название шахматки обязательно',
-      sectionNameRequired: 'Название секции обязательно',
-      duplicateFloor: 'Дублирование этажа',
-      unitIdRequired: 'ID юнита обязателен',
-      invalidArea: 'Некорректная площадь',
-      invalidPrice: 'Некорректная цена',
+      nameRequiredError: 'Chessboard name is required',
+      sectionNameRequired: 'Section name is required',
+      duplicateFloor: 'Duplicate floor number',
+      unitIdRequired: 'Unit ID is required',
+      invalidArea: 'Invalid area value',
+      invalidPrice: 'Invalid price value',
       
       // Additional editing texts
-      editingChessboard: 'Mengedit Papan Catur',
-      backToList: 'К списку',
-      noAvailableComplexes: 'Нет доступных комплексов без шахматки',
-      floorButton: 'Этаж',
-      noComplexesForDeveloper: 'Нет доступных комплексов для застройщика "{name}" без шахматки',
+      editingChessboard: 'Editing Chessboard',
+      backToList: 'Back to List',
+      noAvailableComplexes: 'No available complexes without chessboard',
+      floorButton: 'Floor',
+      noComplexesForDeveloper: 'No available complexes for developer "{name}" without chessboard',
       
       // Unit form labels
       chessboardFloors: 'Этажность',
@@ -2105,10 +2096,10 @@ _________________               _________________
       chessboardBathrooms: 'Санузлы',
       chessboardView: 'Вид из окна',
       side: 'Сторона',
-      priceWithRate: 'Harga (USD → IDR)',
-      enterPrice: 'Masukkan harga',
-      showPriceOnPublic: 'Tampilkan harga di halaman publik',
-      showPrice: 'Tampilkan harga',
+      priceWithRate: 'Цена (USD → IDR)',
+      enterPrice: 'Введите цену',
+      showPriceOnPublic: 'Показать цену на публичной странице',
+      showPrice: 'Показать цену',
       
       // Floor form labels
       noNumber: 'Без номера',
@@ -2135,8 +2126,8 @@ _________________               _________________
         rooftop: 'Руфтоп',
         terrace: 'Терраса'
       },
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      createdAt: 'Создано',
+      updatedAt: 'Обновлено'
     },
 
     // ROI Calculator
@@ -2329,87 +2320,87 @@ _________________               _________________
       lessons: 'Уроки',
       createSection: 'Создать раздел',
       editSection: 'Редактировать раздел',
-      deleteSection: 'Удалить раздел',
-      createTopic: 'Создать тему',
-      editTopic: 'Редактировать тему',
-      deleteTopic: 'Удалить тему',
-      createLesson: 'Создать урок',
-      editLesson: 'Редактировать урок',
-      deleteLesson: 'Удалить урок',
-      sectionName: 'Название раздела',
-      sectionNameEn: 'Название раздела (Английский)',
-      sectionNameRu: 'Название раздела (Русский)',
-      sectionNameId: 'Название раздела (Индонезийский)',
-      sectionDescription: 'Описание раздела',
-      sectionDescriptionEn: 'Описание раздела (Английский)',
-      sectionDescriptionRu: 'Описание раздела (Русский)',
-      sectionDescriptionId: 'Описание раздела (Индонезийский)',
-      topicName: 'Название темы',
-      topicNameEn: 'Название темы (Английский)',
-      topicNameRu: 'Название темы (Русский)',
-      topicNameId: 'Название темы (Индонезийский)',
-      topicDescription: 'Описание темы',
-      topicDescriptionEn: 'Описание темы (Английский)',
-      topicDescriptionRu: 'Описание темы (Русский)',
-      topicDescriptionId: 'Описание темы (Индонезийский)',
-      lessonName: 'Название урока',
-      lessonNameEn: 'Название урока (Английский)',
-      lessonNameRu: 'Название урока (Русский)',
-      lessonNameId: 'Название урока (Индонезийский)',
-      lessonDescription: 'Описание урока',
-      lessonDescriptionEn: 'Описание урока (Английский)',
-      lessonDescriptionRu: 'Описание урока (Русский)',
-      lessonDescriptionId: 'Описание урока (Индонезийский)',
-      videoUrlEn: 'Ссылка на видео (Английский)',
-      videoUrlRu: 'Ссылка на видео (Русский)',
-      videoUrlId: 'Ссылка на видео (Индонезийский)',
-      order: 'Порядок',
-      save: 'Сохранить',
-      cancel: 'Отмена',
-      loading: 'Загрузка...',
-      noSections: 'Разделы не найдены',
-      noTopics: 'Темы не найдены',
-      noLessons: 'В этой теме нет уроков',
-      sectionCreated: 'Раздел успешно создан',
-      sectionUpdated: 'Раздел успешно обновлен',
-      sectionDeleted: 'Раздел успешно удален',
-      topicCreated: 'Тема успешно создана',
-      topicUpdated: 'Тема успешно обновлена',
-      topicDeleted: 'Тема успешно удалена',
-      lessonCreated: 'Урок успешно создан',
-      lessonUpdated: 'Урок успешно обновлен',
-      lessonDeleted: 'Урок успешно удален',
-      confirmDeleteSection: 'Вы уверены, что хотите удалить этот раздел? Все темы и уроки также будут удалены.',
-      confirmDeleteTopic: 'Вы уверены, что хотите удалить эту тему? Все уроки также будут удалены.',
-      confirmDeleteLesson: 'Вы уверены, что хотите удалить этот урок?',
-      errorLoading: 'Ошибка загрузки данных',
-      errorSaving: 'Ошибка сохранения данных',
-      errorDeleting: 'Ошибка удаления данных',
-      noPermission: 'У вас нет прав для выполнения этого действия',
-      topicNotFound: 'Тема не найдена',
-      lessonNotFound: 'Урок не найден',
-      enterLessonName: 'Введите название урока хотя бы на одном языке',
-      addVideoUrl: 'Добавьте хотя бы одну ссылку на видео',
-      watchVideo: 'Смотреть видео',
-      backToSections: 'Назад к разделам',
-      backToTopics: 'Назад к темам',
-      backToLessons: 'Назад к урокам',
-      viewLessons: 'Просмотр уроков',
-      goToEducation: 'Перейти к обучению',
-      backToSection: 'Назад к разделу',
-      videoNotAvailable: 'Видео недоступно на вашем языке',
-      selectLanguage: 'Выберите язык',
-      english: 'Английский',
-      russian: 'Русский',
-      indonesian: 'Индонезийский',
-      infoSection: 'Информация',
-      navigationSection: 'Навигация',
-      lessonDescriptionSection: 'Описание урока',
-      moveTopic: 'Переместить тему',
-      moveTopicToSection: 'Переместить тему в другой раздел',
-      availableRoles: 'Доступные роли',
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      deleteSection: 'Delete Section',
+      createTopic: 'Create Topic',
+      editTopic: 'Edit Topic',
+      deleteTopic: 'Delete Topic',
+      createLesson: 'Create Lesson',
+      editLesson: 'Edit Lesson',
+      deleteLesson: 'Delete Lesson',
+      sectionName: 'Section Name',
+      sectionNameEn: 'Section Name (English)',
+      sectionNameRu: 'Section Name (Russian)',
+      sectionNameId: 'Section Name (Indonesian)',
+      sectionDescription: 'Section Description',
+      sectionDescriptionEn: 'Section Description (English)',
+      sectionDescriptionRu: 'Section Description (Russian)',
+      sectionDescriptionId: 'Section Description (Indonesian)',
+      topicName: 'Topic Name',
+      topicNameEn: 'Topic Name (English)',
+      topicNameRu: 'Topic Name (Russian)',
+      topicNameId: 'Topic Name (Indonesian)',
+      topicDescription: 'Topic Description',
+      topicDescriptionEn: 'Topic Description (English)',
+      topicDescriptionRu: 'Topic Description (Russian)',
+      topicDescriptionId: 'Topic Description (Indonesian)',
+      lessonName: 'Lesson Name',
+      lessonNameEn: 'Lesson Name (English)',
+      lessonNameRu: 'Lesson Name (Russian)',
+      lessonNameId: 'Lesson Name (Indonesian)',
+      lessonDescription: 'Lesson Description',
+      lessonDescriptionEn: 'Lesson Description (English)',
+      lessonDescriptionRu: 'Lesson Description (Russian)',
+      lessonDescriptionId: 'Lesson Description (Indonesian)',
+      videoUrlEn: 'Video URL (English)',
+      videoUrlRu: 'Video URL (Russian)',
+      videoUrlId: 'Video URL (Indonesian)',
+      order: 'Order',
+      save: 'Save',
+      cancel: 'Cancel',
+      loading: 'Loading...',
+      noSections: 'No sections available',
+      noTopics: 'No topics available',
+      noLessons: 'No lessons in this topic',
+      sectionCreated: 'Section created successfully',
+      sectionUpdated: 'Section updated successfully',
+      sectionDeleted: 'Section deleted successfully',
+      topicCreated: 'Topic created successfully',
+      topicUpdated: 'Topic updated successfully',
+      topicDeleted: 'Topic deleted successfully',
+      lessonCreated: 'Lesson created successfully',
+      lessonUpdated: 'Lesson updated successfully',
+      lessonDeleted: 'Lesson deleted successfully',
+      confirmDeleteSection: 'Are you sure you want to delete this section? All topics and lessons will also be deleted.',
+      confirmDeleteTopic: 'Are you sure you want to delete this topic? All lessons will also be deleted.',
+      confirmDeleteLesson: 'Are you sure you want to delete this lesson?',
+      errorLoading: 'Error loading data',
+      errorSaving: 'Error saving data',
+      errorDeleting: 'Error deleting data',
+      noPermission: 'You do not have permission to perform this action',
+      topicNotFound: 'Topic not found',
+      lessonNotFound: 'Lesson not found',
+      enterLessonName: 'Enter lesson name in at least one language',
+      addVideoUrl: 'Add at least one video URL',
+      watchVideo: 'Watch Video',
+      backToSections: 'Back to Sections',
+      backToTopics: 'Back to Topics',
+      backToLessons: 'Back to Lessons',
+      viewLessons: 'View Lessons',
+      goToEducation: 'Go to Education',
+      backToSection: 'Back to Section',
+      videoNotAvailable: 'Video not available in your language',
+      selectLanguage: 'Select language',
+      english: 'English',
+      russian: 'Russian',
+      indonesian: 'Indonesian',
+      infoSection: 'Information',
+      navigationSection: 'Navigation',
+      lessonDescriptionSection: 'Lesson Description',
+      moveTopic: 'Move Topic',
+      moveTopicToSection: 'Move topic to another section',
+      availableRoles: 'Available Roles',
+      createdAt: 'Created',
+      updatedAt: 'Updated'
     },
 
     // Список застройщиков
@@ -2445,12 +2436,12 @@ _________________               _________________
         verifiedBadge: {
           title: 'Бейдж "Проверено сервисом"',
           description: 'Специальный бейдж на страницах ваших объектов и комплексов, который повышает доверие агентов и клиентов к вашим предложениям.',
-          benefit: 'Повышение доверия и конверсии'
+          benefit: 'Increased trust and conversion'
         },
         publicWebPage: {
           title: 'Публичная веб-страница',
           description: 'Полноценная веб-страница с информацией о ваших объектах, которую можно использовать вне приложения и делиться ссылкой с клиентами и партнерами.',
-          benefit: 'Расширение каналов продаж'
+          benefit: 'Expanded sales channels'
         }
       },
 
@@ -2728,20 +2719,7 @@ _________________               _________________
       messageSent: 'Pesan berhasil dikirim',
       messageError: 'Gagal mengirim pesan',
       chatDataError: 'Gagal memuat data chat',
-      messagesError: 'Gagal memuat pesan',
       createdAt: 'Dibuat',
-      updatedAt: 'Diperbarui',
-      // Image viewing
-      imageError: 'Kesalahan memuat gambar',
-      imageLoadError: 'Coba lagi',
-      downloadImage: 'Unduh',
-      shareImage: 'Bagikan',
-      deleteImage: 'Hapus',
-      closeImage: 'Tutup',
-      imageShareTitle: 'Gambar dari chat',
-      imageShareText: 'Lihat gambar ini',
-      messageDeleted: 'Pesan dihapus',
-      deleteMessageError: 'Gagal menghapus pesan'
     },
 
     // Settings Page
@@ -2824,10 +2802,10 @@ _________________               _________________
         viewContract: 'Lihat Kontrak',
         signDate: 'Ditandatangani pada',
         allContracts: 'Semua Kontrak',
-        loading: 'Memuat kontrak...',
-        developer: 'Pengembang',
-        signedBy: 'Ditandatangani oleh',
-        signing: 'Menandatangani...',
+        loading: 'Загрузка договоров...',
+        developer: 'Застройщик',
+        signedBy: 'Подписан',
+        signing: 'Подписание...',
         contractSigned: 'Kontrak berhasil ditandatangani',
         contractTitle: 'PERJANJIAN PENGALIHAN\nuntuk menyediakan layanan informasi dan teknis',
         agree: 'Saya setuju dengan syarat dan ketentuan',
@@ -2980,7 +2958,7 @@ _________________               _________________
       completionDateLabel: 'Tanggal Selesai',
       coordinatesLabel: 'Koordinat',
       videoLabel: 'Video',
-      tourLabel: 'Tur 3D',
+      tourLabel: '3D Tur',
       pricePlaceholder: 'Harga dalam USD',
       descriptionPlaceholder: 'Deskripsi kompleks',
       videoLinkPlaceholder: 'Tautan video',
@@ -3613,7 +3591,7 @@ _________________               _________________
       videoUrlRu: 'URL Video (Bahasa Rusia)',
       videoUrlId: 'URL Video (Bahasa Indonesia)',
       order: 'Urutan',
-      save: 'Simpan',
+      save: 'Сохранить',
       cancel: 'Batal',
       loading: 'Loading...',
       noSections: 'Tidak ada bagian yang tersedia',

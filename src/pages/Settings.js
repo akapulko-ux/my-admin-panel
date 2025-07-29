@@ -7,7 +7,7 @@ import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
@@ -69,6 +69,7 @@ const Settings = () => {
   const [showCrmTestDialog, setShowCrmTestDialog] = useState(false);
   const [selectedCrmIntegration, setSelectedCrmIntegration] = useState(null);
   const [crmTestResult, setCrmTestResult] = useState(null);
+  const [showCrmToken, setShowCrmToken] = useState(false);
 
   // Форма создания CRM интеграции
   const [crmFormData, setCrmFormData] = useState({
@@ -140,22 +141,17 @@ const Settings = () => {
 
   useEffect(() => {
     loadUserSettings();
-    
-    // Загружаем все договора для админа и модератора
+  }, [currentUser, role, loadUserSettings]);
+
+  // Загружаем договора для админа и модератора
+  useEffect(() => {
     if (role === 'admin' || role === 'moderator') {
       loadAllContracts();
     }
-    
-    // Загружаем API ключи, webhook подписки и CRM интеграции
-    if (currentUser) {
-      loadApiKeys();
-      loadWebhooks();
-      loadCrmIntegrations();
-    }
-  }, [currentUser, role, loadUserSettings]);
+  }, [role]);
 
   // Загружаем API ключи пользователя
-  const loadApiKeys = async () => {
+  const loadApiKeys = useCallback(async () => {
     if (!currentUser) return;
     
     setIsLoadingApiKeys(true);
@@ -178,10 +174,10 @@ const Settings = () => {
     } finally {
       setIsLoadingApiKeys(false);
     }
-  };
+  }, [currentUser]);
 
   // Загружаем webhook подписки пользователя
-  const loadWebhooks = async () => {
+  const loadWebhooks = useCallback(async () => {
     if (!currentUser) return;
     
     setIsLoadingWebhooks(true);
@@ -198,13 +194,14 @@ const Settings = () => {
       });
       
       return unsubscribe;
+      
     } catch (error) {
       console.error('Ошибка при загрузке webhook подписок:', error);
       toast.error('Ошибка при загрузке webhook подписок');
     } finally {
       setIsLoadingWebhooks(false);
     }
-  };
+  }, [currentUser]);
 
   // Генерируем новый API ключ
   const generateApiKey = async () => {
@@ -346,7 +343,7 @@ const Settings = () => {
   };
 
   // Загружаем CRM интеграции пользователя
-  const loadCrmIntegrations = async () => {
+  const loadCrmIntegrations = useCallback(async () => {
     if (!currentUser) return;
     
     setIsLoadingCrmIntegrations(true);
@@ -369,7 +366,16 @@ const Settings = () => {
     } finally {
       setIsLoadingCrmIntegrations(false);
     }
-  };
+  }, [currentUser]);
+
+  // Загружаем API ключи, webhook подписки и CRM интеграции
+  useEffect(() => {
+    if (currentUser) {
+      loadApiKeys();
+      loadWebhooks();
+      loadCrmIntegrations();
+    }
+  }, [currentUser, loadApiKeys, loadWebhooks, loadCrmIntegrations]);
 
   // Создаем новую CRM интеграцию
   const createCrmIntegration = async () => {
@@ -380,55 +386,78 @@ const Settings = () => {
       return;
     }
 
-    setIsLoading(true);
+    setIsLoadingCrmIntegrations(true);
     try {
-      if (selectedCrmIntegration) {
-        // Обновляем существующую интеграцию
-        const integrationRef = doc(db, 'crmIntegrations', selectedCrmIntegration.id);
-        await updateDoc(integrationRef, {
-          ...crmFormData,
-          updatedAt: new Date()
-        });
-        
-        setSelectedCrmIntegration(null);
-        toast.success('CRM интеграция успешно обновлена');
-      } else {
-        // Создаем новую интеграцию
-        const integrationData = {
-          userId: currentUser.uid,
-          ...crmFormData,
-          createdAt: new Date(),
-          lastSync: null,
-          syncCount: 0,
-          errorCount: 0,
-          lastError: null
-        };
+      // Создаем новую интеграцию
+      const integrationData = {
+        userId: currentUser.uid,
+        ...crmFormData,
+        createdAt: new Date(),
+        lastSync: null,
+        syncCount: 0,
+        errorCount: 0,
+        lastError: null
+      };
 
-        await addDoc(collection(db, 'crmIntegrations'), integrationData);
-        toast.success('CRM интеграция успешно создана');
-      }
+      await addDoc(collection(db, 'crmIntegrations'), integrationData);
+      toast.success('CRM интеграция успешно создана');
       
       setCrmFormData({
         name: '',
         crmType: 'amo',
         domain: '',
         accessToken: '',
-        pipelineId: '',
-        statusId: '',
-        clientNameFieldId: '',
-        phoneFieldId: '',
-        emailFieldId: '',
-        propertyFieldId: '',
-        commentFieldId: '',
-        isActive: true
+        clientId: '',
+        description: '',
+        syncInterval: '1hour',
+        enabled: true
       });
       setShowCrmIntegrationDialog(false);
-      
     } catch (error) {
-      console.error('Ошибка при работе с CRM интеграцией:', error);
-      toast.error('Ошибка при работе с CRM интеграцией');
+      console.error('Ошибка при создании CRM интеграции:', error);
+      toast.error('Ошибка при создании CRM интеграции');
     } finally {
-      setIsLoading(false);
+      setIsLoadingCrmIntegrations(false);
+    }
+  };
+
+  // Обновляем существующую CRM интеграцию
+  const updateCrmIntegration = async () => {
+    if (!currentUser || !selectedCrmIntegration) return;
+
+    if (!crmFormData.name.trim() || !crmFormData.domain.trim() || !crmFormData.accessToken.trim()) {
+      toast.error('Заполните все обязательные поля');
+      return;
+    }
+
+    setIsLoadingCrmIntegrations(true);
+    try {
+      // Обновляем существующую интеграцию
+      const integrationRef = doc(db, 'crmIntegrations', selectedCrmIntegration.id);
+      await updateDoc(integrationRef, {
+        ...crmFormData,
+        updatedAt: new Date()
+      });
+      
+      setSelectedCrmIntegration(null);
+      toast.success('CRM интеграция успешно обновлена');
+      
+      setCrmFormData({
+        name: '',
+        crmType: 'amo',
+        domain: '',
+        accessToken: '',
+        clientId: '',
+        description: '',
+        syncInterval: '1hour',
+        enabled: true
+      });
+      setShowCrmIntegrationDialog(false);
+    } catch (error) {
+      console.error('Ошибка при обновлении CRM интеграции:', error);
+      toast.error('Ошибка при обновлении CRM интеграции');
+    } finally {
+      setIsLoadingCrmIntegrations(false);
     }
   };
 
@@ -1147,15 +1176,15 @@ const Settings = () => {
       {/* Интеграции с внешними CRM системами */}
       <Card className="p-6">
         <div className="flex items-start gap-4">
-          <div className="p-2 bg-orange-100 rounded-lg">
+          <div className="p-2 bg-orange-100 rounded-lg flex-shrink-0">
             <SettingsIcon className="h-6 w-6 text-orange-600" />
           </div>
           
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold">Интеграции с внешними CRM системами</h3>
-                <p className="text-muted-foreground">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold mb-2">Интеграции с внешними CRM системами</h3>
+                <p className="text-muted-foreground text-sm">
                   Настройте API ключи и webhook подписки для интеграции с внешними системами
                 </p>
               </div>
@@ -1163,8 +1192,11 @@ const Settings = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsCrmIntegrationsExpanded(!isCrmIntegrationsExpanded)}
-                className="p-2"
+                className="p-2 flex-shrink-0 w-full sm:w-auto justify-center sm:justify-start"
               >
+                <span className="sm:hidden mr-2">
+                  {isCrmIntegrationsExpanded ? 'Свернуть' : 'Развернуть'}
+                </span>
                 {isCrmIntegrationsExpanded ? (
                   <ChevronDown className="h-5 w-5" />
                 ) : (
@@ -1177,317 +1209,359 @@ const Settings = () => {
               <>
                 {/* Информационная карточка */}
                 <Card className="bg-blue-50 border-blue-200 mb-6">
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-blue-900 mb-2">Информация об API</h4>
-                    <div className="space-y-1 text-sm text-blue-800">
-                      <p>• Базовый URL: <code className="bg-blue-100 px-2 py-1 rounded">https://us-central1-bali-estate-1130f.cloudfunctions.net/api/v1</code></p>
-                      <p>• Лимит запросов: <strong>{getUsageLimit().toLocaleString()}</strong> запросов в месяц</p>
-                      <p>• Аутентификация: используйте заголовок <code className="bg-blue-100 px-2 py-1 rounded">X-API-Key</code></p>
-                      <p>• Документация: <a href="/api-docs.html" className="underline">открыть документацию</a></p>
+                  <div className="p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-blue-900 mb-2">Информация об API</h4>
+                        <div className="space-y-1 text-sm text-blue-800">
+                          <p className="flex flex-col sm:flex-row sm:items-center gap-1">
+                            <span>• Базовый URL:</span>
+                            <code className="bg-blue-100 px-2 py-1 rounded text-xs break-all">
+                              https://us-central1-bali-estate-1130f.cloudfunctions.net/api/v1
+                            </code>
+                          </p>
+                          <p>• Лимит запросов: <strong>{getUsageLimit().toLocaleString()}</strong> запросов в месяц</p>
+                          <p className="flex flex-col sm:flex-row sm:items-center gap-1">
+                            <span>• Аутентификация: используйте заголовок</span>
+                            <code className="bg-blue-100 px-2 py-1 rounded text-xs">X-API-Key</code>
+                          </p>
+                          <p>• Документация: <a href="/api-docs.html" className="underline hover:text-blue-700">открыть документацию</a></p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </Card>
+                </Card>
 
-            {/* API Ключи */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-medium">API Ключи</h4>
-                <Button onClick={() => setShowApiKeyDialog(true)} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Создать API ключ
-                </Button>
-              </div>
+                {/* API Ключи */}
+                <div className="mb-8">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <h4 className="text-lg font-medium">API Ключи</h4>
+                    <Button onClick={() => setShowApiKeyDialog(true)} size="sm" className="w-full sm:w-auto">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Создать API ключ
+                    </Button>
+                  </div>
 
-              {isLoadingApiKeys ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
-                  <span className="ml-2 text-muted-foreground">Загрузка API ключей...</span>
-                </div>
-              ) : apiKeys.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
-                  <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Нет API ключей</h3>
-                  <p className="mb-4">Создайте свой первый API ключ для интеграции с внешними системами</p>
-                  <Button onClick={() => setShowApiKeyDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Создать API ключ
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {apiKeys.map(key => (
-                    <div key={key.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h5 className="font-semibold">{key.name}</h5>
-                            <Badge variant={key.isActive ? "default" : "secondary"}>
-                              {key.isActive ? (
-                                <>
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Активен
-                                </>
-                              ) : (
-                                <>
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Неактивен
-                                </>
+                  {isLoadingApiKeys ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+                      <span className="ml-2 text-muted-foreground">Загрузка API ключей...</span>
+                    </div>
+                  ) : apiKeys.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
+                      <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Нет API ключей</h3>
+                      <p className="mb-4">Создайте свой первый API ключ для интеграции с внешними системами</p>
+                      <Button onClick={() => setShowApiKeyDialog(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Создать API ключ
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {apiKeys.map(key => (
+                        <div key={key.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                <h5 className="font-semibold truncate">{key.name}</h5>
+                                <Badge variant={key.isActive ? "default" : "secondary"}>
+                                  {key.isActive ? (
+                                    <>
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Активен
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      Неактивен
+                                    </>
+                                  )}
+                                </Badge>
+                              </div>
+                              
+                              {key.description && (
+                                <p className="text-muted-foreground mb-2 text-sm">{key.description}</p>
                               )}
-                            </Badge>
-                          </div>
-                          
-                          {key.description && (
-                            <p className="text-muted-foreground mb-2">{key.description}</p>
-                          )}
-                          
-                          <div className="flex items-center gap-2 mb-2">
-                            <Key className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm font-mono">
-                              {showApiKeyVisibility[key.id] 
-                                ? key.key 
-                                : `${key.key.substring(0, 20)}...`
-                              }
-                            </span>
+                              
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                                <Key className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                <span className="text-sm font-mono break-all">
+                                  {showApiKeyVisibility[key.id] 
+                                    ? key.key 
+                                    : `${key.key.substring(0, 20)}...`
+                                  }
+                                </span>
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleApiKeyVisibility(key.id)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    {showApiKeyVisibility[key.id] ? (
+                                      <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                      <Eye className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyApiKey(key.key)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                              
+                              <div className="text-xs text-muted-foreground">
+                                Создан: {key.createdAt?.toDate ? key.createdAt.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}
+                                {key.lastUsed && ` • Последнее использование: ${key.lastUsed.toDate ? key.lastUsed.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}`}
+                              </div>
+                            </div>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => toggleApiKeyVisibility(key.id)}
+                              onClick={() => deleteApiKey(key.id)}
+                              className="text-red-600 hover:text-red-700 flex-shrink-0"
                             >
-                              {showApiKeyVisibility[key.id] ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
+                              <Trash2 className="h-4 w-4" />
                             </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Webhook Подписки */}
+                <div className="mb-8">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <h4 className="text-lg font-medium">Webhook Подписки</h4>
+                    <Button onClick={() => setShowWebhookDialog(true)} size="sm" className="w-full sm:w-auto">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Создать Webhook
+                    </Button>
+                  </div>
+
+                  {isLoadingWebhooks ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+                      <span className="ml-2 text-muted-foreground">Загрузка webhook подписок...</span>
+                    </div>
+                  ) : webhooks.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
+                      <Webhook className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Нет webhook подписок</h3>
+                      <p className="mb-4">Создайте webhook подписку для получения уведомлений о событиях</p>
+                      <Button onClick={() => setShowWebhookDialog(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Создать Webhook
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {webhooks.map(webhook => (
+                        <div key={webhook.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                <h5 className="font-semibold truncate">{webhook.name}</h5>
+                                <Badge variant={webhook.isActive ? "default" : "secondary"}>
+                                  {webhook.isActive ? (
+                                    <>
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Активен
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      Неактивен
+                                    </>
+                                  )}
+                                </Badge>
+                              </div>
+                              
+                              <div className="text-sm text-muted-foreground mb-2">
+                                <div className="font-mono break-all text-xs bg-gray-100 p-2 rounded border">
+                                  {webhook.url}
+                                </div>
+                              </div>
+                              
+                              <div className="text-xs text-muted-foreground">
+                                Создан: {webhook.createdAt?.toDate ? webhook.createdAt.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}
+                                {webhook.lastDelivery && ` • Последняя доставка: ${webhook.lastDelivery.toDate ? webhook.lastDelivery.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}`}
+                              </div>
+                            </div>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => copyApiKey(key.key)}
+                              onClick={() => deleteWebhook(webhook.id)}
+                              className="text-red-600 hover:text-red-700 flex-shrink-0"
                             >
-                              <Copy className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                          
-                          <div className="text-xs text-muted-foreground">
-                            Создан: {key.createdAt?.toDate ? key.createdAt.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}
-                            {key.lastUsed && ` • Последнее использование: ${key.lastUsed.toDate ? key.lastUsed.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}`}
-                          </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteApiKey(key.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Webhook Подписки */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-medium">Webhook Подписки</h4>
-                <Button onClick={() => setShowWebhookDialog(true)} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Создать Webhook
-                </Button>
-              </div>
+                {/* CRM Интеграции */}
+                <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <h4 className="text-lg font-medium">CRM Интеграции</h4>
+                    <Button onClick={() => {
+                      setCrmFormData({
+                        name: '',
+                        crmType: 'amo',
+                        domain: '',
+                        accessToken: '',
+                        clientId: '',
+                        description: '',
+                        syncInterval: '1hour',
+                        enabled: true
+                      });
+                      setSelectedCrmIntegration(null);
+                      setShowCrmIntegrationDialog(true);
+                    }} size="sm" className="w-full sm:w-auto">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить CRM
+                    </Button>
+                  </div>
 
-              {isLoadingWebhooks ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
-                  <span className="ml-2 text-muted-foreground">Загрузка webhook подписок...</span>
-                </div>
-              ) : webhooks.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
-                  <Webhook className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Нет webhook подписок</h3>
-                  <p className="mb-4">Создайте webhook подписку для получения уведомлений о событиях</p>
-                  <Button onClick={() => setShowWebhookDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Создать Webhook
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {webhooks.map(webhook => (
-                    <div key={webhook.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h5 className="font-semibold">{webhook.name}</h5>
-                            <Badge variant={webhook.isActive ? "default" : "secondary"}>
-                              {webhook.isActive ? (
-                                <>
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Активен
-                                </>
-                              ) : (
-                                <>
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Неактивен
-                                </>
-                              )}
-                            </Badge>
-                          </div>
-                          
-                          <div className="text-sm text-muted-foreground mb-2">
-                            <div className="font-mono">{webhook.url}</div>
-                          </div>
-                          
-                          <div className="text-xs text-muted-foreground">
-                            Создан: {webhook.createdAt?.toDate ? webhook.createdAt.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}
-                            {webhook.lastDelivery && ` • Последняя доставка: ${webhook.lastDelivery.toDate ? webhook.lastDelivery.toDate().toLocaleDateString('ru-RU') : 'Неизвестно'}`}
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteWebhook(webhook.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                  {isLoadingCrmIntegrations ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+                      <span className="ml-2 text-muted-foreground">Загрузка CRM интеграций...</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* CRM Интеграции */}
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-medium">CRM Интеграции</h4>
-                <Button onClick={() => {
-                  setSelectedCrmIntegration(null);
-                  setCrmFormData({
-                    name: '',
-                    crmType: 'amo',
-                    domain: '',
-                    accessToken: '',
-                    pipelineId: '',
-                    statusId: '',
-                    clientNameFieldId: '',
-                    phoneFieldId: '',
-                    emailFieldId: '',
-                    propertyFieldId: '',
-                    commentFieldId: '',
-                    isActive: true
-                  });
-                  setShowCrmIntegrationDialog(true);
-                }} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Добавить CRM
-                </Button>
-              </div>
-
-              {isLoadingCrmIntegrations ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
-                  <span className="ml-2 text-muted-foreground">Загрузка CRM интеграций...</span>
-                </div>
-              ) : crmIntegrations.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
-                  <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Нет CRM интеграций</h3>
-                  <p className="mb-4">Создайте интеграцию с CRM для автоматической синхронизации фиксаций</p>
-                  <Button onClick={() => {
-                    setSelectedCrmIntegration(null);
-                    setCrmFormData({
-                      name: '',
-                      crmType: 'amo',
-                      domain: '',
-                      accessToken: '',
-                      pipelineId: '',
-                      statusId: '',
-                      clientNameFieldId: '',
-                      phoneFieldId: '',
-                      emailFieldId: '',
-                      propertyFieldId: '',
-                      commentFieldId: '',
-                      isActive: true
-                    });
-                    setShowCrmIntegrationDialog(true);
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Добавить CRM
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {crmIntegrations.map(integration => (
-                    <div key={integration.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h5 className="font-semibold">{integration.name}</h5>
-                            {getCrmStatusBadge(integration)}
-                          </div>
-                          
-                          <div className="space-y-2 text-sm text-muted-foreground">
-                            <div>CRM: <strong>{getCrmName(integration.crmType)}</strong></div>
-                            <div>Домен: <code className="bg-gray-100 px-1 rounded">{integration.domain}</code></div>
-                            {integration.lastSync && (
-                              <div>Последняя синхронизация: {integration.lastSync.toDate ? 
-                                integration.lastSync.toDate().toLocaleString('ru-RU') : 
-                                new Date(integration.lastSync).toLocaleString('ru-RU')
-                              }</div>
-                            )}
-                            {integration.syncCount > 0 && (
-                              <div>Всего синхронизировано: <strong>{integration.syncCount}</strong> записей</div>
-                            )}
-                            {integration.lastError && (
-                              <div className="text-red-600">Последняя ошибка: {integration.lastError}</div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => testCrmIntegration(integration)}
-                          >
-                            <TestTube className="h-4 w-4 mr-2" />
-                            Тест
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setCrmFormData(integration);
-                              setShowCrmIntegrationDialog(true);
-                            }}
-                          >
-                            <SettingsIcon className="h-4 w-4 mr-2" />
-                            Настройки
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteCrmIntegration(integration.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                  ) : crmIntegrations.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-gray-200 rounded-lg">
+                      <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Нет CRM интеграций</h3>
+                      <p className="mb-4">Создайте интеграцию с CRM для автоматической синхронизации фиксаций</p>
+                      <Button onClick={() => {
+                        setCrmFormData({
+                          name: '',
+                          crmType: 'amo',
+                          domain: '',
+                          accessToken: '',
+                          clientId: '',
+                          description: '',
+                          syncInterval: '1hour',
+                          enabled: true
+                        });
+                        setSelectedCrmIntegration(null);
+                        setShowCrmIntegrationDialog(true);
+                      }}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Добавить CRM
+                      </Button>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="space-y-3">
+                      {crmIntegrations.map(integration => (
+                        <div key={integration.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+                                <h5 className="font-semibold text-lg truncate">{integration.name}</h5>
+                                {getCrmStatusBadge(integration)}
+                              </div>
+                              
+                              <div className="space-y-2 text-sm text-muted-foreground">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                  <span>CRM:</span> 
+                                  <strong className="text-gray-900">{getCrmName(integration.crmType)}</strong>
+                                </div>
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                  <span>Домен:</span> 
+                                  <code className="bg-gray-100 px-2 py-1 rounded text-xs break-all">{integration.domain}</code>
+                                </div>
+                                {integration.lastSync && (
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                    <span>Последняя синхронизация:</span>
+                                    <span className="text-gray-900 text-xs">
+                                      {integration.lastSync.toDate ? 
+                                        integration.lastSync.toDate().toLocaleString('ru-RU') : 
+                                        new Date(integration.lastSync).toLocaleString('ru-RU')
+                                      }
+                                    </span>
+                                  </div>
+                                )}
+                                {integration.syncCount > 0 && (
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                    <span>Всего синхронизировано:</span> 
+                                    <strong className="text-gray-900">{integration.syncCount}</strong> записей
+                                  </div>
+                                )}
+                                {integration.lastError && (
+                                  <div className="text-red-600 text-xs break-words bg-red-50 p-2 rounded border border-red-200">
+                                    <strong>Последняя ошибка:</strong> {integration.lastError}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => testCrmIntegration(integration)}
+                                disabled={isLoadingCrmIntegrations}
+                                className="flex-1 sm:flex-none min-h-[40px]"
+                              >
+                                <TestTube className="h-4 w-4 mr-2" />
+                                <span className="hidden sm:inline">Тестировать</span>
+                                <span className="sm:hidden">Тест</span>
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedCrmIntegration(integration);
+                                  setCrmFormData({
+                                    name: integration.name || '',
+                                    crmType: integration.crmType || 'amo',
+                                    domain: integration.domain || '',
+                                    accessToken: integration.accessToken || '',
+                                    clientId: integration.clientId || '',
+                                    description: integration.description || '',
+                                    syncInterval: integration.syncInterval || '1hour',
+                                    enabled: integration.enabled !== false
+                                  });
+                                  setShowCrmIntegrationDialog(true);
+                                }}
+                                className="flex-1 sm:flex-none min-h-[40px]"
+                              >
+                                <SettingsIcon className="h-4 w-4 mr-2" />
+                                <span className="hidden sm:inline">Настроить</span>
+                                <span className="sm:hidden">Настр.</span>
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => deleteCrmIntegration(integration.id)}
+                                disabled={isLoadingCrmIntegrations}
+                                className="flex-1 sm:flex-none min-h-[40px] hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                <span className="hidden sm:inline">Удалить</span>
+                                <span className="sm:hidden">Удал.</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
               </>
             )}
           </div>
@@ -1565,20 +1639,25 @@ const Settings = () => {
 
       {/* Диалог просмотра договора */}
       <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0 pb-4">
             <DialogTitle>{t.contract.title}</DialogTitle>
+            <DialogDescription>
+              {contractSigned ? 'Просмотр подписанного договора' : 'Ознакомьтесь с договором и подпишите его'}
+            </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div className="border rounded-lg p-6 max-h-96 overflow-y-auto bg-white shadow-inner">
-              <div className="whitespace-pre-wrap text-base leading-7 font-serif text-gray-900">
-                {getContractText()}
+          <div className="flex-1 overflow-hidden flex flex-col space-y-4">
+            <div className="border rounded-lg flex-1 overflow-hidden bg-white shadow-inner">
+              <div className="h-full overflow-y-auto p-6">
+                <div className="whitespace-pre-wrap text-base leading-7 font-serif text-gray-900">
+                  {getContractText()}
+                </div>
               </div>
             </div>
             
             {!contractSigned && (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex-shrink-0">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -1598,30 +1677,30 @@ const Settings = () => {
             )}
           </div>
 
-                     <DialogFooter className="flex gap-2">
-             {!contractSigned && (
-               <Button 
-                 onClick={signContract} 
-                 disabled={isLoading}
-                 className="bg-green-600 hover:bg-green-700"
-               >
-                 {isLoading ? (
-                   <div className="flex items-center">
-                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                     {t.contract.signing}
-                   </div>
-                 ) : (
-                   <div className="flex items-center">
-                     <Check className="h-4 w-4 mr-2" />
-                     {t.contract.signContract}
-                   </div>
-                 )}
-               </Button>
-             )}
-             <Button variant="outline" onClick={() => setShowContractDialog(false)}>
-               {common.close}
-             </Button>
-           </DialogFooter>
+          <DialogFooter className="flex-shrink-0 flex gap-2 pt-4 border-t">
+            {!contractSigned && (
+              <Button 
+                onClick={signContract} 
+                disabled={isLoading}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    {t.contract.signing}
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 mr-2" />
+                    {t.contract.signContract}
+                  </div>
+                )}
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setShowContractDialog(false)}>
+              {common.close}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1940,15 +2019,18 @@ const Settings = () => {
 
       {/* Диалог создания/редактирования CRM интеграции */}
       <Dialog open={showCrmIntegrationDialog} onOpenChange={setShowCrmIntegrationDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedCrmIntegration ? 'Редактировать CRM интеграцию' : 'Создать новую CRM интеграцию'}
             </DialogTitle>
+            <DialogDescription>
+              Настройте подключение к внешней CRM системе
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="crmName">Название интеграции *</Label>
                 <Input
@@ -1976,189 +2058,219 @@ const Settings = () => {
                 </Select>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="crmDomain">Домен CRM *</Label>
-              <Input
-                id="crmDomain"
-                value={crmFormData.domain}
-                onChange={(e) => setCrmFormData({...crmFormData, domain: e.target.value})}
-                placeholder="your-domain.amocrm.ru"
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="crmDomain">Домен CRM *</Label>
+                <Input
+                  id="crmDomain"
+                  value={crmFormData.domain}
+                  onChange={(e) => setCrmFormData({...crmFormData, domain: e.target.value})}
+                  placeholder="your-domain.amocrm.ru"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="crmClientId">Client ID</Label>
+                <Input
+                  id="crmClientId"
+                  value={crmFormData.clientId}
+                  onChange={(e) => setCrmFormData({...crmFormData, clientId: e.target.value})}
+                  placeholder="Опционально"
+                />
+              </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="crmAccessToken">Access Token *</Label>
-              <Input
-                id="crmAccessToken"
-                type="password"
-                value={crmFormData.accessToken}
-                onChange={(e) => setCrmFormData({...crmFormData, accessToken: e.target.value})}
-                placeholder="Введите токен доступа"
+              <div className="relative">
+                <Input
+                  id="crmAccessToken"
+                  type={showCrmToken ? 'text' : 'password'}
+                  value={crmFormData.accessToken}
+                  onChange={(e) => setCrmFormData({...crmFormData, accessToken: e.target.value})}
+                  placeholder="Введите access token"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowCrmToken(!showCrmToken)}
+                >
+                  {showCrmToken ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="crmDescription">Описание</Label>
+              <Textarea
+                id="crmDescription"
+                value={crmFormData.description}
+                onChange={(e) => setCrmFormData({...crmFormData, description: e.target.value})}
+                placeholder="Краткое описание интеграции"
+                rows={3}
               />
             </div>
-            
-            {crmFormData.crmType === 'amo' && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="crmPipelineId">ID воронки продаж</Label>
-                    <Input
-                      id="crmPipelineId"
-                      value={crmFormData.pipelineId}
-                      onChange={(e) => setCrmFormData({...crmFormData, pipelineId: e.target.value})}
-                      placeholder="123456"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="crmStatusId">ID статуса</Label>
-                    <Input
-                      id="crmStatusId"
-                      value={crmFormData.statusId}
-                      onChange={(e) => setCrmFormData({...crmFormData, statusId: e.target.value})}
-                      placeholder="123456"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>ID полей в AMO CRM</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="crmClientNameFieldId">Имя клиента</Label>
-                      <Input
-                        id="crmClientNameFieldId"
-                        value={crmFormData.clientNameFieldId}
-                        onChange={(e) => setCrmFormData({...crmFormData, clientNameFieldId: e.target.value})}
-                        placeholder="123456"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="crmPhoneFieldId">Телефон</Label>
-                      <Input
-                        id="crmPhoneFieldId"
-                        value={crmFormData.phoneFieldId}
-                        onChange={(e) => setCrmFormData({...crmFormData, phoneFieldId: e.target.value})}
-                        placeholder="123456"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="crmEmailFieldId">Email</Label>
-                      <Input
-                        id="crmEmailFieldId"
-                        value={crmFormData.emailFieldId}
-                        onChange={(e) => setCrmFormData({...crmFormData, emailFieldId: e.target.value})}
-                        placeholder="123456"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="crmPropertyFieldId">Объект недвижимости</Label>
-                      <Input
-                        id="crmPropertyFieldId"
-                        value={crmFormData.propertyFieldId}
-                        onChange={(e) => setCrmFormData({...crmFormData, propertyFieldId: e.target.value})}
-                        placeholder="123456"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="crmCommentFieldId">ID поля комментария</Label>
-              <Input
-                id="crmCommentFieldId"
-                value={crmFormData.commentFieldId}
-                onChange={(e) => setCrmFormData({...crmFormData, commentFieldId: e.target.value})}
-                placeholder="123456"
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Периодичность синхронизации</Label>
+                <Select 
+                  value={crmFormData.syncInterval} 
+                  onValueChange={(value) => setCrmFormData({...crmFormData, syncInterval: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5min">Каждые 5 минут</SelectItem>
+                    <SelectItem value="15min">Каждые 15 минут</SelectItem>
+                    <SelectItem value="30min">Каждые 30 минут</SelectItem>
+                    <SelectItem value="1hour">Каждый час</SelectItem>
+                    <SelectItem value="manual">Вручную</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-6">
+                <input
+                  type="checkbox"
+                  id="crmEnabled"
+                  checked={crmFormData.enabled}
+                  onChange={(e) => setCrmFormData({...crmFormData, enabled: e.target.checked})}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <Label htmlFor="crmEnabled" className="text-sm">
+                  Включить интеграцию
+                </Label>
+              </div>
             </div>
           </div>
 
-          <DialogFooter className="flex gap-2">
-            <Button onClick={createCrmIntegration} disabled={isLoading}>
-              {isLoading ? (
-                <div className="flex items-center">
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Сохранение...
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {selectedCrmIntegration ? 'Обновить' : 'Создать'}
-                </div>
-              )}
-            </Button>
-            <Button variant="outline" onClick={() => {
-              setShowCrmIntegrationDialog(false);
-              setSelectedCrmIntegration(null);
-              setCrmFormData({
-                name: '',
-                crmType: 'amo',
-                domain: '',
-                accessToken: '',
-                pipelineId: '',
-                statusId: '',
-                clientNameFieldId: '',
-                phoneFieldId: '',
-                emailFieldId: '',
-                propertyFieldId: '',
-                commentFieldId: '',
-                isActive: true
-              });
-            }}>
-              Отмена
-            </Button>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+            {selectedCrmIntegration && (
+              <Button 
+                variant="outline" 
+                onClick={() => testCrmIntegration(selectedCrmIntegration)}
+                disabled={isLoadingCrmIntegrations}
+                className="w-full sm:w-auto"
+              >
+                <TestTube className="h-4 w-4 mr-2" />
+                Тестировать
+              </Button>
+            )}
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCrmIntegrationDialog(false)}
+                className="flex-1 sm:flex-none"
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={selectedCrmIntegration ? updateCrmIntegration : createCrmIntegration}
+                disabled={isLoadingCrmIntegrations}
+                className="flex-1 sm:flex-none"
+              >
+                {isLoadingCrmIntegrations ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    {selectedCrmIntegration ? 'Обновление...' : 'Создание...'}
+                  </div>
+                ) : (
+                  selectedCrmIntegration ? 'Обновить' : 'Создать'
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Диалог тестирования CRM интеграции */}
       <Dialog open={showCrmTestDialog} onOpenChange={setShowCrmTestDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto">
           <DialogHeader>
             <DialogTitle>Тестирование CRM интеграции</DialogTitle>
+            <DialogDescription>
+              Проверяем подключение к внешней CRM системе
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             {selectedCrmIntegration && (
-              <div>
-                <h4 className="font-medium mb-2">{selectedCrmIntegration.name}</h4>
-                <p className="text-sm text-muted-foreground">
-                  Проверяем подключение к {getCrmName(selectedCrmIntegration.crmType)}...
-                </p>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium mb-2 text-lg">{selectedCrmIntegration.name}</h4>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                    <span>CRM:</span>
+                    <strong className="text-gray-900">{getCrmName(selectedCrmIntegration.crmType)}</strong>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                    <span>Домен:</span>
+                    <code className="bg-white px-2 py-1 rounded text-xs break-all border">{selectedCrmIntegration.domain}</code>
+                  </div>
+                </div>
               </div>
             )}
             
             {crmTestResult && (
-              <div className={`p-4 rounded-lg ${
+              <div className={`p-4 rounded-lg border ${
                 crmTestResult.success 
-                  ? 'bg-green-50 border border-green-200' 
-                  : 'bg-red-50 border border-red-200'
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-red-50 border-red-200'
               }`}>
-                <div className="flex items-center gap-2">
-                  {crmTestResult.success ? (
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-600" />
-                  )}
-                  <span className={crmTestResult.success ? 'text-green-800' : 'text-red-800'}>
-                    {crmTestResult.message}
-                  </span>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {crmTestResult.success ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-600" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={`font-medium mb-1 ${crmTestResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                      {crmTestResult.success ? 'Подключение успешно!' : 'Ошибка подключения'}
+                    </div>
+                    <p className={`text-sm break-words ${crmTestResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                      {crmTestResult.message}
+                    </p>
+                  </div>
                 </div>
+              </div>
+            )}
+
+            {isLoadingCrmIntegrations && (
+              <div className="flex items-center justify-center py-6">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-orange-600 border-t-transparent"></div>
+                <span className="ml-3 text-muted-foreground">Тестирование подключения...</span>
               </div>
             )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCrmTestDialog(false)}>
+          <DialogFooter className="flex gap-2 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowCrmTestDialog(false)}
+              className="flex-1 sm:flex-none"
+            >
               Закрыть
             </Button>
+            {selectedCrmIntegration && !isLoadingCrmIntegrations && (
+              <Button 
+                onClick={() => testCrmIntegration(selectedCrmIntegration)}
+                className="flex-1 sm:flex-none"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Повторить тест
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
