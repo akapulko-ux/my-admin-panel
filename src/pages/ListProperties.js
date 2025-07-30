@@ -6,7 +6,6 @@ import {
   collection,
   getDocs,
   doc,
-  getDoc,
   addDoc,
   updateDoc,
   Timestamp
@@ -22,7 +21,6 @@ import {
   ChevronDown, 
   ChevronUp, 
   Home, 
-  DollarSign, 
   MapPin, 
   Building,
   Loader2,
@@ -287,7 +285,7 @@ const PropertyCard = ({ property, onDuplicate, isMobile }) => {
           
           {property.bedrooms !== undefined && property.bedrooms !== null && property.bedrooms !== "" && (
             <div className="text-sm text-gray-600">
-              Спален: {safeDisplay(property.bedrooms)}
+              {property.bedrooms === 0 ? t.propertiesGallery.studio : `${t.propertiesGallery.bedroomsText}: ${safeDisplay(property.bedrooms)}`}
             </div>
           )}
 
@@ -299,13 +297,13 @@ const PropertyCard = ({ property, onDuplicate, isMobile }) => {
 
           {property.developer && (
             <div className="text-sm text-gray-600">
-              Застройщик: {safeDisplay(property.developer)}
+              {t.propertiesGallery.developerText} {safeDisplay(property.developer)}
             </div>
           )}
 
           {property.propertyName && (
             <div className="text-sm text-gray-600">
-              Название: {safeDisplay(property.propertyName)}
+              {t.propertyDetail.propertyName}: {safeDisplay(property.propertyName)}
             </div>
           )}
         </div>
