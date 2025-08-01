@@ -24,9 +24,7 @@ const clearServiceWorkerCache = async () => {
   }
 };
 
-// Service Worker отключен для устранения проблем с кешированием
-// Можно включить позже после исправления стратегии кеширования
-/*
+// Service Worker включен для PWA функциональности
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     // Проверяем, что мы в production или на localhost
@@ -78,21 +76,11 @@ if ('serviceWorker' in navigator) {
     }
   });
 }
-*/
 
-// Очистка существующих Service Worker при загрузке
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => {
-      registration.unregister().then(() => {
-        console.log('Service Worker unregistered successfully');
-      });
-    });
-  });
+// Очистка кеша Service Worker при загрузке только в development
+if (process.env.NODE_ENV === 'development') {
+  clearServiceWorkerCache();
 }
-
-// Очистка кеша Service Worker при загрузке
-clearServiceWorkerCache();
 
 // PWA Install промо (отключено - пользователи могут устанавливать через браузер)
 window.addEventListener('beforeinstallprompt', (e) => {

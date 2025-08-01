@@ -800,7 +800,7 @@ function ComplexDetail() {
       </Card>
 
       {/* Описание */}
-      {complex.description && (
+      {(complex.description || (isEditing && canEdit())) && (
         <Card className="p-6">
           <div className="space-y-3">
             <h3 className="text-lg font-semibold flex items-center gap-2">

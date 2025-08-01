@@ -966,6 +966,7 @@ _________________               _________________
       additionalExpenses: 'Additional Expenses ($)',
       investmentPeriod: 'Investment Period (years)',
       selectPeriod: 'Select period',
+      years3: '3 years',
       years5: '5 years',
       years10: '10 years',
       years20: '20 years',
@@ -1057,7 +1058,92 @@ _________________               _________________
       otaCommission: 'OTA Commission (%)',
       calculationName: 'Calculation Name',
       exportToCSV: 'Export to CSV',
-      basedOnDataAndScenario: 'Based on entered data and scenario'
+      basedOnDataAndScenario: 'Based on entered data and scenario',
+      
+      // Field tooltips
+      formulaLabel: 'How it works in calculations',
+      tooltips: {
+        propertyPrice: {
+          title: 'Property Purchase Price',
+          description: 'The total cost of purchasing the property. This is the base amount for all ROI calculations.',
+          formula: 'This value is added to renovation costs, legal fees, and additional expenses to calculate your total initial investment. The total investment is used as the denominator in ROI calculations.'
+        },
+        renovationCosts: {
+          title: 'Renovation and Furnishing Costs',
+          description: 'All costs associated with preparing the property for rental, including furniture, appliances, and renovations.',
+          formula: 'This value is added to the purchase price, legal fees, and additional expenses to calculate your total initial investment. Higher renovation costs increase your total investment, which affects ROI calculations.'
+        },
+        legalFees: {
+          title: 'Legal and Administrative Expenses',
+          description: 'Costs for legal services, property registration, permits, and other administrative expenses.',
+          formula: 'This value is added to the purchase price, renovation costs, and additional expenses to calculate your total initial investment. These costs are part of your upfront investment and affect the total ROI calculation.'
+        },
+        additionalExpenses: {
+          title: 'Additional Initial Expenses',
+          description: 'Any other one-time costs not covered by other categories (e.g., insurance, initial marketing).',
+          formula: 'This value is added to the purchase price, renovation costs, and legal fees to calculate your total initial investment. These additional costs increase your total investment amount.'
+        },
+        investmentPeriod: {
+          title: 'Investment Period',
+          description: 'The number of years for which you want to calculate the return on investment.',
+          formula: 'This determines how many years the calculator will project your rental income, expenses, and property appreciation. The final ROI is calculated as: (Total Return Over Period / Total Investment) × 100%.'
+        },
+        dailyRate: {
+          title: 'Daily Rental Rate',
+          description: 'The amount you plan to charge per day for renting the property.',
+          formula: 'This value is multiplied by 365 days and your occupancy rate to calculate annual rental income. For example: $100/day × 365 × 70% = $25,550 annual income. This income is then used to calculate profits and ROI.'
+        },
+        occupancyRate: {
+          title: 'Occupancy Rate',
+          description: 'The percentage of time the property is expected to be rented out (e.g., 70% means rented 255 days per year).',
+          formula: 'This percentage is used to calculate your actual annual rental income. For example: if your daily rate is $100 and occupancy is 70%, your annual income = $100 × 365 × 70% = $25,550. This affects all profit calculations.'
+        },
+        rentGrowthRate: {
+          title: 'Annual Rent Growth Rate',
+          description: 'Expected annual increase in rental rates due to market growth and inflation.',
+          formula: 'This percentage is used to increase your rental income each year. For example: if your initial annual income is $25,550 and growth rate is 5%, year 2 income = $25,550 × (1 + 5%) = $26,828. This compounds over the investment period.'
+        },
+        operationStartYear: {
+          title: 'Operation Start Year',
+          description: 'The year when rental operations begin (0 = immediate start, 1 = start after 1 year, etc.).',
+          formula: 'This determines when you start earning rental income. If set to 0, you earn income from year 1. If set to 1, you earn no income in year 1, but start earning in year 2. This affects the total profit calculation over your investment period.'
+        },
+        maintenanceFees: {
+          title: 'Annual Maintenance Costs',
+          description: 'Percentage of rental income spent on property maintenance, repairs, and regular upkeep.',
+          formula: 'This percentage is applied to your annual rental income to calculate maintenance costs. For example: if your annual income is $25,550 and maintenance is 10%, costs = $25,550 × 10% = $2,555. These costs reduce your annual profit.'
+        },
+        utilityBills: {
+          title: 'Utility Bills',
+          description: 'Percentage of rental income spent on utilities (electricity, water, internet, etc.).',
+          formula: 'This percentage is applied to your annual rental income to calculate utility costs. For example: if your annual income is $25,550 and utilities are 8%, costs = $25,550 × 8% = $2,044. These costs reduce your annual profit.'
+        },
+        annualTax: {
+          title: 'Annual Tax Rate',
+          description: 'Tax rate applied to rental income (income tax, property tax, etc.).',
+          formula: 'This percentage is applied to your profit AFTER operational expenses (maintenance + utilities + management). For example: if your rental income is $25,550, operational expenses are $5,000, and tax rate is 20%, taxes = ($25,550 - $5,000) × 20% = $4,110.'
+        },
+        propertyManagement: {
+          title: 'Property Management Fee',
+          description: 'Percentage of rental income paid to property management services.',
+          formula: 'This percentage is applied to your annual rental income to calculate management fees. For example: if your annual income is $25,550 and management fee is 5%, costs = $25,550 × 5% = $1,278. These costs reduce your annual profit.'
+        },
+        appreciationYear1: {
+          title: 'Property Appreciation Year 1',
+          description: 'Expected increase in property value during the first year of ownership.',
+          formula: 'This percentage increases your property value in year 1. For example: if your total investment is $200,000 and appreciation is 5%, year 1 value = $200,000 × (1 + 5%) = $210,000. This appreciation is added to your total return calculation.'
+        },
+        appreciationYear2: {
+          title: 'Property Appreciation Year 2',
+          description: 'Expected increase in property value during the second year of ownership.',
+          formula: 'This percentage increases your property value in year 2, based on the year 1 value. For example: if year 1 value is $210,000 and appreciation is 3%, year 2 value = $210,000 × (1 + 3%) = $216,300. This appreciation is added to your total return calculation.'
+        },
+        appreciationYear3: {
+          title: 'Property Appreciation Year 3',
+          description: 'Expected increase in property value during the third year of ownership.',
+          formula: 'This percentage increases your property value in year 3, based on the year 2 value. For example: if year 2 value is $216,300 and appreciation is 2%, year 3 value = $216,300 × (1 + 2%) = $220,626. After year 3, property value remains constant until the end of the investment period.'
+        }
+      }
     },
 
     // Building Progress
@@ -1131,7 +1217,7 @@ _________________               _________________
     // Education
     education: {
       title: 'Education',
-      description: 'Learning materials and training courses',
+      description: 'Training materials and courses',
       sections: 'Sections',
       topics: 'Topics',
       lessons: 'Lessons',
@@ -1168,15 +1254,15 @@ _________________               _________________
       lessonDescriptionEn: 'Lesson Description (English)',
       lessonDescriptionRu: 'Lesson Description (Russian)',
       lessonDescriptionId: 'Lesson Description (Indonesian)',
-      videoUrlEn: 'Video URL (English)',
-      videoUrlRu: 'Video URL (Russian)',
-      videoUrlId: 'Video URL (Indonesian)',
+      videoUrlEn: 'Video Link (English)',
+      videoUrlRu: 'Video Link (Russian)',
+      videoUrlId: 'Video Link (Indonesian)',
       order: 'Order',
       save: 'Save',
       cancel: 'Cancel',
       loading: 'Loading...',
-      noSections: 'No sections available',
-      noTopics: 'No topics available',
+      noSections: 'Sections не найдены',
+      noTopics: 'Topics не найдены',
       noLessons: 'No lessons in this topic',
       sectionCreated: 'Section created successfully',
       sectionUpdated: 'Section updated successfully',
@@ -1187,9 +1273,9 @@ _________________               _________________
       lessonCreated: 'Lesson created successfully',
       lessonUpdated: 'Lesson updated successfully',
       lessonDeleted: 'Lesson deleted successfully',
-      confirmDeleteSection: 'Are you sure you want to delete this section? All topics and lessons will also be deleted.',
-      confirmDeleteTopic: 'Are you sure you want to delete this topic? All lessons will also be deleted.',
-      confirmDeleteLesson: 'Are you sure you want to delete this lesson?',
+      confirmDeleteSection: 'Вы уверены, что хотите удалить этот раздел? Все темы и уроки также будут удалены.',
+      confirmDeleteTopic: 'Вы уверены, что хотите удалить эту тему? Все уроки также будут удалены.',
+      confirmDeleteLesson: 'Вы уверены, что хотите удалить этот урок?',
       errorLoading: 'Error loading data',
       errorSaving: 'Error saving data',
       errorDeleting: 'Error deleting data',
@@ -1197,7 +1283,7 @@ _________________               _________________
       topicNotFound: 'Topic not found',
       lessonNotFound: 'Lesson not found',
       enterLessonName: 'Enter lesson name in at least one language',
-      addVideoUrl: 'Add at least one video URL',
+      addVideoUrl: 'Add at least one video link',
       watchVideo: 'Watch Video',
       backToSections: 'Back to Sections',
       backToTopics: 'Back to Topics',
@@ -1206,7 +1292,7 @@ _________________               _________________
       goToEducation: 'Go to Education',
       backToSection: 'Back to Section',
       videoNotAvailable: 'Video not available in your language',
-      selectLanguage: 'Select language',
+      selectLanguage: 'Select Language',
       english: 'English',
       russian: 'Russian',
       indonesian: 'Indonesian',
@@ -1681,65 +1767,65 @@ _________________               _________________
         contractText: `ДОГОВОР ЦЕССИИ
 об оказании информационно-технических услуг
 
-"IT Agent", именуемое в дальнейшем "Исполнитель", с одной стороны, и Developer, именуемый в дальнейшем "Client", на другой стороне, заключили настоящий Договор о нижеследующем:
+"IT Agent", именуемое в дальнейшем "Исполнитель", с одной стороны, и Developer, именуемый в дальнейшем "Клиент", с другой стороны, заключили настоящий Договор о нижеследующем:
 
 1. ПРЕДМЕТ ДОГОВОРА
 
-1.1. Исполнитель обязуется предоставить Client IT-платформу для размещения информации об объектах недвижимости и организации взаимодействия с агентами по недвижимости.
+1.1. Исполнитель обязуется предоставить Клиенту IT-платформу для размещения информации об объектах недвижимости и организации взаимодействия с агентами по недвижимости.
 
-1.2. The Client undertakes to pay for the Contractor's services in the amount and manner established by this Agreement.
+1.2. Клиент обязуется оплачивать услуги Исполнителя в размере и порядке, установленными настоящим Договором.
 
-2. RIGHTS AND OBLIGATIONS OF THE PARTIES
+2. ПРАВА И ОБЯЗАННОСТИ СТОРОН
 
-2.1. The Contractor undertakes to:
-2.1.1. Provide access to the IT platform for posting real estate objects;
-2.1.2. Ensure technical functioning of the platform;
-2.1.3. Organize receiving and processing of applications from agents;
-2.1.4. Provide tools for interaction with real estate agents.
+2.1. Исполнитель обязуется:
+2.1.1. Предоставить доступ к IT-платформе для размещения объектов недвижимости;
+2.1.2. Обеспечить техническое функционирование платформы;
+2.1.3. Организовать получение и обработку заявок от агентов;
+2.1.4. Предоставить инструменты для взаимодействия с агентами по недвижимости.
 
-2.2. The Client undertakes to:
-2.2.1. Timely provide current and reliable information about real estate objects;
-2.2.2. Keep information about objects up to date;
-2.2.3. Timely pay for services according to the terms of this Agreement;
-2.2.4. Notify the Contractor about the sale of real estate objects through the platform.
+2.2. Клиент обязуется:
+2.2.1. Своевременно предоставлять актуальную и достоверную информацию об объектах недвижимости;
+2.2.2. Поддерживать информацию об объектах в актуальном состоянии;
+2.2.3. Своевременно оплачивать услуги согласно условиям настоящего Договора;
+2.2.4. Уведомлять Исполнителя о продаже объектов недвижимости через платформу.
 
-3. PAYMENT PROCEDURE
+3. ПОРЯДОК ОПЛАТЫ
 
-3.1. The cost of the Contractor's services is 0.5% (zero point five percent) of the price of each real estate object sold through the IT platform.
+3.1. Стоимость услуг Исполнителя составляет 0,5% (ноль целых пять десятых процента) от цены каждого объекта недвижимости, проданного через IT-платформу.
 
-3.2. The commission specified in clause 3.1 is paid by the Client in addition to the standard commission to real estate agents (5%).
+3.2. Комиссия, указанная в пункте 3.1, оплачивается Клиентом дополнительно к стандартной комиссии агентам по недвижимости (5%).
 
-3.3. Payment is made within 10 (ten) banking days from the moment of concluding a real estate purchase and sale agreement between the Client and the buyer attracted through the IT platform.
+3.3. Оплата производится в течение 10 (десяти) банковских дней с момента заключения договора купли-продажи недвижимости между Клиентом и покупателем, привлеченным через IT-платформу.
 
-3.4. The basis for payment is the signed purchase and sale agreement and notification from the Client about the completed transaction.
+3.4. Основанием для оплаты является подписанный договор купли-продажи и уведомление Клиента о совершенной сделке.
 
-4. LIABILITY OF THE PARTIES
+4. ОТВЕТСТВЕННОСТЬ СТОРОН
 
-4.1. For non-performance or improper performance of obligations under this Agreement, the parties bear responsibility in accordance with applicable law.
+4.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору стороны несут ответственность в соответствии с действующим законодательством.
 
-4.2. In case of payment delay, the Client pays a penalty of 0.1% of the overdue payment amount for each day of delay.
+4.2. В случае просрочки платежа Клиент выплачивает пени в размере 0,1% от суммы просроченного платежа за каждый день просрочки.
 
-5. TERM OF THE AGREEMENT
+5. СРОК ДЕЙСТВИЯ ДОГОВОРА
 
-5.1. This Agreement comes into force from the moment of its signing and is valid for one year.
+5.1. Настоящий Договор вступает в силу с момента его подписания и действует в течение одного года.
 
-5.2. The Agreement is automatically extended for the same period if neither party notifies the other of termination 30 days before the expiration date.
+5.2. Договор автоматически продлевается на тот же срок, если ни одна из сторон не уведомит другую о расторжении за 30 дней до истечения срока действия.
 
-6. DISPUTE RESOLUTION PROCEDURE
+6. ПОРЯДОК РАЗРЕШЕНИЯ СПОРОВ
 
-6.1. All disputes and disagreements are resolved through negotiations.
+6.1. Все споры и разногласия разрешаются путем переговоров.
 
-6.2. If it is impossible to reach an agreement, disputes are resolved in court at the location of the Contractor.
+6.2. В случае невозможности достижения соглашения споры разрешаются в суде по месту нахождения Исполнителя.
 
-7. FINAL PROVISIONS
+7. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ
 
-7.1. This Agreement is made in two copies, having equal legal force, one for each party.
+7.1. Настоящий Договор составлен в двух экземплярах, имеющих одинаковую юридическую силу, по одному для каждой стороны.
 
-7.2. Changes and additions to the Agreement are valid only when executed in writing and signed by both parties.
+7.2. Изменения и дополнения к Договору действительны только при оформлении в письменном виде и подписании обеими сторонами.
 
-8. SIGNATURES OF THE PARTIES
+8. ПОДПИСИ СТОРОН
 
-CONTRACTOR:                     CLIENT:
+ИСПОЛНИТЕЛЬ:                    КЛИЕНТ:
      IT Agent                                         Developer
 
 
@@ -1955,7 +2041,7 @@ _________________               _________________
       buildingPermitIMB: 'Разрешение на строительство (IMB):',
       buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
       layout: 'Планировка:',
-      dueDiligence: 'Юридическая проверка:',
+      dueDiligence: 'Due Diligence:',
       unbrandedPresentation: 'Презентация без брендинга:',
       pkkprFile: 'Файл PKKPR:',
       
@@ -2070,55 +2156,55 @@ _________________               _________________
       deleteConfirmTitle: 'Подтверждение удаления',
       deleteConfirmText: 'Вы уверены, что хотите удалить шахматку "{name}"?',
       chessboardDeleted: 'Шахматка удалена!',
-      deleteError: 'Error deleting chessboard',
+      deleteError: 'Ошибка удаления шахматки',
       publicLinkCopied: 'Публичная ссылка скопирована!',
       
       // Table headers and labels
       complex: 'Комплекс:',
-      totalUnits: 'Total units:',
-      sections: 'Sections:',
-      floors: 'Floors:',
-      publicLinkAvailable: 'Public link available',
-      created: 'Created:',
-      loading: 'Loading...',
-      untitled: 'Untitled',
-      open: 'Open',
-      delete: 'Delete',
-      copyLink: 'Copy link',
-      openInNewTab: 'Open in new tab',
+      totalUnits: 'Всего юнитов:',
+      sections: 'Секций:',
+      floors: 'Этажей:',
+      publicLinkAvailable: 'Публичная ссылка доступна',
+      created: 'Создано:',
+      loading: 'Загрузка...',
+      untitled: 'Без названия',
+      open: 'Открыть',
+      delete: 'Удалить',
+      copyLink: 'Копировать ссылку',
+      openInNewTab: 'Открыть в новой вкладке',
       
       // Status badges
-      free: 'Free: {count}',
-      booked: 'Booked: {count}',
-      sold: 'Sold: {count}',
+      free: 'Свободно: {count}',
+      booked: 'Забронировано: {count}',
+      sold: 'Продано: {count}',
       
       // Chessboard page
-      chessboardName: 'Chessboard Name',
-      selectComplex: 'Select Complex',
-      noComplexSelected: 'No complex selected',
-      nameRequired: 'Chessboard name is required',
-      save: 'Save',
-      deleteChessboard: 'Delete',
-      addSection: 'Add Section',
-      exchangeRate: 'Exchange Rate (USD to IDR)',
+      chessboardName: 'Название шахматки',
+      selectComplex: 'Выберите комплекс',
+      noComplexSelected: 'Комплекс не выбран',
+      nameRequired: 'Название шахматки обязательно',
+      save: 'Сохранить',
+      deleteChessboard: 'Удалить',
+      addSection: 'Добавить секцию',
+      exchangeRate: 'Курс обмена (USD в IDR)',
       
       // Sections and floors
-      sectionName: 'Section Name',
-      addFloor: 'Add Floor',
-      floor: 'Floor',
-      addUnit: 'Add Unit',
+      sectionName: 'Название секции',
+      addFloor: 'Добавить этаж',
+      floor: 'Этаж',
+      addUnit: 'Добавить юнит',
       
       // Units
-      unitId: 'Unit ID',
-      rooms: 'Rooms',
-      bathrooms: 'Bathrooms',
-      area: 'Area (m²)',
-      priceUSD: 'Price (USD)',
-      priceIDR: 'Price (IDR)',
-      showIDRPrice: 'Show IDR price',
-      propertyType: 'Property Type',
-      view: 'View',
-      status: 'Status',
+      unitId: 'ID юнита',
+      rooms: 'Комнаты',
+      bathrooms: 'Санузлы',
+      area: 'Площадь (м²)',
+      priceUSD: 'Цена (USD)',
+      priceIDR: 'Цена (IDR)',
+      showIDRPrice: 'Показать цену в IDR',
+      propertyType: 'Тип недвижимости',
+      view: 'Вид',
+      status: 'Статус',
       
       // Options
       roomOptions: {
@@ -2148,92 +2234,92 @@ _________________               _________________
       },
       
       views: {
-        notSelected: 'Not specified',
-        ocean: 'Ocean',
-        jungle: 'Jungle',
-        pool: 'Pool',
-        river: 'River',
-        yard: 'Yard',
-        volcano: 'Volcano',
-        riceTerraces: 'Rice Terraces'
+        notSelected: 'Не указано',
+        ocean: 'Океан',
+        jungle: 'Джунгли',
+        pool: 'Бассейн',
+        river: 'Река',
+        yard: 'Двор',
+        volcano: 'Вулкан',
+        riceTerraces: 'Рисовые террасы'
       },
       
       statuses: {
-        free: 'Free',
-        booked: 'Booked',
-        sold: 'Sold'
+        free: 'Свободно',
+        booked: 'Забронировано',
+        sold: 'Продано'
       },
       
       // Actions
-      copy: 'Copy',
-      remove: 'Remove',
-      moveUp: 'Move Up',
-      moveDown: 'Move Down',
+      copy: 'Копировать',
+      remove: 'Удалить',
+      moveUp: 'Переместить вверх',
+      moveDown: 'Переместить вниз',
       
       // Messages
-      chessboardSaved: 'Chessboard saved successfully',
-      chessboardDeletedSuccess: 'Chessboard deleted successfully',
-      saveError: 'Error saving chessboard',
-      loadError: 'Error loading chessboard',
-      complexLoadError: 'Error loading complexes',
-      chessboardNotFound: 'Chessboard not found',
-      accessDenied: 'Access denied',
-      validationError: 'Please fix validation errors before saving',
+      chessboardSaved: 'Шахматка успешно сохранена',
+      chessboardDeletedSuccess: 'Шахматка успешно удалена',
+      saveError: 'Ошибка сохранения шахматки',
+      loadError: 'Ошибка загрузки шахматки',
+      complexLoadError: 'Ошибка загрузки комплексов',
+      chessboardNotFound: 'Шахматка не найдена',
+      accessDenied: 'Доступ запрещен',
+      validationError: 'Исправьте ошибки валидации перед сохранением',
       
       // Validation messages
-      nameRequiredError: 'Chessboard name is required',
-      sectionNameRequired: 'Section name is required',
-      duplicateFloor: 'Duplicate floor number',
-      unitIdRequired: 'Unit ID is required',
-      invalidArea: 'Invalid area value',
-      invalidPrice: 'Invalid price value',
+      nameRequiredError: 'Название шахматки обязательно',
+      sectionNameRequired: 'Название секции обязательно',
+      duplicateFloor: 'Дублирующийся номер этажа',
+      unitIdRequired: 'ID юнита обязателен',
+      invalidArea: 'Неверное значение площади',
+      invalidPrice: 'Неверное значение цены',
       
       // Additional editing texts
-      editingChessboard: 'Editing Chessboard',
-      backToList: 'Back to List',
-      noAvailableComplexes: 'No available complexes without chessboard',
-      floorButton: 'Floor',
-      noComplexesForDeveloper: 'No available complexes for developer "{name}" without chessboard',
+      editingChessboard: 'Редактирование шахматки',
+      backToList: 'Назад к списку',
+      noAvailableComplexes: 'Нет доступных комплексов без шахматки',
+      floorButton: 'Этаж',
+      noComplexesForDeveloper: 'Нет доступных комплексов для застройщика "{name}" без шахматки',
       
       // Unit form labels
-      chessboardFloors: 'Floors',
-      chessboardArea: 'Area (m²)',
-      chessboardRooms: 'Bedrooms',
-      chessboardBathrooms: 'Bathrooms',
-      chessboardView: 'View',
-      side: 'Side',
-      priceWithRate: 'Price (USD → IDR)',
-      enterPrice: 'Enter price',
-      showPriceOnPublic: 'Show price on public page',
-      showPrice: 'Show price',
+      chessboardFloors: 'Этажи',
+      chessboardArea: 'Площадь (м²)',
+      chessboardRooms: 'Спальни',
+      chessboardBathrooms: 'Санузлы',
+      chessboardView: 'Вид',
+      side: 'Сторона',
+      priceWithRate: 'Цена (USD → IDR)',
+      enterPrice: 'Введите цену',
+      showPriceOnPublic: 'Показать цену на публичной странице',
+      showPrice: 'Показать цену',
       
       // Floor form labels
-      noNumber: 'No number',
-      floorType: 'floor',
-      rowType: 'row',
-      unitButton: 'Unit',
+      noNumber: 'Без номера',
+      floorType: 'этаж',
+      rowType: 'ряд',
+      unitButton: 'Юнит',
       
       // Side options
       sideOptions: {
-        notSpecified: 'Not specified',
-        sunrise: 'Sunrise',
-        sunset: 'Sunset'
+        notSpecified: 'Не указано',
+        sunrise: 'Рассветная',
+        sunset: 'Закатная'
       },
       
       // Status options with prefixes
       statusOptions: {
-        free: '✓ Free',
-        booked: '⏳ Booked',
-        sold: '✖ Sold'
+        free: '✓ Свободно',
+        booked: '⏳ Забронировано',
+        sold: '✖ Продано'
       },
       
       // Additional features
       features: {
-        rooftop: 'Rooftop',
-        terrace: 'Terrace'
+        rooftop: 'Руфтоп',
+        terrace: 'Терраса'
       },
-      createdAt: 'Created',
-      updatedAt: 'Updated'
+      createdAt: 'Создано',
+      updatedAt: 'Обновлено'
     },
 
     // ROI Calculator
@@ -2255,6 +2341,7 @@ _________________               _________________
       additionalExpenses: 'Дополнительные расходы ($)',
       investmentPeriod: 'Период инвестирования (лет)',
       selectPeriod: 'Выберите период',
+      years3: '3 года',
       years5: '5 лет',
       years10: '10 лет',
       years20: '20 лет',
@@ -2346,7 +2433,92 @@ _________________               _________________
       otaCommission: 'Комиссия площадок (%)',
       calculationName: 'Название расчета',
       exportToCSV: 'Экспорт в CSV',
-      basedOnDataAndScenario: 'На основе введенных данных и сценария'
+      basedOnDataAndScenario: 'На основе введенных данных и сценария',
+      
+      // Field tooltips
+      formulaLabel: 'Как участвует в расчетах',
+      tooltips: {
+        propertyPrice: {
+          title: 'Стоимость покупки недвижимости',
+          description: 'Общая стоимость приобретения недвижимости. Это базовая сумма для всех расчетов ROI.',
+          formula: 'Это значение добавляется к затратам на ремонт, юридическим расходам и дополнительным расходам для расчета общих первоначальных инвестиций. Общие инвестиции используются как знаменатель в расчетах ROI.'
+        },
+        renovationCosts: {
+          title: 'Затраты на ремонт и обустройство',
+          description: 'Все затраты, связанные с подготовкой недвижимости к сдаче в аренду, включая мебель, бытовую технику и ремонт.',
+          formula: 'Это значение добавляется к цене покупки, юридическим расходам и дополнительным расходам для расчета общих первоначальных инвестиций. Более высокие затраты на ремонт увеличивают общие инвестиции, что влияет на расчеты ROI.'
+        },
+        legalFees: {
+          title: 'Юридические и административные расходы',
+          description: 'Затраты на юридические услуги, регистрацию недвижимости, разрешения и другие административные расходы.',
+          formula: 'Это значение добавляется к цене покупки, затратам на ремонт и дополнительным расходам для расчета общих первоначальных инвестиций. Эти расходы являются частью ваших первоначальных инвестиций и влияют на общий расчет ROI.'
+        },
+        additionalExpenses: {
+          title: 'Дополнительные первоначальные расходы',
+          description: 'Любые другие единовременные затраты, не покрытые другими категориями (например, страховка, первоначальный маркетинг).',
+          formula: 'Это значение добавляется к цене покупки, затратам на ремонт и юридическим расходам для расчета общих первоначальных инвестиций. Эти дополнительные расходы увеличивают общую сумму инвестиций.'
+        },
+        investmentPeriod: {
+          title: 'Период инвестирования',
+          description: 'Количество лет, на которые вы хотите рассчитать доходность инвестиций.',
+          formula: 'Это определяет, на сколько лет калькулятор будет прогнозировать ваш арендный доход, расходы и удорожание недвижимости. Итоговый ROI рассчитывается как: (Общий доход за период / Общие инвестиции) × 100%.'
+        },
+        dailyRate: {
+          title: 'Дневная ставка аренды',
+          description: 'Сумма, которую вы планируете взимать за день аренды недвижимости.',
+          formula: 'Это значение умножается на 365 дней и ваш процент заполняемости для расчета годового арендного дохода. Например: $100/день × 365 × 70% = $25,550 годового дохода. Этот доход затем используется для расчета прибыли и ROI.'
+        },
+        occupancyRate: {
+          title: 'Процент заполняемости',
+          description: 'Процент времени, в течение которого недвижимость ожидается сданной в аренду (например, 70% означает сдачу 255 дней в год).',
+          formula: 'Этот процент используется для расчета вашего фактического годового арендного дохода. Например: если ваша дневная ставка $100 и заполняемость 70%, ваш годовой доход = $100 × 365 × 70% = $25,550. Это влияет на все расчеты прибыли.'
+        },
+        rentGrowthRate: {
+          title: 'Годовой рост арендной платы',
+          description: 'Ожидаемое годовое увеличение арендных ставок из-за роста рынка и инфляции.',
+          formula: 'Этот процент используется для увеличения вашего арендного дохода каждый год. Например: если ваш начальный годовой доход $25,550 и рост 5%, доход 2-го года = $25,550 × (1 + 5%) = $26,828. Это накапливается за период инвестирования.'
+        },
+        operationStartYear: {
+          title: 'Год начала эксплуатации',
+          description: 'Год, когда начинается арендная деятельность (0 = немедленное начало, 1 = начало через 1 год и т.д.).',
+          formula: 'Это определяет, когда вы начинаете получать арендный доход. Если установлено 0, вы получаете доход с 1-го года. Если установлено 1, вы не получаете доход в 1-м году, но начинаете получать во 2-м году. Это влияет на общий расчет прибыли за период инвестирования.'
+        },
+        maintenanceFees: {
+          title: 'Годовые затраты на обслуживание',
+          description: 'Процент от арендного дохода, расходуемый на обслуживание недвижимости, ремонт и регулярное содержание.',
+          formula: 'Этот процент применяется к вашему годовому арендному доходу для расчета затрат на обслуживание. Например: если ваш годовой доход $25,550 и обслуживание 10%, затраты = $25,550 × 10% = $2,555. Эти затраты уменьшают вашу годовую прибыль.'
+        },
+        utilityBills: {
+          title: 'Коммунальные платежи',
+          description: 'Процент от арендного дохода, расходуемый на коммунальные услуги (электричество, вода, интернет и т.д.).',
+          formula: 'Этот процент применяется к вашему годовому арендному доходу для расчета коммунальных расходов. Например: если ваш годовой доход $25,550 и коммунальные 8%, затраты = $25,550 × 8% = $2,044. Эти затраты уменьшают вашу годовую прибыль.'
+        },
+        annualTax: {
+          title: 'Годовая налоговая ставка',
+          description: 'Налоговая ставка, применяемая к арендному доходу (подоходный налог, налог на недвижимость и т.д.).',
+          formula: 'Этот процент применяется к вашей прибыли ПОСЛЕ операционных расходов (обслуживание + коммунальные + управление). Например: если ваш арендный доход $25,550, операционные расходы $5,000 и налоговая ставка 20%, налоги = ($25,550 - $5,000) × 20% = $4,110.'
+        },
+        propertyManagement: {
+          title: 'Комиссия управляющей компании',
+          description: 'Процент от арендного дохода, выплачиваемый службам управления недвижимостью.',
+          formula: 'Этот процент применяется к вашему годовому арендному доходу для расчета комиссии управляющей компании. Например: если ваш годовой доход $25,550 и комиссия 5%, затраты = $25,550 × 5% = $1,278. Эти затраты уменьшают вашу годовую прибыль.'
+        },
+        appreciationYear1: {
+          title: 'Удорожание недвижимости в первый год',
+          description: 'Ожидаемое увеличение стоимости недвижимости в течение первого года владения.',
+          formula: 'Этот процент увеличивает стоимость вашей недвижимости в 1-м году. Например: если ваши общие инвестиции $200,000 и удорожание 5%, стоимость 1-го года = $200,000 × (1 + 5%) = $210,000. Это удорожание добавляется к расчету общего дохода.'
+        },
+        appreciationYear2: {
+          title: 'Удорожание недвижимости во второй год',
+          description: 'Ожидаемое увеличение стоимости недвижимости в течение второго года владения.',
+          formula: 'Этот процент увеличивает стоимость вашей недвижимости во 2-м году, основываясь на стоимости 1-го года. Например: если стоимость 1-го года $210,000 и удорожание 3%, стоимость 2-го года = $210,000 × (1 + 3%) = $216,300. Это удорожание добавляется к расчету общего дохода.'
+        },
+        appreciationYear3: {
+          title: 'Удорожание недвижимости в третий год',
+          description: 'Ожидаемое увеличение стоимости недвижимости в течение третьего года владения.',
+          formula: 'Этот процент увеличивает стоимость вашей недвижимости в 3-м году, основываясь на стоимости 2-го года. Например: если стоимость 2-го года $216,300 и удорожание 2%, стоимость 3-го года = $216,300 × (1 + 2%) = $220,626. После 3-го года стоимость недвижимости остается постоянной до конца периода инвестирования.'
+        }
+      }
     },
 
     // Building Progress
@@ -2419,92 +2591,92 @@ _________________               _________________
 
     // Education
     education: {
-      title: 'Education',
-      description: 'Learning materials and training courses',
-      sections: 'Sections',
-      topics: 'Topics',
-      lessons: 'Lessons',
-      createSection: 'Create Section',
-      editSection: 'Edit Section',
-      deleteSection: 'Delete Section',
-      createTopic: 'Create Topic',
-      editTopic: 'Edit Topic',
-      deleteTopic: 'Delete Topic',
-      createLesson: 'Create Lesson',
-      editLesson: 'Edit Lesson',
-      deleteLesson: 'Delete Lesson',
-      sectionName: 'Section Name',
-      sectionNameEn: 'Section Name (English)',
-      sectionNameRu: 'Section Name (Russian)',
-      sectionNameId: 'Section Name (Indonesian)',
-      sectionDescription: 'Section Description',
-      sectionDescriptionEn: 'Section Description (English)',
-      sectionDescriptionRu: 'Section Description (Russian)',
-      sectionDescriptionId: 'Section Description (Indonesian)',
-      topicName: 'Topic Name',
-      topicNameEn: 'Topic Name (English)',
-      topicNameRu: 'Topic Name (Russian)',
-      topicNameId: 'Topic Name (Indonesian)',
-      topicDescription: 'Topic Description',
-      topicDescriptionEn: 'Topic Description (English)',
-      topicDescriptionRu: 'Topic Description (Russian)',
-      topicDescriptionId: 'Topic Description (Indonesian)',
-      lessonName: 'Lesson Name',
-      lessonNameEn: 'Lesson Name (English)',
-      lessonNameRu: 'Lesson Name (Russian)',
-      lessonNameId: 'Lesson Name (Indonesian)',
-      lessonDescription: 'Lesson Description',
-      lessonDescriptionEn: 'Lesson Description (English)',
-      lessonDescriptionRu: 'Lesson Description (Russian)',
-      lessonDescriptionId: 'Lesson Description (Indonesian)',
-      videoUrlEn: 'Video URL (English)',
-      videoUrlRu: 'Video URL (Russian)',
-      videoUrlId: 'Video URL (Indonesian)',
-      order: 'Order',
-      save: 'Save',
-      cancel: 'Cancel',
-      loading: 'Loading...',
-      noSections: 'No sections available',
-      noTopics: 'No topics available',
-      noLessons: 'No lessons in this topic',
-      sectionCreated: 'Section created successfully',
-      sectionUpdated: 'Section updated successfully',
-      sectionDeleted: 'Section deleted successfully',
-      topicCreated: 'Topic created successfully',
-      topicUpdated: 'Topic updated successfully',
-      topicDeleted: 'Topic deleted successfully',
-      lessonCreated: 'Lesson created successfully',
-      lessonUpdated: 'Lesson updated successfully',
-      lessonDeleted: 'Lesson deleted successfully',
-      confirmDeleteSection: 'Are you sure you want to delete this section? All topics and lessons will also be deleted.',
-      confirmDeleteTopic: 'Are you sure you want to delete this topic? All lessons will also be deleted.',
-      confirmDeleteLesson: 'Are you sure you want to delete this lesson?',
-      errorLoading: 'Error loading data',
-      errorSaving: 'Error saving data',
-      errorDeleting: 'Error deleting data',
-      noPermission: 'You do not have permission to perform this action',
-      topicNotFound: 'Topic not found',
-      lessonNotFound: 'Lesson not found',
-      enterLessonName: 'Enter lesson name in at least one language',
-      addVideoUrl: 'Add at least one video URL',
-      watchVideo: 'Watch Video',
-      backToSections: 'Back to Sections',
-      backToTopics: 'Back to Topics',
-      backToLessons: 'Back to Lessons',
-      viewLessons: 'View Lessons',
-      goToEducation: 'Go to Education',
-      backToSection: 'Back to Section',
-      videoNotAvailable: 'Video not available in your language',
-      selectLanguage: 'Select language',
-      english: 'English',
-      russian: 'Russian',
-      indonesian: 'Indonesian',
-      infoSection: 'Information',
-      navigationSection: 'Navigation',
-      lessonDescriptionSection: 'Lesson Description',
-      moveTopic: 'Move Topic',
-      moveTopicToSection: 'Move topic to another section',
-      availableRoles: 'Available Roles',
+      title: 'Обучение',
+      description: 'Обучающие материалы и курсы',
+      sections: 'Разделы',
+      topics: 'Темы',
+      lessons: 'Уроки',
+      createSection: 'Создать раздел',
+      editSection: 'Редактировать раздел',
+      deleteSection: 'Удалить раздел',
+      createTopic: 'Создать тему',
+      editTopic: 'Редактировать тему',
+      deleteTopic: 'Удалить тему',
+      createLesson: 'Создать урок',
+      editLesson: 'Редактировать урок',
+      deleteLesson: 'Удалить урок',
+      sectionName: 'Название раздела',
+      sectionNameEn: 'Название раздела (Английский)',
+      sectionNameRu: 'Название раздела (Русский)',
+      sectionNameId: 'Название раздела (Индонезийский)',
+      sectionDescription: 'Описание раздела',
+      sectionDescriptionEn: 'Описание раздела (Английский)',
+      sectionDescriptionRu: 'Описание раздела (Русский)',
+      sectionDescriptionId: 'Описание раздела (Индонезийский)',
+      topicName: 'Название темы',
+      topicNameEn: 'Название темы (Английский)',
+      topicNameRu: 'Название темы (Русский)',
+      topicNameId: 'Название темы (Индонезийский)',
+      topicDescription: 'Описание темы',
+      topicDescriptionEn: 'Описание темы (Английский)',
+      topicDescriptionRu: 'Описание темы (Русский)',
+      topicDescriptionId: 'Описание темы (Индонезийский)',
+      lessonName: 'Название урока',
+      lessonNameEn: 'Название урока (Английский)',
+      lessonNameRu: 'Название урока (Русский)',
+      lessonNameId: 'Название урока (Индонезийский)',
+      lessonDescription: 'Описание урока',
+      lessonDescriptionEn: 'Описание урока (Английский)',
+      lessonDescriptionRu: 'Описание урока (Русский)',
+      lessonDescriptionId: 'Описание урока (Индонезийский)',
+      videoUrlEn: 'Ссылка на видео (Английский)',
+      videoUrlRu: 'Ссылка на видео (Русский)',
+      videoUrlId: 'Ссылка на видео (Индонезийский)',
+      order: 'Порядок',
+      save: 'Сохранить',
+      cancel: 'Отмена',
+      loading: 'Загрузка...',
+      noSections: 'Разделы не найдены',
+      noTopics: 'Темы не найдены',
+      noLessons: 'В этой теме нет уроков',
+      sectionCreated: 'Раздел успешно создан',
+      sectionUpdated: 'Раздел успешно обновлен',
+      sectionDeleted: 'Раздел успешно удален',
+      topicCreated: 'Тема успешно создана',
+      topicUpdated: 'Тема успешно обновлена',
+      topicDeleted: 'Тема успешно удалена',
+      lessonCreated: 'Урок успешно создан',
+      lessonUpdated: 'Урок успешно обновлен',
+      lessonDeleted: 'Урок успешно удален',
+      confirmDeleteSection: 'Вы уверены, что хотите удалить этот раздел? Все темы и уроки также будут удалены.',
+      confirmDeleteTopic: 'Вы уверены, что хотите удалить эту тему? Все уроки также будут удалены.',
+      confirmDeleteLesson: 'Вы уверены, что хотите удалить этот урок?',
+      errorLoading: 'Ошибка загрузки данных',
+      errorSaving: 'Ошибка сохранения данных',
+      errorDeleting: 'Ошибка удаления данных',
+      noPermission: 'У вас нет прав для выполнения этого действия',
+      topicNotFound: 'Тема не найдена',
+      lessonNotFound: 'Урок не найден',
+      enterLessonName: 'Введите название урока хотя бы на одном языке',
+      addVideoUrl: 'Добавьте хотя бы одну ссылку на видео',
+      watchVideo: 'Смотреть видео',
+      backToSections: 'Назад к разделам',
+      backToTopics: 'Назад к темам',
+      backToLessons: 'Назад к урокам',
+      viewLessons: 'Просмотр уроков',
+      goToEducation: 'Перейти к обучению',
+      backToSection: 'Назад к разделу',
+      videoNotAvailable: 'Видео недоступно на вашем языке',
+      selectLanguage: 'Выберите язык',
+      english: 'Английский',
+      russian: 'Русский',
+      indonesian: 'Индонезийский',
+      infoSection: 'Информация',
+      navigationSection: 'Навигация',
+      lessonDescriptionSection: 'Описание урока',
+      moveTopic: 'Переместить тему',
+      moveTopicToSection: 'Переместить тему в другой раздел',
+      availableRoles: 'Доступные роли',
       createdAt: 'Created',
       updatedAt: 'Updated'
     },
@@ -2955,10 +3127,10 @@ _________________               _________________
         viewContract: 'Lihat Kontrak',
         signDate: 'Ditandatangani pada',
         allContracts: 'Semua Kontrak',
-        loading: 'Загрузка договоров...',
-        developer: 'Застройщик',
-        signedBy: 'Подписан',
-        signing: 'Подписание...',
+        loading: 'Memuat kontrak...',
+        developer: 'Pengembang',
+        signedBy: 'Ditandatangani oleh',
+        signing: 'Menandatangani...',
         contractSigned: 'Kontrak berhasil ditandatangani',
         contractTitle: 'PERJANJIAN PENGALIHAN\nuntuk menyediakan layanan informasi dan teknis',
         agree: 'Saya setuju dengan syarat dan ketentuan',
@@ -3544,6 +3716,7 @@ _________________               _________________
       additionalExpenses: 'Biaya Tambahan ($)',
       investmentPeriod: 'Periode Investasi (tahun)',
       selectPeriod: 'Pilih periode',
+      years3: '3 tahun',
       years5: '5 tahun',
       years10: '10 tahun',
       years20: '20 tahun',
@@ -3635,7 +3808,92 @@ _________________               _________________
       otaCommission: 'Komisi OTA (%)',
       calculationName: 'Nama Perhitungan',
       exportToCSV: 'Ekspor ke CSV',
-      basedOnDataAndScenario: 'Berdasarkan data yang dimasukkan dan skenario'
+      basedOnDataAndScenario: 'Berdasarkan data yang dimasukkan dan skenario',
+      
+      // Field tooltips
+      formulaLabel: 'Bagaimana berpartisipasi dalam perhitungan',
+      tooltips: {
+        propertyPrice: {
+          title: 'Harga Pembelian Properti',
+          description: 'Total biaya pembelian properti. Ini adalah jumlah dasar untuk semua perhitungan ROI.',
+          formula: 'Nilai ini ditambahkan ke biaya renovasi, biaya hukum, dan biaya tambahan untuk menghitung total investasi awal Anda. Total investasi digunakan sebagai penyebut dalam perhitungan ROI.'
+        },
+        renovationCosts: {
+          title: 'Biaya Renovasi dan Perabotan',
+          description: 'Semua biaya yang terkait dengan persiapan properti untuk disewakan, termasuk furnitur, peralatan, dan renovasi.',
+          formula: 'Nilai ini ditambahkan ke harga beli, biaya hukum, dan biaya tambahan untuk menghitung total investasi awal Anda. Biaya renovasi yang lebih tinggi meningkatkan total investasi, yang mempengaruhi perhitungan ROI.'
+        },
+        legalFees: {
+          title: 'Biaya Hukum dan Administrasi',
+          description: 'Biaya untuk layanan hukum, registrasi properti, izin, dan biaya administrasi lainnya.',
+          formula: 'Nilai ini ditambahkan ke harga beli, biaya renovasi, dan biaya tambahan untuk menghitung total investasi awal Anda. Biaya ini adalah bagian dari investasi awal Anda dan mempengaruhi perhitungan ROI total.'
+        },
+        additionalExpenses: {
+          title: 'Biaya Awal Tambahan',
+          description: 'Biaya satu kali lainnya yang tidak tercakup dalam kategori lain (misalnya, asuransi, pemasaran awal).',
+          formula: 'Nilai ini ditambahkan ke harga beli, biaya renovasi, dan biaya hukum untuk menghitung total investasi awal Anda. Biaya tambahan ini meningkatkan jumlah total investasi.'
+        },
+        investmentPeriod: {
+          title: 'Periode Investasi',
+          description: 'Jumlah tahun untuk menghitung pengembalian investasi.',
+          formula: 'Ini menentukan berapa tahun kalkulator akan memproyeksikan pendapatan sewa, pengeluaran, dan apresiasi properti Anda. ROI akhir dihitung sebagai: (Total Pengembalian Selama Periode / Total Investasi) × 100%.'
+        },
+        dailyRate: {
+          title: 'Tarif Sewa Harian',
+          description: 'Jumlah yang Anda rencanakan untuk dikenakan per hari untuk menyewakan properti.',
+          formula: 'Nilai ini dikalikan dengan 365 hari dan tingkat hunian Anda untuk menghitung pendapatan sewa tahunan. Contoh: $100/hari × 365 × 70% = $25,550 pendapatan tahunan. Pendapatan ini kemudian digunakan untuk menghitung keuntungan dan ROI.'
+        },
+        occupancyRate: {
+          title: 'Tingkat Hunian',
+          description: 'Persentase waktu properti diperkirakan akan disewakan (misalnya, 70% berarti disewakan 255 hari per tahun).',
+          formula: 'Persentase ini digunakan untuk menghitung pendapatan sewa tahunan aktual Anda. Contoh: jika tarif harian Anda $100 dan hunian 70%, pendapatan tahunan Anda = $100 × 365 × 70% = $25,550. Ini mempengaruhi semua perhitungan keuntungan.'
+        },
+        rentGrowthRate: {
+          title: 'Tingkat Pertumbuhan Sewa Tahunan',
+          description: 'Peningkatan tahunan yang diharapkan dalam tarif sewa karena pertumbuhan pasar dan inflasi.',
+          formula: 'Persentase ini digunakan untuk meningkatkan pendapatan sewa Anda setiap tahun. Contoh: jika pendapatan tahunan awal Anda $25,550 dan tingkat pertumbuhan 5%, pendapatan tahun 2 = $25,550 × (1 + 5%) = $26,828. Ini bertambah selama periode investasi.'
+        },
+        operationStartYear: {
+          title: 'Tahun Mulai Operasi',
+          description: 'Tahun ketika operasi sewa dimulai (0 = mulai segera, 1 = mulai setelah 1 tahun, dll.).',
+          formula: 'Ini menentukan kapan Anda mulai mendapatkan pendapatan sewa. Jika diatur ke 0, Anda mendapatkan pendapatan dari tahun 1. Jika diatur ke 1, Anda tidak mendapatkan pendapatan di tahun 1, tetapi mulai mendapatkan di tahun 2. Ini mempengaruhi perhitungan total keuntungan selama periode investasi Anda.'
+        },
+        maintenanceFees: {
+          title: 'Biaya Pemeliharaan Tahunan',
+          description: 'Persentase dari pendapatan sewa yang dihabiskan untuk pemeliharaan properti, perbaikan, dan perawatan rutin.',
+          formula: 'Persentase ini diterapkan pada pendapatan sewa tahunan Anda untuk menghitung biaya pemeliharaan. Contoh: jika pendapatan tahunan Anda $25,550 dan pemeliharaan 10%, biaya = $25,550 × 10% = $2,555. Biaya ini mengurangi keuntungan tahunan Anda.'
+        },
+        utilityBills: {
+          title: 'Tagihan Utilitas',
+          description: 'Persentase dari pendapatan sewa yang dihabiskan untuk utilitas (listrik, air, internet, dll.).',
+          formula: 'Persentase ini diterapkan pada pendapatan sewa tahunan Anda untuk menghitung biaya utilitas. Contoh: jika pendapatan tahunan Anda $25,550 dan utilitas 8%, biaya = $25,550 × 8% = $2,044. Biaya ini mengurangi keuntungan tahunan Anda.'
+        },
+        annualTax: {
+          title: 'Tarif Pajak Tahunan',
+          description: 'Tarif pajak yang diterapkan pada pendapatan sewa (pajak penghasilan, pajak properti, dll.).',
+          formula: 'Persentase ini diterapkan pada keuntungan Anda SETELAH biaya operasional (pemeliharaan + utilitas + pengelolaan). Contoh: jika pendapatan sewa Anda $25,550, biaya operasional $5,000, dan tarif pajak 20%, pajak = ($25,550 - $5,000) × 20% = $4,110.'
+        },
+        propertyManagement: {
+          title: 'Biaya Pengelolaan Properti',
+          description: 'Persentase dari pendapatan sewa yang dibayarkan kepada layanan pengelolaan properti.',
+          formula: 'Persentase ini diterapkan pada pendapatan sewa tahunan Anda untuk menghitung biaya pengelolaan. Contoh: jika pendapatan tahunan Anda $25,550 dan biaya pengelolaan 5%, biaya = $25,550 × 5% = $1,278. Biaya ini mengurangi keuntungan tahunan Anda.'
+        },
+        appreciationYear1: {
+          title: 'Apresiasi Properti Tahun 1',
+          description: 'Peningkatan nilai properti yang diharapkan selama tahun pertama kepemilikan.',
+          formula: 'Persentase ini meningkatkan nilai properti Anda di tahun 1. Contoh: jika total investasi Anda $200,000 dan apresiasi 5%, nilai tahun 1 = $200,000 × (1 + 5%) = $210,000. Apresiasi ini ditambahkan ke perhitungan total pengembalian Anda.'
+        },
+        appreciationYear2: {
+          title: 'Apresiasi Properti Tahun 2',
+          description: 'Peningkatan nilai properti yang diharapkan selama tahun kedua kepemilikan.',
+          formula: 'Persentase ini meningkatkan nilai properti Anda di tahun 2, berdasarkan nilai tahun 1. Contoh: jika nilai tahun 1 $210,000 dan apresiasi 3%, nilai tahun 2 = $210,000 × (1 + 3%) = $216,300. Apresiasi ini ditambahkan ke perhitungan total pengembalian Anda.'
+        },
+        appreciationYear3: {
+          title: 'Apresiasi Properti Tahun 3',
+          description: 'Peningkatan nilai properti yang diharapkan selama tahun ketiga kepemilikan.',
+          formula: 'Persentase ini meningkatkan nilai properti Anda di tahun 3, berdasarkan nilai tahun 2. Contoh: jika nilai tahun 2 $216,300 dan apresiasi 2%, nilai tahun 3 = $216,300 × (1 + 2%) = $220,626. Setelah tahun 3, nilai properti tetap konstan sampai akhir periode investasi.'
+        }
+      }
     },
 
     // Building Progress

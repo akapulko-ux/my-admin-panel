@@ -3,7 +3,7 @@ import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { Calculator, Download, Share2 } from 'lucide-react';
+import { Calculator, Download, Share2, Info, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -144,12 +144,59 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     appreciationYear3: '',
   });
 
-  const [scenario, setScenario] = useState('realistic');
+
   const [calculationResults, setCalculationResults] = useState(null);
   const [pdfLanguage, setPdfLanguage] = useState('en');
   const [hasSavedData, setHasSavedData] = useState(false);
   const [notification, setNotification] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Компонент информационной подсказки
+  const InfoTooltip = ({ fieldName }) => {
+    const [showTooltip, setShowTooltip] = useState(false);
+    const tooltip = t.roiCalculator.tooltips?.[fieldName];
+
+    if (!tooltip) return null;
+
+    return (
+      <div className="relative inline-block">
+        <button
+          type="button"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+          onFocus={() => setShowTooltip(true)}
+          onBlur={() => setShowTooltip(false)}
+          onClick={() => setShowTooltip(!showTooltip)}
+          className="ml-2 text-gray-400 hover:text-blue-600 focus:text-blue-600 transition-colors focus:outline-none"
+          title={tooltip.title}
+        >
+          <Info className="h-4 w-4" />
+        </button>
+        
+        {showTooltip && (
+          <div className="absolute z-50 w-80 p-4 bg-white border border-gray-200 rounded-lg shadow-xl -top-2 left-8 md:left-8">
+            <div className="text-sm">
+              <h4 className="font-semibold text-gray-900 mb-2">{tooltip.title}</h4>
+              <p className="text-gray-700 mb-3 leading-relaxed">{tooltip.description}</p>
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded-md">
+                <span className="text-xs font-semibold text-blue-800 uppercase tracking-wide">{t.roiCalculator.formulaLabel}:</span>
+                <p className="text-xs text-blue-900 mt-1 font-mono">{tooltip.formula}</p>
+              </div>
+            </div>
+            {/* Стрелка */}
+            <div className="absolute -left-2 top-4 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-white"></div>
+            {/* Закрывающая кнопка для мобильных устройств */}
+            <button
+              onClick={() => setShowTooltip(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 md:hidden"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Функция для показа уведомлений
   const showNotification = (message, type = 'success') => {
@@ -181,7 +228,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
           setCostData(data.costData);
           setRentalData(data.rentalData);
           setExpensesData(data.expensesData);
-          setScenario(data.scenario);
+
           setCalculationResults(data.results);
           setHasSavedData(true);
         } else {
@@ -234,7 +281,6 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
         costData: cleanCostData,
         rentalData: cleanRentalData,
         expensesData: cleanExpensesData,
-        scenario: scenario || 'realistic',
         results: calculationResults,
         updatedAt: new Date(),
         userId: currentUser.uid,
@@ -293,7 +339,6 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
         costData: cleanCostData,
         rentalData: cleanRentalData,
         expensesData: cleanExpensesData,
-        scenario: scenario || 'realistic',
         results: {
           ...calculationResults,
           maxInvestmentPeriod: Number(costData.investmentPeriod) || 5
@@ -370,19 +415,6 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     const initialTaxes = initialProfitBeforeTax * (annualTax / 100);
     const initialAnnualExpenses = initialOperationalExpenses + initialTaxes;
 
-    // Применяем сценарий
-    let scenarioMultiplier = 1;
-    switch (scenario) {
-      case 'pessimistic':
-        scenarioMultiplier = 0.7;
-        break;
-      case 'optimistic':
-        scenarioMultiplier = 1.3;
-        break;
-      default:
-        scenarioMultiplier = 1;
-    }
-
     // Расчет по годам с учетом роста
     let graphData = [];
     let totalProfit = 0;
@@ -392,8 +424,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
     for (let year = 1; year <= investmentPeriod; year++) {
       const rentalIncome = year <= operationStartYear ? 0 : 
         initialAnnualRentalIncome * 
-        Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear) * 
-        scenarioMultiplier;
+        Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear);
       
       // Операционные расходы (без налогов)
       const operationalExpenses = rentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
@@ -455,8 +486,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       // Расчет дохода от аренды
       const rentalIncome = year <= operationStartYear ? 0 : 
         initialAnnualRentalIncome * 
-        Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear) * 
-        scenarioMultiplier;
+        Math.pow(1 + rentGrowthRate / 100, year - 1 - operationStartYear);
       
       // Операционные расходы (без налогов)
       const operationalExpenses = rentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
@@ -484,7 +514,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
 
     setCalculationResults({
       totalInvestment,
-      annualRentalIncome: initialAnnualRentalIncome * scenarioMultiplier,
+      annualRentalIncome: initialAnnualRentalIncome,
       annualExpenses: initialAnnualExpenses,
       annualNetProfit,
       roi,
@@ -499,7 +529,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
       appreciationYear3,
       maxInvestmentPeriod: investmentPeriod
     });
-  }, [costData, rentalData, expensesData, scenario, t.roiCalculator.year]);
+  }, [costData, rentalData, expensesData, t.roiCalculator.year]);
 
   // Автоматический расчет при изменении данных
   useEffect(() => {
@@ -540,7 +570,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             <h2 className="text-xl font-semibold">{t.roiCalculator.costsInvestmentsTitle}</h2>
             
             <div className="space-y-2">
-              <Label htmlFor="purchasePrice">{t.roiCalculator.propertyPrice}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="purchasePrice">{t.roiCalculator.propertyPrice}</Label>
+                <InfoTooltip fieldName="propertyPrice" />
+              </div>
               <Input
                 id="purchasePrice"
                 type="number"
@@ -550,7 +583,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="renovationCosts">{t.roiCalculator.renovationCosts}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="renovationCosts">{t.roiCalculator.renovationCosts}</Label>
+                <InfoTooltip fieldName="renovationCosts" />
+              </div>
               <Input
                 id="renovationCosts"
                 type="number"
@@ -560,7 +596,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="legalFees">{t.roiCalculator.legalFees}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="legalFees">{t.roiCalculator.legalFees}</Label>
+                <InfoTooltip fieldName="legalFees" />
+              </div>
               <Input
                 id="legalFees"
                 type="number"
@@ -570,7 +609,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="additionalExpenses">{t.roiCalculator.additionalExpenses}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="additionalExpenses">{t.roiCalculator.additionalExpenses}</Label>
+                <InfoTooltip fieldName="additionalExpenses" />
+              </div>
               <Input
                 id="additionalExpenses"
                 type="number"
@@ -582,7 +624,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             <h3 className="text-lg font-semibold mt-6 mb-4">{t.roiCalculator.calculationOptionsTitle}</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="investmentPeriod">{t.roiCalculator.investmentPeriod}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="investmentPeriod">{t.roiCalculator.investmentPeriod}</Label>
+                <InfoTooltip fieldName="investmentPeriod" />
+              </div>
               <Select
                 value={costData.investmentPeriod}
                 onValueChange={(value) => setCostData({...costData, investmentPeriod: value})}
@@ -591,6 +636,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
                   <SelectValue placeholder={t.roiCalculator.selectPeriod} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="3">{t.roiCalculator.years3}</SelectItem>
                   <SelectItem value="5">{t.roiCalculator.years5}</SelectItem>
                   <SelectItem value="10">{t.roiCalculator.years10}</SelectItem>
                   <SelectItem value="20">{t.roiCalculator.years20}</SelectItem>
@@ -599,19 +645,7 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t.roiCalculator.calculationScenario}</Label>
-              <Select value={scenario} onValueChange={setScenario}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t.roiCalculator.selectScenario} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pessimistic">{t.roiCalculator.pessimistic}</SelectItem>
-                  <SelectItem value="realistic">{t.roiCalculator.realistic}</SelectItem>
-                  <SelectItem value="optimistic">{t.roiCalculator.optimistic}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
           </Card>
 
           {/* Блок арендного дохода */}
@@ -619,7 +653,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             <h2 className="text-xl font-semibold">{t.roiCalculator.rentalIncomeTitle}</h2>
             
             <div className="space-y-2">
-              <Label htmlFor="dailyRate">{t.roiCalculator.dailyRate}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="dailyRate">{t.roiCalculator.dailyRate}</Label>
+                <InfoTooltip fieldName="dailyRate" />
+              </div>
               <Input
                 id="dailyRate"
                 type="number"
@@ -629,7 +666,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="occupancyRate">{t.roiCalculator.occupancyRate}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="occupancyRate">{t.roiCalculator.occupancyRate}</Label>
+                <InfoTooltip fieldName="occupancyRate" />
+              </div>
               <Input
                 id="occupancyRate"
                 type="number"
@@ -639,7 +679,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rentGrowthRate">{t.roiCalculator.rentGrowthRate}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="rentGrowthRate">{t.roiCalculator.rentGrowthRate}</Label>
+                <InfoTooltip fieldName="rentGrowthRate" />
+              </div>
               <Input
                 id="rentGrowthRate"
                 type="number"
@@ -649,7 +692,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="operationStartYear">{t.roiCalculator.operationStartYear}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="operationStartYear">{t.roiCalculator.operationStartYear}</Label>
+                <InfoTooltip fieldName="operationStartYear" />
+              </div>
               <Input
                 id="operationStartYear"
                 type="number"
@@ -660,7 +706,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appreciationYear1">{t.roiCalculator.appreciationYear1}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="appreciationYear1">{t.roiCalculator.appreciationYear1}</Label>
+                <InfoTooltip fieldName="appreciationYear1" />
+              </div>
               <Input
                 id="appreciationYear1"
                 type="number"
@@ -671,7 +720,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appreciationYear2">{t.roiCalculator.appreciationYear2}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="appreciationYear2">{t.roiCalculator.appreciationYear2}</Label>
+                <InfoTooltip fieldName="appreciationYear2" />
+              </div>
               <Input
                 id="appreciationYear2"
                 type="number"
@@ -682,7 +734,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appreciationYear3">{t.roiCalculator.appreciationYear3}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="appreciationYear3">{t.roiCalculator.appreciationYear3}</Label>
+                <InfoTooltip fieldName="appreciationYear3" />
+              </div>
               <Input
                 id="appreciationYear3"
                 type="number"
@@ -698,7 +753,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             <h2 className="text-xl font-semibold">{t.roiCalculator.operationalMetricsTitle}</h2>
             
             <div className="space-y-2">
-              <Label htmlFor="maintenanceFees">{t.roiCalculator.maintenanceFees}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="maintenanceFees">{t.roiCalculator.maintenanceFees}</Label>
+                <InfoTooltip fieldName="maintenanceFees" />
+              </div>
               <Input
                 id="maintenanceFees"
                 type="number"
@@ -708,7 +766,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="utilityBills">{t.roiCalculator.utilityBills}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="utilityBills">{t.roiCalculator.utilityBills}</Label>
+                <InfoTooltip fieldName="utilityBills" />
+              </div>
               <Input
                 id="utilityBills"
                 type="number"
@@ -718,7 +779,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="annualTax">{t.roiCalculator.annualTax}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="annualTax">{t.roiCalculator.annualTax}</Label>
+                <InfoTooltip fieldName="annualTax" />
+              </div>
               <Input
                 id="annualTax"
                 type="number"
@@ -728,7 +792,10 @@ const PropertyRoiCalculator = ({ propertyId, propertyData, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="propertyManagementFee">{t.roiCalculator.propertyManagement}</Label>
+              <div className="flex items-center">
+                <Label htmlFor="propertyManagementFee">{t.roiCalculator.propertyManagement}</Label>
+                <InfoTooltip fieldName="propertyManagement" />
+              </div>
               <Input
                 id="propertyManagementFee"
                 type="number"
