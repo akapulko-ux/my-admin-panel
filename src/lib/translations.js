@@ -1373,6 +1373,81 @@ _________________               _________________
         subscribeButton: 'Subscribe to premium',
         footer: 'No hidden fees • Cancel anytime • Priority support'
       }
+    },
+
+    // Notifications Page
+    notificationsPage: {
+      title: 'Notification Management',
+      subtitle: 'Manage push notifications for your properties',
+      
+      // Statistics
+      statistics: {
+        sentToday: 'Sent Today',
+        totalSent: 'Total Sent',
+        lastSent: 'Last Sent',
+        remaining: 'Remaining',
+        of: 'of',
+        total: 'Total',
+        never: 'Never'
+      },
+
+      // Tabs
+      tabs: {
+        send: 'Send',
+        history: 'History'
+      },
+
+      // Send Form
+      sendForm: {
+        title: 'Create Notification',
+        description: 'Send notification to iOS app users',
+        titleLabel: 'Title',
+        titlePlaceholder: 'Enter notification title',
+        bodyLabel: 'Message Text',
+        bodyPlaceholder: 'Enter notification text',
+        characters: 'characters',
+        targetAudience: 'Notification will be sent to all iOS app users',
+        sendButton: 'Send Notification',
+        sending: 'Sending...',
+        validation: {
+          titleRequired: 'Title is required',
+          bodyRequired: 'Message text is required',
+          titleTooLong: 'Title is too long',
+          bodyTooLong: 'Message text is too long'
+        }
+      },
+
+      // History
+      history: {
+        title: 'Notification History',
+        description: 'View sent notifications',
+        noNotifications: 'No notifications sent yet',
+        sentToAllUsers: 'Sent to all users',
+        delivered: 'Delivered',
+        errors: 'Errors',
+        status: {
+          sent: 'Sent',
+          delivered: 'Delivered',
+          failed: 'Failed',
+          pending: 'Pending'
+        }
+      },
+
+      // Notifications
+      notifications: {
+        success: {
+          title: 'Notification sent successfully!',
+          message: 'Delivered: {successCount}, Errors: {failureCount}'
+        },
+        error: {
+          title: 'Sending Error',
+          message: 'Unknown error occurred'
+        },
+        authError: {
+          title: 'Authentication Error',
+          message: 'User not authenticated. Please refresh the page.'
+        }
+      }
     }
   },
   ru: {
@@ -2696,57 +2771,132 @@ _________________               _________________
 
     // Premium Features
     premiumFeatures: {
-      title: 'Premium Subscription for Developers',
-      subtitle: 'Maximum visibility of your properties among real estate agents and increased sales through the IT Agent platform',
+      title: 'Премиум подписка для застройщиков',
+      subtitle: 'Максимальная видимость ваших объектов среди риелторов и увеличение продаж через платформу IT Agent',
       
       // Features
       features: {
         iosAppPlacement: {
-          title: 'Placement on iOS app homepage',
-          description: 'Your properties and complexes will be displayed on the IT Agent app homepage for all real estate agents, significantly increasing the visibility of your offerings.',
-          benefit: 'Increased visibility among agents'
+          title: 'Размещение на главной странице iOS приложения',
+          description: 'Ваши объекты и комплексы будут отображаться на главной странице приложения IT Agent для всех риелторов, значительно увеличивая видимость ваших предложений.',
+          benefit: 'Повышенная видимость среди агентов'
         },
         pushNotifications: {
-          title: 'Push notifications to all agents',
-          description: 'Send notifications about new properties, promotions and important events directly to all real estate agents in the IT Agent app.',
-          benefit: 'Direct communication with agents'
+          title: 'Push-уведомления всем агентам',
+          description: 'Отправляйте уведомления о новых объектах, акциях и важных событиях напрямую всем риелторам в приложении IT Agent.',
+          benefit: 'Прямая связь с агентами'
         },
         verifiedBadge: {
-          title: '"Service Verified" badge',
-          description: 'Special badge on your property and complex pages that increases trust and conversion among agents and clients.',
-          benefit: 'Increased trust and conversion'
+          title: 'Значок "Проверенный сервис"',
+          description: 'Специальный значок на страницах ваших объектов и комплексов, который повышает доверие и конверсию среди агентов и клиентов.',
+          benefit: 'Повышенное доверие и конверсия'
         },
         publicWebPage: {
-          title: 'Public web page',
-          description: 'Full web page with information about your properties that can be used outside the app and shared with clients and partners.',
-          benefit: 'Expanded sales channels'
+          title: 'Публичная веб-страница',
+          description: 'Полноценная веб-страница с информацией о ваших объектах, которую можно использовать вне приложения и делиться с клиентами и партнерами.',
+          benefit: 'Расширенные каналы продаж'
         }
       },
 
       // Additional benefits
-      additionalBenefits: 'Additional Benefits',
+      additionalBenefits: 'Дополнительные преимущества',
       benefits: [
-        'Increased number of views of your properties',
-        'Direct access to real estate agent database',
-        'Increased brand trust and authority',
-        'Automation of property promotion process',
-        'Analytics and statistics on views',
-        'Priority support from IT Agent team'
+        'Увеличение количества просмотров ваших объектов',
+        'Прямой доступ к базе данных риелторов',
+        'Повышение доверия и авторитета бренда',
+        'Автоматизация процесса продвижения объектов',
+        'Аналитика и статистика просмотров',
+        'Приоритетная поддержка от команды IT Agent'
       ],
 
       // Statistics
       statistics: {
-        agents: 'Real estate agents',
-        viewsIncrease: 'Increase in views',
-        availability: 'Availability'
+        agents: 'Риелторов',
+        viewsIncrease: 'Рост просмотров',
+        availability: 'Доступность'
       },
 
       // CTA section
       cta: {
-        title: 'Ready to increase sales?',
-        subtitle: 'Join premium developers and get maximum visibility of your properties among real estate agents',
-        subscribeButton: 'Subscribe to premium',
-        footer: 'No hidden fees • Cancel anytime • Priority support'
+        title: 'Готовы увеличить продажи?',
+        subtitle: 'Присоединяйтесь к премиум застройщикам и получите максимальную видимость ваших объектов среди риелторов',
+        subscribeButton: 'Подписаться на премиум',
+        footer: 'Без скрытых комиссий • Отмена в любое время • Приоритетная поддержка'
+      }
+    },
+
+    // Notifications Page
+    notificationsPage: {
+      title: 'Управление уведомлениями',
+      subtitle: 'Управление рассылкой push-уведомлений для ваших объектов',
+      
+      // Statistics
+      statistics: {
+        sentToday: 'Отправлено сегодня',
+        totalSent: 'Всего отправлено',
+        lastSent: 'Последняя отправка',
+        remaining: 'Осталось',
+        of: 'из',
+        total: 'Всего',
+        never: 'Никогда'
+      },
+
+      // Tabs
+      tabs: {
+        send: 'Отправить',
+        history: 'История'
+      },
+
+      // Send Form
+      sendForm: {
+        title: 'Создать уведомление',
+        description: 'Отправьте уведомление пользователям iOS приложения',
+        titleLabel: 'Заголовок',
+        titlePlaceholder: 'Введите заголовок уведомления',
+        bodyLabel: 'Текст сообщения',
+        bodyPlaceholder: 'Введите текст уведомления',
+        characters: 'символов',
+        targetAudience: 'Уведомление будет отправлено всем пользователям iOS приложения',
+        sendButton: 'Отправить уведомление',
+        sending: 'Отправка...',
+        validation: {
+          titleRequired: 'Заголовок обязателен',
+          bodyRequired: 'Текст сообщения обязателен',
+          titleTooLong: 'Заголовок слишком длинный',
+          bodyTooLong: 'Текст сообщения слишком длинный'
+        }
+      },
+
+      // History
+      history: {
+        title: 'История уведомлений',
+        description: 'Просмотр отправленных уведомлений',
+        noNotifications: 'Уведомления еще не отправлялись',
+        sentToAllUsers: 'Отправлено всем пользователям',
+        delivered: 'Доставлено',
+        errors: 'Ошибок',
+        status: {
+          sent: 'Отправлено',
+          delivered: 'Доставлено',
+          failed: 'Ошибка',
+          pending: 'В ожидании'
+        }
+      },
+
+      // Notifications
+      notifications: {
+        success: {
+          title: 'Уведомление отправлено успешно!',
+          message: 'Доставлено: {successCount}, Ошибок: {failureCount}'
+        },
+        error: {
+          title: 'Ошибка отправки',
+          message: 'Произошла неизвестная ошибка'
+        },
+        authError: {
+          title: 'Ошибка авторизации',
+          message: 'Пользователь не авторизован. Пожалуйста, перезагрузите страницу.'
+        }
       }
     }
   },
@@ -4122,6 +4272,81 @@ _________________               _________________
         subtitle: 'Bergabunglah dengan pengembang premium dan dapatkan visibilitas maksimum properti Anda di kalangan agen real estate',
         subscribeButton: 'Berlangganan premium',
         footer: 'Tidak ada biaya tersembunyi • Batal kapan saja • Dukungan prioritas'
+      }
+    },
+
+    // Notifications Page
+    notificationsPage: {
+      title: 'Manajemen Notifikasi',
+      subtitle: 'Kelola notifikasi push untuk properti Anda',
+      
+      // Statistics
+      statistics: {
+        sentToday: 'Dikirim Hari Ini',
+        totalSent: 'Total Dikirim',
+        lastSent: 'Terakhir Dikirim',
+        remaining: 'Tersisa',
+        of: 'dari',
+        total: 'Total',
+        never: 'Tidak pernah'
+      },
+
+      // Tabs
+      tabs: {
+        send: 'Kirim',
+        history: 'Riwayat'
+      },
+
+      // Send Form
+      sendForm: {
+        title: 'Buat Notifikasi',
+        description: 'Kirim notifikasi ke pengguna aplikasi iOS',
+        titleLabel: 'Judul',
+        titlePlaceholder: 'Masukkan judul notifikasi',
+        bodyLabel: 'Teks Pesan',
+        bodyPlaceholder: 'Masukkan teks notifikasi',
+        characters: 'karakter',
+        targetAudience: 'Notifikasi akan dikirim ke semua pengguna aplikasi iOS',
+        sendButton: 'Kirim Notifikasi',
+        sending: 'Mengirim...',
+        validation: {
+          titleRequired: 'Judul diperlukan',
+          bodyRequired: 'Teks pesan diperlukan',
+          titleTooLong: 'Judul terlalu panjang',
+          bodyTooLong: 'Teks pesan terlalu panjang'
+        }
+      },
+
+      // History
+      history: {
+        title: 'Riwayat Notifikasi',
+        description: 'Lihat notifikasi yang dikirim',
+        noNotifications: 'Belum ada notifikasi yang dikirim',
+        sentToAllUsers: 'Dikirim ke semua pengguna',
+        delivered: 'Terkirim',
+        errors: 'Kesalahan',
+        status: {
+          sent: 'Dikirim',
+          delivered: 'Terkirim',
+          failed: 'Gagal',
+          pending: 'Menunggu'
+        }
+      },
+
+      // Notifications
+      notifications: {
+        success: {
+          title: 'Notifikasi berhasil dikirim!',
+          message: 'Terkirim: {successCount}, Kesalahan: {failureCount}'
+        },
+        error: {
+          title: 'Kesalahan Pengiriman',
+          message: 'Terjadi kesalahan yang tidak diketahui'
+        },
+        authError: {
+          title: 'Kesalahan Autentikasi',
+          message: 'Pengguna tidak terautentikasi. Silakan segarkan halaman.'
+        }
       }
     }
   }

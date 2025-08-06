@@ -147,23 +147,33 @@ export const getDeveloperNotificationStats = async () => {
  * @param {string} body - Текст уведомления
  * @returns {Object} Объект с результатом валидации
  */
-export const validateNotificationData = (title, body) => {
+export const validateNotificationData = (title, body, translations = null) => {
   const errors = {};
   
+  // Используем переводы если они предоставлены, иначе используем русский текст
+  const t = translations || {
+    titleRequired: 'Заголовок обязателен',
+    titleTooShort: 'Заголовок слишком короткий (минимум 3 символа)',
+    titleTooLong: 'Заголовок не должен превышать 100 символов',
+    bodyRequired: 'Текст сообщения обязателен',
+    bodyTooShort: 'Текст сообщения слишком короткий (минимум 10 символов)',
+    bodyTooLong: 'Текст сообщения не должен превышать 500 символов'
+  };
+  
   if (!title || title.trim().length === 0) {
-    errors.title = 'Заголовок обязателен';
+    errors.title = t.titleRequired;
   } else if (title.trim().length < 3) {
-    errors.title = 'Заголовок слишком короткий (минимум 3 символа)';
+    errors.title = t.titleTooShort;
   } else if (title.length > 100) {
-    errors.title = 'Заголовок не должен превышать 100 символов';
+    errors.title = t.titleTooLong;
   }
   
   if (!body || body.trim().length === 0) {
-    errors.body = 'Текст сообщения обязателен';
+    errors.body = t.bodyRequired;
   } else if (body.trim().length < 10) {
-    errors.body = 'Текст сообщения слишком короткий (минимум 10 символов)';
+    errors.body = t.bodyTooShort;
   } else if (body.length > 500) {
-    errors.body = 'Текст сообщения не должен превышать 500 символов';
+    errors.body = t.bodyTooLong;
   }
 
   // Проверка на спам-контент только если есть текст
@@ -195,7 +205,7 @@ export const validateNotificationData = (title, body) => {
  * @param {Date|string} date - Дата для форматирования
  * @returns {string} Отформатированная дата
  */
-export const formatNotificationDate = (date) => {
+export const formatNotificationDate = (date, locale = 'ru-RU') => {
   if (!date) return 'Не указано';
   
   try {
@@ -223,7 +233,7 @@ export const formatNotificationDate = (date) => {
       return 'Некорректная дата';
     }
     
-    return new Intl.DateTimeFormat('ru-RU', {
+    return new Intl.DateTimeFormat(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
