@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
-import { useAuth } from '../AuthContext';
+import { useAuth, isPremiumDeveloper } from '../AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -21,18 +21,33 @@ import {
   getNotificationStatusColor,
   getNotificationStatusText
 } from '../utils/notifications';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 // Шаблоны убраны - оставляем только простую отправку
 
 function Notifications() {
   const { language } = useLanguage();
-  const { currentUser } = useAuth();
+  const { currentUser, role } = useAuth();
   const t = translations[language].notificationsPage;
-  const nav = translations[language].navigation;
+
+  // Функция для получения отображаемого имени роли
+  const getRoleDisplayName = (role, rolesTranslations) => {
+    const roleMap = {
+      'admin': rolesTranslations.admin,
+      'moderator': rolesTranslations.moderator,
+      'agent': rolesTranslations.agent,
+      'premium agent': rolesTranslations.premiumAgent,
+      'застройщик': rolesTranslations.developer,
+      'премиум застройщик': rolesTranslations.premiumDeveloper,
+      'user': rolesTranslations.user
+    };
+    return roleMap[role] || role;
+  };
   
   // Состояние формы
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  // Упрощено: всегда отправляем всем пользователям
+  const [targetAudience, setTargetAudience] = useState('all_users');
+  const [selectedRole, setSelectedRole] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   // Состояние статистики и истории
@@ -91,6 +106,25 @@ function Notifications() {
     const validation = validateNotificationData(title, body, t.sendForm.validation);
     setErrors(validation.errors);
     setWarnings(validation.warnings);
+    
+    // Дополнительная валидация для админа при выборе роли
+    if (role === 'admin' && targetAudience === 'role_specific' && !selectedRole) {
+      setErrors(prev => ({
+        ...prev,
+        role: t.sendForm.validation.roleRequired
+      }));
+      return false;
+    }
+    
+    // Очищаем ошибку роли, если она больше не актуальна
+    if (errors.role && (targetAudience !== 'role_specific' || selectedRole)) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.role;
+        return newErrors;
+      });
+    }
+    
     return validation.isValid;
   };
 
@@ -99,7 +133,7 @@ function Notifications() {
     e.preventDefault();
     
     // Проверяем авторизацию перед отправкой
-    if (!currentUser) {
+    if (!currentUser || !role) {
       setNotification({
         type: 'error',
         title: t.notifications.authError.title,
@@ -116,7 +150,8 @@ function Notifications() {
       const notificationData = {
         title: title.trim(),
         body: body.trim(),
-        targetAudience: 'all_users'
+        targetAudience: targetAudience,
+        ...(targetAudience === 'role_specific' && { role: selectedRole })
       };
       
       const result = await sendDeveloperNotification(notificationData);
@@ -134,6 +169,10 @@ function Notifications() {
         // Очищаем форму
         setTitle('');
         setBody('');
+        setTargetAudience('all_users');
+        setSelectedRole('');
+        setErrors({});
+        setWarnings([]);
         
         // Обновляем данные
         loadStats();
@@ -158,6 +197,18 @@ function Notifications() {
   };
 
   // Шаблоны убраны
+
+  // Проверяем доступ к разделу
+  if (!currentUser || !role || (!isPremiumDeveloper(role) && role !== 'admin')) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t.accessControl.forbidden}</h2>
+          <p className="text-gray-600">{t.accessControl.noPermission}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -290,11 +341,84 @@ function Notifications() {
                   </p>
                 </div>
 
+                {/* Выбор целевой аудитории - только для админа */}
+                {role === 'admin' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>{t.sendForm.targetAudienceLabel}</Label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            value="all_users"
+                            checked={targetAudience === 'all_users'}
+                            onChange={(e) => {
+                              setTargetAudience(e.target.value);
+                              setSelectedRole('');
+                              setErrors(prev => {
+                                const newErrors = { ...prev };
+                                delete newErrors.role;
+                                return newErrors;
+                              });
+                            }}
+                            className="text-blue-600"
+                          />
+                          <span className="text-sm">{t.sendForm.targetAudienceAll}</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            value="role_specific"
+                            checked={targetAudience === 'role_specific'}
+                            onChange={(e) => setTargetAudience(e.target.value)}
+                            className="text-blue-600"
+                          />
+                          <span className="text-sm">{t.sendForm.targetAudienceRole}</span>
+                        </label>
+                      </div>
+                    </div>
+
+                                         {targetAudience === 'role_specific' && (
+                       <div className="space-y-2">
+                         <Label>{t.sendForm.roleSelectLabel}</Label>
+                         <Select value={selectedRole} onValueChange={(value) => {
+                           setSelectedRole(value);
+                           setErrors(prev => {
+                             const newErrors = { ...prev };
+                             delete newErrors.role;
+                             return newErrors;
+                           });
+                         }}>
+                           <SelectTrigger>
+                             <SelectValue placeholder={t.sendForm.roleSelectPlaceholder} />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="admin">{t.roles.admin}</SelectItem>
+                             <SelectItem value="moderator">{t.roles.moderator}</SelectItem>
+                             <SelectItem value="agent">{t.roles.agent}</SelectItem>
+                             <SelectItem value="premium agent">{t.roles.premiumAgent}</SelectItem>
+                             <SelectItem value="застройщик">{t.roles.developer}</SelectItem>
+                             <SelectItem value="премиум застройщик">{t.roles.premiumDeveloper}</SelectItem>
+                             <SelectItem value="user">{t.roles.user}</SelectItem>
+                           </SelectContent>
+                         </Select>
+                         {errors.role && (
+                           <p className="text-sm text-red-500">{errors.role}</p>
+                         )}
+                       </div>
+                     )}
+                  </div>
+                )}
+
+                {/* Информация о целевой аудитории */}
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-blue-600" />
                     <span className="text-sm font-medium text-blue-800">
-                      {t.sendForm.targetAudience}
+                      {role === 'admin' && targetAudience === 'role_specific' && selectedRole
+                        ? `${t.sendForm.targetAudienceRole}: ${getRoleDisplayName(selectedRole, t.roles)}`
+                        : t.sendForm.targetAudience
+                      }
                     </span>
                   </div>
                 </div>
@@ -314,7 +438,12 @@ function Notifications() {
 
                 <Button 
                   type="submit" 
-                  disabled={isLoading || !title.trim() || !body.trim()}
+                  disabled={
+                    isLoading || 
+                    !title.trim() || 
+                    !body.trim() || 
+                    (role === 'admin' && targetAudience === 'role_specific' && !selectedRole)
+                  }
                   className="w-full"
                 >
                   {isLoading ? (
@@ -376,7 +505,12 @@ function Notifications() {
                       
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>{formatNotificationDate(notification.createdAt, language === 'en' ? 'en-US' : language === 'id' ? 'id-ID' : 'ru-RU')}</span>
-                        <span>{t.history.sentToAllUsers}</span>
+                        <span>
+                          {notification.targetAudience === 'role_specific' && notification.role
+                            ? `${t.sendForm.targetAudienceRole}: ${getRoleDisplayName(notification.role, t.roles)}`
+                            : t.history.sentToAllUsers
+                          }
+                        </span>
                         {notification.successCount !== undefined && (
                           <span>{t.history.delivered}: {notification.successCount}</span>
                         )}

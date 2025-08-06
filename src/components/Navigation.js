@@ -441,8 +441,8 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {/* ⚠️ КРИТИЧЕСКИ ВАЖНО: Уведомления - активны только для премиум застройщика */}
-        {isPremiumDeveloper(role) && (
+        {/* Уведомления - доступны для премиум застройщика и админа */}
+        {(isPremiumDeveloper(role) || role === 'admin') && (
           <NavItem 
             to="/notifications" 
             icon={Bell}
@@ -451,7 +451,7 @@ const Navigation = () => {
             {nav.notifications}
           </NavItem>
         )}
-        {isDeveloper(role) && (
+        {isDeveloper(role) && !isPremiumDeveloper(role) && role !== 'admin' && (
           <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
             <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
               <Bell className="h-4 w-4" />
@@ -625,13 +625,13 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {/* ⚠️ КРИТИЧЕСКИ ВАЖНО: Уведомления - активны только для премиум застройщика */}
-        {isPremiumDeveloper(role) && (
+        {/* Уведомления - доступны для премиум застройщика и админа */}
+        {(isPremiumDeveloper(role) || role === 'admin') && (
           <NavItem to="/notifications" icon={Bell}>
             {nav.notifications}
           </NavItem>
         )}
-        {isDeveloper(role) && (
+        {isDeveloper(role) && !isPremiumDeveloper(role) && role !== 'admin' && (
           <AdaptiveTooltip content={nav.premiumSubscriptionTooltip}>
             <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
               <Bell className="h-4 w-4" />

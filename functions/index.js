@@ -685,7 +685,7 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
     }
 
     // Исправлено: данные приходят в data.data
-    const { title, body } = data.data || data;
+    const { title, body, targetAudience, role: targetRole } = data.data || data;
 
     // Валидация входных данных
     if (!title || !body) {
@@ -710,12 +710,13 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
     const senderRole = senderData.role;
     const senderDeveloperId = senderData.developerId;
 
-    // Проверяем права: только премиум застройщики могут отправлять уведомления
-    if (senderRole !== 'премиум застройщик') {
-      throw new functions.https.HttpsError('permission-denied', 'Только премиум застройщики могут отправлять уведомления');
+    // Проверяем права: премиум застройщики и администраторы могут отправлять уведомления
+    if (senderRole !== 'премиум застройщик' && senderRole !== 'admin') {
+      throw new functions.https.HttpsError('permission-denied', 'Только премиум застройщики и администраторы могут отправлять уведомления');
     }
 
-    if (!senderDeveloperId) {
+    // Проверяем developerId только для премиум застройщиков
+    if (senderRole === 'премиум застройщик' && !senderDeveloperId) {
       throw new functions.https.HttpsError('permission-denied', 'У пользователя не указан ID застройщика');
     }
 
@@ -797,23 +798,57 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
       throw new functions.https.HttpsError('already-exists', 'Уведомление с таким содержимым уже было отправлено');
     }
 
-    // Получаем список FCM токенов всех пользователей iOS приложения
+    // Получаем список FCM токенов пользователей iOS приложения
     let targetTokens = [];
     let targetUserIds = [];
 
-    // Отправляем всем пользователям iOS приложения
-    const tokensSnapshot = await admin.firestore()
-      .collection('userTokens')
-      .where('platform', '==', 'iOS')
-      .get();
+    if (senderRole === 'admin' && targetAudience === 'role_specific' && targetRole) {
+      // Для администратора: отправляем пользователям с определенной ролью
+      console.log(`Admin sending notification to users with role: ${targetRole}`);
+      
+      // Получаем пользователей с указанной ролью
+      const usersSnapshot = await admin.firestore()
+        .collection('users')
+        .where('role', '==', targetRole)
+        .get();
 
-    tokensSnapshot.forEach(doc => {
-      const tokenData = doc.data();
-      if (tokenData.fcmToken) {
-        targetTokens.push(tokenData.fcmToken);
-        targetUserIds.push(tokenData.userId);
+      const targetUserIds = usersSnapshot.docs.map(doc => doc.id);
+      
+      if (targetUserIds.length === 0) {
+        throw new functions.https.HttpsError('failed-precondition', `Не найдено пользователей с ролью: ${targetRole}`);
       }
-    });
+
+      // Получаем FCM токены для этих пользователей
+      const tokensSnapshot = await admin.firestore()
+        .collection('userTokens')
+        .where('platform', '==', 'iOS')
+        .where('userId', 'in', targetUserIds)
+        .get();
+
+      tokensSnapshot.forEach(doc => {
+        const tokenData = doc.data();
+        if (tokenData.fcmToken) {
+          targetTokens.push(tokenData.fcmToken);
+          targetUserIds.push(tokenData.userId);
+        }
+      });
+    } else {
+      // Для премиум застройщиков или администраторов: отправляем всем пользователям iOS приложения
+      console.log('Sending notification to all iOS users');
+      
+      const tokensSnapshot = await admin.firestore()
+        .collection('userTokens')
+        .where('platform', '==', 'iOS')
+        .get();
+
+      tokensSnapshot.forEach(doc => {
+        const tokenData = doc.data();
+        if (tokenData.fcmToken) {
+          targetTokens.push(tokenData.fcmToken);
+          targetUserIds.push(tokenData.userId);
+        }
+      });
+    }
 
     if (targetTokens.length === 0) {
       throw new functions.https.HttpsError('failed-precondition', 'Не найдено получателей для отправки уведомления');
@@ -835,7 +870,7 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
       type: 'developer_message',
       senderId: userId,
       senderName: senderData.name || senderData.email,
-      developerId: senderDeveloperId,
+      ...(senderDeveloperId && { developerId: senderDeveloperId }),
       timestamp: Date.now().toString()
     };
 
@@ -857,7 +892,7 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
           type: 'developer_message',
           senderId: userId,
           senderName: senderData.name || senderData.email,
-          developerId: senderDeveloperId,
+          ...(senderDeveloperId && { developerId: senderDeveloperId }),
           timestamp: Date.now().toString()
         }
       },
@@ -872,9 +907,11 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
       senderId: userId,
       senderName: senderData.name || senderData.email,
       senderEmail: senderData.email,
-      developerId: senderDeveloperId,
+      ...(senderDeveloperId && { developerId: senderDeveloperId }),
       title: title,
       body: body,
+      targetAudience: targetAudience || 'all_users',
+      targetRole: targetRole || null,
       targetTokensCount: targetTokens.length,
       targetUserIds: targetUserIds,
       successCount: response.successCount,
@@ -899,10 +936,12 @@ exports.sendDeveloperNotification = functions.https.onCall(async (data, context)
       userId: userId,
       userEmail: senderData.email,
       userRole: senderRole,
-      developerId: senderDeveloperId,
+      ...(senderDeveloperId && { developerId: senderDeveloperId }),
       details: {
         notificationId: docRef.id,
         title: title,
+        targetAudience: targetAudience || 'all_users',
+        targetRole: targetRole || null,
         targetCount: targetTokens.length,
         successCount: response.successCount,
         failureCount: response.failureCount
@@ -969,7 +1008,7 @@ exports.getDeveloperNotificationHistory = functions.https.onCall(async (data, co
     }
 
     const userData = userDoc.data();
-    if (userData.role !== 'премиум застройщик') {
+    if (userData.role !== 'премиум застройщик' && userData.role !== 'admin') {
       throw new functions.https.HttpsError('permission-denied', 'Доступ запрещен');
     }
 
@@ -1045,7 +1084,7 @@ exports.getDeveloperNotificationStats = functions.https.onCall(async (data, cont
     }
 
     const userData = userDoc.data();
-    if (userData.role !== 'премиум застройщик') {
+    if (userData.role !== 'премиум застройщик' && userData.role !== 'admin') {
       throw new functions.https.HttpsError('permission-denied', 'Доступ запрещен');
     }
 

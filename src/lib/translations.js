@@ -1407,13 +1407,19 @@ _________________               _________________
         bodyPlaceholder: 'Enter notification text',
         characters: 'characters',
         targetAudience: 'Notification will be sent to all iOS app users',
+        targetAudienceLabel: 'Target Audience',
+        targetAudienceAll: 'All users',
+        targetAudienceRole: 'Users with specific role',
+        roleSelectLabel: 'Select role',
+        roleSelectPlaceholder: 'Choose user role',
         sendButton: 'Send Notification',
         sending: 'Sending...',
         validation: {
           titleRequired: 'Title is required',
           bodyRequired: 'Message text is required',
           titleTooLong: 'Title is too long',
-          bodyTooLong: 'Message text is too long'
+          bodyTooLong: 'Message text is too long',
+          roleRequired: 'Please select a role'
         }
       },
 
@@ -1447,6 +1453,23 @@ _________________               _________________
           title: 'Authentication Error',
           message: 'User not authenticated. Please refresh the page.'
         }
+      },
+
+      // Access Control
+      accessControl: {
+        forbidden: 'Access Forbidden',
+        noPermission: 'You do not have permission to access this section.'
+      },
+
+      // User Roles
+      roles: {
+        admin: 'Administrator',
+        moderator: 'Moderator',
+        agent: 'Agent',
+        premiumAgent: 'Premium Agent',
+        developer: 'Developer',
+        premiumDeveloper: 'Premium Developer',
+        user: 'User'
       }
     }
   },
@@ -2857,13 +2880,19 @@ _________________               _________________
         bodyPlaceholder: 'Введите текст уведомления',
         characters: 'символов',
         targetAudience: 'Уведомление будет отправлено всем пользователям iOS приложения',
+        targetAudienceLabel: 'Целевая аудитория',
+        targetAudienceAll: 'Все пользователи',
+        targetAudienceRole: 'Пользователи с определенной ролью',
+        roleSelectLabel: 'Выберите роль',
+        roleSelectPlaceholder: 'Выберите роль пользователя',
         sendButton: 'Отправить уведомление',
         sending: 'Отправка...',
         validation: {
           titleRequired: 'Заголовок обязателен',
           bodyRequired: 'Текст сообщения обязателен',
           titleTooLong: 'Заголовок слишком длинный',
-          bodyTooLong: 'Текст сообщения слишком длинный'
+          bodyTooLong: 'Текст сообщения слишком длинный',
+          roleRequired: 'Пожалуйста, выберите роль'
         }
       },
 
@@ -2897,6 +2926,23 @@ _________________               _________________
           title: 'Ошибка авторизации',
           message: 'Пользователь не авторизован. Пожалуйста, перезагрузите страницу.'
         }
+      },
+
+      // Access Control
+      accessControl: {
+        forbidden: 'Доступ запрещен',
+        noPermission: 'У вас нет прав для доступа к этому разделу.'
+      },
+
+      // User Roles
+      roles: {
+        admin: 'Администратор',
+        moderator: 'Модератор',
+        agent: 'Агент',
+        premiumAgent: 'Премиум агент',
+        developer: 'Застройщик',
+        premiumDeveloper: 'Премиум застройщик',
+        user: 'Пользователь'
       }
     }
   },
@@ -4307,13 +4353,19 @@ _________________               _________________
         bodyPlaceholder: 'Masukkan teks notifikasi',
         characters: 'karakter',
         targetAudience: 'Notifikasi akan dikirim ke semua pengguna aplikasi iOS',
+        targetAudienceLabel: 'Target Audiens',
+        targetAudienceAll: 'Semua pengguna',
+        targetAudienceRole: 'Pengguna dengan peran tertentu',
+        roleSelectLabel: 'Pilih peran',
+        roleSelectPlaceholder: 'Pilih peran pengguna',
         sendButton: 'Kirim Notifikasi',
         sending: 'Mengirim...',
         validation: {
           titleRequired: 'Judul diperlukan',
           bodyRequired: 'Teks pesan diperlukan',
           titleTooLong: 'Judul terlalu panjang',
-          bodyTooLong: 'Teks pesan terlalu panjang'
+          bodyTooLong: 'Teks pesan terlalu panjang',
+          roleRequired: 'Silakan pilih peran'
         }
       },
 
@@ -4347,6 +4399,23 @@ _________________               _________________
           title: 'Kesalahan Autentikasi',
           message: 'Pengguna tidak terautentikasi. Silakan segarkan halaman.'
         }
+      },
+
+      // Access Control
+      accessControl: {
+        forbidden: 'Akses Dilarang',
+        noPermission: 'Anda tidak memiliki izin untuk mengakses bagian ini.'
+      },
+
+      // User Roles
+      roles: {
+        admin: 'Administrator',
+        moderator: 'Moderator',
+        agent: 'Agen',
+        premiumAgent: 'Agen Premium',
+        developer: 'Pengembang',
+        premiumDeveloper: 'Pengembang Premium',
+        user: 'Pengguna'
       }
     }
   }
