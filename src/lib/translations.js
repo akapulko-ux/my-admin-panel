@@ -2886,8 +2886,8 @@ _________________               _________________
     editDeveloper: {
       addTitle: 'Добавить застройщика',
       editTitle: 'Редактировать застройщика',
-      nameLabel: 'Имя застройщика',
-      namePlaceholder: 'Введите имя застройщика',
+      nameLabel: 'Название',
+      namePlaceholder: 'Введите название застройщика',
       descriptionLabel: 'Описание',
       descriptionPlaceholder: 'Введите описание застройщика',
       approvedLabel: 'Проверено сервисом',

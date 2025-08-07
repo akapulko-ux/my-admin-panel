@@ -185,6 +185,8 @@ function EditDeveloper() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 placeholder={t.namePlaceholder}
+                disabled={['застройщик', 'премиум застройщик'].includes(role)}
+                className={['застройщик', 'премиум застройщик'].includes(role) ? 'opacity-50 cursor-not-allowed' : ''}
               />
             </div>
 
