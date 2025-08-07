@@ -142,7 +142,7 @@ export const translations = {
       support: 'Support',
       roiCalculator: 'ROI Calculator',
       clientFixations: 'Client Fixations',
-      userManagement: 'User Management',
+      userManagement: 'Users',
       generalOverview: 'General Overview',
       registrationRequests: 'Registration Requests',
       referralMap: 'Referral Map',
@@ -1662,7 +1662,7 @@ _________________               _________________
       support: 'Поддержка',
       roiCalculator: 'Калькулятор ROI',
       clientFixations: 'Фиксации клиентов',
-      userManagement: 'Управление пользователями',
+      userManagement: 'Пользователи',
       generalOverview: 'Общий обзор',
       registrationRequests: 'Заявки на регистрацию',
       
@@ -3201,7 +3201,7 @@ _________________               _________________
       support: 'Dukungan',
       roiCalculator: 'Kalkulator ROI',
       clientFixations: 'Fiksasi Klien',
-      userManagement: 'Manajemen Pengguna',
+      userManagement: 'Pengguna',
       generalOverview: 'Ikhtisar Umum',
       registrationRequests: 'Permintaan Registrasi',
       

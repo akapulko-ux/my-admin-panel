@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
+import { useAuth } from '../AuthContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { 
@@ -38,17 +39,17 @@ const ROLES = {
     icon: ShieldCheck,
     color: 'bg-yellow-500'
   },
-  'premium agent': {
-    value: 'premium agent',
-    label: 'Премиум агент',
-    icon: Star,
-    color: 'bg-purple-500'
-  },
   agent: {
     value: 'agent',
     label: 'Агент',
     icon: User,
     color: 'bg-blue-500'
+  },
+  'premium agent': {
+    value: 'premium agent',
+    label: 'Премиум агент',
+    icon: Star,
+    color: 'bg-purple-500'
   },
   user: {
     value: 'user',
@@ -77,11 +78,13 @@ const ROLES = {
 };
 
 const UserManagement = () => {
+  const { role: currentUserRole } = useAuth();
   const [users, setUsers] = useState([]);
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [activeFilter, setActiveFilter] = useState(null); // null = все пользователи, roleKey = фильтр по роли
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -241,6 +244,34 @@ const UserManagement = () => {
     return counts;
   };
 
+  // Функция для фильтрации пользователей
+  const getFilteredUsers = () => {
+    if (!activeFilter) {
+      return users; // Показываем всех пользователей
+    }
+    
+    return users.filter(user => {
+      const userRole = user.role || 'user';
+      return userRole === activeFilter;
+    });
+  };
+
+  // Обработчик клика на карточку роли
+  const handleRoleCardClick = (roleKey) => {
+    if (activeFilter === roleKey) {
+      // Если кликаем на уже активный фильтр, сбрасываем его
+      setActiveFilter(null);
+    } else {
+      // Иначе устанавливаем новый фильтр
+      setActiveFilter(roleKey);
+    }
+  };
+
+  // Обработчик клика на карточку "Всего пользователей"
+  const handleTotalUsersClick = () => {
+    setActiveFilter(null);
+  };
+
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
@@ -261,20 +292,64 @@ const UserManagement = () => {
 
       {/* Счетчики пользователей по ролям */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        {/* Карточка "Всего пользователей" - первая в ряду */}
+        <Card 
+          className={`hover:shadow-md transition-all cursor-pointer ${
+            activeFilter === null ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-lg'
+          }`}
+          onClick={handleTotalUsersClick}
+        >
+          <CardContent className="p-3">
+            <div className="flex flex-col items-center text-center space-y-2">
+              <div className={`p-2 rounded-lg ${activeFilter === null ? 'bg-blue-200' : 'bg-blue-100'}`}>
+                <BarChart3 className={`w-4 h-4 ${activeFilter === null ? 'text-blue-700' : 'text-blue-600'}`} />
+              </div>
+              <div className="w-full">
+                <p className={`text-xs font-medium truncate ${activeFilter === null ? 'text-blue-700' : 'text-gray-600'}`}>
+                  Всего пользователей
+                </p>
+                <p className={`text-xl font-bold ${activeFilter === null ? 'text-blue-700' : 'text-gray-900'}`}>
+                  {users.length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Карточки ролей пользователей */}
         {Object.entries(ROLES).map(([roleKey, roleConfig]) => {
           const Icon = roleConfig.icon;
           const count = getUsersCountByRole()[roleKey] || 0;
+          const isActive = activeFilter === roleKey;
           
           return (
-            <Card key={roleKey} className="hover:shadow-md transition-shadow">
+            <Card 
+              key={roleKey} 
+              className={`hover:shadow-md transition-all cursor-pointer ${
+                isActive ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-lg'
+              }`}
+              onClick={() => handleRoleCardClick(roleKey)}
+            >
               <CardContent className="p-3">
                 <div className="flex flex-col items-center text-center space-y-2">
-                  <div className={`p-2 rounded-lg ${roleConfig.color.replace('bg-', 'bg-')} bg-opacity-10`}>
+                  <div className={`p-2 rounded-lg ${
+                    isActive 
+                      ? `${roleConfig.color.replace('bg-', 'bg-')} bg-opacity-20` 
+                      : `${roleConfig.color.replace('bg-', 'bg-')} bg-opacity-10`
+                  }`}>
                     <Icon className={`w-4 h-4 ${roleConfig.color.replace('bg-', 'text-')}`} />
                   </div>
                   <div className="w-full">
-                    <p className="text-xs font-medium text-gray-600 truncate">{roleConfig.label}</p>
-                    <p className="text-xl font-bold text-gray-900">{count}</p>
+                    <p className={`text-xs font-medium truncate ${
+                      isActive ? 'text-blue-700' : 'text-gray-600'
+                    }`}>
+                      {roleConfig.label}
+                    </p>
+                    <p className={`text-xl font-bold ${
+                      isActive ? 'text-blue-700' : 'text-gray-900'
+                    }`}>
+                      {count}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -283,20 +358,30 @@ const UserManagement = () => {
         })}
       </div>
 
-      {/* Общий счетчик всех пользователей */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-100">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
+      {/* Индикатор активного фильтра */}
+      {activeFilter && (
+        <Card className="border-blue-200 bg-blue-50 mb-4">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-blue-800">
+                <Shield className="w-4 h-4" />
+                <span>
+                  Фильтр: <strong>{ROLES[activeFilter]?.label || activeFilter}</strong>
+                  <span className="text-blue-600 ml-2">
+                    ({getFilteredUsers().length} из {users.length} пользователей)
+                  </span>
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveFilter(null)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Сбросить фильтр
+              </button>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Всего пользователей</p>
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {error && (
         <Card className="border-red-200 bg-red-50">
@@ -309,16 +394,21 @@ const UserManagement = () => {
         </Card>
       )}
 
-      {users.length === 0 ? (
+      {getFilteredUsers().length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-lg text-gray-600">Пользователи не найдены</p>
+            <p className="text-lg text-gray-600">
+              {activeFilter 
+                ? `Пользователи с ролью "${ROLES[activeFilter]?.label || activeFilter}" не найдены`
+                : 'Пользователи не найдены'
+              }
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {users.map((user) => (
+          {getFilteredUsers().map((user) => (
             <Card key={user.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className={`${isMobile ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-5 gap-4 items-center'}`}>
@@ -342,50 +432,70 @@ const UserManagement = () => {
                   {/* Роль */}
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-500">Роль</p>
-                    <Select 
-                      value={user.role || 'user'} 
-                      onValueChange={(value) => handleRoleChange(user.id, value)}
-                    >
-                      <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'min-w-[160px]'}`}>
-                        <SelectValue>
-                          {getRoleBadge(user.role || 'user')}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableRoles().map((role) => (
-                          <SelectItem key={role.value} value={role.value}>
-                            <div className="flex items-center gap-2">
-                              <role.icon className="w-4 h-4" />
-                              {role.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {currentUserRole === 'moderator' ? (
+                      // Для модератора показываем только текущую роль без возможности изменения
+                      <div className={`${isMobile ? 'w-full h-12' : 'min-w-[160px]'} flex items-center px-3 py-2 border border-gray-200 rounded-md bg-gray-50`}>
+                        {getRoleBadge(user.role || 'user')}
+                      </div>
+                    ) : (
+                      // Для админа показываем Select с возможностью изменения
+                      <Select 
+                        value={user.role || 'user'} 
+                        onValueChange={(value) => handleRoleChange(user.id, value)}
+                      >
+                        <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'min-w-[160px]'}`}>
+                          <SelectValue>
+                            {getRoleBadge(user.role || 'user')}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getAvailableRoles().map((role) => (
+                            <SelectItem key={role.value} value={role.value}>
+                              <div className="flex items-center gap-2">
+                                <role.icon className="w-4 h-4" />
+                                {role.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
 
                   {/* Застройщик */}
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-500">Застройщик</p>
                     {['застройщик', 'премиум застройщик'].includes(user.role) ? (
-                      <Select 
-                        value={user.developerId || 'unselected'} 
-                        onValueChange={(value) => handleDeveloperChange(user.id, value)}
-                      >
-                        <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'min-w-[180px]'}`}>
-                          <SelectValue placeholder="Не выбран" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="unselected">
-                            <em>Сбросить выбор</em>
-                          </SelectItem>
-                          {developers.map(developer => (
-                            <SelectItem key={developer.id} value={developer.id}>
-                              {developer.name}
+                      currentUserRole === 'moderator' ? (
+                        // Для модератора показываем только текущий застройщик без возможности изменения
+                        <div className={`${isMobile ? 'w-full h-12' : 'min-w-[180px]'} flex items-center px-3 py-2 border border-gray-200 rounded-md bg-gray-50`}>
+                          {user.developerId ? (
+                            <span className="text-gray-900">{getDeveloperName(user.developerId)}</span>
+                          ) : (
+                            <span className="text-gray-400">Не выбран</span>
+                          )}
+                        </div>
+                      ) : (
+                        // Для админа показываем Select с возможностью изменения
+                        <Select 
+                          value={user.developerId || 'unselected'} 
+                          onValueChange={(value) => handleDeveloperChange(user.id, value)}
+                        >
+                          <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'min-w-[180px]'}`}>
+                            <SelectValue placeholder="Не выбран" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unselected">
+                              <em>Сбросить выбор</em>
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            {developers.map(developer => (
+                              <SelectItem key={developer.id} value={developer.id}>
+                                {developer.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )
                     ) : (
                       <div className="h-10 flex items-center text-gray-400">
                         Недоступно

@@ -21,6 +21,7 @@ const ROUTE_ACCESS = {
     '/chessboard/*',
     '/referral-map',
     '/general-overview',
+    '/users/manage',
     '/dashboard',
   ],
   'premium agent': [

@@ -46,7 +46,8 @@ const ROUTE_ACCESS = {
     '/support/*',
     '/client-fixations',
     '/building-progress/*',
-    '/general-overview'
+    '/general-overview',
+    '/users/manage'
   ],
   'premium agent': [
     '/property/gallery',
@@ -368,7 +369,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {role === 'admin' && (
+              {['admin', 'moderator'].includes(role) && (
                 <NavItem 
                   to="/users/manage" 
                   icon={Users2}
@@ -580,7 +581,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {role === 'admin' && (
+        {['admin', 'moderator'].includes(role) && (
           <NavItem to="/users/manage" icon={Users2}>
             {nav.userManagement}
           </NavItem>
