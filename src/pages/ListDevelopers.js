@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
+import { useAuth } from '../AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Building2, Check, Pencil, Eye, EyeOff, Plus } from 'lucide-react';
@@ -20,6 +21,7 @@ import toast from 'react-hot-toast';
 
 function ListDevelopers() {
   const navigate = useNavigate();
+  const { currentUser, role } = useAuth();
 
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,24 +47,51 @@ function ListDevelopers() {
       try {
         setLoading(true);
 
-        // Считываем все документы из коллекции "developers"
-        const snap = await getDocs(collection(db, "developers"));
+        let devs = [];
 
-        const devs = [];
-        snap.forEach((docSnap) => {
-          const data = docSnap.data();
-          // Документ может содержать поля: { name, description, logo, ... }
-          if (data.name && data.name.trim() !== "") {
-            devs.push({
-              id: docSnap.id, // чтобы знать, какой документ редактировать
-              name: data.name,
-              description: data.description || "",
-              logo: data.logo || null,
-              approved: data.approved || false,
-              isHidden: data.isHidden || false
-            });
+        // Если пользователь - застройщик или премиум застройщик, показываем только его застройщика
+        if (['застройщик', 'премиум застройщик'].includes(role)) {
+          // Получаем developerId пользователя
+          const userDoc = await getDocs(query(collection(db, "users"), where("email", "==", currentUser?.email)));
+          if (!userDoc.empty) {
+            const userData = userDoc.docs[0].data();
+            const developerId = userData.developerId;
+            
+            if (developerId) {
+              // Получаем только застройщика пользователя
+              const developerDoc = await getDocs(query(collection(db, "developers"), where("__name__", "==", developerId)));
+              if (!developerDoc.empty) {
+                const data = developerDoc.docs[0].data();
+                if (data.name && data.name.trim() !== "") {
+                  devs.push({
+                    id: developerDoc.docs[0].id,
+                    name: data.name,
+                    description: data.description || "",
+                    logo: data.logo || null,
+                    approved: data.approved || false,
+                    isHidden: data.isHidden || false
+                  });
+                }
+              }
+            }
           }
-        });
+        } else {
+          // Для админов и модераторов показываем всех застройщиков
+          const snap = await getDocs(collection(db, "developers"));
+          snap.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.name && data.name.trim() !== "") {
+              devs.push({
+                id: docSnap.id,
+                name: data.name,
+                description: data.description || "",
+                logo: data.logo || null,
+                approved: data.approved || false,
+                isHidden: data.isHidden || false
+              });
+            }
+          });
+        }
 
         // Сортируем по алфавиту
         devs.sort((a, b) => a.name.localeCompare(b.name));
@@ -70,13 +99,14 @@ function ListDevelopers() {
         setDevelopers(devs);
       } catch (error) {
         console.error("Ошибка при загрузке застройщиков:", error);
+        showError(t.errorLoading);
       } finally {
         setLoading(false);
       }
     }
 
     loadDevelopers();
-  }, []);
+  }, [role, currentUser, t.errorLoading]);
 
   // Функция для обновления статуса approved
   const handleToggleApproved = async (developerId, currentStatus) => {
@@ -205,20 +235,26 @@ function ListDevelopers() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className={`${isMobile ? 'flex flex-col gap-4' : 'flex justify-between items-center'} mb-8`}>
-        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>{t.title}</h1>
-        <Button 
-          onClick={() => navigate("/developers/edit/new")}
-          className={`${isMobile ? 'w-full h-12' : ''}`}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {t.addDeveloper}
-        </Button>
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>
+          {['застройщик', 'премиум застройщик'].includes(role) ? t.titleForDeveloper : t.title}
+        </h1>
+        {!['застройщик', 'премиум застройщик'].includes(role) && (
+          <Button 
+            onClick={() => navigate("/developers/edit/new")}
+            className={`${isMobile ? 'w-full h-12' : ''}`}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {t.addDeveloper}
+          </Button>
+        )}
       </div>
 
       {/* Счетчик количества застройщиков */}
-      <div className="text-sm text-gray-500 mb-4">
-        {t.developersFound.replace('{count}', developers.length)}
-      </div>
+      {!['застройщик', 'премиум застройщик'].includes(role) && (
+        <div className="text-sm text-gray-500 mb-4">
+          {t.developersFound.replace('{count}', developers.length)}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center min-h-[200px]">
@@ -235,33 +271,38 @@ function ListDevelopers() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {developers.map((dev) => (
             <Card key={dev.id} className={`overflow-hidden relative transition-opacity duration-200 ${dev.isHidden ? 'opacity-50' : 'opacity-100'}`}>
-              {/* Кнопка переключения видимости в левом верхнем углу */}
-              <button
-                onClick={() => handleToggleVisibility(dev.id, dev.isHidden, dev.name)}
-                className={`absolute top-2 left-2 p-2 rounded-full transition-all duration-200 ${
-                  dev.isHidden 
-                    ? 'bg-red-500 text-white hover:bg-red-600' 
-                    : 'bg-green-500 text-white hover:bg-green-600'
-                }`}
-                title={dev.isHidden ? "Показать застройщика и все связанные объекты" : "Скрыть застройщика и все связанные объекты"}
-              >
-                {dev.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+              {/* Кнопки управления только для админов и модераторов */}
+              {!['застройщик', 'премиум застройщик'].includes(role) && (
+                <>
+                  {/* Кнопка переключения видимости в левом верхнем углу */}
+                  <button
+                    onClick={() => handleToggleVisibility(dev.id, dev.isHidden, dev.name)}
+                    className={`absolute top-2 left-2 p-2 rounded-full transition-all duration-200 ${
+                      dev.isHidden 
+                        ? 'bg-red-500 text-white hover:bg-red-600' 
+                        : 'bg-green-500 text-white hover:bg-green-600'
+                    }`}
+                    title={dev.isHidden ? "Показать застройщика и все связанные объекты" : "Скрыть застройщика и все связанные объекты"}
+                  >
+                    {dev.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                  
+                  {/* Кнопка с галочкой в правом верхнем углу */}
+                  <button
+                    onClick={() => handleToggleApproved(dev.id, dev.approved)}
+                    className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-200 ${
+                      dev.approved 
+                        ? 'bg-green-500 text-white hover:bg-green-600' 
+                        : 'bg-gray-300 text-gray-500 hover:bg-gray-400'
+                    }`}
+                    title={dev.approved ? "Снять проверку" : "Проверить застройщика"}
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                </>
+              )}
               
-              {/* Кнопка с галочкой в правом верхнем углу */}
-              <button
-                onClick={() => handleToggleApproved(dev.id, dev.approved)}
-                className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-200 ${
-                  dev.approved 
-                    ? 'bg-green-500 text-white hover:bg-green-600' 
-                    : 'bg-gray-300 text-gray-500 hover:bg-gray-400'
-                }`}
-                title={dev.approved ? "Снять проверку" : "Проверить застройщика"}
-              >
-                <Check className="w-4 h-4" />
-              </button>
-              
-              <CardHeader className="space-y-4 pt-12">
+                              <CardHeader className={`space-y-4 ${!['застройщик', 'премиум застройщик'].includes(role) ? 'pt-12' : 'pt-4'}`}>
                 <div className="flex items-center space-x-4">
                   {dev.logo ? (
                     <img

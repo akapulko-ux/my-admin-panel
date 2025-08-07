@@ -159,6 +159,28 @@ export const translations = {
       lists: 'Lists'
     },
 
+    // Registration Requests Page
+    registrationRequestsPage: {
+      title: 'Registration Requests',
+      noRequests: 'No registration requests',
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      position: 'Position',
+      applicationDate: 'Application Date',
+      takeInWork: 'Take in Work',
+      approve: 'Approve',
+      reject: 'Reject',
+      statusUpdated: 'Request status updated',
+      statusUpdateError: 'Failed to update request status',
+      positions: {
+        owner: 'Owner',
+        manager: 'Manager',
+        marketer: 'Marketer',
+        agent: 'Agent'
+      }
+    },
+
     // Deals (CRM)
     deals: {
       title: 'DEALS',
@@ -789,6 +811,7 @@ _________________               _________________
       totalUnits: 'Total units:',
       sections: 'Sections:',
       floors: 'Floors:',
+      rows: 'Rows:',
       publicLinkAvailable: 'Public link available',
       created: 'Created:',
       loading: 'Loading...',
@@ -1309,6 +1332,7 @@ _________________               _________________
     // Developers List
     developersList: {
       title: 'Developers List',
+      titleForDeveloper: 'About Developer',
       addDeveloper: 'Add Developer',
       noDevelopers: 'No developers',
       developersFound: 'Developers found: {count}',
@@ -1471,6 +1495,26 @@ _________________               _________________
         premiumDeveloper: 'Premium Developer',
         user: 'User'
       }
+    },
+
+    // Edit Developer
+    editDeveloper: {
+      addTitle: 'Add Developer',
+      editTitle: 'Edit Developer',
+      nameLabel: 'Developer Name',
+      namePlaceholder: 'Enter developer name',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Enter developer description',
+      approvedLabel: 'Service Verified',
+      logoLabel: 'Logo',
+      uploadLogo: 'Upload Logo',
+      currentLogo: 'Current Logo',
+      save: 'Save',
+      add: 'Add',
+      saving: 'Saving...',
+      saveSuccess: 'Saved!',
+      saveError: 'Error saving!',
+      loadError: 'Error loading data!'
     }
   },
   ru: {
@@ -1621,6 +1665,28 @@ _________________               _________________
       userManagement: 'Управление пользователями',
       generalOverview: 'Общий обзор',
       registrationRequests: 'Заявки на регистрацию',
+      
+      // Registration Requests Page
+      registrationRequestsPage: {
+        title: 'Заявки на регистрацию',
+        noRequests: 'Нет заявок на регистрацию',
+        name: 'Имя',
+        email: 'Email',
+        phone: 'Телефон',
+        position: 'Должность',
+        applicationDate: 'Дата заявки',
+        takeInWork: 'Взять в работу',
+        approve: 'Одобрить',
+        reject: 'Отклонить',
+        statusUpdated: 'Статус заявки обновлен',
+        statusUpdateError: 'Не удалось обновить статус заявки',
+        positions: {
+          owner: 'Собственник',
+          manager: 'Менеджер',
+          marketer: 'Маркетолог',
+          agent: 'Агент'
+        }
+      },
       referralMap: 'Карта рефералов',
       settings: 'Настройки',
       education: 'Обучение',
@@ -1635,6 +1701,28 @@ _________________               _________________
       lists: 'Списки',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
+    },
+
+    // Registration Requests Page
+    registrationRequestsPage: {
+      title: 'Заявки на регистрацию',
+      noRequests: 'Нет заявок на регистрацию',
+      name: 'Имя',
+      email: 'Email',
+      phone: 'Телефон',
+      position: 'Должность',
+      applicationDate: 'Дата заявки',
+      takeInWork: 'Взять в работу',
+      approve: 'Одобрить',
+      reject: 'Отклонить',
+      statusUpdated: 'Статус заявки обновлен',
+      statusUpdateError: 'Не удалось обновить статус заявки',
+      positions: {
+        owner: 'Собственник',
+        manager: 'Менеджер',
+        marketer: 'Маркетолог',
+        agent: 'Агент'
+      }
     },
 
     // Deals (CRM)
@@ -2262,6 +2350,7 @@ _________________               _________________
       totalUnits: 'Всего юнитов:',
       sections: 'Секций:',
       floors: 'Этажей:',
+      rows: 'Рядов:',
       publicLinkAvailable: 'Публичная ссылка доступна',
       created: 'Создано:',
       loading: 'Загрузка...',
@@ -2775,21 +2864,42 @@ _________________               _________________
       moveTopic: 'Переместить тему',
       moveTopicToSection: 'Переместить тему в другой раздел',
       availableRoles: 'Доступные роли',
-      createdAt: 'Created',
-      updatedAt: 'Updated'
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
     },
 
     // Developers List
     developersList: {
-      title: 'Developers List',
-      addDeveloper: 'Add Developer',
-      noDevelopers: 'No developers',
-      developersFound: 'Developers found: {count}',
-      editDeveloper: 'Edit',
-      loading: 'Loading...',
-      errorLoading: 'Error loading developers',
-      createdAt: 'Created',
-      updatedAt: 'Updated'
+      title: 'Список застройщиков',
+      titleForDeveloper: 'О застройщике',
+      addDeveloper: 'Добавить застройщика',
+      noDevelopers: 'Нет застройщиков',
+      developersFound: 'Найдено застройщиков: {count}',
+      editDeveloper: 'Редактировать',
+      loading: 'Загрузка...',
+      errorLoading: 'Ошибка загрузки застройщиков',
+      createdAt: 'Создан',
+      updatedAt: 'Обновлен'
+    },
+
+    // Edit Developer
+    editDeveloper: {
+      addTitle: 'Добавить застройщика',
+      editTitle: 'Редактировать застройщика',
+      nameLabel: 'Имя застройщика',
+      namePlaceholder: 'Введите имя застройщика',
+      descriptionLabel: 'Описание',
+      descriptionPlaceholder: 'Введите описание застройщика',
+      approvedLabel: 'Проверено сервисом',
+      logoLabel: 'Логотип',
+      uploadLogo: 'Загрузить логотип',
+      currentLogo: 'Текущий логотип',
+      save: 'Сохранить',
+      add: 'Добавить',
+      saving: 'Сохранение...',
+      saveSuccess: 'Сохранено!',
+      saveError: 'Ошибка сохранения!',
+      loadError: 'Ошибка загрузки данных!'
     },
 
     // Premium Features
@@ -3094,6 +3204,28 @@ _________________               _________________
       userManagement: 'Manajemen Pengguna',
       generalOverview: 'Ikhtisar Umum',
       registrationRequests: 'Permintaan Registrasi',
+      
+      // Registration Requests Page
+      registrationRequestsPage: {
+        title: 'Permintaan Registrasi',
+        noRequests: 'Tidak ada permintaan registrasi',
+        name: 'Nama',
+        email: 'Email',
+        phone: 'Telepon',
+        position: 'Jabatan',
+        applicationDate: 'Tanggal Aplikasi',
+        takeInWork: 'Ambil dalam Pekerjaan',
+        approve: 'Setujui',
+        reject: 'Tolak',
+        statusUpdated: 'Status permintaan diperbarui',
+        statusUpdateError: 'Gagal memperbarui status permintaan',
+        positions: {
+          owner: 'Pemilik',
+          manager: 'Manajer',
+          marketer: 'Pemasar',
+          agent: 'Agen'
+        }
+      },
       referralMap: 'Peta Referral',
       settings: 'Pengaturan',
       education: 'Pendidikan',
@@ -3108,6 +3240,28 @@ _________________               _________________
       lists: 'Daftar',
       createdAt: 'Dibuat',
       updatedAt: 'Diperbarui'
+    },
+
+    // Registration Requests Page
+    registrationRequestsPage: {
+      title: 'Permintaan Registrasi',
+      noRequests: 'Tidak ada permintaan registrasi',
+      name: 'Nama',
+      email: 'Email',
+      phone: 'Telepon',
+      position: 'Jabatan',
+      applicationDate: 'Tanggal Aplikasi',
+      takeInWork: 'Ambil dalam Pekerjaan',
+      approve: 'Setujui',
+      reject: 'Tolak',
+      statusUpdated: 'Status permintaan diperbarui',
+      statusUpdateError: 'Gagal memperbarui status permintaan',
+      positions: {
+        owner: 'Pemilik',
+        manager: 'Manajer',
+        marketer: 'Pemasar',
+        agent: 'Agen'
+      }
     },
 
     // Deals (CRM)
@@ -3735,6 +3889,7 @@ _________________               _________________
       totalUnits: 'Total unit:',
       sections: 'Bagian:',
       floors: 'Lantai:',
+      rows: 'Baris:',
       publicLinkAvailable: 'Tautan publik tersedia',
       created: 'Dibuat:',
       loading: 'Memuat...',
@@ -4252,17 +4407,38 @@ _________________               _________________
       updatedAt: 'Diperbarui'
     },
 
-    // Список застройщиков
+    // Developers List
     developersList: {
-      title: 'Список застройщиков',
-      addDeveloper: 'Добавить застройщика',
-      noDevelopers: 'Нет застройщиков',
-      developersFound: 'Найдено застройщиков: {count}',
-      editDeveloper: 'Редактировать',
-      loading: 'Загрузка...',
-      errorLoading: 'Ошибка при загрузке застройщиков',
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      title: 'Daftar Pengembang',
+      titleForDeveloper: 'Tentang Pengembang',
+      addDeveloper: 'Tambah Pengembang',
+      noDevelopers: 'Tidak ada pengembang',
+      developersFound: 'Pengembang ditemukan: {count}',
+      editDeveloper: 'Edit',
+      loading: 'Memuat...',
+      errorLoading: 'Kesalahan memuat pengembang',
+      createdAt: 'Dibuat',
+      updatedAt: 'Diperbarui'
+    },
+
+    // Edit Developer
+    editDeveloper: {
+      addTitle: 'Tambah Pengembang',
+      editTitle: 'Edit Pengembang',
+      nameLabel: 'Nama Pengembang',
+      namePlaceholder: 'Masukkan nama pengembang',
+      descriptionLabel: 'Deskripsi',
+      descriptionPlaceholder: 'Masukkan deskripsi pengembang',
+      approvedLabel: 'Diverifikasi Layanan',
+      logoLabel: 'Logo',
+      uploadLogo: 'Upload Logo',
+      currentLogo: 'Logo Saat Ini',
+      save: 'Simpan',
+      add: 'Tambah',
+      saving: 'Menyimpan...',
+      saveSuccess: 'Disimpan!',
+      saveError: 'Kesalahan menyimpan!',
+      loadError: 'Kesalahan memuat data!'
     },
 
     // Premium Features

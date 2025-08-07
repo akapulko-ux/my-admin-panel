@@ -181,7 +181,7 @@ const ListChessboards = () => {
   // Подсчёт статистики по шахматке
   const getChessboardStats = (sections) => {
     if (!sections || !Array.isArray(sections)) {
-      return { totalUnits: 0, freeUnits: 0, bookedUnits: 0, soldUnits: 0, totalFloors: 0 };
+      return { totalUnits: 0, freeUnits: 0, bookedUnits: 0, soldUnits: 0, totalFloors: 0, totalRows: 0 };
     }
 
     let totalUnits = 0;
@@ -189,11 +189,18 @@ const ListChessboards = () => {
     let bookedUnits = 0;
     let soldUnits = 0;
     let totalFloors = 0;
+    let totalRows = 0;
 
     sections.forEach(section => {
       if (section.floors && Array.isArray(section.floors)) {
-        totalFloors += section.floors.length;
         section.floors.forEach(floor => {
+          // Подсчитываем этажи и ряды в зависимости от типа
+          if (floor.type === 'ряд') {
+            totalRows++;
+          } else {
+            totalFloors++;
+          }
+          
           if (floor.units && Array.isArray(floor.units)) {
             floor.units.forEach(unit => {
               totalUnits++;
@@ -216,7 +223,7 @@ const ListChessboards = () => {
       }
     });
 
-    return { totalUnits, freeUnits, bookedUnits, soldUnits, totalFloors };
+    return { totalUnits, freeUnits, bookedUnits, soldUnits, totalFloors, totalRows };
   };
 
   // Форматирование даты
@@ -323,10 +330,18 @@ const ListChessboards = () => {
                           {chessboard.sections ? chessboard.sections.length : 0}
                         </span>
                       </div>
-                      <div className="flex items-center">
-                        <span className="text-gray-600">{t.chessboards.floors}</span>
-                        <span className="font-semibold ml-[4px]">{stats.totalFloors}</span>
-                      </div>
+                      {stats.totalFloors > 0 && (
+                        <div className="flex items-center">
+                          <span className="text-gray-600">{t.chessboards.floors}</span>
+                          <span className="font-semibold ml-[4px]">{stats.totalFloors}</span>
+                        </div>
+                      )}
+                      {stats.totalRows > 0 && (
+                        <div className="flex items-center">
+                          <span className="text-gray-600">{t.chessboards.rows}</span>
+                          <span className="font-semibold ml-[4px]">{stats.totalRows}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Статусы */}

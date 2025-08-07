@@ -6,6 +6,8 @@ import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 
 const statusColors = {
   new: 'bg-blue-500',
@@ -22,6 +24,8 @@ const statusLabels = {
 };
 
 const RegistrationRequests = () => {
+  const { language } = useLanguage();
+  const t = translations[language];
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -54,15 +58,21 @@ const RegistrationRequests = () => {
     return () => unsubscribe();
   }, []);
 
+  // Функция для получения локализованного значения должности
+  const getLocalizedPosition = (position) => {
+    if (!position) return '';
+    return t.registrationRequestsPage.positions[position] || position;
+  };
+
   const updateStatus = async (requestId, newStatus) => {
     try {
       await updateDoc(doc(db, 'registrationRequests', requestId), {
         status: newStatus
       });
-      toast.success('Статус заявки обновлен');
+      toast.success(t.registrationRequestsPage.statusUpdated);
     } catch (error) {
       console.error('Ошибка при обновлении статуса:', error);
-      toast.error('Не удалось обновить статус заявки');
+      toast.error(t.registrationRequestsPage.statusUpdateError);
     }
   };
 
@@ -72,11 +82,11 @@ const RegistrationRequests = () => {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-6`}>Заявки на регистрацию</h1>
+      <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-6`}>{t.registrationRequestsPage.title}</h1>
       
       {requests.length === 0 ? (
         <Card className="p-4 text-center text-muted-foreground">
-          Нет заявок на регистрацию
+          {t.registrationRequestsPage.noRequests}
         </Card>
       ) : (
         <div className="grid gap-4">
@@ -86,10 +96,11 @@ const RegistrationRequests = () => {
                 <div className="space-y-2">
                   <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>{request.companyName}</h3>
                   <div className="text-sm text-muted-foreground">
-                    <p>Имя: {request.name}</p>
-                    <p>Email: {request.email}</p>
-                    <p>Телефон: {request.phone}</p>
-                    <p>Дата заявки: {format(request.createdAt, 'dd.MM.yyyy HH:mm')}</p>
+                    <p>{t.registrationRequestsPage.name}: {request.name}</p>
+                    <p>{t.registrationRequestsPage.email}: {request.email}</p>
+                    <p>{t.registrationRequestsPage.phone}: {request.phone}</p>
+                    {request.position && <p>{t.registrationRequestsPage.position}: {getLocalizedPosition(request.position)}</p>}
+                    <p>{t.registrationRequestsPage.applicationDate}: {format(request.createdAt, 'dd.MM.yyyy HH:mm')}</p>
                   </div>
                 </div>
                 <div className={`${isMobile ? 'flex flex-col space-y-2' : 'flex flex-col items-end space-y-2'}`}>
@@ -104,7 +115,7 @@ const RegistrationRequests = () => {
                         onClick={() => updateStatus(request.id, 'processing')}
                         className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
-                        Взять в работу
+                        {t.registrationRequestsPage.takeInWork}
                       </Button>
                       <Button
                         size={isMobile ? "default" : "sm"}
@@ -112,7 +123,7 @@ const RegistrationRequests = () => {
                         onClick={() => updateStatus(request.id, 'approved')}
                         className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
-                        Одобрить
+                        {t.registrationRequestsPage.approve}
                       </Button>
                       <Button
                         size={isMobile ? "default" : "sm"}
@@ -120,7 +131,7 @@ const RegistrationRequests = () => {
                         onClick={() => updateStatus(request.id, 'rejected')}
                         className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
-                        Отклонить
+                        {t.registrationRequestsPage.reject}
                       </Button>
                     </div>
                   )}
@@ -132,7 +143,7 @@ const RegistrationRequests = () => {
                         onClick={() => updateStatus(request.id, 'approved')}
                         className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
-                        Одобрить
+                        {t.registrationRequestsPage.approve}
                       </Button>
                       <Button
                         size={isMobile ? "default" : "sm"}
@@ -140,7 +151,7 @@ const RegistrationRequests = () => {
                         onClick={() => updateStatus(request.id, 'rejected')}
                         className={`${isMobile ? 'w-full h-12' : ''}`}
                       >
-                        Отклонить
+                        {t.registrationRequestsPage.reject}
                       </Button>
                     </div>
                   )}

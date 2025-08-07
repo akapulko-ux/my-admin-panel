@@ -8,6 +8,9 @@ import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "
 import imageCompression from "browser-image-compression";
 import { showSuccess, showError } from '../utils/notifications';
 import { Building2, Upload, Save } from "lucide-react";
+import { useAuth } from "../AuthContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { translations } from "../lib/translations";
 
 import {
   Card,
@@ -24,6 +27,9 @@ import { Checkbox } from "../components/ui/checkbox";
 function EditDeveloper() {
   const navigate = useNavigate();
   const { id } = useParams(); // либо "new", либо реальный docId
+  const { role } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language]?.editDeveloper || translations.ru.editDeveloper;
 
   // Мобильная детекция
   const [isMobile, setIsMobile] = useState(false);
@@ -71,13 +77,13 @@ function EditDeveloper() {
         }
       } catch (error) {
         console.error("Ошибка загрузки застройщика:", error);
-        showError("Ошибка при загрузке данных!");
+        showError(t.loadError);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [id]);
+  }, [id, t.loadError]);
 
   // Обработчик выбора файла (логотип)
   const handleFileChange = async (e) => {
@@ -116,9 +122,13 @@ function EditDeveloper() {
       const newData = {
         name: name.trim(),
         description: description.trim(),
-        approved: approved,
         logo: newLogoUrl || ""
       };
+
+      // Застройщики не могут изменять поле approved
+      if (!['застройщик', 'премиум застройщик'].includes(role)) {
+        newData.approved = approved;
+      }
 
       if (id === "new") {
         await addDoc(collection(db, "developers"), newData);
@@ -138,11 +148,11 @@ function EditDeveloper() {
         }
       }
 
-      showSuccess("Сохранено!");
+      showSuccess(t.saveSuccess);
       navigate("/developers/list");
     } catch (error) {
       console.error("Ошибка сохранения застройщика:", error);
-      showError("Ошибка при сохранении!");
+      showError(t.saveError);
     } finally {
       setIsSaving(false);
     }
@@ -162,29 +172,29 @@ function EditDeveloper() {
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 text-${isMobile ? 'lg' : 'xl'}`}>
             <Building2 className={`h-${isMobile ? '5' : '6'} w-${isMobile ? '5' : '6'}`} />
-            {id === "new" ? "Добавить Застройщика" : "Редактировать Застройщика"}
+            {id === "new" ? t.addTitle : t.editTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSave} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Имя застройщика</Label>
+              <Label htmlFor="name">{t.nameLabel}</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                placeholder="Введите имя застройщика"
+                placeholder={t.namePlaceholder}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Описание</Label>
+              <Label htmlFor="description">{t.descriptionLabel}</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Введите описание застройщика"
+                placeholder={t.descriptionPlaceholder}
                 rows={4}
               />
             </div>
@@ -194,15 +204,21 @@ function EditDeveloper() {
                 id="approved"
                 checked={approved}
                 onCheckedChange={setApproved}
+                disabled={['застройщик', 'премиум застройщик'].includes(role)}
               />
-              <Label htmlFor="approved" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Проверено сервисом
+              <Label 
+                htmlFor="approved" 
+                className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+                  ['застройщик', 'премиум застройщик'].includes(role) ? 'opacity-50' : ''
+                }`}
+              >
+                {t.approvedLabel}
               </Label>
             </div>
 
             {logoPreview && (
               <div className="space-y-2">
-                <Label>Текущий логотип</Label>
+                <Label>{t.currentLogo}</Label>
                 <div className={`relative ${isMobile ? 'w-32 h-32' : 'w-40 h-40'} rounded-lg overflow-hidden border`}>
                   <img
                     src={logoPreview}
@@ -214,17 +230,17 @@ function EditDeveloper() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="logo">Логотип</Label>
+              <Label htmlFor="logo">{t.logoLabel}</Label>
               <div className={`flex items-center gap-4 ${isMobile ? 'flex-col' : ''}`}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('logo').click()}
-                  className={`${isMobile ? 'w-full h-12' : ''}`}
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Загрузить логотип
-                </Button>
+                                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('logo').click()}
+                    className={`${isMobile ? 'w-full h-12' : ''}`}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {t.uploadLogo}
+                  </Button>
                 <input
                   id="logo"
                   type="file"
@@ -240,12 +256,12 @@ function EditDeveloper() {
                 {isSaving ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Сохранение...
+                    {t.saving}
                   </>
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    {id === "new" ? "Добавить" : "Сохранить"}
+                    {id === "new" ? t.add : t.save}
                   </>
                 )}
               </Button>

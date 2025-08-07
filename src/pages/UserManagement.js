@@ -134,7 +134,10 @@ const UserManagement = () => {
   const handleRoleChange = async (userId, newRole) => {
     try {
       const userRef = doc(db, 'users', userId);
-      const updateData = { role: newRole };
+      const updateData = { 
+        role: newRole,
+        lastRoleUpdate: new Date()
+      };
       
       // Если меняем роль с застройщика на другую, удаляем developerId
       if (!['застройщик', 'премиум застройщик'].includes(newRole)) {
@@ -200,6 +203,24 @@ const UserManagement = () => {
   const getDeveloperName = (developerId) => {
     const developer = developers.find(dev => dev.id === developerId);
     return developer ? developer.name : 'Не выбран';
+  };
+
+  // Функция для форматирования даты
+  const formatDate = (date) => {
+    if (!date) return 'Не указано';
+    
+    try {
+      const dateObj = date.toDate ? date.toDate() : new Date(date);
+      return dateObj.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Неверный формат даты';
+    }
   };
 
   // Функция для подсчета пользователей по ролям
@@ -306,6 +327,9 @@ const UserManagement = () => {
                     <p className="text-sm font-medium text-gray-500">Имя пользователя</p>
                     <p className="font-semibold text-gray-900">
                       {user.displayName || 'Не указано'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Роль изменена: {formatDate(user.lastRoleUpdate)}
                     </p>
                   </div>
 

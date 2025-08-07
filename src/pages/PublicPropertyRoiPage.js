@@ -127,8 +127,8 @@ const PublicPropertyRoiPage = () => {
             // Устанавливаем максимальный период из результатов расчета
             if (roiData.results?.maxInvestmentPeriod) {
               setMaxPeriod(Number(roiData.results.maxInvestmentPeriod));
-              // Устанавливаем начальный период не больше максимального
-              setTimeframe(`${Math.min(5, roiData.results.maxInvestmentPeriod)} Years`);
+              // Устанавливаем начальный период равным максимальному периоду из расчета
+              setTimeframe(`${roiData.results.maxInvestmentPeriod} Years`);
             }
 
             // Преобразуем данные в формат, который ожидает компонент
@@ -333,6 +333,7 @@ const PublicPropertyRoiPage = () => {
     // Получаем количество лет из выбранного периода
     const getYearsFromTimeframe = (timeframe) => {
       switch (timeframe) {
+        case '3 Years': return 3;
         case '5 Years': return 5;
         case '10 Years': return 10;
         case '20 Years': return 20;
@@ -348,7 +349,7 @@ const PublicPropertyRoiPage = () => {
 
   // Функция для получения доступных периодов
   const getAvailablePeriods = () => {
-    const allPeriods = [5, 10, 20, 30];
+    const allPeriods = [3, 5, 10, 20, 30];
     return allPeriods.filter(period => period <= maxPeriod);
   };
 

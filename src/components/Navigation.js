@@ -539,9 +539,9 @@ const Navigation = () => {
             </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/developers/list" icon={Building2}>
-            {nav.developers}
+            {['застройщик', 'премиум застройщик'].includes(role) ? translations[language]?.developersList?.titleForDeveloper || nav.developers : nav.developers}
           </NavItem>
         )}
 
