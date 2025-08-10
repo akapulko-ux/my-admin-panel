@@ -438,7 +438,7 @@ for providing information and technical services
 
 3. PAYMENT PROCEDURE
 
-3.1. The cost of the Contractor's services is 0.5% (zero point five percent) of the price of each real estate object sold through the IT platform.
+3.1. The cost of the Contractor's services is 0.5% (zero point five percent) of the price of each real estate object sold through the IT platform. For the first 2 completed deals, the platform commission is not charged.
 
 3.2. The commission specified in clause 3.1 is paid by the Client in addition to the standard commission to real estate agents (5%).
 
@@ -1977,7 +1977,7 @@ _________________               _________________
 
 3. ПОРЯДОК ОПЛАТЫ
 
-3.1. Стоимость услуг Исполнителя составляет 0,5% (ноль целых пять десятых процента) от цены каждого объекта недвижимости, проданного через IT-платформу.
+3.1. Стоимость услуг Исполнителя составляет 0,5% (ноль целых пять десятых процента) от цены каждого объекта недвижимости, проданного через IT-платформу. За первые 2 проведенные сделки комиссия платформой не взимается.
 
 3.2. Комиссия, указанная в пункте 3.1, оплачивается Клиентом дополнительно к стандартной комиссии агентам по недвижимости (5%).
 
@@ -3516,7 +3516,7 @@ untuk menyediakan layanan informasi dan teknis
 
 3. PROSEDUR PEMBAYARAN
 
-3.1. Biaya layanan Kontraktor adalah 0,5% (nol koma lima persen) dari harga setiap objek real estat yang dijual melalui platform IT.
+3.1. Biaya layanan Kontraktor adalah 0,5% (nol koma lima persen) dari harga setiap objek real estat yang dijual melalui platform IT. Untuk 2 transaksi pertama yang diselesaikan, komisi platform tidak dikenakan.
 
 3.2. Komisi yang ditentukan dalam pasal 3.1 dibayar oleh Klien sebagai tambahan dari komisi standar kepada agen real estat (5%).
 
