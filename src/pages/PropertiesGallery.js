@@ -35,6 +35,7 @@ function PropertiesGallery() {
   const [editingPrice, setEditingPrice] = useState(null);
   const [newPrice, setNewPrice] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [roiAvailability, setRoiAvailability] = useState({});
 
   // Проверка размера экрана
   useEffect(() => {
@@ -174,6 +175,31 @@ function PropertiesGallery() {
   useEffect(() => {
     fetchProperties();
   }, [fetchProperties]);
+
+  // Для точной проверки ROI: по каждому объекту проверяем существование документа properties/{id}/calculations/roi
+  useEffect(() => {
+    async function checkRoiForProperties(ids) {
+      const updates = {};
+      await Promise.all(ids.map(async (pid) => {
+        try {
+          const roiDocRef = doc(db, 'properties', pid, 'calculations', 'roi');
+          const roiSnap = await getDoc(roiDocRef);
+          updates[pid] = roiSnap.exists();
+        } catch (e) {
+          console.error('ROI check error for property', pid, e);
+        }
+      }));
+      setRoiAvailability(prev => ({ ...prev, ...updates }));
+    }
+    // Проверяем только для тех, кого ещё нет в карте
+    const missingIds = properties
+      .map(p => p.id)
+      .filter(Boolean)
+      .filter(pid => roiAvailability[pid] === undefined);
+    if (missingIds.length) {
+      checkRoiForProperties(missingIds);
+    }
+  }, [properties, roiAvailability]);
 
   // Обработчики для обновления данных при возврате к странице
   useEffect(() => {
@@ -679,6 +705,12 @@ function PropertiesGallery() {
                   if (!hasPbg && !hasSlf && !hasImb) {
                     missing.push(`${t.propertyDetail.buildingPermit} / ${t.propertyDetail.buildingReadinessCertificate} / ${t.propertyDetail.buildingPermitIMB}`);
                   }
+
+                  // Планировка (если файл не загружен)
+                  if (isEmpty(p.layout)) missing.push(t.propertyDetail.layout);
+
+                  // ROI: выводим как пустое только когда точно знаем, что документа нет
+                  if (roiAvailability[p.id] === false) missing.push('ROI');
 
                   if (missing.length === 0) return null;
                   return (
