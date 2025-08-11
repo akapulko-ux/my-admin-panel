@@ -8,7 +8,7 @@ import { useCache } from "../CacheContext";
 import { showSuccess, showError } from "../utils/notifications";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
-import { translateDistrict, translatePropertyType } from "../lib/utils";
+import { translateDistrict, translatePropertyType, translateConstructionStatus } from "../lib/utils";
 
 // Импорт компонентов shadcn
 import { Input } from "../components/ui/input";
@@ -63,9 +63,9 @@ function PropertiesGallery() {
   // Получаем уникальные значения для фильтров из данных
   const filterOptions = useMemo(() => {
     const options = {
-      districts: [...new Set(properties.map(p => p.district).filter(Boolean))],
-      types: [...new Set(properties.map(p => p.type).filter(Boolean))],
-      bedrooms: [...new Set(properties.map(p => p.bedrooms).filter(n => n !== undefined && n !== null))],
+      districts: [...new Set(properties.map(p => p.district).filter(v => v !== undefined && v !== null && v !== ''))],
+      types: [...new Set(properties.map(p => p.type).filter(v => v !== undefined && v !== null && v !== ''))],
+      bedrooms: [...new Set(properties.map(p => p.bedrooms).filter(n => n !== undefined && n !== null && n !== ''))],
     };
     
     // Сортируем опции
@@ -218,7 +218,12 @@ function PropertiesGallery() {
         (property.complex && property.complex.toLowerCase().includes(searchText)) ||
         (property.district && property.district.toLowerCase().includes(searchText)) ||
         (property.developer && property.developer.toLowerCase().includes(searchText)) ||
-        (property.type && property.type.toLowerCase().includes(searchText));
+        (property.type && property.type.toLowerCase().includes(searchText)) ||
+        // Поиск по числовым полям
+        (property.price !== undefined && property.price !== null && String(property.price).toLowerCase().includes(searchText)) ||
+        (property.area !== undefined && property.area !== null && String(property.area).toLowerCase().includes(searchText)) ||
+        (property.bedrooms !== undefined && property.bedrooms !== null && String(property.bedrooms).toLowerCase().includes(searchText)) ||
+        (property.unitsCount !== undefined && property.unitsCount !== null && String(property.unitsCount).toLowerCase().includes(searchText));
 
       // Фильтры
       const matchesPrice = 
@@ -414,10 +419,9 @@ function PropertiesGallery() {
                       options={[
                         { label: t.propertiesGallery.allBedrooms, value: "all" },
                         { label: t.propertiesGallery.studio, value: "0" },
-                        ...filterOptions.bedrooms.map(num => ({
-                          label: String(num),
-                          value: String(num)
-                        }))
+                        ...filterOptions.bedrooms
+                          .filter(num => num !== '' && num !== null && num !== undefined)
+                          .map(num => ({ label: String(num), value: String(num) }))
                       ]}
                     />
                   </div>
@@ -430,10 +434,9 @@ function PropertiesGallery() {
                       onValueChange={(value) => setFilters(prev => ({ ...prev, district: value }))}
                       options={[
                         { label: t.propertiesGallery.allDistricts, value: "all" },
-                        ...filterOptions.districts.map(district => ({
-                          label: translateDistrict(district, language),
-                          value: district
-                        }))
+                        ...filterOptions.districts
+                          .filter(d => d !== '' && d !== null && d !== undefined)
+                          .map(district => ({ label: translateDistrict(district, language), value: String(district) }))
                       ]}
                     />
                   </div>
@@ -446,10 +449,9 @@ function PropertiesGallery() {
                       onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}
                       options={[
                         { label: t.propertiesGallery.allTypes, value: "all" },
-                        ...filterOptions.types.map(type => ({
-                          label: translatePropertyType(type, language),
-                          value: type
-                        }))
+                        ...filterOptions.types
+                          .filter(t => t !== '' && t !== null && t !== undefined)
+                          .map(type => ({ label: translatePropertyType(type, language), value: String(type) }))
                       ]}
                     />
                   </div>
@@ -527,8 +529,9 @@ function PropertiesGallery() {
                   </span>
                 )}
 
-                {/* Цена с возможностью редактирования */}
+                {/* Цена с возможностью редактирования + лейбл */}
                 <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
+                  <span className="text-sm text-gray-600">{t.propertiesGallery.priceLabel}:</span>
                   {editingPrice === p.id && hasEditAccess ? (
                     <div className="flex items-center gap-2">
                       <Input
@@ -583,19 +586,42 @@ function PropertiesGallery() {
                   )}
                 </div>
 
-                {p.type && <span className="text-sm">{translatePropertyType(safeDisplay(p.type), language)}</span>}
-                {p.area && <span className="text-sm">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>}
+                {p.type && (
+                  <span className="text-sm">
+                    <span className="text-gray-600">{t.propertiesGallery.typeLabel}:</span>
+                    <span className="ml-2">{translatePropertyType(safeDisplay(p.type), language)}</span>
+                  </span>
+                )}
+                {p.area && (
+                  <span className="text-sm">
+                    <span className="text-gray-600">{t.propertiesGallery.areaLabel}:</span>
+                    <span className="ml-2">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>
+                  </span>
+                )}
                 {p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== "" && (
                   <span className="text-sm">
-                    {p.bedrooms === 0 ? t.propertiesGallery.studio : `${t.propertiesGallery.bedroomsText}: ${safeDisplay(p.bedrooms)}`}
+                    <span className="text-gray-600">{t.propertiesGallery.bedroomsLabel}:</span>
+                    <span className="ml-2">{p.bedrooms === 0 ? t.propertiesGallery.studio : safeDisplay(p.bedrooms)}</span>
                   </span>
                 )}
                 {p.unitsCount !== undefined && p.unitsCount !== null && p.unitsCount !== "" && (
                   <span className="text-sm">
-                    {t.propertiesGallery.unitsCountText}: {safeDisplay(p.unitsCount)}
+                    <span className="text-gray-600">{t.propertiesGallery.unitsCountText}:</span>
+                    <span className="ml-2">{safeDisplay(p.unitsCount)}</span>
                   </span>
                 )}
-                {p.district && <span className="text-sm">{translateDistrict(safeDisplay(p.district), language)}</span>}
+                {p.status && (
+                  <span className="text-sm">
+                    <span className="text-gray-600">{t.propertiesGallery.statusLabel}:</span>
+                    <span className="ml-2">{translateConstructionStatus(safeDisplay(p.status), language)}</span>
+                  </span>
+                )}
+                {p.district && (
+                  <span className="text-sm">
+                    <span className="text-gray-600">{t.propertiesGallery.districtLabel}:</span>
+                    <span className="ml-2">{translateDistrict(safeDisplay(p.district), language)}</span>
+                  </span>
+                )}
                 {/* Показываем застройщика только для не-застройщиков */}
                 {role !== 'застройщик' && p.developer && (
                   <span className="text-sm text-gray-600">

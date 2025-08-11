@@ -1,5 +1,14 @@
 export const translations = {
   en: {
+    leadForm: {
+      writeToAgent: 'Write to agent',
+      name: 'Name',
+      phone: 'Phone',
+      cancel: 'Cancel',
+      send: 'Send',
+      sentSuccess: 'Your request has been sent',
+      sentError: 'Failed to send the request'
+    },
     // Page 1: Summary
     title: 'Investor ROI Presentation',
     logo: '',
@@ -133,6 +142,9 @@ export const translations = {
     navigation: {
       adminPanel: 'Admin Panel',
       propertyGallery: 'Properties Gallery',
+      publicGallery: 'Public Gallery',
+      publicInvestorTitle: 'Bali Investor',
+      clientLeads: 'Client Leads',
       complexGallery: 'Complexes Gallery',
       properties: 'Properties',
       complexes: 'Complexes',
@@ -595,7 +607,8 @@ _________________               _________________
       coworking: 'Coworking',
       concertHall: 'Concert Hall',
       parking: 'Parking',
-      artificialWave: 'Artificial Wave'
+      artificialWave: 'Artificial Wave',
+      conferenceHall: 'Conference hall'
     },
 
     // Properties Gallery
@@ -603,6 +616,7 @@ _________________               _________________
       title: 'Properties Gallery',
       developerPropertiesTitle: 'Developer Properties',
       searchPlaceholder: 'Search by name, district or type...',
+      statusLabel: 'Status',
       filtersTitle: 'Filters',
       priceLabel: 'Price (USD)',
       pricePlaceholderFrom: 'From',
@@ -658,6 +672,7 @@ _________________               _________________
       
       // Field labels
       bedrooms: 'Bedrooms',
+      pricePerSqm: 'Price per m²',
       studio: 'Studio',
       unitsCount: 'Units Count',
       area: 'Living Area',
@@ -671,6 +686,9 @@ _________________               _________________
       district: 'District',
       buildingType: 'Building Type',
       constructionStatus: 'Construction Status',
+      distanceToBeach: 'Distance to beach',
+      distanceToCenter: 'Distance to center',
+      kmUnit: 'km',
       landStatus: 'Land Status',
       pool: 'Pool',
       ownership: 'Ownership',
@@ -1518,6 +1536,15 @@ _________________               _________________
     }
   },
   ru: {
+    leadForm: {
+      writeToAgent: 'Написать агенту',
+      name: 'Имя',
+      phone: 'Телефон',
+      cancel: 'Отменить',
+      send: 'Отправить',
+      sentSuccess: 'Ваша заявка отправлена',
+      sentError: 'Не удалось отправить заявку'
+    },
     // Page 1: Summary
     title: 'Инвестиционная презентация ROI',
     logo: '',
@@ -1653,6 +1680,9 @@ _________________               _________________
     navigation: {
       adminPanel: 'Админ панель',
       propertyGallery: 'Галерея объектов',
+      publicGallery: 'Публичная галерея',
+      publicInvestorTitle: 'Инвестор Бали',
+      clientLeads: 'Заявки клиентов',
       complexGallery: 'Галерея комплексов',
       properties: 'Объекты',
       complexes: 'Комплексы',
@@ -2134,7 +2164,8 @@ _________________               _________________
       coworking: 'Коворкинг',
       concertHall: 'Концертный зал',
       parking: 'Парковка',
-      artificialWave: 'Искусственная волна'
+      artificialWave: 'Искусственная волна',
+      conferenceHall: 'Конференц зал'
     },
 
     // Properties Gallery
@@ -2142,6 +2173,7 @@ _________________               _________________
       title: 'Галерея объектов',
       developerPropertiesTitle: 'Объекты застройщика',
       searchPlaceholder: 'Поиск по названию, району или типу...',
+      statusLabel: 'Статус',
       filtersTitle: 'Фильтры',
       priceLabel: 'Цена (USD)',
       pricePlaceholderFrom: 'От',
@@ -2197,6 +2229,7 @@ _________________               _________________
       
       // Field labels
       bedrooms: 'Спален',
+      pricePerSqm: 'Цена за м²',
       studio: 'Студия',
       unitsCount: 'Количество юнитов',
       area: 'Жилая площадь',
@@ -2210,6 +2243,9 @@ _________________               _________________
       district: 'Район',
       buildingType: 'Тип здания',
       constructionStatus: 'Статус строительства',
+      distanceToBeach: 'До пляжа',
+      distanceToCenter: 'До центра',
+      kmUnit: 'км',
       landStatus: 'Статус земли',
       pool: 'Бассейн',
       ownership: 'Собственность',
@@ -2315,10 +2351,10 @@ _________________               _________________
       smartHome: 'Умный дом',
       jacuzzi: 'Джакузи',
       terrace: 'Терраса',
-      rooftop: 'Крыша',
+      rooftop: 'Руфтоп',
       balcony: 'Балкон',
       bbq: 'Барбекю',
-      furniture: 'Полная мебель',
+      furniture: 'Полная мебелировка',
       washingMachine: 'Стиральная машина',
       spaSalon: 'СПА салон',
       restaurant: 'Ресторан',
@@ -3057,6 +3093,15 @@ _________________               _________________
     }
   },
   id: {
+    leadForm: {
+      writeToAgent: 'Tulis ke agen',
+      name: 'Nama',
+      phone: 'Telepon',
+      cancel: 'Batal',
+      send: 'Kirim',
+      sentSuccess: 'Permintaan Anda telah dikirim',
+      sentError: 'Gagal mengirim permintaan'
+    },
     // Page 1: Summary
     title: 'Presentasi ROI Investor',
     logo: '',
@@ -3192,6 +3237,9 @@ _________________               _________________
     navigation: {
       adminPanel: 'Panel Admin',
       propertyGallery: 'Galeri Properti',
+      publicGallery: 'Galeri Publik',
+      publicInvestorTitle: 'Investor Bali',
+      clientLeads: 'Ajuan Klien',
       complexGallery: 'Galeri Kompleks',
       properties: 'Properti',
       complexes: 'Kompleks',
@@ -3673,7 +3721,8 @@ _________________               _________________
       coworking: 'Koworking',
       concertHall: 'Aula Konser',
       parking: 'Tempat Parkir',
-      artificialWave: 'Gelombang Buatan'
+      artificialWave: 'Gelombang Buatan',
+      conferenceHall: 'Ruang konferensi'
     },
 
     // Properties Gallery
@@ -3681,6 +3730,7 @@ _________________               _________________
       title: 'Galeri Properti',
       developerPropertiesTitle: 'Properti Pengembang',
       searchPlaceholder: 'Cari berdasarkan nama, distrik atau tipe...',
+      statusLabel: 'Status',
       filtersTitle: 'Filter',
       priceLabel: 'Harga (USD)',
       pricePlaceholderFrom: 'Dari',
@@ -3736,6 +3786,7 @@ _________________               _________________
       
       // Field labels
       bedrooms: 'Kamar Tidur',
+      pricePerSqm: 'Harga per m²',
       studio: 'Studio',
       unitsCount: 'Jumlah Unit',
       area: 'Luas Hunian',
@@ -3749,6 +3800,9 @@ _________________               _________________
       district: 'Distrik',
       buildingType: 'Tipe Bangunan',
       constructionStatus: 'Status Konstruksi',
+      distanceToBeach: 'Jarak ke pantai',
+      distanceToCenter: 'Jarak ke pusat kota',
+      kmUnit: 'km',
       landStatus: 'Status Tanah',
       pool: 'Kolam Renang',
       ownership: 'Kepemilikan',

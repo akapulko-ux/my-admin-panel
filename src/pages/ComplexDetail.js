@@ -824,7 +824,7 @@ function ComplexDetail() {
       )}
 
       {/* Дополнительные опции */}
-      {(complex.spaSalon || complex.restaurant || complex.fitnessGym || complex.playground || complex.shop || complex.cinema || complex.coworking || complex.concertHall || complex.parking || complex.artificialWave || isEditing) && (
+      {(complex.spaSalon || complex.restaurant || complex.fitnessGym || complex.playground || complex.shop || complex.cinema || complex.coworking || complex.concertHall || complex.parking || complex.artificialWave || complex.conferenceHall || isEditing) && (
         <Card className="p-6">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -964,6 +964,19 @@ function ComplexDetail() {
                     {t.complexDetail.artificialWave}
                   </Label>
                 </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="conferenceHall"
+                    checked={editedValues.conferenceHall !== undefined ? editedValues.conferenceHall : complex.conferenceHall || false}
+                    onChange={(e) => handleValueChange('conferenceHall', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="conferenceHall" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {t.complexDetail.conferenceHall}
+                  </Label>
+                </div>
               </div>
             ) : (
               // Режим просмотра - бейджи
@@ -1026,6 +1039,12 @@ function ComplexDetail() {
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                     <Waves className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium">{t.complexDetail.artificialWave}</span>
+                  </div>
+                )}
+                {complex.conferenceHall && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <Building2 className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">{t.complexDetail.conferenceHall}</span>
                   </div>
                 )}
               </div>

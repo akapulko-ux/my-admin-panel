@@ -81,6 +81,7 @@ function PropertyDetail() {
 
   // Мобильное обнаружение
   const [isMobile, setIsMobile] = useState(false);
+  const [roiPercent, setRoiPercent] = useState(null);
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -565,7 +566,7 @@ function PropertyDetail() {
   };
 
   // Список неизменяемых полей
-  const nonEditableFields = ['district', 'landStatus', 'developer', 'complex'];
+  const nonEditableFields = ['district', 'landStatus', 'developer', 'complex', 'pricePerSqm', 'roi'];
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -949,6 +950,19 @@ function PropertyDetail() {
           }
           
           setProperty(propertyData);
+          // Загружаем сохраненный ROI, если есть
+          try {
+            const roiSnap = await getDoc(doc(db, "properties", id, "calculations", "roi"));
+            if (roiSnap.exists()) {
+              const r = roiSnap.data();
+              const savedRoi = r?.results?.roi;
+              if (typeof savedRoi === 'number' && !isNaN(savedRoi)) {
+                setRoiPercent(savedRoi);
+              }
+            }
+          } catch (e) {
+            console.warn('ROI not found or error:', e);
+          }
         } else {
           console.log('PropertyDetail: Property not found');
         }
@@ -1110,6 +1124,24 @@ function PropertyDetail() {
   const showManagementCompany = isEditing || (!!property.managementCompany && property.managementCompany !== '');
   const attributes = [
     ...attributesBase,
+    {
+      label: t.propertyDetail.pricePerSqm,
+      value: property.price && property.area
+        ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(
+            Math.round(Number(property.price) / Number(property.area))
+          )
+        : "—",
+      field: "pricePerSqm",
+      icon: Ruler,
+      type: "text"
+    },
+    ...(roiPercent !== null ? [{
+      label: t.roiShort,
+      value: `${Number(roiPercent).toFixed(2)}%`,
+      field: "roi",
+      icon: Star,
+      type: "text"
+    }] : []),
     ...(showTotalArea ? [{
       label: t.propertyDetail.totalArea,
       value: safeDisplay(property.totalArea),
@@ -1430,10 +1462,44 @@ function PropertyDetail() {
                 {t.propertyDetail.washingMachine}
               </label>
             </div>
+
+            {/* Distance to beach (km) */}
+            <div className="flex items-center space-x-2">
+              <label htmlFor="distanceToBeach" className="text-sm font-medium text-gray-700 w-40">
+                {t.propertyDetail.distanceToBeach}
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                id="distanceToBeach"
+                value={editedValues.hasOwnProperty('distanceToBeach') ? editedValues.distanceToBeach : (property.distanceToBeach || '')}
+                onChange={(e) => handleValueChange('distanceToBeach', e.target.value)}
+                className="flex-1 text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+                placeholder={`0 ${t.propertyDetail.kmUnit}`}
+              />
+              <span className="text-sm text-gray-600">{t.propertyDetail.kmUnit}</span>
+            </div>
+
+            {/* Distance to center (km) */}
+            <div className="flex items-center space-x-2">
+              <label htmlFor="distanceToCenter" className="text-sm font-medium text-gray-700 w-40">
+                {t.propertyDetail.distanceToCenter}
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                id="distanceToCenter"
+                value={editedValues.hasOwnProperty('distanceToCenter') ? editedValues.distanceToCenter : (property.distanceToCenter || '')}
+                onChange={(e) => handleValueChange('distanceToCenter', e.target.value)}
+                className="flex-1 text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+                placeholder={`0 ${t.propertyDetail.kmUnit}`}
+              />
+              <span className="text-sm text-gray-600">{t.propertyDetail.kmUnit}</span>
+            </div>
           </div>
         </div>
       ) : (
-        (property.smartHome || property.jacuzzi || property.terrace || property.rooftop || property.balcony || property.bbq || property.furniture || property.washingMachine) && (
+        (property.smartHome || property.jacuzzi || property.terrace || property.rooftop || property.balcony || property.bbq || property.furniture || property.washingMachine || property.distanceToBeach || property.distanceToCenter) && (
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.additionalOptions}</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -1483,6 +1549,23 @@ function PropertyDetail() {
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                   <Waves className="w-4 h-4 text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">{t.propertyDetail.washingMachine}</span>
+                </div>
+              )}
+
+              {property.distanceToBeach && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <MapPin className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {t.propertyDetail.distanceToBeach} {String(property.distanceToBeach)} {t.propertyDetail.kmUnit}
+                  </span>
+                </div>
+              )}
+              {property.distanceToCenter && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <MapPin className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {t.propertyDetail.distanceToCenter} {String(property.distanceToCenter)} {t.propertyDetail.kmUnit}
+                  </span>
                 </div>
               )}
             </div>

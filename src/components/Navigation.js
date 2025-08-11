@@ -131,12 +131,14 @@ const Navigation = () => {
     });
   };
 
-  const NavItem = ({ to, icon: Icon, children, isSubItem = false, onClick }) => {
+  const NavItem = ({ to, icon: Icon, children, isSubItem = false, onClick, target, rel }) => {
     const isActive = location.pathname === to;
     
     return (
       <Link 
         to={to}
+        target={target}
+        rel={rel}
         onClick={onClick}
         className={cn(
           "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent touch-manipulation",
@@ -264,6 +266,19 @@ const Navigation = () => {
 
             {/* Навигационные элементы */}
             <nav className="space-y-2">
+              {/* Публичная галерея - ПЕРВОЙ в списке, открывается в новой вкладке */}
+              {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+                <NavItem 
+                  to="/public" 
+                  icon={Globe}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.publicGallery}
+                </NavItem>
+              )}
+
               {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/property/gallery" 
@@ -516,6 +531,13 @@ const Navigation = () => {
       )}
 
       <nav className="space-y-1">
+        {/* Публичная галерея - ПЕРВОЙ в списке, открывается в новой вкладке */}
+        {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+          <NavItem to="/public" icon={Globe} target="_blank" rel="noopener noreferrer">
+            {nav.publicGallery}
+          </NavItem>
+        )}
+
         {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/property/gallery" icon={Home}>
             {nav.propertyGallery}
@@ -578,6 +600,12 @@ const Navigation = () => {
         {(['admin', 'moderator'].includes(role) || isAnyDeveloper(role)) && (
           <NavItem to="/client-fixations" icon={UserCheck}>
             {nav.clientFixations}
+          </NavItem>
+        )}
+
+        {['admin', 'moderator'].includes(role) && (
+          <NavItem to="/client-leads" icon={Users2}>
+            {nav.clientLeads}
           </NavItem>
         )}
 

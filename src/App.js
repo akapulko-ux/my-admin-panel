@@ -92,6 +92,9 @@ import Settings from "./pages/Settings";
 import PremiumFeatures from "./pages/PremiumFeatures";
 import Notifications from "./pages/Notifications";
 import PublicPage from "./pages/PublicPage";
+import PublicPropertiesGallery from "./pages/PublicPropertiesGallery";
+import PublicPropertyDetail from "./pages/PublicPropertyDetail";
+import ClientLeads from "./pages/ClientLeads";
 
 // CRM система
 import CrmDeals from "./pages/CrmDeals";
@@ -225,6 +228,8 @@ function App() {
               <Route path="/public-roi/property/:propertyId" element={<PublicPropertyRoiPage />} />
               <Route path="/public-building-progress/:type/:id" element={<PublicBuildingProgress />} />
               <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
+              <Route path="/public" element={<PublicPropertiesGallery />} />
+              <Route path="/public/property/:id" element={<PublicPropertyDetail />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/roi-calculator" element={<RoiCalculator />} />
               <Route path="/access-closed" element={<AccessClosed />} />
@@ -366,6 +371,13 @@ function App() {
                     <Route path="/users/manage" element={
                       <ProtectedRoute>
                         <UserManagement />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Заявки клиентов */}
+                    <Route path="/client-leads" element={
+                      <ProtectedRoute>
+                        <ClientLeads />
                       </ProtectedRoute>
                     } />
 
