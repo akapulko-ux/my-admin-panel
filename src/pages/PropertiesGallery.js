@@ -212,6 +212,9 @@ function PropertiesGallery() {
     return properties.filter(property => {
       // Текстовый поиск
       const searchText = searchQuery.toLowerCase();
+      const statusTranslated = property.status
+        ? translateConstructionStatus(String(property.status), language).toLowerCase()
+        : '';
       const matchesSearch = 
         !searchQuery ||
         (property.complexName && property.complexName.toLowerCase().includes(searchText)) ||
@@ -219,6 +222,9 @@ function PropertiesGallery() {
         (property.district && property.district.toLowerCase().includes(searchText)) ||
         (property.developer && property.developer.toLowerCase().includes(searchText)) ||
         (property.type && property.type.toLowerCase().includes(searchText)) ||
+        // Статус (оригинал и перевод)
+        (property.status && String(property.status).toLowerCase().includes(searchText)) ||
+        (statusTranslated && statusTranslated.includes(searchText)) ||
         // Поиск по числовым полям
         (property.price !== undefined && property.price !== null && String(property.price).toLowerCase().includes(searchText)) ||
         (property.area !== undefined && property.area !== null && String(property.area).toLowerCase().includes(searchText)) ||
@@ -248,7 +254,7 @@ function PropertiesGallery() {
 
       return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType;
     });
-  }, [properties, searchQuery, filters]);
+  }, [properties, searchQuery, filters, language]);
 
   // Сброс фильтров
   const resetFilters = () => {
@@ -520,7 +526,7 @@ function PropertiesGallery() {
               </div>
 
               {/* Текстовая информация */}
-              <div className="flex flex-col text-gray-900 space-y-0.5">
+              <div className="flex flex-col text-gray-900 space-y-0.5 flex-1">
                 {(p.complexName || p.complex || p.propertyName) && (
                   <span className={`font-semibold leading-none text-black ${
                     isMobile ? 'text-base' : 'text-lg'
@@ -628,6 +634,64 @@ function PropertiesGallery() {
                     {t.propertiesGallery.developerText} {safeDisplay(p.developer)}
                   </span>
                 )}
+              </div>
+
+              {/* Блок незаполненных полей справа */}
+              <div className={`flex-shrink-0 ${isMobile ? 'mt-2' : 'ml-auto'} text-sm text-red-600`}
+                   onClick={(e) => e.preventDefault()}>
+                {(() => {
+                  const missing = [];
+                  const isEmpty = (val) => val === undefined || val === null || val === '' || (typeof val === 'number' && isNaN(val));
+
+                  // Основные поля
+                  if (isEmpty(p.bedrooms)) missing.push(t.propertyDetail.bedrooms);
+                  if (isEmpty(p.area)) missing.push(t.propertyDetail.area);
+                  if (isEmpty(p.bathrooms)) missing.push(t.propertyDetail.bathrooms);
+                  if (isEmpty(p.floors)) missing.push(t.propertyDetail.floors);
+                  if (isEmpty(p.status)) missing.push(t.propertyDetail.constructionStatus);
+                  if (isEmpty(p.pool) || p.pool === 'none') missing.push(t.propertyDetail.pool);
+
+                  // Собственность + годы для лизхолда
+                  if (isEmpty(p.ownershipForm)) {
+                    missing.push(t.propertyDetail.ownership);
+                  } else {
+                    const leaseholdVariants = ['Leashold', 'Leasehold'];
+                    if (leaseholdVariants.includes(String(p.ownershipForm))) {
+                      if (isEmpty(p.leaseYears)) {
+                        missing.push(`${t.propertyDetail.ownership} (${t.propertyDetail.years})`);
+                      }
+                    }
+                  }
+
+                  if (isEmpty(p.completionDate)) missing.push(t.propertyDetail.completionDate);
+                  if (isEmpty(p.managementCompany)) missing.push(t.propertyDetail.managementCompany);
+
+                  // Документы
+                  if (isEmpty(p.legalCompanyName)) missing.push(t.propertyDetail.legalCompanyName);
+                  const npwpVal = p.npwp ?? p.taxNumber;
+                  if (isEmpty(npwpVal)) missing.push(t.propertyDetail.taxNumber);
+                  const pkkprVal = p.pkkprFile ?? p.pkkpr;
+                  if (isEmpty(pkkprVal)) missing.push(t.propertyDetail.landUsePermit);
+                  if (isEmpty(p.shgb)) missing.push(t.propertyDetail.landRightsCertificate);
+                  const hasPbg = !isEmpty(p.pbg);
+                  const hasSlf = !isEmpty(p.slf);
+                  const hasImb = !isEmpty(p.imb);
+                  if (!hasPbg && !hasSlf && !hasImb) {
+                    missing.push(`${t.propertyDetail.buildingPermit} / ${t.propertyDetail.buildingReadinessCertificate} / ${t.propertyDetail.buildingPermitIMB}`);
+                  }
+
+                  if (missing.length === 0) return null;
+                  return (
+                    <div className={`border ${isMobile ? 'mt-2' : 'ml-4'} border-red-200 bg-red-50 rounded-md p-2 max-w-xs`}> 
+                      <div className="font-semibold text-red-700 mb-1">{t.propertiesGallery.missingFieldsTitle}:</div>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {missing.map((label) => (
+                          <li key={label} className="text-red-700">{label}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
               </div>
             </Link>
           ))

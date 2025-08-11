@@ -137,10 +137,16 @@ function PublicPropertiesGallery() {
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
       const searchText = searchQuery.toLowerCase();
+      const statusTranslated = property.status
+        ? translateConstructionStatus(String(property.status), language).toLowerCase()
+        : '';
       const matchesSearch =
         !searchQuery ||
         (property.district && property.district.toLowerCase().includes(searchText)) ||
         (property.type && property.type.toLowerCase().includes(searchText)) ||
+        // Поиск по статусу (как по исходному значению, так и по переводу)
+        (property.status && String(property.status).toLowerCase().includes(searchText)) ||
+        (statusTranslated && statusTranslated.includes(searchText)) ||
         // Поиск по числовым полям
         (property.price !== undefined && property.price !== null && String(property.price).toLowerCase().includes(searchText)) ||
         (property.area !== undefined && property.area !== null && String(property.area).toLowerCase().includes(searchText)) ||
@@ -161,7 +167,7 @@ function PublicPropertiesGallery() {
 
       return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType;
     });
-  }, [properties, searchQuery, filters]);
+  }, [properties, searchQuery, filters, language]);
 
   const resetFilters = () => {
     setSearchQuery("");
