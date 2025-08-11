@@ -23,9 +23,7 @@ function getBotToken() {
   return process.env.AI_ASSISTANT_TELEGRAM_BOT_TOKEN;
 }
 
-if (!getBotToken()) {
-  console.warn('[aiAssistantBot] Не задан токен бота (AI_ASSISTANT_TELEGRAM_BOT_TOKEN). Добавьте его в functions/.env');
-}
+// Не шумим на этапе деплоя: проверку токена делаем только при вызове функций
 
 // Утилита: отправка сообщения
 async function sendTelegramMessage(chatId, text, replyMarkup = null) {

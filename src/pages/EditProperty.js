@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc, Timestamp, collection, getDocs } from "firebase/firestore";
 // Импорт функций для загрузки и удаления из Firebase Storage
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 import { useParams, useNavigate } from "react-router-dom";
@@ -82,6 +82,7 @@ function EditProperty() {
   const [pool, setPool] = useState("");
   const [description, setDescription] = useState("");
   const [developer, setDeveloper] = useState("");
+  const [developersList, setDevelopersList] = useState([]);
   const [propertyName, setPropertyName] = useState("");
   const [complex, setComplex] = useState("");
   const [area, setArea] = useState("");
@@ -220,6 +221,23 @@ function EditProperty() {
     };
     fetchProperty();
   }, [id]);
+
+  // Загрузка списка застройщиков
+  useEffect(() => {
+    async function loadDevelopers() {
+      try {
+        const snap = await getDocs(collection(db, 'developers'));
+        const names = snap.docs
+          .map(d => (d.data()?.name || '').trim())
+          .filter(Boolean);
+        const unique = Array.from(new Set(names)).sort();
+        setDevelopersList(unique);
+      } catch (e) {
+        console.error('Ошибка загрузки списка застройщиков:', e);
+      }
+    }
+    loadDevelopers();
+  }, []);
 
   // Обработчик выбора новых файлов (с сжатием и поддержкой PDF)
   const handleFileChange = async (e) => {
@@ -529,11 +547,16 @@ function EditProperty() {
 
                 <div className="space-y-2">
                   <Label htmlFor="developer">Застройщик</Label>
-                  <Input
-                    id="developer"
-                    value={developer}
-                    onChange={(e) => setDeveloper(e.target.value)}
-                  />
+                  <Select value={developer} onValueChange={setDeveloper}>
+                    <SelectTrigger id="developer">
+                      <SelectValue placeholder="Выберите застройщика" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {developersList.map((name) => (
+                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

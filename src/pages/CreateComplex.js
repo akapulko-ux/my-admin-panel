@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 // Заменяем импорт uploadToCloudinary на загрузку в Firebase Storage с указанием папки
 import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 
@@ -52,6 +52,23 @@ function CreateComplex() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Загрузка списка застройщиков
+  useEffect(() => {
+    async function loadDevelopers() {
+      try {
+        const snap = await getDocs(collection(db, 'developers'));
+        const names = snap.docs
+          .map(d => (d.data()?.name || '').trim())
+          .filter(Boolean);
+        const unique = Array.from(new Set(names)).sort();
+        setDevelopersList(unique);
+      } catch (e) {
+        console.error('Ошибка загрузки списка застройщиков:', e);
+      }
+    }
+    loadDevelopers();
+  }, []);
+
   // ----- Поля формы -----
   const [complexNumber, setComplexNumber] = useState("");
 
@@ -62,12 +79,9 @@ function CreateComplex() {
     setName(input);
   };
 
-  // "Застройщик" (только заглавные английские буквы + пробелы, обязательно)
+  // "Застройщик" — выбор из списка из БД
   const [developer, setDeveloper] = useState("");
-  const handleDeveloperChange = (e) => {
-    const input = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
-    setDeveloper(input);
-  };
+  const [developersList, setDevelopersList] = useState([]);
 
   // Обязательные поля: район, координаты
   const [district, setDistrict] = useState("");
@@ -389,13 +403,11 @@ function CreateComplex() {
 
               <div className="space-y-2">
                 <Label htmlFor="developer">Застройщик *</Label>
-                <Input
-                  id="developer"
+                <CustomSelect
                   value={developer}
-                  onChange={handleDeveloperChange}
-                  placeholder="ТОЛЬКО ЗАГЛАВНЫЕ БУКВЫ"
-                  className="uppercase"
-                  required
+                  onValueChange={setDeveloper}
+                  placeholder="Выберите застройщика"
+                  options={[...developersList.map(name => ({ value: name, label: name }))]}
                 />
               </div>
 

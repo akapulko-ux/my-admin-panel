@@ -182,7 +182,11 @@ function EditDeveloper() {
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  // Разрешаем только английские заглавные буквы, цифры и пробелы
+                  const input = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "");
+                  setName(input);
+                }}
                 required
                 placeholder={t.namePlaceholder}
                 disabled={['застройщик', 'премиум застройщик'].includes(role)}

@@ -62,13 +62,9 @@ function CreateProperty() {
   const [complexList, setComplexList] = useState([]);
   const [complex, setComplex] = useState("none");
 
-  // Застройщик (только заглавные английские буквы и пробелы, обязательно)
-  const [developer, setDeveloper] = useState("");
-  const handleDeveloperChange = (e) => {
-    // Преобразуем ввод в заглавные и убираем всё, кроме A-Z и пробела
-    const input = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
-    setDeveloper(input);
-  };
+  // Застройщик — выбор из списка из БД
+  const [developer, setDeveloper] = useState("none");
+  const [developersList, setDevelopersList] = useState([]);
 
   // Название объекта (необязательное поле)
   const [propertyName, setPropertyName] = useState("");
@@ -167,12 +163,30 @@ function CreateProperty() {
             commission: data.commission ?? "1.0"
           };
         });
+        loaded.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         setComplexList(loaded);
       } catch (error) {
         console.error("Ошибка загрузки комплексов:", error);
       }
     }
     loadComplexes();
+  }, []);
+
+  // Загрузка списка застройщиков
+  useEffect(() => {
+    async function loadDevelopers() {
+      try {
+        const snap = await getDocs(collection(db, 'developers'));
+        const names = snap.docs
+          .map(d => (d.data()?.name || '').trim())
+          .filter(Boolean);
+        const unique = Array.from(new Set(names)).sort();
+        setDevelopersList(unique);
+      } catch (e) {
+        console.error('Ошибка загрузки списка застройщиков:', e);
+      }
+    }
+    loadDevelopers();
   }, []);
 
   // Обработчик выбора файлов (Drag & Drop) + сжатие + PDF
@@ -498,12 +512,17 @@ function CreateProperty() {
               {/* Застройщик */}
               <div className="space-y-2">
                 <Label htmlFor="developer">Застройщик</Label>
-                <Input
-                  id="developer"
-                  value={developer}
-                  onChange={handleDeveloperChange}
-                  required
-                />
+                <Select value={developer} onValueChange={setDeveloper}>
+                  <SelectTrigger id="developer">
+                    <SelectValue placeholder="Выберите застройщика" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">(не выбрано)</SelectItem>
+                    {developersList.map((name) => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Название объекта */}

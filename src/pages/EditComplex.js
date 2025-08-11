@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 // Используем функцию загрузки и удаления из Firebase Storage
 import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
 
@@ -64,6 +64,7 @@ function EditComplex() {
   const [complexNumber, setComplexNumber] = useState("");
   const [name, setName] = useState("");
   const [developer, setDeveloper] = useState("");
+  const [developersList, setDevelopersList] = useState([]);
   const [district, setDistrict] = useState("");
   const [coordinates, setCoordinates] = useState("");
   const [description, setDescription] = useState("");
@@ -195,6 +196,23 @@ function EditComplex() {
 
     fetchComplex();
   }, [id]);
+
+  // Загрузка списка застройщиков
+  useEffect(() => {
+    async function loadDevelopers() {
+      try {
+        const snap = await getDocs(collection(db, 'developers'));
+        const names = snap.docs
+          .map(d => (d.data()?.name || '').trim())
+          .filter(Boolean);
+        const unique = Array.from(new Set(names)).sort();
+        setDevelopersList(unique);
+      } catch (e) {
+        console.error('Ошибка загрузки списка застройщиков:', e);
+      }
+    }
+    loadDevelopers();
+  }, []);
 
   // Обработчик выбора новых фото (с учётом сжатия и PDF)
   const handleFileChange = async (e) => {
@@ -440,11 +458,12 @@ function EditComplex() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="developer">Застройщик</Label>
-                <Input
+                <CustomSelect
                   id="developer"
                   value={developer}
-                  onChange={(e) => setDeveloper(e.target.value)}
-                  placeholder="Введите название застройщика"
+                  onValueChange={setDeveloper}
+                  placeholder="Выберите застройщика"
+                  options={developersList.map(name => ({ value: name, label: name }))}
                 />
               </div>
               <div className="space-y-2">
