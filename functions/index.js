@@ -8,12 +8,16 @@ const os = require("os");
 const fs = require("fs");
 const telegramTranslations = require("./telegramTranslations");
 const { sendFixationCreatedWebhook, sendFixationStatusChangedWebhook, sendFixationExpiredWebhook, sendFixationRejectedWebhook } = require("./webhookService");
+// Новый AI Assistant Telegram Bot (изолированный)
+const { aiAssistantTelegramWebhook, aiAssistantSetWebhook } = require('./aiAssistantBot');
 
 // Telegram Bot Token
 const BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM";
 
-// Инициализируем admin SDK
-admin.initializeApp();
+// Инициализируем admin SDK (без повторной инициализации)
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 // Функция для получения языка пользователя
 function getUserLanguage(userData) {
@@ -58,8 +62,17 @@ const setupWebAppMenuButton = async () => {
   }
 };
 
-// Вызываем установку меню при инициализации
-setupWebAppMenuButton();
+// Важно: не выполняем сетевые запросы на уровне модуля, чтобы не ломать старт контейнера Cloud Run
+// Предоставляем явную функцию для ручной установки кнопки меню Web App
+exports.installTelegramWebAppMenuButton = functions.https.onCall(async () => {
+  try {
+    const result = await setupWebAppMenuButton();
+    return { success: true, result };
+  } catch (e) {
+    console.error('installTelegramWebAppMenuButton error:', e);
+    throw new functions.https.HttpsError('internal', e.message || 'Unknown error');
+  }
+});
 
 // Клиент для распознавания речи
 const speechClient = new speech.SpeechClient();
@@ -653,6 +666,10 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Новый бот ИИ ассистента (отдельный webhook и callable)
+exports.aiAssistantTelegramWebhook = aiAssistantTelegramWebhook;
+exports.aiAssistantSetWebhook = aiAssistantSetWebhook;
 
 // MARK: - Developer Push Notifications
 
