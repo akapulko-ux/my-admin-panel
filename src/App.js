@@ -95,6 +95,7 @@ import PublicPage from "./pages/PublicPage";
 import PublicPropertiesGallery from "./pages/PublicPropertiesGallery";
 import PublicComplexDetail from "./pages/PublicComplexDetail";
 import PublicPropertyDetail from "./pages/PublicPropertyDetail";
+import PublicAdminLikePropertyDetail from "./pages/PublicAdminLikePropertyDetail";
 import ClientLeads from "./pages/ClientLeads";
 
 // CRM система
@@ -232,6 +233,7 @@ function App() {
               <Route path="/public" element={<PublicPropertiesGallery />} />
               <Route path="/public/complex/:id" element={<PublicComplexDetail />} />
               <Route path="/public/property/:id" element={<PublicPropertyDetail />} />
+              <Route path="/public/complex-property/:id" element={<PublicAdminLikePropertyDetail />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/roi-calculator" element={<RoiCalculator />} />
               <Route path="/access-closed" element={<AccessClosed />} />

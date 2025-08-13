@@ -364,7 +364,7 @@ function PublicComplexDetail() {
             filteredComplexProperties.map((p) => (
               <Link
                 key={p.id}
-                to={`/public/property/${p.id}`}
+                to={`/public/complex-property/${p.id}`}
                 className={`flex items-stretch hover:bg-gray-50 transition-colors ${
                   isMobile ? 'flex-col gap-3 p-3' : 'gap-4 p-4'
                 }`}

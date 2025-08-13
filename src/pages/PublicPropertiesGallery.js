@@ -398,7 +398,7 @@ function PublicPropertiesGallery() {
           filteredProperties.map((p) => (
             <Link
               key={p.id}
-              to={p.complexResolvedId ? `/public/complex/${p.complexResolvedId}` : (p.complexId ? `/public/complex/${p.complexId}` : `/public/property/${p.id}`)}
+              to={`/public/property/${p.id}`}
               className={`flex items-stretch hover:bg-gray-50 transition-colors ${
                 isMobile ? "flex-col gap-3 p-3" : "gap-4 p-4"
               }`}
