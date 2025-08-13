@@ -171,6 +171,16 @@ export const translations = {
       lists: 'Lists'
     },
 
+    // Public Page
+    publicPage: {
+      uploadCover: 'Upload cover',
+      expand: 'Expand',
+      collapse: 'Collapse',
+      complexesListTitle: 'Complexes list',
+      rentingLabel: 'Renting',
+      propertiesListTitle: 'Properties list'
+    },
+
     // Registration Requests Page
     registrationRequestsPage: {
       title: 'Registration Requests',
@@ -556,9 +566,10 @@ _________________               _________________
       removedFromListing: 'Removed from listing',
       addPhotoButton: 'Add Photo / PDF',
       uploadingText: 'Uploading...',
-      watchVideoButton: 'Watch Video',
+      watchVideoButton: 'Complex Video',
       view3DTourButton: 'View 3D Tour',
       buildingProgressButton: 'Building Progress',
+      openChessboardButton: 'Objects Chessboard',
       linksAndDocuments: 'Links and Documents',
       description: 'Description',
       priceFromLabel: 'Price from',
@@ -1735,6 +1746,16 @@ _________________               _________________
       updatedAt: 'Обновлен'
     },
 
+    // Public Page
+    publicPage: {
+      uploadCover: 'Загрузить обложку',
+      expand: 'Развернуть',
+      collapse: 'Свернуть',
+      complexesListTitle: 'Список комплексов',
+      rentingLabel: 'Сдается',
+      propertiesListTitle: 'Список объектов'
+    },
+
     // Registration Requests Page
     registrationRequestsPage: {
       title: 'Заявки на регистрацию',
@@ -2115,9 +2136,10 @@ _________________               _________________
       removedFromListing: 'Убран из листинга',
       addPhotoButton: 'Добавить фото / PDF',
       uploadingText: 'Загрузка...',
-      watchVideoButton: 'Посмотреть видео',
+      watchVideoButton: 'Видео о комплексе',
       view3DTourButton: 'Посмотреть 3D тур',
       buildingProgressButton: 'Прогресс строительства',
+      openChessboardButton: 'Шахматка объектов',
       linksAndDocuments: 'Ссылки и документы',
       description: 'Описание',
       priceFromLabel: 'Цена от',
@@ -3294,6 +3316,16 @@ _________________               _________________
       updatedAt: 'Diperbarui'
     },
 
+    // Public Page
+    publicPage: {
+      uploadCover: 'Unggah sampul',
+      expand: 'Perluas',
+      collapse: 'Tutup',
+      complexesListTitle: 'Daftar kompleks',
+      rentingLabel: 'Disewakan',
+      propertiesListTitle: 'Daftar properti'
+    },
+
     // Registration Requests Page
     registrationRequestsPage: {
       title: 'Permintaan Registrasi',
@@ -3674,9 +3706,10 @@ _________________               _________________
       removedFromListing: 'Dihapus dari listing',
       addPhotoButton: 'Tambah Foto / PDF',
       uploadingText: 'Mengupload...',
-      watchVideoButton: 'Tonton Video',
+      watchVideoButton: 'Video Komplek',
       view3DTourButton: 'Lihat Tur 3D',
       buildingProgressButton: 'Progres Pembangunan',
+      openChessboardButton: 'Papan Catur Unit',
       linksAndDocuments: 'Tautan dan Dokumen',
       description: 'Deskripsi',
       priceFromLabel: 'Harga dari',

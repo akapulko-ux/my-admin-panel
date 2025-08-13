@@ -66,10 +66,11 @@ function PublicPropertiesGallery() {
     try {
       const data = await forceRefreshPropertiesList();
 
-      // Загружаем все комплексы и строим быстрые мапы: id -> number, name(normalized) -> number
+      // Загружаем все комплексы и строим быстрые мапы: id -> number, name(normalized) -> number/id
       const complexesSnap = await getDocs(collection(db, "complexes"));
       const complexNumberById = {};
       const complexNumberByName = {};
+      const complexIdByName = {};
       complexesSnap.forEach((docSnap) => {
         const c = docSnap.data();
         let num = c?.number;
@@ -82,6 +83,7 @@ function PublicPropertiesGallery() {
         if (c?.name) {
           const key = String(c.name).trim().toLowerCase();
           complexNumberByName[key] = num;
+          complexIdByName[key] = docSnap.id;
         }
       });
 
@@ -89,16 +91,21 @@ function PublicPropertiesGallery() {
         data.map(async (property) => {
           const augmented = { ...property };
 
-          // Номер комплекса по id или по имени (нормализуем имя)
+          // Номер и id комплекса по id или по имени (нормализуем имя)
           if (property.complexId && Object.prototype.hasOwnProperty.call(complexNumberById, property.complexId)) {
             augmented.complexNumber = complexNumberById[property.complexId];
+            augmented.complexResolvedId = property.complexId;
           } else if (property.complex) {
             const key = String(property.complex).trim().toLowerCase();
             augmented.complexNumber = Object.prototype.hasOwnProperty.call(complexNumberByName, key)
               ? complexNumberByName[key]
               : null;
+            augmented.complexResolvedId = Object.prototype.hasOwnProperty.call(complexIdByName, key)
+              ? complexIdByName[key]
+              : null;
           } else {
             augmented.complexNumber = null;
+            augmented.complexResolvedId = null;
           }
 
           // Статус проверки застройщика
@@ -391,7 +398,7 @@ function PublicPropertiesGallery() {
           filteredProperties.map((p) => (
             <Link
               key={p.id}
-              to={`/public/property/${p.id}`}
+              to={p.complexResolvedId ? `/public/complex/${p.complexResolvedId}` : (p.complexId ? `/public/complex/${p.complexId}` : `/public/property/${p.id}`)}
               className={`flex items-stretch hover:bg-gray-50 transition-colors ${
                 isMobile ? "flex-col gap-3 p-3" : "gap-4 p-4"
               }`}

@@ -93,6 +93,7 @@ import PremiumFeatures from "./pages/PremiumFeatures";
 import Notifications from "./pages/Notifications";
 import PublicPage from "./pages/PublicPage";
 import PublicPropertiesGallery from "./pages/PublicPropertiesGallery";
+import PublicComplexDetail from "./pages/PublicComplexDetail";
 import PublicPropertyDetail from "./pages/PublicPropertyDetail";
 import ClientLeads from "./pages/ClientLeads";
 
@@ -229,6 +230,7 @@ function App() {
               <Route path="/public-building-progress/:type/:id" element={<PublicBuildingProgress />} />
               <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
               <Route path="/public" element={<PublicPropertiesGallery />} />
+              <Route path="/public/complex/:id" element={<PublicComplexDetail />} />
               <Route path="/public/property/:id" element={<PublicPropertyDetail />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/roi-calculator" element={<RoiCalculator />} />
