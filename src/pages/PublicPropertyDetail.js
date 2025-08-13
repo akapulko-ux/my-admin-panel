@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query } from "firebase/firestore";
 import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Waves, Bed, Ruler, MapPin, Hammer, Layers, Bath, FileText, Calendar, DollarSign } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
@@ -17,6 +17,7 @@ import {
   formatArea,
 } from "../lib/utils";
 import { showError, showSuccess } from "../utils/notifications";
+import { Badge } from "../components/ui/badge";
 
 function PublicPropertyDetail() {
   const { id } = useParams();
@@ -74,6 +75,24 @@ function PublicPropertyDetail() {
               if (typeof savedRoi === 'number' && !isNaN(savedRoi)) {
                 setRoiPercent(savedRoi);
               }
+            }
+          } catch {}
+
+          // Подтягиваем статус проверки застройщика (для публичного бейджа)
+          try {
+            if (data.developerId) {
+              const devDoc = await getDoc(doc(db, "developers", data.developerId));
+              data.isDeveloperApproved = devDoc.exists() && devDoc.data().approved === true;
+            } else if (data.developer) {
+              const devQuery = query(collection(db, "developers"), where("name", "==", data.developer));
+              const devSnap = await getDocs(devQuery);
+              if (!devSnap.empty) {
+                data.isDeveloperApproved = !!devSnap.docs[0].data().approved;
+              } else {
+                data.isDeveloperApproved = false;
+              }
+            } else {
+              data.isDeveloperApproved = false;
             }
           } catch {}
           setProperty(data);
@@ -257,9 +276,21 @@ function PublicPropertyDetail() {
       </div>
 
       {/* Тип */}
-      <div className="text-2xl font-bold mb-4 text-gray-800">
+      <div className="text-2xl font-bold mb-2 text-gray-800">
         {translatePropertyType(safeDisplay(property.type), language)}
       </div>
+      {property.isDeveloperApproved === true && (
+        <div className="mb-4">
+          <div className="inline-block group relative">
+            <Badge className="border bg-green-100 text-green-800 border-green-200">
+              {t.propertyDetail.serviceVerified}
+            </Badge>
+            <div className="pointer-events-none hidden group-hover:block absolute z-50 w-72 p-3 bg-white border rounded-lg shadow-lg text-xs sm:text-sm whitespace-pre-line top-full mt-1 left-0">
+              {t.propertyDetail.serviceVerifiedTooltip}
+            </div>
+          </div>
+        </div>
+      )}
 
       {property.description && (
         <p className="text-gray-600 mb-6 whitespace-pre-line">{property.description}</p>

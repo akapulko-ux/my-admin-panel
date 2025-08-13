@@ -706,8 +706,9 @@ function PropertiesGallery() {
                     missing.push(`${t.propertyDetail.buildingPermit} / ${t.propertyDetail.buildingReadinessCertificate} / ${t.propertyDetail.buildingPermitIMB}`);
                   }
 
-                  // Планировка (если файл не загружен)
-                  if (isEmpty(p.layout)) missing.push(t.propertyDetail.layout);
+                  // Планировка: считаем загруженной, если есть новое поле URL файла или совместимое старое поле
+                  const hasLayout = !isEmpty(p.layoutFileURL) || !isEmpty(p.layout);
+                  if (!hasLayout) missing.push(t.propertyDetail.layout);
 
                   // ROI: выводим как пустое только когда точно знаем, что документа нет
                   if (roiAvailability[p.id] === false) missing.push('ROI');

@@ -43,7 +43,7 @@ export const AdaptiveTooltip = ({ content, children }) => {
       {children}
       <div
         ref={tooltipRef}
-        className={`pointer-events-none hidden group-hover:block absolute z-50 w-48 sm:w-64 p-2 bg-white border rounded-lg shadow-lg text-xs sm:text-sm
+        className={`pointer-events-none hidden group-hover:block absolute z-50 w-48 sm:w-64 p-2 bg-white border rounded-lg shadow-lg text-xs sm:text-sm whitespace-pre-line
           ${position.top ? 'bottom-full mb-1' : 'top-full mt-1'}
           ${position.left ? 'right-0' : 'left-0'}`}
       >

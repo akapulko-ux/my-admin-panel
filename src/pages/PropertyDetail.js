@@ -1309,7 +1309,7 @@ function PropertyDetail() {
             {getServiceVerificationStatus() && (
               <div className="mb-4">
                 {getServiceVerificationStatus().tooltip ? (
-                  <AdaptiveTooltip content={getServiceVerificationStatus().tooltip}>
+                  <AdaptiveTooltip content={t.propertyDetail.serviceVerifiedTooltip}>
                     <Badge className={`${getServiceVerificationStatus().color} border flex items-center gap-1 w-fit`}>
                       <span className="text-sm font-medium">{getServiceVerificationStatus().icon}</span>
                       <span className="text-sm">{t.propertyDetail.serviceVerified}</span>

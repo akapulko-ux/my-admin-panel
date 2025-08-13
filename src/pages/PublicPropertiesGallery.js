@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, Timestamp, getDocs, where, query, collection } from "firebase/firestore";
 import { Building2, Search, Filter, ChevronDown, X as XIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCache } from "../CacheContext";
@@ -60,47 +60,85 @@ function PublicPropertiesGallery() {
     return String(value);
   };
 
-  const fetchComplexName = useCallback(async (complexId) => {
-    try {
-      const complexDoc = await getDoc(doc(db, "complexes", complexId));
-      if (complexDoc.exists()) return complexDoc.data().name;
-      return null;
-    } catch (err) {
-      console.error(t.propertiesGallery.complexLoadError, err);
-      return null;
-    }
-  }, [t.propertiesGallery.complexLoadError]);
+  
 
   const fetchProperties = useCallback(async () => {
     try {
       const data = await forceRefreshPropertiesList();
-      const withComplexNames = await Promise.all(
+
+      // Загружаем все комплексы и строим быстрые мапы: id -> number, name(normalized) -> number
+      const complexesSnap = await getDocs(collection(db, "complexes"));
+      const complexNumberById = {};
+      const complexNumberByName = {};
+      complexesSnap.forEach((docSnap) => {
+        const c = docSnap.data();
+        let num = c?.number;
+        if (typeof num === 'string') {
+          const parsed = parseInt(num, 10);
+          num = Number.isNaN(parsed) ? null : parsed;
+        }
+        if (typeof num !== 'number') num = null;
+        complexNumberById[docSnap.id] = num;
+        if (c?.name) {
+          const key = String(c.name).trim().toLowerCase();
+          complexNumberByName[key] = num;
+        }
+      });
+
+      const withComplexInfo = await Promise.all(
         data.map(async (property) => {
-          if (property.complexId) {
-            try {
-              const complexName = await fetchComplexName(property.complexId);
-              return { ...property, complexName };
-            } catch {
-              return property;
-            }
+          const augmented = { ...property };
+
+          // Номер комплекса по id или по имени (нормализуем имя)
+          if (property.complexId && Object.prototype.hasOwnProperty.call(complexNumberById, property.complexId)) {
+            augmented.complexNumber = complexNumberById[property.complexId];
+          } else if (property.complex) {
+            const key = String(property.complex).trim().toLowerCase();
+            augmented.complexNumber = Object.prototype.hasOwnProperty.call(complexNumberByName, key)
+              ? complexNumberByName[key]
+              : null;
+          } else {
+            augmented.complexNumber = null;
           }
-          return property;
+
+          // Статус проверки застройщика
+          try {
+            if (property.developerId) {
+              const devDoc = await getDoc(doc(db, "developers", property.developerId));
+              augmented.isDeveloperApproved = devDoc.exists() && devDoc.data().approved === true;
+            } else if (property.developer) {
+              const q = query(collection(db, "developers"), where("name", "==", property.developer));
+              const snap = await getDocs(q);
+              augmented.isDeveloperApproved = !snap.empty && !!snap.docs[0].data().approved;
+            } else {
+              augmented.isDeveloperApproved = false;
+            }
+          } catch {
+            augmented.isDeveloperApproved = false;
+          }
+
+          return augmented;
         })
       );
-      withComplexNames.sort((a, b) => {
+
+      // Сортировка по номеру комплекса (возрастание), без номера в конец; при равенстве — новые сверху
+      withComplexInfo.sort((a, b) => {
+        const aNum = typeof a.complexNumber === 'number' ? a.complexNumber : Number.POSITIVE_INFINITY;
+        const bNum = typeof b.complexNumber === 'number' ? b.complexNumber : Number.POSITIVE_INFINITY;
+        if (aNum !== bNum) return aNum - bNum;
         const tA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
         const tB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0;
         return tB - tA;
       });
-      // Исключаем объекты, скрытые из листинга
-      const visibleProperties = withComplexNames.filter((p) => !p?.isHidden);
+
+      const visibleProperties = withComplexInfo.filter((p) => !p?.isHidden);
       setProperties(visibleProperties);
     } catch (err) {
       console.error(t.propertiesGallery.dataLoadError || "Ошибка загрузки объектов:", err);
     } finally {
       setLoading(false);
     }
-  }, [forceRefreshPropertiesList, fetchComplexName, t.propertiesGallery.dataLoadError]);
+  }, [forceRefreshPropertiesList, t.propertiesGallery.dataLoadError]);
 
   useEffect(() => {
     fetchProperties();
@@ -378,6 +416,14 @@ function PublicPropertiesGallery() {
 
               <div className="flex flex-col text-gray-900 space-y-1">
                 {/* ВНИМАНИЕ: умышленно НЕ показываем Название объекта, Комплекс и Застройщика */}
+
+                {p.isDeveloperApproved === true && (
+                  <div className="mb-1">
+                    <Badge className="border bg-green-100 text-green-800 border-green-200">
+                      {t.propertyDetail?.serviceVerified || 'Проверено сервисом'}
+                    </Badge>
+                  </div>
+                )}
 
                 <span className={isMobile ? "text-base" : "text-lg"}>
                   <span className="text-gray-600">{t.propertiesGallery.priceLabel}:</span>

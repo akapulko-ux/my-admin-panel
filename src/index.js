@@ -45,23 +45,19 @@ if ('serviceWorker' in navigator) {
         .then((registration) => {
           console.log('SW registered successfully: ', registration);
           
-          // Проверка на обновления каждые 60 секунд
-          setInterval(() => {
-            registration.update().catch(err => {
-              console.log('SW update check failed:', err);
-            });
-          }, 60000);
+          // Явно проверяем обновления сразу после регистрации
+          registration.update().catch(err => {
+            console.log('SW immediate update check failed:', err);
+          });
           
           // Обработка обновлений
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // Показываем пользователю уведомление об обновлении
-                  if (window.confirm('Доступно обновление приложения. Обновить сейчас?')) {
-                    window.location.reload();
-                  }
+                if (newWorker.state === 'installed') {
+                  // Сразу применяем новую версию без подтверждения
+                  window.location.reload();
                 }
               });
             }

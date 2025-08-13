@@ -18,6 +18,10 @@ function getDb() {
   return admin.firestore();
 }
 
+function getDefaultBucketName() {
+  return process.env.FIREBASE_STORAGE_BUCKET || `${process.env.GCLOUD_PROJECT}.appspot.com`;
+}
+
 // Токен бота читаем из окружения лениво, чтобы не зависеть от порядка загрузки .env при деплое
 function getBotToken() {
   return process.env.AI_ASSISTANT_TELEGRAM_BOT_TOKEN;
@@ -365,9 +369,11 @@ async function getImageUrl(property) {
     }
   };
 
-  // images: массив строк или объектов
+  // images: массив строк/объектов ИЛИ единичная строка
   if (Array.isArray(property.images)) {
     property.images.forEach(pushUrl);
+  } else if (typeof property.images === 'string') {
+    pushUrl(property.images);
   }
   // возможные альтернативные поля
   ['image', 'mainImage', 'coverImage', 'preview', 'thumbnail'].forEach((k) => pushUrl(property[k]));
@@ -390,7 +396,7 @@ async function getImageUrl(property) {
         if (idx > 0) {
           const bucketName = without.slice(0, idx);
           const filePath = without.slice(idx + 1);
-          const bucket = admin.storage().bucket(bucketName);
+          const bucket = admin.storage().bucket(bucketName || getDefaultBucketName());
           const [signed] = await bucket.file(filePath).getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 });
           if (signed) return signed;
         }
@@ -398,9 +404,20 @@ async function getImageUrl(property) {
       continue;
     }
 
-    // Нормализация Firebase Storage ссылок: добавляем alt=media
-    if (/firebasestorage\.googleapis\.com\/v0\/b\//i.test(url) && !/alt=media/i.test(url)) {
-      url += (url.includes('?') ? '&' : '?') + 'alt=media';
+    // Если это Firebase Storage REST URL — сразу пробуем получить подписанную ссылку через дефолтный bucket
+    if (/firebasestorage\.googleapis\.com\/v0\/b\//i.test(url)) {
+      try {
+        const m2 = url.match(/\/o\/([^?]+)/);
+        if (m2) {
+          const filePath2 = decodeURIComponent(m2[1]);
+          const [signed2] = await admin.storage().bucket(getDefaultBucketName()).file(filePath2).getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 });
+          if (signed2) return signed2;
+        }
+      } catch (_) {}
+      // На всякий случай добавляем alt=media (если подпись не удалась)
+      if (!/alt=media/i.test(url)) {
+        url += (url.includes('?') ? '&' : '?') + 'alt=media';
+      }
     }
 
     if (/^https?:\/\//i.test(url)) {
@@ -418,7 +435,8 @@ async function getImageUrl(property) {
     if (m) {
       try {
         const filePath = decodeURIComponent(m[1]);
-        const bucket = bucketMatch ? admin.storage().bucket(bucketMatch[1]) : admin.storage().bucket();
+        // Всегда подписываем через дефолтный bucket проекта — Telegram требует прямой контент
+        const bucket = admin.storage().bucket(getDefaultBucketName());
         const [signed] = await bucket.file(filePath).getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 });
         if (signed) return signed;
       } catch (_) {}

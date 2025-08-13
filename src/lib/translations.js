@@ -764,6 +764,7 @@ _________________               _________________
       
       // Service verification badge
       serviceVerified: 'Service Verified',
+      serviceVerifiedTooltip: 'This mark means the developer and their properties have passed an initial document check in the following categories:\n• Legal company name\n• Company tax number\n• Presence of a land use permit\n• Presence of land rights certificates\n• Presence of a building/operation permit (or a registered application number)\n• Compliance with land designation and zoning color',
       premiumOnlyTooltip: 'Only available for premium developers',
       removedFromListing: 'Removed from listing',
       removeFromListing: 'Remove from listing',
@@ -2322,6 +2323,7 @@ _________________               _________________
       
       // Service verification badge
       serviceVerified: 'Проверено сервисом',
+      serviceVerifiedTooltip: 'Данный знак означает, что застройщик и его объекты прошли первичную проверку документов по следующим категориям:\n• Юридическое наименование компании\n• Налоговый номер компании\n• Наличие разрешения на использование земли\n• Наличие сертификатов права на землю\n• Наличие разрешения на строительство/эксплуатацию (или зарегистрированный номер заявки)\n• Соответствие назначению и цвету земли',
       premiumOnlyTooltip: 'Данная опция доступна только для премиум аккаунтов',
       removedFromListing: 'Убран из листинга',
       removeFromListing: 'Убрать из листинга',
@@ -3880,6 +3882,7 @@ _________________               _________________
       
       // Service verification badge
       serviceVerified: 'Diverifikasi Layanan',
+      serviceVerifiedTooltip: 'Tanda ini berarti pengembang dan propertinya telah lulus pemeriksaan dokumen awal pada kategori berikut:\n• Nama perusahaan yang sah\n• Nomor pajak perusahaan\n• Adanya izin penggunaan lahan\n• Adanya sertifikat hak atas tanah\n• Adanya izin bangunan/operasional (atau nomor permohonan yang terdaftar)\n• Kesesuaian dengan peruntukan dan warna zonasi tanah',
       premiumOnlyTooltip: 'Opsi ini hanya tersedia untuk akun premium',
       removedFromListing: 'Removed from listing',
       removeFromListing: 'Remove from listing',
