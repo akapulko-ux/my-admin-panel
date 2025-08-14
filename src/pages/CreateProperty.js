@@ -481,6 +481,7 @@ function CreateProperty() {
                     <SelectItem value="Вилла">Вилла</SelectItem>
                     <SelectItem value="Апартаменты">Апартаменты</SelectItem>
                     <SelectItem value="Дом">Дом</SelectItem>
+                    <SelectItem value="Дюплекс">Дюплекс</SelectItem>
                     <SelectItem value="Коммерческая недвижимость">
                       Коммерческая недвижимость
                     </SelectItem>
@@ -721,6 +722,11 @@ function CreateProperty() {
                     <SelectItem value="RDTR Kecamatan Sukawati">RDTR Kecamatan Sukawati</SelectItem>
                     <SelectItem value="RDTR Kecamatan Payangan">RDTR Kecamatan Payangan</SelectItem>
                     <SelectItem value="RDTR Kecamatan Tegallalang">RDTR Kecamatan Tegallalang</SelectItem>
+                    <SelectItem value="RDTR WP Utara">RDTR WP Utara</SelectItem>
+                    <SelectItem value="RDTR WP Tengah">RDTR WP Tengah</SelectItem>
+                    <SelectItem value="RDTR WP Barat">RDTR WP Barat</SelectItem>
+                    <SelectItem value="RDTR WP Timur">RDTR WP Timur</SelectItem>
+                    <SelectItem value="RDTR WP Selatan">RDTR WP Selatan</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

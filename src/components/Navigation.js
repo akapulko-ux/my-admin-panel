@@ -301,6 +301,16 @@ const Navigation = () => {
 
               {['admin', 'moderator'].includes(role) && (
                 <NavItem 
+                  to="/agent-properties" 
+                  icon={List}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.agentProperties}
+                </NavItem>
+              )}
+
+              {['admin', 'moderator'].includes(role) && (
+                <NavItem 
                   to="/property/list" 
                   icon={Building}
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -548,6 +558,12 @@ const Navigation = () => {
           <NavItem to="/complex/gallery" icon={Building2}>
             {nav.complexGallery}
           </NavItem>
+        )}
+
+        {['admin', 'moderator'].includes(role) && (
+            <NavItem to="/agent-properties" icon={List}>
+              {nav.agentProperties}
+            </NavItem>
         )}
 
         {['admin', 'moderator'].includes(role) && (

@@ -494,6 +494,7 @@ function EditProperty() {
                       <SelectItem value="Вилла">Вилла</SelectItem>
                       <SelectItem value="Апартаменты">Апартаменты</SelectItem>
                       <SelectItem value="Дом">Дом</SelectItem>
+                      <SelectItem value="Дюплекс">Дюплекс</SelectItem>
                       <SelectItem value="Коммерческая недвижимость">Коммерческая недвижимость</SelectItem>
                       <SelectItem value="Апарт-вилла">Апарт-вилла</SelectItem>
                       <SelectItem value="Таунхаус">Таунхаус</SelectItem>
@@ -676,7 +677,8 @@ function EditProperty() {
                         "RDTR Kecamatan Kuta Utara", "RDTR Kuta Selatan",
                         "RDTR Mengwi", "RDTR Kecamatan Abiansemal",
                         "RDTR Wilayah Perencanaan Pentang", "RDTR Wilayah Perencanaan Geopark Batur", "RDTR Kecamatan Sukawati",
-                        "RDTR Kecamatan Payangan", "RDTR Kecamatan Tegallalang"
+                        "RDTR Kecamatan Payangan", "RDTR Kecamatan Tegallalang",
+                        "RDTR WP Utara", "RDTR WP Tengah", "RDTR WP Barat", "RDTR WP Timur", "RDTR WP Selatan"
                       ].map((item) => (
                         <SelectItem key={item} value={item}>{item}</SelectItem>
                       ))}

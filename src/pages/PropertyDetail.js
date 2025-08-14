@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query } from "firebase/firestore";
+import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query, orderBy } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
 import {
@@ -31,6 +31,7 @@ import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '
 import PropertyRoiCalculator from "../components/PropertyRoiCalculator";
 import { Badge } from "../components/ui/badge";
 import { AdaptiveTooltip } from "../components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 // Импорт для сжатия изображений и конвертации PDF
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
@@ -82,6 +83,13 @@ function PropertyDetail() {
   // Мобильное обнаружение
   const [isMobile, setIsMobile] = useState(false);
   const [roiPercent, setRoiPercent] = useState(null);
+
+  // Чаты по объекту (созданные в iOS)
+  const [agentChats, setAgentChats] = useState([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -585,6 +593,92 @@ function PropertyDetail() {
     }).format(price);
   };
 
+  // Загрузка списка чатов по объекту (из iOS) для агента, создавшего объект
+  useEffect(() => {
+    async function loadAgentChats() {
+      try {
+        if (!property?.addedByAgent || !property?.createdBy || !id) return;
+        const chatsCol = collection(db, 'agents', property.createdBy, 'chats');
+        const q = query(chatsCol, where('propertyId', '==', id));
+        const snap = await getDocs(q);
+        const chats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Сортировка: по timestamp убыв.
+        chats.sort((a, b) => {
+          const tA = a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0;
+          const tB = b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0;
+          return tB - tA;
+        });
+        setAgentChats(chats);
+      } catch (e) {
+        console.error('Failed to load agent chats', e);
+      }
+    }
+    loadAgentChats();
+  }, [property, id]);
+
+  const openChatViewer = async (chat) => {
+    try {
+      setSelectedChat(chat);
+      setIsChatOpen(true);
+      setIsChatLoading(true);
+      const agentMsgsQ = query(collection(db, 'agents', property.createdBy, 'chats', chat.id, 'messages'), orderBy('timestamp', 'asc'));
+      const agentMsgsSnap = await getDocs(agentMsgsQ);
+      const agentMsgs = agentMsgsSnap.docs.map(d => ({ id: `a:${d.id}`, source: 'agent', ...d.data() }));
+      let allMsgs = agentMsgs;
+      if (chat.clientUserId) {
+        try {
+          const clientMsgsQ = query(collection(db, 'agents', chat.clientUserId, 'chats', chat.id, 'messages'), orderBy('timestamp', 'asc'));
+          const clientMsgsSnap = await getDocs(clientMsgsQ);
+          const clientMsgs = clientMsgsSnap.docs.map(d => ({ id: `c:${d.id}`, source: 'client', ...d.data() }));
+          allMsgs = [...agentMsgs, ...clientMsgs];
+        } catch (e) {
+          console.warn('Failed to load client side messages', e);
+        }
+      }
+      // Дедупликация одинаковых сообщений, дублированных в коллекциях агента и клиента
+      const toSecond = (ts) => {
+        try {
+          return ts?.toDate ? Math.floor(ts.toDate().getTime() / 1000) : 0;
+        } catch { return 0; }
+      };
+      const buildKey = (m) => {
+        const senderId = m.sender_id || m.senderId || '';
+        const role = m.sender_role || '';
+        const text = m.text || '';
+        const prop = m.propertyId || '';
+        const sec = toSecond(m.timestamp);
+        return `${senderId}__${role}__${text}__${prop}__${sec}`;
+      };
+      const uniqueMap = new Map();
+      for (const m of allMsgs) {
+        const key = buildKey(m);
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, m);
+        } else {
+          const existing = uniqueMap.get(key);
+          // Предпочитаем копию из коллекции агента
+          const isExistingAgent = existing?.source === 'agent' || String(existing?.id || '').startsWith('a:');
+          const isCurrentAgent = m?.source === 'agent' || String(m?.id || '').startsWith('a:');
+          if (!isExistingAgent && isCurrentAgent) {
+            uniqueMap.set(key, m);
+          }
+        }
+      }
+      allMsgs = Array.from(uniqueMap.values());
+      allMsgs.sort((m1, m2) => {
+        const t1 = m1.timestamp?.toDate ? m1.timestamp.toDate().getTime() : 0;
+        const t2 = m2.timestamp?.toDate ? m2.timestamp.toDate().getTime() : 0;
+        return t1 - t2;
+      });
+      setChatMessages(allMsgs);
+    } catch (e) {
+      console.error('Failed to load chat messages', e);
+      setChatMessages([]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
 
 
   // Добавляем списки значений для выпадающих списков
@@ -592,6 +686,7 @@ function PropertyDetail() {
     { value: "Вилла", label: t.propertyDetail.typeOptions.villa },
     { value: "Апартаменты", label: t.propertyDetail.typeOptions.apartment },
     { value: "Дом", label: t.propertyDetail.typeOptions.house },
+    { value: "Дюплекс", label: t.propertyDetail.typeOptions.duplex },
     { value: "Коммерческая недвижимость", label: t.propertyDetail.typeOptions.commercial },
     { value: "Апарт-вилла", label: t.propertyDetail.typeOptions.apartVilla },
     { value: "Таунхаус", label: t.propertyDetail.typeOptions.townhouse },
@@ -1169,10 +1264,10 @@ function PropertyDetail() {
     <div className="max-w-2xl mx-auto p-4">
       {/* Кнопка добавления фотографий */}
       {canEdit() && (
-        <div className="mb-4">
+        <div className={`mb-4 ${isMobile ? 'flex flex-col gap-2' : 'flex items-center justify-between gap-2'}`}>
           <button
             onClick={handleImageUpload}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 ${isMobile ? 'w-full h-12 justify-center' : ''}`}
             disabled={uploadingImages}
           >
             {uploadingImages ? (
@@ -1184,6 +1279,42 @@ function PropertyDetail() {
               </>
             )}
           </button>
+          {isEditing ? (
+            <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
+              <button
+                onClick={toggleListingStatus}
+                className={`px-4 py-2 rounded-lg text-white ${
+                  property.isHidden
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                } ${isMobile ? 'w-full h-12' : ''}`}
+              >
+                {property.isHidden ? t.propertyDetail.returnToListing : t.propertyDetail.removeFromListing}
+              </button>
+              <button
+                onClick={handleCancel}
+                className={`px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 ${isMobile ? 'w-full h-12' : ''}`}
+              >
+                {t.propertyDetail.cancelButton}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!hasChanges}
+                className={`px-4 py-2 rounded-lg text-white ${
+                  hasChanges ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
+                } ${isMobile ? 'w-full h-12' : ''}`}
+              >
+                {t.propertyDetail.saveButton}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
+            >
+              {t.propertyDetail.editButton}
+            </button>
+          )}
         </div>
       )}
 
@@ -1839,49 +1970,37 @@ function PropertyDetail() {
         </div>
       </div>
 
-      {/* Кнопки редактирования */}
-      {canEdit() && (
-        <div className={`mt-8 ${isMobile ? 'flex flex-col gap-4' : 'flex justify-end gap-4'}`}>
-          {isEditing ? (
-            <>
-              <button
-                onClick={toggleListingStatus}
-                className={`px-4 py-2 rounded-lg text-white ${
-                  property.isHidden
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : "bg-red-600 hover:bg-red-700"
-                } ${isMobile ? 'w-full h-12' : ''}`}
-              >
-                {property.isHidden ? t.propertyDetail.returnToListing : t.propertyDetail.removeFromListing}
-              </button>
-              <button
-                onClick={handleCancel}
-                className={`px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 ${isMobile ? 'w-full h-12' : ''}`}
-              >
-                {t.propertyDetail.cancelButton}
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={!hasChanges}
-                className={`px-4 py-2 rounded-lg text-white ${
-                  hasChanges
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : "bg-gray-400 cursor-not-allowed"
-                } ${isMobile ? 'w-full h-12' : ''}`}
-              >
-                {t.propertyDetail.saveButton}
-              </button>
-            </>
+      {/* Чаты по объекту (iOS) */}
+      {property.addedByAgent && agentChats && (
+        <div className="mt-8">
+          <h3 className="text-xl font-bold text-gray-800 mb-3">{t.propertyDetail.agentChatsTitle || 'Чаты по объекту'}</h3>
+          {agentChats.length === 0 ? (
+            <div className="text-sm text-gray-500">{t.propertyDetail.noChats || 'Чатов по объекту пока нет'}</div>
           ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
-            >
-              {t.propertyDetail.editButton}
-            </button>
+            <div className="flex flex-col gap-2">
+              {agentChats.map(chat => (
+                <button
+                  key={chat.id}
+                  onClick={() => openChatViewer(chat)}
+                  className="flex items-center justify-between w-full px-4 py-2 border rounded-lg hover:bg-gray-50 text-left"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-800">{chat.chatName || 'Чат'}</span>
+                    <span className="text-xs text-gray-500">
+                      {(chat.timestamp?.toDate && chat.timestamp.toDate().toLocaleString()) || ''}
+                      {chat.chatType ? ` • ${chat.chatType}` : ''}
+                    </span>
+                  </div>
+                  <span className="text-xs text-blue-600">{t.propertyDetail.openChat || 'Открыть чат'}</span>
+                </button>
+              ))}
+            </div>
           )}
         </div>
       )}
+
+      {/* Кнопки редактирования */}
+      {/* Управляющие кнопки редактирования перенесены в верхний бар рядом с загрузкой фото */}
 
       {/* LIGHTBOX */}
       {lightbox && (
@@ -1925,6 +2044,42 @@ function PropertyDetail() {
           </div>
         </div>
       )}
+
+      {/* Chat Viewer Dialog */}
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <DialogContent className="max-w-2xl w-full">
+          <DialogHeader>
+            <DialogTitle>{selectedChat?.chatName || t.propertyDetail.chatDialogTitle || 'Переписка'}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 max-h-[70vh] overflow-y-auto space-y-3">
+            {isChatLoading ? (
+              <div className="text-sm text-gray-500">{t.propertyDetail.loadingMessages || 'Загрузка сообщений…'}</div>
+            ) : (
+              (chatMessages.length ? chatMessages : []).map(msg => (
+                <div key={msg.id} className={`flex ${msg.sender_role === 'agent' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] rounded-lg px-3 py-2 ${msg.sender_role === 'agent' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                    <div className="text-[10px] opacity-70 mb-1">
+                      {(msg.sender_name || msg.sender_role || '').toString()}
+                    </div>
+                    {msg.text ? (
+                      <div className="text-sm whitespace-pre-wrap break-words">{msg.text}</div>
+                    ) : msg.propertyId ? (
+                      <div className="text-sm italic text-gray-700">
+                        {t.propertyDetail.propertyCardMessage || 'Карточка объекта'}
+                      </div>
+                    ) : null}
+                    {msg.timestamp?.toDate && (
+                      <div className={`text-[10px] mt-1 ${msg.sender_role === 'agent' ? 'text-white/80' : 'text-gray-500'}`}>
+                        {msg.timestamp.toDate().toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

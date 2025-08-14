@@ -163,6 +163,7 @@ export const translations = {
       premiumFeatures: 'Premium Subscription',
       notifications: 'Notifications',
       publicPage: 'Public Page',
+      agentProperties: 'Agent Properties',
       premiumSubscriptionTooltip: 'Available in premium subscription',
       // CRM System
       crmSystem: 'CRM System',
@@ -179,6 +180,19 @@ export const translations = {
       complexesListTitle: 'Complexes list',
       rentingLabel: 'Renting',
       propertiesListTitle: 'Properties list'
+    },
+
+    // Agent info panel
+    agentInfo: {
+      title: 'Agent',
+      name: 'Name',
+      email: 'Email',
+      role: 'Role',
+      language: 'Language',
+      telegram: 'Telegram',
+      userId: 'User ID',
+      createdAt: 'Created at',
+      notFound: 'Agent info not found'
     },
 
     // Registration Requests Page
@@ -582,10 +596,13 @@ _________________               _________________
       coordinatesLabel: 'Coordinates',
       videoLabel: 'Video',
       tourLabel: '3D Tour',
+      masterPlanLabel: 'Master Plan',
       pricePlaceholder: 'Price in USD',
       descriptionPlaceholder: 'Complex description',
       videoLinkPlaceholder: 'Video link',
       tourLinkPlaceholder: '3D tour link',
+      masterPlanLinkPlaceholder: 'Master plan link',
+      viewMasterPlanButton: 'View Master Plan',
       photoAltText: 'Photo',
       autoCalculatedPriceText: 'Automatically calculated as minimum price among complex objects',
       changesSaved: 'Changes saved',
@@ -681,6 +698,12 @@ _________________               _________________
       updateButton: 'Update',
       uploadButton: 'Upload',
       roiCalculatorButton: 'ROI Calculator',
+      // Agent chats
+      agentChatsTitle: 'Chats for this property',
+      openChat: 'Open chat',
+      chatDialogTitle: 'Conversation',
+      loadingMessages: 'Loading messages…',
+      propertyCardMessage: 'Property card',
       
       // Field labels
       bedrooms: 'Bedrooms',
@@ -727,6 +750,7 @@ _________________               _________________
         villa: 'Villa',
         apartment: 'Apartment',
         house: 'House',
+        duplex: 'Duplex',
         commercial: 'Commercial Property',
         apartVilla: 'Apart-Villa',
         townhouse: 'Townhouse',
@@ -1736,6 +1760,7 @@ _________________               _________________
       premiumFeatures: 'Премиум подписка',
       notifications: 'Рассылка уведомлений',
       publicPage: 'Публичная страница',
+      agentProperties: 'Объекты агентов',
       premiumSubscriptionTooltip: 'Доступно в премиум подписке',
       // CRM System
       crmSystem: 'CRM система',
@@ -1754,6 +1779,19 @@ _________________               _________________
       complexesListTitle: 'Список комплексов',
       rentingLabel: 'Сдается',
       propertiesListTitle: 'Список объектов'
+    },
+
+    // Agent info panel
+    agentInfo: {
+      title: 'Агент',
+      name: 'Имя',
+      email: 'Email',
+      role: 'Роль',
+      language: 'Язык',
+      telegram: 'Telegram',
+      userId: 'ID пользователя',
+      createdAt: 'Создан',
+      notFound: 'Информация об агенте не найдена'
     },
 
     // Registration Requests Page
@@ -2152,10 +2190,13 @@ _________________               _________________
       coordinatesLabel: 'Координаты',
       videoLabel: 'Видео',
       tourLabel: '3D Тур',
+      masterPlanLabel: 'Генплан',
       pricePlaceholder: 'Цена в USD',
       descriptionPlaceholder: 'Описание комплекса',
       videoLinkPlaceholder: 'Ссылка на видео',
       tourLinkPlaceholder: '3D тур ссылка',
+      masterPlanLinkPlaceholder: 'Ссылка на генплан',
+      viewMasterPlanButton: 'Посмотреть генплан',
       photoAltText: 'Фото',
       autoCalculatedPriceText: 'Автоматически рассчитана как минимальная цена среди объектов комплекса',
       changesSaved: 'Изменения сохранены',
@@ -2251,6 +2292,12 @@ _________________               _________________
       updateButton: 'Обновить',
       uploadButton: 'Загрузить',
       roiCalculatorButton: 'Калькулятор ROI',
+      // Agent chats
+      agentChatsTitle: 'Чаты по объекту',
+      openChat: 'Открыть чат',
+      chatDialogTitle: 'Переписка',
+      loadingMessages: 'Загрузка сообщений…',
+      propertyCardMessage: 'Карточка объекта',
       
       // Field labels
       bedrooms: 'Спален',
@@ -2297,6 +2344,7 @@ _________________               _________________
         villa: 'Вилла',
         apartment: 'Апартаменты',
         house: 'Дом',
+        duplex: 'Дюплекс',
         commercial: 'Коммерческая недвижимость',
         apartVilla: 'Апарт-вилла',
         townhouse: 'Таунхаус',
@@ -3306,6 +3354,7 @@ _________________               _________________
       premiumFeatures: 'Langganan Premium',
       notifications: 'Pengiriman Notifikasi',
       publicPage: 'Halaman Publik',
+      agentProperties: 'Properti Agen',
       premiumSubscriptionTooltip: 'Tersedia dalam langganan premium',
       // CRM System
       crmSystem: 'Sistem CRM',
@@ -3324,6 +3373,19 @@ _________________               _________________
       complexesListTitle: 'Daftar kompleks',
       rentingLabel: 'Disewakan',
       propertiesListTitle: 'Daftar properti'
+    },
+
+    // Agent info panel
+    agentInfo: {
+      title: 'Agen',
+      name: 'Nama',
+      email: 'Email',
+      role: 'Peran',
+      language: 'Bahasa',
+      telegram: 'Telegram',
+      userId: 'ID Pengguna',
+      createdAt: 'Dibuat',
+      notFound: 'Info agen tidak ditemukan'
     },
 
     // Registration Requests Page
@@ -3722,10 +3784,13 @@ _________________               _________________
       coordinatesLabel: 'Koordinat',
       videoLabel: 'Video',
       tourLabel: '3D Tur',
+      masterPlanLabel: 'Rencana Induk',
       pricePlaceholder: 'Harga dalam USD',
       descriptionPlaceholder: 'Deskripsi kompleks',
       videoLinkPlaceholder: 'Tautan video',
       tourLinkPlaceholder: 'Tautan tur 3D',
+      masterPlanLinkPlaceholder: 'Tautan rencana induk',
+      viewMasterPlanButton: 'Lihat Rencana Induk',
       photoAltText: 'Foto',
       autoCalculatedPriceText: 'Otomatis dihitung sebagai harga minimum di antara objek kompleks',
       changesSaved: 'Perubahan disimpan',
@@ -3821,6 +3886,12 @@ _________________               _________________
       updateButton: 'Update',
       uploadButton: 'Upload',
       roiCalculatorButton: 'Kalkulator ROI',
+      // Agent chats
+      agentChatsTitle: 'Obrolan untuk properti ini',
+      openChat: 'Buka obrolan',
+      chatDialogTitle: 'Percakapan',
+      loadingMessages: 'Memuat pesan…',
+      propertyCardMessage: 'Kartu properti',
       
       // Field labels
       bedrooms: 'Kamar Tidur',
@@ -3867,6 +3938,7 @@ _________________               _________________
         villa: 'Vila',
         apartment: 'Apartemen',
         house: 'Rumah',
+        duplex: 'Dupleks',
         commercial: 'Properti Komersial',
         apartVilla: 'Apart-Vila',
         townhouse: 'Rumah Teres',

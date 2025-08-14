@@ -13,6 +13,7 @@ const ROUTE_ACCESS = {
     '/support/*',
     '/roi-calculator',
     '/client-fixations',
+    '/agent-properties',
     '/building-progress/*',
     '/settings',
     '/education',
@@ -20,6 +21,7 @@ const ROUTE_ACCESS = {
     '/chessboard',
     '/chessboard/*',
     '/referral-map',
+    '/public-agent-page/*',
     '/general-overview',
     '/users/manage',
     '/dashboard',
@@ -27,12 +29,14 @@ const ROUTE_ACCESS = {
   'premium agent': [
     '/property/gallery',
     '/building-progress/*',
-    '/roi-calculator'
+    '/roi-calculator',
+    '/public-agent-page/*'
   ],
   agent: [
     '/property/gallery',
     '/building-progress/*',
-    '/roi-calculator'
+    '/roi-calculator',
+    '/public-agent-page/*'
   ],
   застройщик: [
     '/property/gallery',
@@ -49,7 +53,8 @@ const ROUTE_ACCESS = {
     '/education/*',
     '/premium-features',
     '/notifications',
-    '/public-page'
+    '/public-page',
+    '/public-agent-page/*'
   ],
   'премиум застройщик': [
     '/property/gallery',
@@ -66,7 +71,8 @@ const ROUTE_ACCESS = {
     '/education/*',
     '/premium-features',
     '/notifications',
-    '/public-page'
+    '/public-page',
+    '/public-agent-page/*'
   ],
   user: [
     '/property/gallery',
@@ -90,6 +96,9 @@ const DEFAULT_ROUTES = {
 const ProtectedRoute = ({ children, isPublic = false }) => {
   const { currentUser, role } = useAuth();
 
+  // Текущий путь нужен для обработки специальных редиректов
+  const currentPath = window.location.pathname;
+
   // Для публичных маршрутов
   if (isPublic) {
     // Если пользователь авторизован, перенаправляем на дашборд
@@ -102,6 +111,10 @@ const ProtectedRoute = ({ children, isPublic = false }) => {
 
   // Для защищенных маршрутов
   if (!currentUser) {
+    // Специальный случай: агентская публичная страница должна вести на страницу авторизации агентов
+    if (currentPath.startsWith('/public-agent-page')) {
+      return <Navigate to={`/public-agent-auth?redirect=${encodeURIComponent(currentPath)}`} />;
+    }
     return <Navigate to="/" />;
   }
 
@@ -111,7 +124,7 @@ const ProtectedRoute = ({ children, isPublic = false }) => {
   }
 
   // Получаем текущий путь
-  const currentPath = window.location.pathname;
+  // const currentPath = window.location.pathname;
   
   // Добавляем отладочную информацию
   console.log('ProtectedRoute Debug:', {

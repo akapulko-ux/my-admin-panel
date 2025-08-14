@@ -313,28 +313,22 @@ function PublicComplexDetail() {
 
         {/* Ссылки (без заголовка) */}
         <Card className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Видео */}
-            <div>
-              {complex.videoLink && (
-                <Button asChild variant="outline" className={`w-full ${isMobile ? 'h-12' : ''}`}>
-                  <a href={complex.videoLink} target="_blank" rel="noopener noreferrer">
-                    {t.complexDetail?.watchVideoButton}
-                  </a>
-                </Button>
-              )}
-            </div>
-            {/* 3D тур */}
-            <div>
-              {complex.threeDTour && (
-                <Button asChild variant="outline" className={`w-full ${isMobile ? 'h-12' : ''}`}>
-                  <a href={complex.threeDTour} target="_blank" rel="noopener noreferrer">
-                    {t.complexDetail?.view3DTourButton}
-                  </a>
-                </Button>
-              )}
-            </div>
-          </div>
+          {(() => {
+            const links = [];
+            if (complex.videoLink) links.push({ href: complex.videoLink, label: t.complexDetail?.watchVideoButton });
+            if (complex.threeDTour) links.push({ href: complex.threeDTour, label: t.complexDetail?.view3DTourButton });
+            if (complex.masterPlanLink) links.push({ href: complex.masterPlanLink, label: t.complexDetail?.viewMasterPlanButton });
+            if (links.length === 0) return null;
+            return (
+              <div className="grid grid-cols-2 gap-4">
+                {links.map((item, idx) => (
+                  <Button key={idx} asChild variant="outline" className={`w-full ${isMobile ? 'h-12' : ''}`}>
+                    <a href={item.href} target="_blank" rel="noopener noreferrer">{item.label}</a>
+                  </Button>
+                ))}
+              </div>
+            );
+          })()}
         </Card>
 
         {/* Ссылки: Шахматка + Публичный прогресс */}

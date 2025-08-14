@@ -585,7 +585,12 @@ function EditComplex() {
                     { value: "RDTR Wilayah Perencanaan Geopark Batur", label: "RDTR Wilayah Perencanaan Geopark Batur" },
                     { value: "RDTR Kecamatan Sukawati", label: "RDTR Kecamatan Sukawati" },
                     { value: "RDTR Kecamatan Payangan", label: "RDTR Kecamatan Payangan" },
-                    { value: "RDTR Kecamatan Tegallalang", label: "RDTR Kecamatan Tegallalang" }
+                    { value: "RDTR Kecamatan Tegallalang", label: "RDTR Kecamatan Tegallalang" },
+                    { value: "RDTR WP Utara", label: "RDTR WP Utara" },
+                    { value: "RDTR WP Tengah", label: "RDTR WP Tengah" },
+                    { value: "RDTR WP Barat", label: "RDTR WP Barat" },
+                    { value: "RDTR WP Timur", label: "RDTR WP Timur" },
+                    { value: "RDTR WP Selatan", label: "RDTR WP Selatan" }
                   ]}
                 />
               </div>

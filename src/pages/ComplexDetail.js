@@ -10,7 +10,6 @@ import { translateDistrict } from "../lib/utils";
 import {
   Building2,
   FileText,
-  Layers,
   ArrowLeft,
   Edit2,
   Save,
@@ -523,50 +522,7 @@ function ComplexDetail() {
             {complex?.name || "Загрузка..."}
           </h1>
         </div>
-        {canEdit() && (
-          <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
-            {isEditing ? (
-              <>
-                <Button
-                  onClick={toggleListingStatus}
-                  variant="outline"
-                  className={`gap-2 ${isMobile ? 'w-full h-12' : ''} ${
-                    complex.isHidden
-                      ? "text-blue-600 border-blue-600 hover:bg-blue-50"
-                      : "text-red-600 border-red-600 hover:bg-red-50"
-                  }`}
-                >
-                  {complex.isHidden ? t.complexDetail.returnToListing : t.complexDetail.removeFromListing}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
-                >
-                  <X className="h-4 w-4" />
-                  {t.complexDetail.cancelButton}
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
-                  disabled={!hasChanges}
-                >
-                  <Save className="h-4 w-4" />
-                  {t.complexDetail.saveButton}
-                </Button>
-              </>
-            ) : (
-              <Button
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
-              >
-                <Edit2 className="h-4 w-4" />
-                {t.complexDetail.editButton}
-              </Button>
-            )}
-          </div>
-        )}
+        {/* Перенесен блок редактирования ниже к кнопке добавления фото */}
       </div>
 
       {/* Бейдж "Убран из листинга" */}
@@ -579,24 +535,68 @@ function ComplexDetail() {
         </div>
       )}
 
-      {/* Кнопка загрузки фотографий */}
+      {/* Строка действий: слева Добавить фото / PDF, справа Редактировать/Сохранить */}
       {canEdit() && (
-        <div className="mb-4">
-          <Button
-            onClick={handleImageUpload}
-            variant="outline"
-            className={`gap-2 ${isMobile ? 'w-full h-12' : ''}`}
-            disabled={uploading}
-          >
-            {uploading ? (
-              t.complexDetail.uploadingText
-            ) : (
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <Button
+              onClick={handleImageUpload}
+              variant="outline"
+              className={`gap-2 h-12`}
+              disabled={uploading}
+            >
+              {uploading ? (
+                t.complexDetail.uploadingText
+              ) : (
+                <>
+                  <Camera className="h-4 w-4" />
+                  {t.complexDetail.addPhotoButton}
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            {isEditing ? (
               <>
-                <Camera className="h-4 w-4" />
-                {t.complexDetail.addPhotoButton}
+                <Button
+                  onClick={toggleListingStatus}
+                  variant="outline"
+                  className={`gap-2 h-12 ${
+                    complex.isHidden
+                      ? "text-blue-600 border-blue-600 hover:bg-blue-50"
+                      : "text-red-600 border-red-600 hover:bg-red-50"
+                  }`}
+                >
+                  {complex.isHidden ? t.complexDetail.returnToListing : t.complexDetail.removeFromListing}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  className={`gap-2 h-12`}
+                >
+                  <X className="h-4 w-4" />
+                  {t.complexDetail.cancelButton}
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  className={`gap-2 h-12`}
+                  disabled={!hasChanges}
+                >
+                  <Save className="h-4 w-4" />
+                  {t.complexDetail.saveButton}
+                </Button>
               </>
+            ) : (
+              <Button
+                onClick={() => setIsEditing(true)}
+                variant="outline"
+                className={`gap-2 h-12`}
+              >
+                <Edit2 className="h-4 w-4" />
+                {t.complexDetail.editButton}
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
       )}
 
@@ -1055,10 +1055,6 @@ function ComplexDetail() {
 
       {/* Ссылки и документы */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Layers className="h-5 w-5" />
-          {t.complexDetail.linksAndDocuments}
-        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Видео */}
           <div className="space-y-2">
@@ -1122,6 +1118,40 @@ function ComplexDetail() {
                   <span>
                     <Globe className="h-4 w-4 mr-2" />
                     {t.complexDetail.view3DTourButton}
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
+
+          {/* Master Plan */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-600">{t.complexDetail.masterPlanLabel}</Label>
+            {isEditing && canEdit() ? (
+              <Input
+                type="text"
+                value={editedValues.masterPlanLink !== undefined ? editedValues.masterPlanLink : complex.masterPlanLink || ''}
+                onChange={(e) => handleValueChange('masterPlanLink', e.target.value)}
+                className="w-full mb-2"
+                placeholder={t.complexDetail.masterPlanLinkPlaceholder}
+              />
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`w-full ${isMobile ? 'h-12' : ''}`}
+                asChild={!!complex.masterPlanLink}
+                disabled={!complex.masterPlanLink}
+              >
+                {complex.masterPlanLink ? (
+                  <a href={complex.masterPlanLink} target="_blank" rel="noopener noreferrer">
+                    <FileText className="h-4 w-4 mr-2" />
+                    {t.complexDetail.viewMasterPlanButton}
+                  </a>
+                ) : (
+                  <span>
+                    <FileText className="h-4 w-4 mr-2" />
+                    {t.complexDetail.viewMasterPlanButton}
                   </span>
                 )}
               </Button>

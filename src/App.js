@@ -92,11 +92,14 @@ import Settings from "./pages/Settings";
 import PremiumFeatures from "./pages/PremiumFeatures";
 import Notifications from "./pages/Notifications";
 import PublicPage from "./pages/PublicPage";
+import PublicPageAgent from "./pages/PublicPageAgent";
+import PublicAgentAuth from "./pages/PublicAgentAuth";
 import PublicPropertiesGallery from "./pages/PublicPropertiesGallery";
 import PublicComplexDetail from "./pages/PublicComplexDetail";
 import PublicPropertyDetail from "./pages/PublicPropertyDetail";
 import PublicAdminLikePropertyDetail from "./pages/PublicAdminLikePropertyDetail";
 import ClientLeads from "./pages/ClientLeads";
+import AgentProperties from "./pages/AgentProperties";
 
 // CRM система
 import CrmDeals from "./pages/CrmDeals";
@@ -233,6 +236,8 @@ function App() {
               <Route path="/public" element={<PublicPropertiesGallery />} />
               <Route path="/public/complex/:id" element={<PublicComplexDetail />} />
               <Route path="/public/property/:id" element={<PublicPropertyDetail />} />
+              <Route path="/public-agent-page/:developerId" element={<ProtectedRoute><PublicPageAgent /></ProtectedRoute>} />
+              <Route path="/public-agent-auth" element={<PublicAgentAuth />} />
               <Route path="/public/complex-property/:id" element={<PublicAdminLikePropertyDetail />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/roi-calculator" element={<RoiCalculator />} />
@@ -313,6 +318,13 @@ function App() {
                     <Route path="/property/:id" element={
                       <ProtectedRoute>
                         <PropertyDetail />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Объекты агентов */}
+                    <Route path="/agent-properties" element={
+                      <ProtectedRoute>
+                        <AgentProperties />
                       </ProtectedRoute>
                     } />
                     

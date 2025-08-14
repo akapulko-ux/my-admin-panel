@@ -1,18 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useLocation, Navigate } from 'react-router-dom';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import { Building2 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebaseConfig';
-import { collection, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, Timestamp, query, where, onSnapshot } from 'firebase/firestore';
 import { useCache } from '../CacheContext';
 import { translateDistrict } from '../lib/utils';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
-function PublicPage() {
+function PublicPageAgent() {
   const { language } = useLanguage();
   const t = translations[language];
   const { currentUser } = useAuth();
+  const { developerId: routeDeveloperId } = useParams();
+  const location = useLocation();
   const { forceRefreshPropertiesList } = useCache();
 
   const [loading, setLoading] = useState(true);
@@ -21,10 +24,11 @@ function PublicPage() {
   const [complexes, setComplexes] = useState([]);
   const [properties, setProperties] = useState([]);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [effectiveDeveloperId, setEffectiveDeveloperId] = useState(null);
+  const [hasPremiumDeveloper, setHasPremiumDeveloper] = useState(null);
   const descriptionParagraphs = useMemo(() => {
     const text = developer?.description || '';
     if (!text) return [];
-    // Разбиваем на абзацы по пустым строкам или переводам строк
     return text
       .split(/\n{2,}|\r?\n/)
       .map((p) => p.trim())
@@ -69,13 +73,11 @@ function PublicPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      // 1) Получаем developerId пользователя и данные застройщика
-      let developerId = null;
-      if (currentUser) {
+      // приоритет: параметр в URL; если нет — берем из профиля
+      let developerId = routeDeveloperId || null;
+      if (!developerId && currentUser) {
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (userDoc.exists()) {
-          developerId = userDoc.data().developerId || null;
-        }
+        if (userDoc.exists()) developerId = userDoc.data().developerId || null;
       }
 
       let developerData = null;
@@ -86,8 +88,8 @@ function PublicPage() {
         }
       }
       setDeveloper(developerData);
+      setEffectiveDeveloperId(developerId || null);
 
-      // 2) Загружаем комплексы застройщика (по developerId, а также по имени как запасной вариант)
       let complexesData = [];
       const snapAll = await getDocs(collection(db, 'complexes'));
       snapAll.forEach((docSnap) => {
@@ -96,7 +98,6 @@ function PublicPage() {
         const matchesByName = developerData?.name && c.developer === developerData.name;
         if (matchesById || matchesByName) complexesData.push(c);
       });
-      // Сортируем по номеру комплекса по возрастанию
       complexesData.sort((a, b) => {
         const aNum = parseInt(a.number, 10) || 0;
         const bNum = parseInt(b.number, 10) || 0;
@@ -104,19 +105,38 @@ function PublicPage() {
       });
       setComplexes(complexesData);
 
-      // 3) Загружаем объекты для расчёта минимальной цены
       const propsData = await forceRefreshPropertiesList();
       setProperties(propsData);
     } catch (e) {
-      console.error('PublicPage: load error', e);
+      console.error('PublicPageAgent: load error', e);
     } finally {
       setLoading(false);
     }
-  }, [currentUser, forceRefreshPropertiesList]);
+  }, [currentUser, forceRefreshPropertiesList, routeDeveloperId]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Live-проверка наличия пользователя с ролью "премиум застройщик" у выбранного застройщика
+  useEffect(() => {
+    if (!effectiveDeveloperId) {
+      setHasPremiumDeveloper(null);
+      return;
+    }
+    const q = query(
+      collection(db, 'users'),
+      where('developerId', '==', effectiveDeveloperId),
+      where('role', '==', 'премиум застройщик')
+    );
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setHasPremiumDeveloper(!snap.empty);
+    }, (err) => {
+      console.error('PublicPageAgent: premium developer check error', err);
+      setHasPremiumDeveloper(false);
+    });
+    return () => unsubscribe();
+  }, [effectiveDeveloperId]);
 
   if (loading) {
     return (
@@ -126,52 +146,23 @@ function PublicPage() {
     );
   }
 
+  // Закрываем доступ ко всей странице, если у застройщика нет ни одного пользователя с ролью "премиум застройщик"
+  if (effectiveDeveloperId && hasPremiumDeveloper === false) {
+    return <Navigate to="/access-closed" />;
+  }
+
+  if (!currentUser) {
+    return <Navigate to={`/public-agent-auth?redirect=${encodeURIComponent(location.pathname)}`} />;
+  }
+
   return (
     <div className="bg-white min-h-screen">
       <div className={`mx-auto space-y-6 p-4 ${isMobile ? 'max-w-full' : 'max-w-5xl'}`}>
-        {/* Шапка застройщика */}
-        {/* Кнопки и логотип+название */}
+        <div className="flex items-center justify-end">
+          <LanguageSwitcher />
+        </div>
+        {/* Логотип+название без загрузки обложки */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <button
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800"
-                onClick={async () => {
-                  try {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'image/*';
-                    input.onchange = async (e) => {
-                      const file = e.target.files && e.target.files[0];
-                      if (!file || !currentUser) return;
-                      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                      const developerId = userDoc.exists() ? userDoc.data().developerId : null;
-                      if (!developerId) return;
-                      const { uploadToFirebaseStorageInFolder } = await import('../utils/firebaseStorage');
-                      const url = await uploadToFirebaseStorageInFolder(file, 'developers/covers');
-                      await (await import('firebase/firestore')).updateDoc(doc(db, 'developers', developerId), { coverUrl: url });
-                      setDeveloper((prev) => prev ? { ...prev, coverUrl: url } : prev);
-                    };
-                    input.click();
-                  } catch (e) {
-                    console.error('Upload cover error', e);
-                  }
-                }}
-              >
-                {t.publicPage?.uploadCover || 'Загрузить обложку'}
-              </button>
-            </div>
-            <Link
-              to={developer?.id ? `/public-agent-page/${developer.id}` : '/public-agent-page/unknown'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {t.publicPage?.agentLink || 'Ссылка для агентов'}
-            </Link>
-          </div>
-
-          {/* Обложка на всю ширину */}
           {developer?.coverUrl && (
             <div className="w-full">
               <img src={developer.coverUrl} alt="cover" className="w-full max-h-[360px] object-cover rounded-xl" />
@@ -233,7 +224,6 @@ function PublicPage() {
                     <span className={`font-semibold leading-none text-black ${isMobile ? 'text-base' : 'text-lg'}`}>
                       {complex.name || t.complexesGallery?.noNameText || 'Без названия'}
                     </span>
-                    {/* Номер комплекса скрыт по требованию */}
                     {complex.completionDate && (
                       <span className="text-sm">
                         {(t.publicPage?.rentingLabel || 'Сдается') + ': '} {safeDisplay(complex.completionDate)}
@@ -244,7 +234,6 @@ function PublicPage() {
                         {t.complexesGallery?.districtPrefix} {translateDistrict(safeDisplay(complex.district), language)}
                       </span>
                     )}
-                    {/* Цена от - выводим последним */}
                     {(() => {
                       const minPrice = getMinPriceForComplex(complex.name);
                       return minPrice ? (
@@ -268,4 +257,6 @@ function PublicPage() {
   );
 }
 
-export default PublicPage; 
+export default PublicPageAgent;
+
+
