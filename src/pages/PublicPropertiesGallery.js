@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, getDocs, where, query, collection } from "firebase/firestore";
-import { Building2, Search, Filter, ChevronDown, X as XIcon } from "lucide-react";
+import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCache } from "../CacheContext";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { translateDistrict, translatePropertyType, translateConstructionStatus } from "../lib/utils";
+import { landingTranslations } from "../lib/landingTranslations";
 
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -20,11 +21,15 @@ import {
 } from "../components/ui/collapsible";
 import { Badge } from "../components/ui/badge";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import PropertyPlacementModal from "../components/PropertyPlacementModal";
 
 function PublicPropertiesGallery() {
   const { forceRefreshPropertiesList } = useCache();
   const { language } = useLanguage();
   const t = translations[language];
+  const lt = landingTranslations[language];
+  
+  const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
 
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -238,13 +243,35 @@ function PublicPropertiesGallery() {
   return (
     <div className="bg-white min-h-screen">
       <div className={`mx-auto space-y-4 p-4 ${isMobile ? "max-w-full" : "max-w-4xl"}`}>
-        {/* Заголовок и переключатель языка в одной строке */}
+        {/* Заголовок, кнопка размещения объекта и переключатель языка в одной строке */}
         <div className="flex items-center justify-between gap-3">
           <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
-            {t.navigation?.publicInvestorTitle || 'Инвестор Бали'}
+            {t.navigation?.publicInvestorTitle || 'IT AGENT BALI'}
           </h1>
-          <LanguageSwitcher />
+          <div className="flex items-center gap-3">
+            {!isMobile && (
+              <Button 
+                onClick={() => setIsPlacementModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {lt.placePropertyTitle}
+              </Button>
+            )}
+            <LanguageSwitcher />
+          </div>
         </div>
+        
+        {/* Кнопка размещения объекта на отдельной строке для мобильных устройств */}
+        {isMobile && (
+          <Button 
+            onClick={() => setIsPlacementModalOpen(true)}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {lt.placePropertyTitle}
+          </Button>
+        )}
 
         <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
           <div className="relative flex-1">
@@ -480,6 +507,12 @@ function PublicPropertiesGallery() {
           ))
         )}
       </div>
+      
+      {/* Модальное окно размещения объекта */}
+      <PropertyPlacementModal 
+        isOpen={isPlacementModalOpen}
+        onClose={() => setIsPlacementModalOpen(false)}
+      />
     </div>
   );
 }

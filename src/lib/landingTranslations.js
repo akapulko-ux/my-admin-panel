@@ -91,7 +91,26 @@ export const landingTranslations = {
     invalidEmail: "Invalid email format",
     userNotFound: "User with this email not found",
     resetError: "Error sending password reset email: ",
-    requestError: "Failed to send request. Please check your internet connection and try again."
+    requestError: "Failed to send request. Please check your internet connection and try again.",
+    
+    // Property Placement Modal
+    placePropertyTitle: "Place Property",
+    placePropertyDescription: "Are you a realtor and already using the IT Agent app? Log in with your credentials",
+    loginTab: "Login",
+    registrationTab: "Registration Request",
+    email: "Email",
+    modalPassword: "Password",
+    loginButton: "Login",
+    registrationDescription: "Are you a realtor but not yet registered in the IT Agent app? {link}",
+    submitRegistrationRequest: "Submit Registration Request",
+    modalName: "Name",
+    modalPhone: "Phone",
+    status: "Status",
+    statusAgent: "Agent",
+    statusAgency: "Agency",
+    modalSubmitRequest: "Submit Request",
+    backButton: "Back",
+    registrationTitle: "Registration Request in IT Agent"
   },
   ru: {
     // Header
@@ -185,7 +204,26 @@ export const landingTranslations = {
     invalidEmail: "Неверный формат email адреса",
     userNotFound: "Пользователь с таким email не найден",
     resetError: "Ошибка при отправке email для сброса пароля: ",
-    requestError: "Не удалось отправить заявку. Пожалуйста, проверьте подключение к интернету и попробуйте снова."
+    requestError: "Не удалось отправить заявку. Пожалуйста, проверьте подключение к интернету и попробуйте снова.",
+    
+    // Property Placement Modal
+    placePropertyTitle: "Разместить объект",
+    placePropertyDescription: "Вы риелтор и уже пользуетесь приложением IT Agent? Авторизуйтесь с вашими учетными данными",
+    loginTab: "Вход",
+    registrationTab: "Заявка на регистрацию",
+    email: "Email",
+    modalPassword: "Пароль",
+    loginButton: "Войти",
+    registrationDescription: "Вы риелтор, но всё ещё не зарегистрированы в приложении IT Agent? {link}",
+    submitRegistrationRequest: "Подать заявку на регистрацию",
+    modalName: "Имя",
+    modalPhone: "Телефон",
+    status: "Статус",
+    statusAgent: "Агент",
+    statusAgency: "Агентство",
+    modalSubmitRequest: "Подать заявку",
+    backButton: "Назад",
+    registrationTitle: "Заявка на регистрацию в IT Agent"
   },
   id: {
     // Header
@@ -279,6 +317,25 @@ export const landingTranslations = {
     invalidEmail: "Format email tidak valid",
     userNotFound: "Pengguna dengan email ini tidak ditemukan",
     resetError: "Kesalahan mengirim email pengaturan ulang kata sandi: ",
-    requestError: "Gagal mengirim permintaan. Silakan periksa koneksi internet Anda dan coba lagi."
+    requestError: "Gagal mengirim permintaan. Silakan periksa koneksi internet Anda dan coba lagi.",
+    
+    // Property Placement Modal
+    placePropertyTitle: "Tempatkan Properti",
+    placePropertyDescription: "Apakah Anda agen real estate dan sudah menggunakan aplikasi IT Agent? Masuk dengan kredensial Anda",
+    loginTab: "Masuk",
+    registrationTab: "Permintaan Pendaftaran",
+    email: "Email",
+    modalPassword: "Kata Sandi",
+    loginButton: "Masuk",
+    registrationDescription: "Apakah Anda agen real estate tetapi belum terdaftar di aplikasi IT Agent? {link}",
+    submitRegistrationRequest: "Ajukan Permintaan Pendaftaran",
+    modalName: "Nama",
+    modalPhone: "Telepon",
+    status: "Status",
+    statusAgent: "Agen",
+    statusAgency: "Agensi",
+    modalSubmitRequest: "Ajukan Permintaan",
+    backButton: "Kembali",
+    registrationTitle: "Permintaan Pendaftaran di IT Agent"
   }
 }; 
