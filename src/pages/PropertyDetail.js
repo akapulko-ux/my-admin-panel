@@ -183,6 +183,28 @@ function PropertyDetail() {
     }
   };
 
+  // Функция для изменения статуса модерации
+  const toggleModerationStatus = async () => {
+    try {
+      const newModerationStatus = !property.moderation;
+      await updateDoc(doc(db, "properties", id), {
+        moderation: newModerationStatus,
+        updatedAt: Timestamp.now()
+      });
+
+      // Обновляем локальное состояние
+      setProperty(prev => ({
+        ...prev,
+        moderation: newModerationStatus
+      }));
+
+      toast.success(newModerationStatus ? 'Объект возвращен на модерацию' : 'Объект одобрен');
+    } catch (error) {
+      console.error('Ошибка при изменении статуса модерации:', error);
+      toast.error('Ошибка при изменении статуса модерации');
+    }
+  };
+
   // Функция для обработки изменений значений
   // Функция валидации для документов
   const validateDocumentField = (value) => {
@@ -1397,12 +1419,27 @@ function PropertyDetail() {
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
-            >
-              {t.propertyDetail.editButton}
-            </button>
+            <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
+              <button
+                onClick={() => setIsEditing(true)}
+                className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
+              >
+                {t.propertyDetail.editButton}
+              </button>
+              {/* Кнопка модерации - только для админов и модераторов */}
+              {(role === 'admin' || role === 'moderator') && (
+                <button
+                  onClick={toggleModerationStatus}
+                  className={`px-4 py-2 rounded-lg text-white ${
+                    property.moderation
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'bg-yellow-600 hover:bg-yellow-700'
+                  } ${isMobile ? 'w-full h-12' : ''}`}
+                >
+                  {property.moderation ? 'Одобрить' : 'Вернуть на модерацию'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

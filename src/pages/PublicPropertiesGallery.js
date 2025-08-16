@@ -156,14 +156,28 @@ function PublicPropertiesGallery() {
         return tB - tA;
       });
 
-      const visibleProperties = withComplexInfo.filter((p) => !p?.isHidden && p?.moderation !== true);
+      // Фильтруем объекты: скрытые не показываем никому
+      const notHiddenProperties = withComplexInfo.filter((p) => !p?.isHidden);
+      
+      // Разделяем объекты на обычные и на модерации
+      const normalProperties = notHiddenProperties.filter((p) => p?.moderation !== true);
+      const moderationProperties = notHiddenProperties.filter((p) => p?.moderation === true);
+      
+      // Объекты на модерации показываем только их создателям в начале списка
+      const creatorModerationProperties = moderationProperties.filter((p) => 
+        currentUser && p?.createdBy === currentUser.uid
+      );
+      
+      // Объединяем: сначала объекты на модерации от создателя, потом обычные
+      const visibleProperties = [...creatorModerationProperties, ...normalProperties];
+      
       setProperties(visibleProperties);
     } catch (err) {
       console.error(t.propertiesGallery.dataLoadError || "Ошибка загрузки объектов:", err);
     } finally {
       setLoading(false);
     }
-  }, [forceRefreshPropertiesList, t.propertiesGallery.dataLoadError]);
+  }, [forceRefreshPropertiesList, t.propertiesGallery.dataLoadError, currentUser]);
 
   useEffect(() => {
     fetchProperties();
@@ -435,89 +449,128 @@ function PublicPropertiesGallery() {
             {t.propertiesGallery.emptyStateNoMatches}
           </div>
         ) : (
-          filteredProperties.map((p) => (
-            <Link
-              key={p.id}
-              to={`/public/property/${p.id}`}
-              className={`flex items-stretch hover:bg-gray-50 transition-colors ${
-                isMobile ? "flex-col gap-3 p-3" : "gap-4 p-4"
-              }`}
-            >
+                    filteredProperties.map((p) => {
+            const isOnModeration = p.moderation === true;
+            const isCreator = currentUser && p.createdBy === currentUser.uid;
+            
+            // Если объект на модерации и пользователь не его создатель - не показываем
+            if (isOnModeration && !isCreator) {
+              return null;
+            }
+            
+            // Определяем, активен ли объект (можно ли перейти на страницу)
+            const isActive = !isOnModeration;
+            
+            const cardContent = (
               <div
-                className={`relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 ${
-                  isMobile ? "w-full h-40" : "w-48 h-32 min-w-48"
+                className={`flex items-stretch transition-colors ${
+                  isMobile ? "flex-col gap-3 p-3" : "gap-4 p-4"
+                } ${
+                  isActive 
+                    ? "hover:bg-gray-50 cursor-pointer" 
+                    : "opacity-60 cursor-not-allowed"
                 }`}
               >
-                {p.images?.length ? (
-                  <img
-                    src={p.images[0]}
-                    alt={safeDisplay(p.type) || t.propertiesGallery.propertyAltText}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                    <Building2 className="w-8 h-8" />
-                  </div>
-                )}
-              </div>
+                <div
+                  className={`relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 ${
+                    isMobile ? "w-full h-40" : "w-48 h-32 min-w-48"
+                  }`}
+                >
+                  {p.images?.length ? (
+                    <img
+                      src={p.images[0]}
+                      alt={safeDisplay(p.type) || t.propertiesGallery.propertyAltText}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                      <Building2 className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex flex-col text-gray-900 space-y-1">
-                {/* ВНИМАНИЕ: умышленно НЕ показываем Название объекта, Комплекс и Застройщика */}
+                <div className="flex flex-col text-gray-900 space-y-1">
+                  {/* ВНИМАНИЕ: умышленно НЕ показываем Название объекта, Комплекс и Застройщика */}
 
-                {p.isDeveloperApproved === true && (
-                  <div className="mb-1">
-                    <Badge className="border bg-green-100 text-green-800 border-green-200">
-                      {t.propertyDetail?.serviceVerified || 'Проверено сервисом'}
-                    </Badge>
-                  </div>
-                )}
+                  {p.isDeveloperApproved === true && (
+                    <div className="mb-1">
+                      <Badge className="border bg-green-100 text-green-800 border-green-200">
+                        {t.propertyDetail?.serviceVerified || 'Проверено сервисом'}
+                      </Badge>
+                    </div>
+                  )}
 
-                <span className={isMobile ? "text-base" : "text-lg"}>
-                  <span className="text-gray-600">{t.propertiesGallery.priceLabel}:</span>
-                  <span className="ml-2 font-semibold">{formatPrice(p.price)}</span>
-                </span>
+                  {/* Бейдж "На модерации" для объектов на модерации */}
+                  {isOnModeration && (
+                    <div className="mb-1">
+                      <Badge className="border bg-yellow-100 text-yellow-800 border-yellow-200">
+                        {t.moderation?.onModeration || 'На модерации'}
+                      </Badge>
+                    </div>
+                  )}
 
-                {p.type && (
-                  <span className="text-sm">
-                    <span className="text-gray-600">{t.propertiesGallery.typeLabel}:</span>
-                    <span className="ml-2">{translatePropertyType(safeDisplay(p.type), language)}</span>
+                  <span className={isMobile ? "text-base" : "text-lg"}>
+                    <span className="text-gray-600">{t.propertiesGallery.priceLabel}:</span>
+                    <span className="ml-2 font-semibold">{formatPrice(p.price)}</span>
                   </span>
-                )}
-                {p.area && (
-                  <span className="text-sm">
-                    <span className="text-gray-600">{t.propertiesGallery.areaLabel}:</span>
-                    <span className="ml-2">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>
-                  </span>
-                )}
-                {p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== "" && (
-                  <span className="text-sm">
-                    <span className="text-gray-600">{t.propertiesGallery.bedroomsLabel}:</span>
-                    <span className="ml-2">
-                      {p.bedrooms === 0 ? t.propertiesGallery.studio : safeDisplay(p.bedrooms)}
+
+                  {p.type && (
+                    <span className="text-sm">
+                      <span className="text-gray-600">{t.propertiesGallery.typeLabel}:</span>
+                      <span className="ml-2">{translatePropertyType(safeDisplay(p.type), language)}</span>
                     </span>
-                  </span>
-                )}
-                {p.unitsCount !== undefined && p.unitsCount !== null && p.unitsCount !== "" && (
-                  <span className="text-sm">
-                    <span className="text-gray-600">{t.propertiesGallery.unitsCountText}:</span>
-                    <span className="ml-2">{safeDisplay(p.unitsCount)}</span>
-                  </span>
-                )}
-                {p.status && (
-                  <span className="text-sm">
-                    <span className="text-gray-600">{t.propertiesGallery.statusLabel}:</span>
-                    <span className="ml-2">{translateConstructionStatus(safeDisplay(p.status), language)}</span>
-                  </span>
-                )}
-                {p.district && (
-                  <span className="text-sm">
-                    <span className="text-gray-600">{t.propertiesGallery.districtLabel}:</span>
-                    <span className="ml-2">{translateDistrict(safeDisplay(p.district), language)}</span>
-                  </span>
-                )}
+                  )}
+                  {p.area && (
+                    <span className="text-sm">
+                      <span className="text-gray-600">{t.propertiesGallery.areaLabel}:</span>
+                      <span className="ml-2">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>
+                    </span>
+                  )}
+                  {p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== "" && (
+                    <span className="text-sm">
+                      <span className="text-gray-600">{t.propertiesGallery.bedroomsLabel}:</span>
+                      <span className="ml-2">
+                        {p.bedrooms === 0 ? t.propertiesGallery.studio : safeDisplay(p.bedrooms)}
+                      </span>
+                    </span>
+                  )}
+                  {p.unitsCount !== undefined && p.unitsCount !== null && p.unitsCount !== "" && (
+                    <span className="text-sm">
+                      <span className="text-gray-600">{t.propertiesGallery.unitsCountText}:</span>
+                      <span className="ml-2">{safeDisplay(p.unitsCount)}</span>
+                    </span>
+                  )}
+                  {p.status && (
+                    <span className="text-sm">
+                      <span className="text-gray-600">{t.propertiesGallery.statusLabel}:</span>
+                      <span className="ml-2">{translateConstructionStatus(safeDisplay(p.status), language)}</span>
+                    </span>
+                  )}
+                  {p.district && (
+                    <span className="text-sm">
+                      <span className="text-gray-600">{t.propertiesGallery.districtLabel}:</span>
+                      <span className="ml-2">{translateDistrict(safeDisplay(p.district), language)}</span>
+                    </span>
+                  )}
+                </div>
               </div>
-            </Link>
-          ))
+            );
+            
+            // Оборачиваем в Link только если объект активен
+            if (isActive) {
+              return (
+                <Link key={p.id} to={`/public/property/${p.id}`}>
+                  {cardContent}
+                </Link>
+              );
+            } else {
+              return (
+                <div key={p.id}>
+                  {cardContent}
+                </div>
+              );
+            }
+          })
         )}
       </div>
       
