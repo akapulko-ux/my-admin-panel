@@ -3163,6 +3163,11 @@ _________________               _________________
         developer: 'Застройщик',
         premiumDeveloper: 'Премиум застройщик',
         user: 'Пользователь'
+      },
+
+      // Moderation
+      moderation: {
+        onModeration: 'На модерации'
       }
     }
   },
@@ -4757,6 +4762,11 @@ _________________               _________________
         developer: 'Pengembang',
         premiumDeveloper: 'Pengembang Premium',
         user: 'Pengguna'
+      },
+
+      // Moderation
+      moderation: {
+        onModeration: 'Sedang Dimoderasi'
       }
     }
   }

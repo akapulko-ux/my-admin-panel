@@ -202,6 +202,15 @@ function AgentProperties() {
                     <Building2 className="w-8 h-8" />
                   </div>
                 )}
+                
+                {/* Бейдж "На модерации" */}
+                {p.moderation === true && (
+                  <div className="absolute top-2 left-2">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                      {translations[language]?.moderation?.onModeration || 'На модерации'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col text-gray-900 space-y-0.5 flex-1">

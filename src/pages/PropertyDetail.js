@@ -91,6 +91,9 @@ function PropertyDetail() {
   const [chatMessages, setChatMessages] = useState([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
+  // Список застройщиков для выбора
+  const [developersList, setDevelopersList] = useState([]);
+
   // Детектор мобильного устройства
   useEffect(() => {
     const checkIfMobile = () => {
@@ -101,6 +104,23 @@ function PropertyDetail() {
     window.addEventListener('resize', checkIfMobile);
     
     return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Загрузка списка застройщиков
+  useEffect(() => {
+    async function loadDevelopers() {
+      try {
+        const snap = await getDocs(collection(db, 'developers'));
+        const names = snap.docs
+          .map(d => (d.data()?.name || '').trim())
+          .filter(Boolean);
+        const unique = Array.from(new Set(names)).sort();
+        setDevelopersList(unique);
+      } catch (e) {
+        console.error('Ошибка загрузки списка застройщиков:', e);
+      }
+    }
+    loadDevelopers();
   }, []);
 
   // Функция для проверки, может ли пользователь редактировать объект
@@ -206,8 +226,15 @@ function PropertyDetail() {
         processedValue = !isNaN(numValue) ? numValue : '';
       }
     }
+    // Специальная обработка для поля leaseYears (годы аренды)
+    else if (field === 'leaseYears') {
+      // Разрешаем цифры, знак + и пустые значения
+      processedValue = value.replace(/[^\d+]/g, '');
+      // Разрешаем пустые значения для возможности полного удаления
+      processedValue = processedValue === '' ? '' : processedValue;
+    }
     // Обработка других числовых полей
-    else if (['price', 'bedrooms', 'bathrooms', 'leaseYears', 'unitsCount'].includes(field)) {
+    else if (['price', 'bedrooms', 'bathrooms', 'unitsCount'].includes(field)) {
       // Убираем все нечисловые символы, кроме цифр
       processedValue = value.replace(/[^\d]/g, '');
       // Разрешаем пустые значения для возможности полного удаления
@@ -574,7 +601,7 @@ function PropertyDetail() {
   };
 
   // Список неизменяемых полей
-  const nonEditableFields = ['district', 'landStatus', 'developer', 'complex', 'pricePerSqm', 'roi'];
+  const nonEditableFields = ['pricePerSqm', 'roi'];
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -762,7 +789,7 @@ function PropertyDetail() {
       return commissionDisplay ? commissionDisplay + '%' : '';
     }
     const sum = Math.round(Number(price) * Number(commission) / 100);
-    return `${commissionDisplay}% (${sum.toLocaleString()})`;
+    return `${commissionDisplay}% ($${sum.toLocaleString()})`;
   };
 
   // Обновляем функцию рендеринга значения
@@ -830,7 +857,7 @@ function PropertyDetail() {
           const commissionDisplay = commissionRaw ? String(commissionRaw).replace(/[%\s]/g, '') : '';
           let sum = '';
           if (commission && !isNaN(Number(commission)) && price && !isNaN(Number(price))) {
-            sum = `${Math.round(Number(price) * Number(commission) / 100).toLocaleString()}`;
+            sum = `$${Math.round(Number(price) * Number(commission) / 100).toLocaleString()}`;
           }
           const options = ['4', '5', '6', '7', '8', '9', '10'];
           return (
@@ -845,9 +872,71 @@ function PropertyDetail() {
                 ))}
               </select>
               {sum && (
-                <div className="text-xs text-gray-500 mt-1">{commissionDisplay}% ({sum})</div>
+                <div className="text-xs text-red-500 mt-1">{commissionDisplay}% ({sum})</div>
               )}
             </div>
+          );
+        }
+
+        // Специальная обработка для поля "Застройщик"
+        if (field === 'developer') {
+          return (
+            <select
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">{t.propertyDetail.notSelected}</option>
+              {developersList.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          );
+        }
+
+        // Специальная обработка для поля "Район"
+        if (field === 'district') {
+          const districtOptions = [
+            "Амед", "Берава", "Будук", "Джимбаран", "Кута", "Кутух", "Кинтамани", "Ловина", "Нуану",
+            "Нуса Дуа", "Пандава", "Переренан", "Санур", "Семиньяк", "Убуд",
+            "Улувату", "Умалас", "Унгасан", "Чангу", "Чемаги",
+            "Гили Траванган", "Ломбок"
+          ];
+          return (
+            <select
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">{t.propertyDetail.notSelected}</option>
+              {districtOptions.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          );
+        }
+
+        // Специальная обработка для поля "Статус земли"
+        if (field === 'landStatus') {
+          const landStatusOptions = [
+            "Туристическая зона (W)",
+            "Торговая зона (K)",
+            "Смешанная зона (C)",
+            "Жилая зона (R)",
+            "Сельхоз зона (P)",
+            "Заповедная зона (RTH)"
+          ];
+          return (
+            <select
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">{t.propertyDetail.notSelected}</option>
+              {landStatusOptions.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
           );
         }
         // Специальная обработка для полей документов с валидацией

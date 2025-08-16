@@ -100,6 +100,7 @@ import PublicPropertyDetail from "./pages/PublicPropertyDetail";
 import PublicAdminLikePropertyDetail from "./pages/PublicAdminLikePropertyDetail";
 import ClientLeads from "./pages/ClientLeads";
 import AgentProperties from "./pages/AgentProperties";
+import AgentPropertyCreate from "./pages/AgentPropertyCreate";
 
 // CRM система
 import CrmDeals from "./pages/CrmDeals";
@@ -239,6 +240,7 @@ function App() {
               <Route path="/public-agent-page/:developerId" element={<ProtectedRoute><PublicPageAgent /></ProtectedRoute>} />
               <Route path="/public-agent-auth" element={<PublicAgentAuth />} />
               <Route path="/public/complex-property/:id" element={<PublicAdminLikePropertyDetail />} />
+              <Route path="/agent-property/create" element={<AgentPropertyCreate />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/roi-calculator" element={<RoiCalculator />} />
               <Route path="/access-closed" element={<AccessClosed />} />
