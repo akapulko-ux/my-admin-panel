@@ -107,6 +107,9 @@ function PropertyCreate() {
   // Мобильное обнаружение
   const [isMobile, setIsMobile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Состояние для галереи фотографий
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -229,7 +232,7 @@ function PropertyCreate() {
     }
     
     if (!property.area || property.area === '') {
-      errors.area = 'Жилая площадь обязательна для заполнения';
+              errors.area = t.propertyDetail.areaPlaceholder.replace(' *', '') + ' обязательна для заполнения';
     }
     
     if (!property.coordinates || property.coordinates === '') {
@@ -365,6 +368,15 @@ function PropertyCreate() {
       const files = Array.from(event.target.files);
       if (!files.length) return;
 
+      // Проверяем ограничение на количество фото (максимум 10)
+      const currentImageCount = property.images?.length || 0;
+      const maxImages = 10;
+      
+      if (currentImageCount >= maxImages) {
+        showError(`Максимальное количество фотографий: ${maxImages}`);
+        return;
+      }
+
       setUploadingImages(true);
       
       try {
@@ -402,6 +414,13 @@ function PropertyCreate() {
 
         const urls = await Promise.all(uploadPromises);
         
+        // Проверяем, не превысим ли лимит после добавления новых фото
+        const newImageCount = (property.images?.length || 0) + urls.length;
+        if (newImageCount > maxImages) {
+          showError(`Максимальное количество фотографий: ${maxImages}. Загружено: ${newImageCount}`);
+          return;
+        }
+        
         // Обновляем локальное состояние
         setProperty(prev => ({
           ...prev,
@@ -437,7 +456,7 @@ function PropertyCreate() {
       // Удаляем файл из хранилища
       await deleteFileFromFirebaseStorage(imageUrl);
       
-      // Обновляем локальное состояние
+                // Обновляем локальное состояние
           const newImages = [...property.images];
           newImages.splice(index, 1);
           
@@ -445,6 +464,13 @@ function PropertyCreate() {
             ...prev,
             images: newImages
           }));
+          
+          // Сбрасываем индекс фото если нужно
+          if (newImages.length === 0) {
+            setCurrentImageIndex(0);
+          } else if (currentImageIndex >= newImages.length) {
+            setCurrentImageIndex(newImages.length - 1);
+          }
           
       showSuccess('Фотография удалена');
     } catch (error) {
@@ -761,7 +787,7 @@ function PropertyCreate() {
             value={fieldValue || ''}
               onChange={(e) => handleValueChange(field, e.target.value)}
               className={`text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border rounded px-2 py-1 ${hasError ? 'border-red-500' : 'border-gray-300'}`}
-              placeholder="Введите площадь"
+              placeholder={t.propertyDetail.areaPlaceholder}
             />
           );
         }
@@ -964,7 +990,7 @@ function PropertyCreate() {
       type: "number"
     },
     {
-      label: shouldShowUnitsCount ? t.propertyDetail.unitsCount : (property.bedrooms === 0 ? t.propertyDetail.studio : 'Спальни'),
+              label: shouldShowUnitsCount ? t.propertyDetail.unitsCount : (property.bedrooms === 0 ? t.propertyDetail.studio : t.propertyDetail.bedroomsLabel),
       value: shouldShowUnitsCount ? safeDisplay(property.unitsCount) : (property.bedrooms === 0 ? t.propertyDetail.studio : safeDisplay(property.bedrooms)),
       field: shouldShowUnitsCount ? "unitsCount" : "bedrooms",
       icon: Bed,
@@ -1012,7 +1038,7 @@ function PropertyCreate() {
       options: buildingTypeOptions
     },
     {
-      label: 'Статус',
+              label: t.propertyDetail.statusLabel,
       value: translateConstructionStatus(safeDisplay(property.status), language),
       field: "status",
       icon: Hammer,
@@ -1029,7 +1055,7 @@ function PropertyCreate() {
       options: poolOptions
     },
     {
-      label: 'Форма собственности',
+              label: t.propertyDetail.ownershipFormLabel,
       value: property.ownershipForm ? `${translateOwnership(property.ownershipForm, language)}${property.leaseYears ? ` ${property.leaseYears} ${t.propertyDetail.years}` : ""}` : "—",
       field: "ownershipForm",
       icon: FileText,
@@ -1051,6 +1077,13 @@ function PropertyCreate() {
       type: "number"
     },
     {
+      label: t.propertyDetail.managementCompany,
+      value: safeDisplay(property.managementCompany),
+      field: "managementCompany",
+      icon: Building2,
+      type: "text"
+    },
+    {
       label: t.propertyDetail.agentCommission,
       value: getAgentCommissionDisplay(),
       field: "agentCommission",
@@ -1066,17 +1099,8 @@ function PropertyCreate() {
     },
   ];
 
-  const showManagementCompany = !!property.managementCompany && property.managementCompany !== '';
   const attributes = [
     ...attributesBase,
-
-    ...(showManagementCompany ? [{
-      label: t.propertyDetail.managementCompany,
-      value: safeDisplay(property.managementCompany),
-      field: "managementCompany",
-      icon: Building2,
-      type: "text"
-    }] : []),
   ];
 
 
@@ -1086,20 +1110,27 @@ function PropertyCreate() {
       {/* Кнопка добавления фотографий */}
       {canCreate() && (
         <div className={`mb-4 ${isMobile ? 'flex flex-col gap-2' : 'flex items-center justify-between gap-2'}`}>
-          <button
-            onClick={handleImageUpload}
-            className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 ${isMobile ? 'w-full h-12 justify-center' : ''}`}
-            disabled={uploadingImages}
-          >
-            {uploadingImages ? (
-              t.propertyDetail.uploading
-            ) : (
-              <>
-                <Camera className="h-4 w-4" />
-                Добавить фото
-              </>
-            )}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handleImageUpload}
+              className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 ${isMobile ? 'w-full h-12 justify-center' : ''}`}
+              disabled={uploadingImages || (property.images?.length || 0) >= 10}
+            >
+              {uploadingImages ? (
+                t.propertyDetail.uploading
+              ) : (
+                <>
+                  <Camera className="h-4 w-4" />
+                  {t.propertyDetail.addPhotoButtonSimple}
+                </>
+              )}
+            </button>
+            <div className="text-sm text-gray-600">
+              {t.propertyDetail.photoCounter
+                .replace('{current}', (property.images?.length || 0))
+                .replace('{total}', '10')}
+            </div>
+          </div>
             <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
               <button
               onClick={handleCreate}
@@ -1110,7 +1141,7 @@ function PropertyCreate() {
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              {isSubmitting ? 'Создание...' : 'Создать объект'}
+              {isSubmitting ? t.propertyDetail.creatingText : t.propertyDetail.createObjectButton}
               </button>
             </div>
         </div>
@@ -1149,18 +1180,49 @@ function PropertyCreate() {
         <div className="hidden md:block relative mb-4 group">
           <div className="w-full h-72 rounded-xl overflow-hidden bg-gray-200">
             <img
-              src={property.images[0]}
-              alt="Фото 1"
+              src={property.images[currentImageIndex]}
+              alt={`Фото ${currentImageIndex + 1}`}
               className="w-full h-full object-cover"
             />
-              <button
-              onClick={() => handleImageDelete(0)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition opacity-0 group-hover:opacity-100"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            
+            {/* Кнопка удаления */}
+            <button
+              onClick={() => handleImageDelete(currentImageIndex)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition opacity-0 group-hover:opacity-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            
+            {/* Навигация по фото */}
+            {property.images.length > 1 && (
+              <>
+                {/* Стрелка влево */}
+                {currentImageIndex > 0 && (
+                  <button
+                    onClick={() => setCurrentImageIndex(prev => prev - 1)}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-all"
+                  >
+                    ←
+                  </button>
+                )}
+                
+                {/* Стрелка вправо */}
+                {currentImageIndex < property.images.length - 1 && (
+                  <button
+                    onClick={() => setCurrentImageIndex(prev => prev + 1)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-all"
+                  >
+                    →
+                  </button>
+                )}
+                
+                {/* Счетчик фото */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black bg-opacity-50 px-4 py-2 rounded-full">
+                  {currentImageIndex + 1} / {property.images.length}
+                </div>
+              </>
+            )}
           </div>
-
         </div>
       ) : (
         <div className="hidden md:flex w-full h-72 rounded-xl overflow-hidden mb-4 bg-gray-200 items-center justify-center text-gray-400">
@@ -1176,7 +1238,7 @@ function PropertyCreate() {
             value={property.price || ''}
               onChange={(e) => handleValueChange('price', e.target.value)}
               className={`w-48 px-2 py-1 border rounded text-4xl ${requiredFieldErrors.price ? 'border-red-500' : 'border-gray-300'}`}
-            placeholder="Цена *"
+            placeholder={t.propertyDetail.pricePlaceholder}
             />
         </div>
         {requiredFieldErrors.price && (
@@ -1382,7 +1444,7 @@ function PropertyCreate() {
             onChange={(e) => handleValueChange('description', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-600 resize-none"
             rows="4"
-            placeholder="Описание объекта"
+                          placeholder={t.propertyDetail.descriptionPlaceholder}
           />
           </div>
           

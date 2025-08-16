@@ -130,11 +130,14 @@ function PropertyDetail() {
       isAdmin: role === 'admin',
       isDeveloper: role === 'застройщик',
       propertyDeveloper: property?.developer,
-      userDeveloperName: property?.userDeveloperName
+      userDeveloperName: property?.userDeveloperName,
+      isCreator: currentUser && property?.createdBy === currentUser.uid
     });
     
     if (role === 'admin' || role === 'moderator') return true;
     if (['застройщик', 'премиум застройщик'].includes(role)) return true;
+    // Создатель объекта может редактировать свой объект
+    if (currentUser && property?.createdBy === currentUser.uid) return true;
     return false;
   };
 
@@ -216,6 +219,16 @@ function PropertyDetail() {
   const handleValueChange = (field, value) => {
     let processedValue = value;
     
+    // Специальная валидация для поля "Статус строительства" для создателей объектов
+    if (field === 'status' && 
+        currentUser && property?.createdBy === currentUser.uid && 
+        role !== 'admin' && role !== 'moderator') {
+      // Для создателей объектов не разрешаем пустое значение
+      if (!value || value === '') {
+        processedValue = 'От собственника';
+      }
+    }
+    
     // Валидация для полей документов
     if (['npwp', 'shgb', 'pbg', 'imb', 'slf'].includes(field)) {
       // Проверяем валидацию
@@ -265,6 +278,15 @@ function PropertyDetail() {
     
     setEditedValues(prev => {
       const newValues = { ...prev, [field]: processedValue };
+      
+      // Для создателей объектов автоматически устанавливаем статус "От собственника"
+      if (field === 'status' && 
+          currentUser && property?.createdBy === currentUser.uid && 
+          role !== 'admin' && role !== 'moderator' && 
+          !prev.hasOwnProperty('status')) {
+        newValues.status = 'От собственника';
+      }
+      
       setHasChanges(JSON.stringify(newValues) !== JSON.stringify({}));
       return newValues;
     });
@@ -304,6 +326,17 @@ function PropertyDetail() {
         let val = String(processedValues.agentCommission).replace(/[%\s]/g, '');
         processedValues.agentCommission = val ? val + '%' : '';
       }
+      
+      // Для создателей объектов автоматически устанавливаем статус "От собственника"
+      if (currentUser && property?.createdBy === currentUser.uid && 
+          role !== 'admin' && role !== 'moderator') {
+        // Если статус не был изменен или пустой, устанавливаем "От собственника"
+        if (!processedValues.hasOwnProperty('status') || 
+            !processedValues.status || 
+            processedValues.status === '') {
+          processedValues.status = 'От собственника';
+        }
+      }
 
       await updateDoc(propertyRef, processedValues);
       setProperty(prev => ({ ...prev, ...processedValues }));
@@ -320,8 +353,15 @@ function PropertyDetail() {
 
   // Функция для отмены редактирования
   const handleCancel = () => {
-    setEditedValues({});
-    setHasChanges(false);
+    // Для создателей объектов автоматически устанавливаем статус "От собственника" при отмене
+    if (currentUser && property?.createdBy === currentUser.uid && 
+        role !== 'admin' && role !== 'moderator') {
+      setEditedValues({ status: 'От собственника' });
+      setHasChanges(true); // Устанавливаем флаг изменений, так как статус изменился
+    } else {
+      setEditedValues({});
+      setHasChanges(false);
+    }
     setIsEditing(false);
     setDocumentValidationErrors({});
   };
@@ -773,12 +813,33 @@ function PropertyDetail() {
     { value: "Резорт", label: t.propertyDetail.buildingTypeOptions.resort }
   ];
 
-  const statusOptions = [
-    { value: "Проект", label: t.propertyDetail.statusOptions.project },
-    { value: "Строится", label: t.propertyDetail.statusOptions.underConstruction },
-    { value: "Готовый", label: t.propertyDetail.statusOptions.ready },
-    { value: "От собственника", label: t.propertyDetail.statusOptions.fromOwner }
-  ];
+  // Создаем условный список значений для статуса строительства
+  const statusOptions = (() => {
+    // Если пользователь админ или модератор - показываем все варианты
+    if (role === 'admin' || role === 'moderator') {
+      return [
+        { value: "Проект", label: t.propertyDetail.statusOptions.project },
+        { value: "Строится", label: t.propertyDetail.statusOptions.underConstruction },
+        { value: "Готовый", label: t.propertyDetail.statusOptions.ready },
+        { value: "От собственника", label: t.propertyDetail.statusOptions.fromOwner }
+      ];
+    }
+    
+    // Если пользователь создатель объекта - показываем только "От собственника"
+    if (currentUser && property?.createdBy === currentUser.uid) {
+      return [
+        { value: "От собственника", label: t.propertyDetail.statusOptions.fromOwner }
+      ];
+    }
+    
+    // Для остальных пользователей - показываем все варианты
+    return [
+      { value: "Проект", label: t.propertyDetail.statusOptions.project },
+      { value: "Строится", label: t.propertyDetail.statusOptions.underConstruction },
+      { value: "Готовый", label: t.propertyDetail.statusOptions.ready },
+      { value: "От собственника", label: t.propertyDetail.statusOptions.fromOwner }
+    ];
+  })();
 
   const poolOptions = [
     { value: "Нет", label: t.propertyDetail.poolOptions.no },
@@ -817,6 +878,13 @@ function PropertyDetail() {
   // Обновляем функцию рендеринга значения
   const renderEditableValue = (field, value, type, options) => {
     if (isEditing && !nonEditableFields.includes(field)) {
+      // Проверяем права доступа для полей "Застройщик" и "Статус земли"
+      if ((field === 'developer' || field === 'landStatus') && 
+          currentUser && property?.createdBy === currentUser.uid && 
+          role !== 'admin' && role !== 'moderator') {
+        return null; // Не показываем эти поля для создателей объектов (не админов/модераторов)
+      }
+      
       // Получаем исходное значение из объекта property, а не отформатированное value
       const originalValue = property[field];
       
@@ -845,17 +913,34 @@ function PropertyDetail() {
           </div>
         );
       } else if (options) {
+        // Специальная обработка для поля "Статус строительства" для создателей объектов
+        if (field === 'status' && 
+            currentUser && property?.createdBy === currentUser.uid && 
+            role !== 'admin' && role !== 'moderator') {
+          return (
+            <select
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || 'От собственника')}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+            >
+              {options.map(opt => (
+                <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>
+              ))}
+            </select>
+          );
+        }
+        
         return (
           <select
             value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
             onChange={(e) => handleValueChange(field, e.target.value)}
             className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
           >
-                          <option value="">{t.propertyDetail.notSelected}</option>
-              {options.map(opt => (
-                <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>
-              ))}
-            </select>
+            <option value="">{t.propertyDetail.notSelected}</option>
+            {options.map(opt => (
+              <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>
+            ))}
+          </select>
         );
       } else {
         // Специальная обработка для поля площади
@@ -932,7 +1017,9 @@ function PropertyDetail() {
             >
               <option value="">{t.propertyDetail.notSelected}</option>
               {districtOptions.map((item) => (
-                <option key={item} value={item}>{item}</option>
+                <option key={item} value={item}>
+                  {t.districts[item] || item}
+                </option>
               ))}
             </select>
           );
@@ -956,7 +1043,9 @@ function PropertyDetail() {
             >
               <option value="">{t.propertyDetail.notSelected}</option>
               {landStatusOptions.map((item) => (
-                <option key={item} value={item}>{item}</option>
+                <option key={item} value={item}>
+                  {t.landStatus?.[item] || item}
+                </option>
               ))}
             </select>
           );
@@ -1328,8 +1417,22 @@ function PropertyDetail() {
 
   const showTotalArea = isEditing || (!!property.totalArea && property.totalArea !== '');
   const showManagementCompany = isEditing || (!!property.managementCompany && property.managementCompany !== '');
+  
+  // Фильтруем атрибуты для создателей объектов (не админов/модераторов)
+  const filteredAttributesBase = attributesBase.filter(attr => {
+    // Если пользователь админ или модератор - показываем все поля
+    if (role === 'admin' || role === 'moderator') return true;
+    
+    // Если пользователь создатель объекта - скрываем поля "Застройщик" и "Статус земли"
+    if (currentUser && property?.createdBy === currentUser.uid) {
+      if (attr.field === 'developer' || attr.field === 'landStatus') return false;
+    }
+    
+    return true;
+  });
+  
   const attributes = [
-    ...attributesBase,
+    ...filteredAttributesBase,
     {
       label: t.propertyDetail.pricePerSqm,
       value: property.price && property.area
@@ -1421,7 +1524,17 @@ function PropertyDetail() {
           ) : (
             <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2'}`}>
               <button
-                onClick={() => setIsEditing(true)}
+                onClick={() => {
+                  // Для создателей объектов автоматически устанавливаем статус "От собственника"
+                  if (currentUser && property?.createdBy === currentUser.uid && 
+                      role !== 'admin' && role !== 'moderator') {
+                    setEditedValues(prev => ({
+                      ...prev,
+                      status: 'От собственника'
+                    }));
+                  }
+                  setIsEditing(true);
+                }}
                 className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isMobile ? 'w-full h-12' : ''}`}
               >
                 {t.propertyDetail.editButton}
@@ -1591,9 +1704,7 @@ function PropertyDetail() {
               </div>
             )}
 
-      {property.description && (
-        <p className="text-gray-600 mb-6 whitespace-pre-line">{property.description}</p>
-      )}
+
 
       {/* Сетка характеристик */}
       <div className="grid grid-cols-2 gap-4">
@@ -1828,6 +1939,14 @@ function PropertyDetail() {
             </div>
           </div>
         )
+      )}
+
+      {/* Поле "Описание" */}
+      {property.description && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.description}</h3>
+          <p className="text-gray-600 whitespace-pre-line">{property.description}</p>
+        </div>
       )}
 
       {/* Добавляем кнопки "Расчет ROI" после характеристик объекта */}

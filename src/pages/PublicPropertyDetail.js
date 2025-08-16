@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query } from "firebase/firestore";
-import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Waves, Bed, Ruler, MapPin, Hammer, Layers, Bath, FileText, Calendar, DollarSign } from "lucide-react";
+import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Waves, Bed, Ruler, MapPin, Hammer, Layers, Bath, FileText, Calendar, DollarSign, Settings } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
+import { useAuth } from "../AuthContext";
 import {
   translateDistrict,
   translatePropertyType,
@@ -21,6 +22,7 @@ import { Badge } from "../components/ui/badge";
 
 function PublicPropertyDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
@@ -28,6 +30,7 @@ function PublicPropertyDetail() {
   const [roiPercent, setRoiPercent] = useState(null);
   const { language } = useLanguage();
   const t = translations[language];
+  const { currentUser } = useAuth();
   const [isLeadOpen, setIsLeadOpen] = useState(false);
   const [leadName, setLeadName] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
@@ -48,6 +51,11 @@ function PublicPropertyDetail() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
+  };
+
+  // Функция для перехода к управлению объектом
+  const handleManageProperty = () => {
+    navigate(`/property/${id}`);
   };
 
   useEffect(() => {
@@ -292,9 +300,7 @@ function PublicPropertyDetail() {
         </div>
       )}
 
-      {property.description && (
-        <p className="text-gray-600 mb-6 whitespace-pre-line">{property.description}</p>
-      )}
+
 
       {/* Характеристики (только просмотр) */}
       <div className="grid grid-cols-2 gap-4">
@@ -489,6 +495,14 @@ function PublicPropertyDetail() {
         </div>
       )}
 
+      {/* Поле "Описание" */}
+      {property.description && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.description}</h3>
+          <p className="text-gray-600 whitespace-pre-line">{property.description}</p>
+        </div>
+      )}
+
       {/* LIGHTBOX */}
       {lightbox && (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
@@ -529,14 +543,24 @@ function PublicPropertyDetail() {
         </div>
       )}
 
-      {/* CTA: Написать агенту — в самом низу страницы */}
+      {/* CTA: Кнопка управления объектом для создателя или "Написать агенту" для остальных */}
       <div className="mt-8">
-        <button
-          onClick={() => setIsLeadOpen(true)}
-          className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          {t.leadForm.writeToAgent}
-        </button>
+        {currentUser && property?.createdBy === currentUser.uid ? (
+          <button
+            onClick={handleManageProperty}
+            className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            {t.leadForm.manageProperty}
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsLeadOpen(true)}
+            className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            {t.leadForm.writeToAgent}
+          </button>
+        )}
       </div>
     </div>
   );

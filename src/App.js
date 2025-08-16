@@ -317,6 +317,9 @@ function App() {
                         <PropertiesGallery />
                       </ProtectedRoute>
                     } />
+                    {/* Маршрут для редактирования объектов перенесен в публичную часть */}
+                    
+                    {/* Детальная страница объекта */}
                     <Route path="/property/:id" element={
                       <ProtectedRoute>
                         <PropertyDetail />

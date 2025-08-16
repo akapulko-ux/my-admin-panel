@@ -1,7 +1,8 @@
 export const translations = {
   en: {
     leadForm: {
-      writeToAgent: 'Write to agent',
+              writeToAgent: 'Write to agent',
+        manageProperty: 'Manage property',
       name: 'Name',
       phone: 'Phone',
       cancel: 'Cancel',
@@ -136,6 +137,16 @@ export const translations = {
       'Kab. Karangasem': 'Karangasem Regency',
       'Kab. Buleleng': 'Buleleng Regency',
       'Kota Denpasar': 'Denpasar City'
+    },
+
+    // Land Status translations
+    landStatus: {
+      'Туристическая зона (W)': 'Tourist Zone (W)',
+      'Торговая зона (K)': 'Commercial Zone (K)',
+      'Смешанная зона (C)': 'Mixed Zone (C)',
+      'Жилая зона (R)': 'Residential Zone (R)',
+      'Сельхоз зона (P)': 'Agricultural Zone (P)',
+      'Заповедная зона (RTH)': 'Protected Zone (RTH)'
     },
 
     // Navigation
@@ -694,6 +705,9 @@ _________________               _________________
       saveButton: 'Save',
       cancelButton: 'Cancel',
       addPhotoButton: 'Add Photo / PDF',
+      addPhotoButtonSimple: 'Add Photo',
+      createObjectButton: 'Create Object',
+      creatingText: 'Creating...',
       viewButton: 'View',
       updateButton: 'Update',
       uploadButton: 'Upload',
@@ -729,6 +743,18 @@ _________________               _________________
       ownership: 'Ownership',
       completionDate: 'Completion Date',
       years: 'years',
+      description: 'Description',
+      
+      // Agent Property Create specific fields
+      pricePlaceholder: 'Price *',
+      areaPlaceholder: 'Living Area *',
+      bedroomsLabel: 'Bedrooms',
+      statusLabel: 'Status',
+      ownershipFormLabel: 'Ownership Form',
+      descriptionPlaceholder: 'Property Description',
+      
+      // Photo counter
+      photoCounter: 'Photos: {current} / {total}',
       
       // Document labels
       documentsSection: 'Documents',
@@ -790,6 +816,7 @@ _________________               _________________
       fileNotUploaded: 'File not uploaded',
       floorText: 'floor',
       floorsText: 'floors',
+      noChats: 'No chats for this property yet',
       
       // Success messages
       changesSaved: 'Changes saved successfully',
@@ -819,7 +846,6 @@ _________________               _________________
       
       // Lightbox
       photo: 'Photo',
-      photoCounter: '{current} / {total}',
       createdAt: 'Created',
       updatedAt: 'Updated',
       
@@ -1574,7 +1600,8 @@ _________________               _________________
   },
   ru: {
     leadForm: {
-      writeToAgent: 'Написать агенту',
+              writeToAgent: 'Написать агенту',
+        manageProperty: 'Управлять объектом',
       name: 'Имя',
       phone: 'Телефон',
       cancel: 'Отменить',
@@ -1711,6 +1738,16 @@ _________________               _________________
       'Kota Denpasar': 'Город Денпасар',
       createdAt: 'Создан',
       updatedAt: 'Обновлен'
+    },
+
+    // Land Status translations
+    landStatus: {
+      'Туристическая зона (W)': 'Туристическая зона (W)',
+      'Торговая зона (K)': 'Торговая зона (K)',
+      'Смешанная зона (C)': 'Смешанная зона (C)',
+      'Жилая зона (R)': 'Жилая зона (R)',
+      'Сельхоз зона (P)': 'Сельхоз зона (P)',
+      'Заповедная зона (RTH)': 'Заповедная зона (RTH)'
     },
 
     // Navigation
@@ -2288,6 +2325,9 @@ _________________               _________________
       saveButton: 'Сохранить',
       cancelButton: 'Отменить',
       addPhotoButton: 'Добавить фото / PDF',
+      addPhotoButtonSimple: 'Добавить фото',
+      createObjectButton: 'Создать объект',
+      creatingText: 'Создание...',
       viewButton: 'Просмотр',
       updateButton: 'Обновить',
       uploadButton: 'Загрузить',
@@ -2323,6 +2363,18 @@ _________________               _________________
       ownership: 'Собственность',
       completionDate: 'Дата завершения',
       years: 'лет',
+      description: 'Описание',
+      
+      // Agent Property Create specific fields
+      pricePlaceholder: 'Цена *',
+      areaPlaceholder: 'Жилая площадь *',
+      bedroomsLabel: 'Спальни',
+      statusLabel: 'Статус',
+      ownershipFormLabel: 'Форма собственности',
+      descriptionPlaceholder: 'Описание объекта',
+      
+      // Photo counter
+      photoCounter: 'Фото: {current} / {total}',
       
       // Document labels
       documentsSection: 'Документы',
@@ -2384,6 +2436,7 @@ _________________               _________________
       fileNotUploaded: 'Файл не загружен',
       floorText: 'этаж',
       floorsText: 'этажа',
+      noChats: 'Чатов по объекту пока нет',
       
       // Success messages
       changesSaved: 'Изменения успешно сохранены',
@@ -2413,7 +2466,6 @@ _________________               _________________
       
       // Lightbox
       photo: 'Фото',
-      photoCounter: '{current} / {total}',
       createdAt: 'Создан',
       updatedAt: 'Обновлен',
       
@@ -3173,7 +3225,8 @@ _________________               _________________
   },
   id: {
     leadForm: {
-      writeToAgent: 'Tulis ke agen',
+              writeToAgent: 'Tulis ke agen',
+        manageProperty: 'Kelola properti',
       name: 'Nama',
       phone: 'Telepon',
       cancel: 'Batal',
@@ -3310,6 +3363,16 @@ _________________               _________________
       'Kota Denpasar': 'Kota Denpasar',
       createdAt: 'Dibuat',
       updatedAt: 'Diperbarui'
+    },
+
+    // Land Status translations
+    landStatus: {
+      'Туристическая зона (W)': 'Zona Wisata (W)',
+      'Торговая зона (K)': 'Zona Komersial (K)',
+      'Смешанная зона (C)': 'Zona Campuran (C)',
+      'Жилая зона (R)': 'Zona Permukiman (R)',
+      'Сельхоз зона (P)': 'Zona Pertanian (P)',
+      'Заповедная зона (RTH)': 'Zona Lindung (RTH)'
     },
 
     // Navigation
@@ -3887,6 +3950,9 @@ _________________               _________________
       saveButton: 'Simpan',
       cancelButton: 'Batal',
       addPhotoButton: 'Tambah Foto / PDF',
+      addPhotoButtonSimple: 'Tambah Foto',
+      createObjectButton: 'Buat Objek',
+      creatingText: 'Membuat...',
       viewButton: 'Lihat',
       updateButton: 'Update',
       uploadButton: 'Upload',
@@ -3922,6 +3988,18 @@ _________________               _________________
       ownership: 'Kepemilikan',
       completionDate: 'Tanggal Selesai',
       years: 'tahun',
+      description: 'Deskripsi',
+      
+      // Agent Property Create specific fields
+      pricePlaceholder: 'Harga *',
+      areaPlaceholder: 'Luas Hunian *',
+      bedroomsLabel: 'Kamar Tidur',
+      statusLabel: 'Status',
+      ownershipFormLabel: 'Bentuk Kepemilikan',
+      descriptionPlaceholder: 'Deskripsi Properti',
+      
+      // Photo counter
+      photoCounter: 'Foto: {current} / {total}',
       
       // Document labels
       documentsSection: 'Dokumen',
@@ -3983,6 +4061,7 @@ _________________               _________________
       fileNotUploaded: 'File tidak diunggah',
       floorText: 'lantai',
       floorsText: 'lantai',
+      noChats: 'Belum ada obrolan untuk properti ini',
       
       // Success messages
       changesSaved: 'Perubahan berhasil disimpan',
@@ -4012,7 +4091,6 @@ _________________               _________________
       
       // Lightbox
       photo: 'Foto',
-      photoCounter: '{current} / {total}',
       createdAt: 'Создан',
       updatedAt: 'Обновлен',
       
