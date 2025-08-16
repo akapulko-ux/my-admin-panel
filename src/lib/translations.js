@@ -687,7 +687,13 @@ _________________               _________________
       complexLoadError: 'Error loading complex name',
       developerLoadError: 'Error loading developer',
       createdAt: 'Created',
-      updatedAt: 'Updated'
+      updatedAt: 'Updated',
+      addedByMe: 'Added by me',
+      allStatuses: 'All Statuses',
+      statusProject: 'Project',
+      statusUnderConstruction: 'Under Construction',
+      statusReady: 'Ready',
+      statusFromOwner: 'From Owner'
     },
 
     // Property Detail
@@ -755,6 +761,7 @@ _________________               _________________
       
       // Photo counter
       photoCounter: 'Photos: {current} / {total}',
+      swipeHint: 'Swipe left/right to switch photos',
       
       // Document labels
       documentsSection: 'Documents',
@@ -2307,7 +2314,13 @@ _________________               _________________
       complexLoadError: 'Ошибка при загрузке названия комплекса',
       developerLoadError: 'Ошибка загрузки застройщика',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      addedByMe: 'Добавлено мной',
+      allStatuses: 'Все статусы',
+      statusProject: 'Проект',
+      statusUnderConstruction: 'Строится',
+      statusReady: 'Готовый',
+      statusFromOwner: 'От собственника'
     },
 
     // Property Detail
@@ -2375,6 +2388,7 @@ _________________               _________________
       
       // Photo counter
       photoCounter: 'Фото: {current} / {total}',
+      swipeHint: 'Свайп влево/вправо для переключения фото',
       
       // Document labels
       documentsSection: 'Документы',
@@ -3931,8 +3945,14 @@ _________________               _________________
       priceUpdateError: 'Gagal memperbarui harga',
       complexLoadError: 'Kesalahan memuat nama kompleks',
       developerLoadError: 'Kesalahan memuat pengembang',
-      createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      createdAt: 'Dibuat',
+      updatedAt: 'Diperbarui',
+      addedByMe: 'Ditambahkan oleh saya',
+      allStatuses: 'Semua Status',
+      statusProject: 'Proyek',
+      statusUnderConstruction: 'Sedang Dibangun',
+      statusReady: 'Siap',
+      statusFromOwner: 'Dari Pemilik'
     },
 
     // Property Detail
@@ -4000,6 +4020,7 @@ _________________               _________________
       
       // Photo counter
       photoCounter: 'Foto: {current} / {total}',
+      swipeHint: 'Geser kiri/kanan untuk mengganti foto',
       
       // Document labels
       documentsSection: 'Dokumen',

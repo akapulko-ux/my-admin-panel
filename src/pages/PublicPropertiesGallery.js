@@ -39,6 +39,7 @@ function PublicPropertiesGallery() {
   const [isMobile, setIsMobile] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [hasUserProperties, setHasUserProperties] = useState(false);
   const [filters, setFilters] = useState({
     priceMin: "",
     priceMax: "",
@@ -47,6 +48,8 @@ function PublicPropertiesGallery() {
     bedrooms: "all",
     district: "all",
     type: "all",
+    status: "all",
+    addedByMe: false,
   });
 
   useEffect(() => {
@@ -172,6 +175,14 @@ function PublicPropertiesGallery() {
       const visibleProperties = [...creatorModerationProperties, ...normalProperties];
       
       setProperties(visibleProperties);
+      
+      // Проверяем, есть ли у текущего пользователя объекты
+      if (currentUser) {
+        const userHasProperties = visibleProperties.some(p => p.createdBy === currentUser.uid);
+        setHasUserProperties(userHasProperties);
+      } else {
+        setHasUserProperties(false);
+      }
     } catch (err) {
       console.error(t.propertiesGallery.dataLoadError || "Ошибка загрузки объектов:", err);
     } finally {
@@ -241,10 +252,12 @@ function PublicPropertiesGallery() {
       const matchesBedrooms = filters.bedrooms === "all" || property.bedrooms === Number(filters.bedrooms);
       const matchesDistrict = filters.district === "all" || property.district === filters.district;
       const matchesType = filters.type === "all" || property.type === filters.type;
+      const matchesStatus = filters.status === "all" || property.status === filters.status;
+      const matchesAddedByMe = !filters.addedByMe || (currentUser && property.createdBy === currentUser.uid);
 
-      return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType;
+      return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType && matchesStatus && matchesAddedByMe;
     });
-  }, [properties, searchQuery, filters, language]);
+  }, [properties, searchQuery, filters, language, currentUser]);
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -256,6 +269,8 @@ function PublicPropertiesGallery() {
       bedrooms: "all",
       district: "all",
       type: "all",
+      status: "all",
+      addedByMe: false,
     });
   };
 
@@ -325,6 +340,8 @@ function PublicPropertiesGallery() {
                     filters.bedrooms !== "all" ? 1 : 0,
                     filters.district !== "all" ? 1 : 0,
                     filters.type !== "all" ? 1 : 0,
+                    filters.status !== "all" ? 1 : 0,
+                    filters.addedByMe ? 1 : 0,
                   ].filter(Boolean).length}
                 </Badge>
                 <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isFiltersOpen ? "transform rotate-180" : ""}`} />
@@ -438,6 +455,56 @@ function PublicPropertiesGallery() {
           </CollapsibleContent>
         </Collapsible>
 
+        {/* Кнопки-фильтры по статусу */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={filters.status === "all" ? "default" : "outline"}
+            onClick={() => setFilters(prev => ({ ...prev, status: "all", addedByMe: false }))}
+            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          >
+            {t.propertiesGallery.allStatuses || 'Все статусы'}
+          </Button>
+          <Button
+            variant={filters.status === "Проект" ? "default" : "outline"}
+            onClick={() => setFilters(prev => ({ ...prev, status: "Проект", addedByMe: false }))}
+            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          >
+            {t.propertiesGallery.statusProject || 'Проект'}
+          </Button>
+          <Button
+            variant={filters.status === "Строится" ? "default" : "outline"}
+            onClick={() => setFilters(prev => ({ ...prev, status: "Строится", addedByMe: false }))}
+            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          >
+            {t.propertiesGallery.statusUnderConstruction || 'Строится'}
+          </Button>
+          <Button
+            variant={filters.status === "Готовый" ? "default" : "outline"}
+            onClick={() => setFilters(prev => ({ ...prev, status: "Готовый", addedByMe: false }))}
+            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          >
+            {t.propertiesGallery.statusReady || 'Готовый'}
+          </Button>
+          <Button
+            variant={filters.status === "От собственника" ? "default" : "outline"}
+            onClick={() => setFilters(prev => ({ ...prev, status: "От собственника", addedByMe: false }))}
+            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          >
+            {t.propertiesGallery.statusFromOwner || 'От собственника'}
+          </Button>
+          
+          {/* Кнопка "Добавлено мной" для авторизованных пользователей с объектами */}
+          {hasUserProperties && (
+            <Button
+              variant={filters.addedByMe ? "default" : "outline"}
+              onClick={() => setFilters(prev => ({ ...prev, addedByMe: !prev.addedByMe, status: "all" }))}
+              className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            >
+              {t.propertiesGallery.addedByMe || 'Добавлено мной'}
+            </Button>
+          )}
+        </div>
+
         <div className="text-sm text-gray-500 mb-4">
           {t.propertiesGallery.searchResultsText.replace("{count}", filteredProperties.length)}
         </div>
@@ -476,6 +543,15 @@ function PublicPropertiesGallery() {
                     isMobile ? "w-full h-40" : "w-48 h-32 min-w-48"
                   }`}
                 >
+                  {/* Бейдж "Добавлено мной" сверху фотографии */}
+                  {isCreator && (
+                    <div className="absolute top-2 left-2 z-10">
+                      <Badge className="border bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                        {t.propertiesGallery?.addedByMe || 'Добавлено мной'}
+                      </Badge>
+                    </div>
+                  )}
+                  
                   {p.images?.length ? (
                     <img
                       src={p.images[0]}
@@ -508,6 +584,8 @@ function PublicPropertiesGallery() {
                       </Badge>
                     </div>
                   )}
+
+
 
                   <span className={isMobile ? "text-base" : "text-lg"}>
                     <span className="text-gray-600">{t.propertiesGallery.priceLabel}:</span>

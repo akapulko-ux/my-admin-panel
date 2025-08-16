@@ -35,6 +35,10 @@ function PublicPropertyDetail() {
   const [leadName, setLeadName] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
   const [leadSending, setLeadSending] = useState(false);
+  
+  // Состояние для свайпов
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -56,6 +60,31 @@ function PublicPropertyDetail() {
   // Функция для перехода к управлению объектом
   const handleManageProperty = () => {
     navigate(`/property/${id}`);
+  };
+
+  // Функции для обработки свайпов
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && currentImg < property.images.length - 1) {
+      setCurrentImg(prev => prev + 1);
+    }
+    if (isRightSwipe && currentImg > 0) {
+      setCurrentImg(prev => prev - 1);
+    }
   };
 
   useEffect(() => {
@@ -171,7 +200,12 @@ function PublicPropertyDetail() {
       {/* Галерея изображений */}
       {property.images?.length ? (
         <div className="relative mb-4">
-          <div className="w-full h-72 rounded-xl overflow-hidden bg-gray-200">
+          <div 
+            className="w-full h-72 rounded-xl overflow-hidden bg-gray-200"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             <img
               src={property.images[currentImg]}
               alt={`Фото ${currentImg + 1}`}
@@ -196,6 +230,25 @@ function PublicPropertyDetail() {
             >
               ▶
             </button>
+          )}
+          
+          {/* Индикатор свайпов для мобильных устройств */}
+          {property.images?.length > 1 && (
+            <div className="md:hidden text-center mt-2">
+              <div className="text-sm text-gray-500">
+                {t.propertyDetail.swipeHint}
+              </div>
+              <div className="flex justify-center gap-1 mt-1">
+                {property.images.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full ${
+                      index === currentImg ? 'bg-blue-500' : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           )}
         </div>
       ) : (
@@ -506,7 +559,12 @@ function PublicPropertyDetail() {
       {/* LIGHTBOX */}
       {lightbox && (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
-          <div className="relative w-full h-full">
+          <div 
+            className="relative w-full h-full"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             <img
               src={property.images[currentImg]}
               alt={`${t.propertyDetail.photo} ${currentImg + 1}`}
