@@ -17,8 +17,9 @@ import { translations } from './lib/translations';
 import PWANotifications from './components/PWANotifications';
 import './testLanguageUpdate'; // Импортируем тестовую функцию
 
-// Лендинг
-import LandingPage from "./pages/LandingPage";
+// Лендинги
+import DevLandingPage from "./pages/DevLandingPage";
+import MainLandingPage from "./pages/MainLandingPage";
 
 // Комплексы
 import CreateComplex from "./pages/CreateComplex";
@@ -248,12 +249,11 @@ function App() {
               <Route path="/roi-calculator" element={<RoiCalculator />} />
               <Route path="/access-closed" element={<AccessClosed />} />
 
-              {/* Лендинг для неавторизованных пользователей */}
-              <Route path="/" element={
-                <ProtectedRoute isPublic>
-                  <LandingPage />
-                </ProtectedRoute>
-              } />
+              {/* Главная страница - новый лендинг */}
+              <Route path="/" element={<MainLandingPage />} />
+              
+              {/* Лендинг для застройщиков */}
+              <Route path="/dev" element={<DevLandingPage />} />
 
               {/* Детальная страница объекта без боковой панели */}
               <Route path="/property/:id/standalone" element={
