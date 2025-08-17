@@ -68,6 +68,16 @@ service cloud.firestore {
       allow read, update: if isAdmin();
     }
 
+    // === Заявки агентов на регистрацию в IT Agent ===
+    match /agentRegistrationRequests/{requestId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Создание доступно всем (для отправки заявок от агентов)
+      allow create: if true;
+      // Чтение и обновление статуса только для админов
+      allow read, update: if isAdmin();
+    }
+
     // === Шахматки (специфично для админ-панели) ===
     match /chessboards/{chessboardId} {
       // Админ имеет полные права

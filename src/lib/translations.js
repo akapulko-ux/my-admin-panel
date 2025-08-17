@@ -167,7 +167,7 @@ export const translations = {
       clientFixations: 'Client Fixations',
       userManagement: 'Users',
       generalOverview: 'General Overview',
-      registrationRequests: 'Registration Requests',
+              registrationRequests: 'Developer Requests',
       referralMap: 'Referral Map',
       settings: 'Settings',
       education: 'Education',
@@ -180,7 +180,8 @@ export const translations = {
       crmSystem: 'CRM System',
       deals: 'Deals',
       tasks: 'Tasks',
-      lists: 'Lists'
+      lists: 'Lists',
+      agentRegistrationRequests: 'Agent Requests'
     },
 
     // Public Page
@@ -208,7 +209,7 @@ export const translations = {
 
     // Registration Requests Page
     registrationRequestsPage: {
-      title: 'Registration Requests',
+      title: 'Developer Requests',
       noRequests: 'No registration requests',
       name: 'Name',
       email: 'Email',
@@ -1775,11 +1776,11 @@ _________________               _________________
       clientFixations: 'Фиксации клиентов',
       userManagement: 'Пользователи',
       generalOverview: 'Общий обзор',
-      registrationRequests: 'Заявки на регистрацию',
+              registrationRequests: 'Заявки застройщиков',
       
       // Registration Requests Page
       registrationRequestsPage: {
-        title: 'Заявки на регистрацию',
+        title: 'Заявки застройщиков',
         noRequests: 'Нет заявок на регистрацию',
         name: 'Имя',
         email: 'Email',
@@ -1812,7 +1813,8 @@ _________________               _________________
       tasks: 'Задачи',
       lists: 'Списки',
       createdAt: 'Создан',
-      updatedAt: 'Обновлен'
+      updatedAt: 'Обновлен',
+      agentRegistrationRequests: 'Заявки агентов'
     },
 
     // Public Page
@@ -1840,7 +1842,7 @@ _________________               _________________
 
     // Registration Requests Page
     registrationRequestsPage: {
-      title: 'Заявки на регистрацию',
+      title: 'Заявки застройщиков',
       noRequests: 'Нет заявок на регистрацию',
       name: 'Имя',
       email: 'Email',
@@ -3407,11 +3409,11 @@ _________________               _________________
       clientFixations: 'Fiksasi Klien',
       userManagement: 'Pengguna',
       generalOverview: 'Ikhtisar Umum',
-      registrationRequests: 'Permintaan Registrasi',
+              registrationRequests: 'Permintaan Pengembang',
       
       // Registration Requests Page
       registrationRequestsPage: {
-        title: 'Permintaan Registrasi',
+        title: 'Permintaan Pengembang',
         noRequests: 'Tidak ada permintaan registrasi',
         name: 'Nama',
         email: 'Email',
@@ -3444,7 +3446,8 @@ _________________               _________________
       tasks: 'Tugas',
       lists: 'Daftar',
       createdAt: 'Dibuat',
-      updatedAt: 'Diperbarui'
+      updatedAt: 'Diperbarui',
+      agentRegistrationRequests: 'Permintaan Agen'
     },
 
     // Public Page
@@ -3472,7 +3475,7 @@ _________________               _________________
 
     // Registration Requests Page
     registrationRequestsPage: {
-      title: 'Permintaan Registrasi',
+      title: 'Permintaan Pengembang',
       noRequests: 'Tidak ada permintaan registrasi',
       name: 'Nama',
       email: 'Email',

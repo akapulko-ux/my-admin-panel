@@ -108,9 +108,15 @@ export const landingTranslations = {
     status: "Status",
     statusAgent: "Agent",
     statusAgency: "Agency",
+    statusDeveloper: "Developer",
     modalSubmitRequest: "Submit Request",
     backButton: "Back",
-    registrationTitle: "Registration Request in IT Agent"
+    registrationTitle: "Registration Request in IT Agent",
+    // Success modal
+    successTitle: "Thank you for your application!",
+    successMessage: "Our specialists will contact you soon.",
+    successAppInfo: "In the meantime, you can download and install our IT Agent app for realtors on iPhone and iPad. In it you will find a complete listing of complexes and properties from Bali developers and many convenient tools for realtors.",
+    installButton: "Install IT Agent"
   },
   ru: {
     // Header
@@ -221,9 +227,15 @@ export const landingTranslations = {
     status: "Статус",
     statusAgent: "Агент",
     statusAgency: "Агентство",
+    statusDeveloper: "Застройщик",
     modalSubmitRequest: "Подать заявку",
     backButton: "Назад",
-    registrationTitle: "Заявка на регистрацию в IT Agent"
+    registrationTitle: "Заявка на регистрацию в IT Agent",
+    // Success modal
+    successTitle: "Спасибо за вашу заявку!",
+    successMessage: "Наши специалисты свяжутся с вами в ближайшее время.",
+    successAppInfo: "В это время вы можете скачать и установить наше приложение IT Agent для риэлторов на iPhone и iPad. В нём вы найдёте полный список комплексов и объектов из балийских застройщиков и множество удобных инструментов для риэлторов.",
+    installButton: "Установить IT Agent"
   },
   id: {
     // Header
@@ -334,8 +346,14 @@ export const landingTranslations = {
     status: "Status",
     statusAgent: "Agen",
     statusAgency: "Agensi",
+    statusDeveloper: "Pengembang",
     modalSubmitRequest: "Ajukan Permintaan",
     backButton: "Kembali",
-    registrationTitle: "Permintaan Pendaftaran di IT Agent"
+    registrationTitle: "Permintaan Pendaftaran di IT Agent",
+    // Success modal
+    successTitle: "Terima kasih atas aplikasi Anda!",
+    successMessage: "Para spesialis kami akan segera menghubungi Anda.",
+    successAppInfo: "Dalam waktu yang sama, Anda dapat mengunduh dan menginstal aplikasi IT Agent untuk agen real estate di iPhone dan iPad. Di dalamnya Anda akan menemukan daftar lengkap kompleks dan properti dari pengembang Bali dan banyak alat yang nyaman untuk agen real estate.",
+    installButton: "Instal IT Agent"
   }
 }; 

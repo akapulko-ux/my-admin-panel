@@ -424,6 +424,16 @@ const Navigation = () => {
                 </NavItem>
               )}
 
+              {role === 'admin' && (
+                <NavItem 
+                  to="/agent-registration-requests" 
+                  icon={UserCheck}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.agentRegistrationRequests}
+                </NavItem>
+              )}
+
               {['admin', 'moderator'].includes(role) && (
                 <NavItem 
                   to="/referral-map" 
@@ -640,6 +650,12 @@ const Navigation = () => {
         {role === 'admin' && (
           <NavItem to="/registration-requests" icon={ClipboardList}>
             {nav.registrationRequests}
+          </NavItem>
+        )}
+
+        {role === 'admin' && (
+          <NavItem to="/agent-registration-requests" icon={UserCheck}>
+            {nav.agentRegistrationRequests}
           </NavItem>
         )}
 

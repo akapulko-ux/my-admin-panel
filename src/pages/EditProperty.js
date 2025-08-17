@@ -246,7 +246,10 @@ function EditProperty() {
     setIsUploading(true);
     const compressionOptions = {
       maxSizeMB: 10,
-      useWebWorker: true
+      useWebWorker: true,
+      fileType: 'image/jpeg',
+      maxWidthOrHeight: 1280,
+      initialQuality: 0.8
     };
 
     const selectedFiles = Array.from(e.target.files);
@@ -258,7 +261,9 @@ function EditProperty() {
           // PDF -> конвертация в изображения
           const pageBlobs = await convertPdfToImages(file);
           for (let blob of pageBlobs) {
-            const compressedFile = await imageCompression(blob, compressionOptions);
+            // Принудительно конвертируем в JPEG
+            const jpegFile = await convertToJpeg(blob);
+            const compressedFile = await imageCompression(jpegFile, compressionOptions);
             newImagesArr.push({
               id: crypto.randomUUID(),
               url: URL.createObjectURL(compressedFile),
@@ -266,8 +271,9 @@ function EditProperty() {
             });
           }
         } else {
-          // Обычное изображение
-          const compressedFile = await imageCompression(file, compressionOptions);
+          // Обычное изображение - принудительно конвертируем в JPEG
+          const jpegFile = await convertToJpeg(file);
+          const compressedFile = await imageCompression(jpegFile, compressionOptions);
           newImagesArr.push({
             id: crypto.randomUUID(),
             url: URL.createObjectURL(compressedFile),
@@ -282,6 +288,46 @@ function EditProperty() {
 
     setImages((prev) => [...prev, ...newImagesArr]);
     setIsUploading(false);
+  };
+
+  // Функция для принудительной конвертации в JPEG (аналогично AgentPropertyCreate.js)
+  const convertToJpeg = async (file) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Вычисляем новые размеры с сохранением пропорций
+        let { width, height } = img;
+        const maxDimension = 1280;
+        
+        if (width > height) {
+          if (width > maxDimension) {
+            height = (height * maxDimension) / width;
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = (width * maxDimension) / height;
+            height = maxDimension;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+            type: 'image/jpeg'
+          });
+          resolve(jpegFile);
+        }, 'image/jpeg', 0.8);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
   };
 
   // Обработка изменения площади с валидацией

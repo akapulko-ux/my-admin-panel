@@ -51,6 +51,7 @@ const RegistrationRequests = () => {
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date()
       }));
+      
       setRequests(requestsData);
       setLoading(false);
     });
@@ -83,6 +84,15 @@ const RegistrationRequests = () => {
   return (
     <div className="p-4 space-y-4">
       <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-6`}>{t.registrationRequestsPage.title}</h1>
+      
+      <p className="text-muted-foreground mb-6">
+        {language === 'ru' 
+          ? 'Заявки от застройщиков на регистрацию в системе'
+          : language === 'id'
+          ? 'Permintaan dari pengembang untuk pendaftaran di sistem'
+          : 'Requests from developers for system registration'
+        }
+      </p>
       
       {requests.length === 0 ? (
         <Card className="p-4 text-center text-muted-foreground">

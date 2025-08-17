@@ -82,6 +82,9 @@ import AccessClosed from "./pages/AccessClosed";
 // Заявки на регистрацию
 import RegistrationRequests from "./pages/RegistrationRequests";
 
+// Заявки агентов на регистрацию в IT Agent
+import AgentRegistrationRequests from "./pages/AgentRegistrationRequests";
+
 // Карта рефералов
 import ReferralMap from "./pages/ReferralMap";
 
@@ -420,6 +423,13 @@ function App() {
                     <Route path="/registration-requests" element={
                       <ProtectedRoute>
                         <RegistrationRequests />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Заявки агентов на регистрацию в IT Agent (только для админа) */}
+                    <Route path="/agent-registration-requests" element={
+                      <ProtectedRoute>
+                        <AgentRegistrationRequests />
                       </ProtectedRoute>
                     } />
 

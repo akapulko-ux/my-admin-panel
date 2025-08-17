@@ -196,10 +196,13 @@ function CreateProperty() {
     setIsUploading(true);
     const selectedFiles = Array.from(e.target.files);
 
-    // Настройки сжатия
+    // Настройки сжатия (аналогично AgentPropertyCreate.js)
     const compressionOptions = {
       maxSizeMB: 10,
-      useWebWorker: true
+      useWebWorker: true,
+      fileType: 'image/jpeg',
+      maxWidthOrHeight: 1280,
+      initialQuality: 0.8
     };
 
     const newItems = [];
@@ -209,7 +212,9 @@ function CreateProperty() {
           // PDF -> конвертация
           const pageBlobs = await convertPdfToImages(file);
           for (let blob of pageBlobs) {
-            const compressed = await imageCompression(blob, compressionOptions);
+            // Принудительно конвертируем в JPEG
+            const jpegFile = await convertToJpeg(blob);
+            const compressed = await imageCompression(jpegFile, compressionOptions);
             newItems.push({
               id: crypto.randomUUID(),
               file: compressed,
@@ -217,8 +222,9 @@ function CreateProperty() {
             });
           }
         } else {
-          // Обычный файл
-          const compressedFile = await imageCompression(file, compressionOptions);
+          // Обычный файл - принудительно конвертируем в JPEG
+          const jpegFile = await convertToJpeg(file);
+          const compressedFile = await imageCompression(jpegFile, compressionOptions);
           newItems.push({
             id: crypto.randomUUID(),
             file: compressedFile,
@@ -232,6 +238,46 @@ function CreateProperty() {
 
     setDndItems((prev) => [...prev, ...newItems]);
     setIsUploading(false);
+  };
+
+  // Функция для принудительной конвертации в JPEG (аналогично AgentPropertyCreate.js)
+  const convertToJpeg = async (file) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Вычисляем новые размеры с сохранением пропорций
+        let { width, height } = img;
+        const maxDimension = 1280;
+        
+        if (width > height) {
+          if (width > maxDimension) {
+            height = (height * maxDimension) / width;
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = (width * maxDimension) / height;
+            height = maxDimension;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+            type: 'image/jpeg'
+          });
+          resolve(jpegFile);
+        }, 'image/jpeg', 0.8);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
   };
 
   // Удалить одно фото
