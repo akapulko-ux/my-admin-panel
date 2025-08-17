@@ -28,12 +28,14 @@ const ROUTE_ACCESS = {
   ],
   'premium agent': [
     '/property/gallery',
+    '/property/*',
     '/building-progress/*',
     '/roi-calculator',
     '/public-agent-page/*'
   ],
   agent: [
     '/property/gallery',
+    '/property/*',
     '/building-progress/*',
     '/roi-calculator',
     '/public-agent-page/*'

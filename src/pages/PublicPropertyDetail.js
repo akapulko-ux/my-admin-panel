@@ -34,6 +34,7 @@ function PublicPropertyDetail() {
   const [isLeadOpen, setIsLeadOpen] = useState(false);
   const [leadName, setLeadName] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
+  const [leadMessenger, setLeadMessenger] = useState('whatsapp');
   const [leadSending, setLeadSending] = useState(false);
   
   // Состояние для свайпов
@@ -59,7 +60,7 @@ function PublicPropertyDetail() {
 
   // Функция для перехода к управлению объектом
   const handleManageProperty = () => {
-    navigate(`/property/${id}`);
+    navigate(`/property/${id}/standalone`);
   };
 
   // Функции для обработки свайпов
@@ -197,6 +198,19 @@ function PublicPropertyDetail() {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
+      {/* Кнопка "Назад" */}
+      <div className="mb-4">
+        <button
+          onClick={() => navigate('/public')}
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          {t.propertyDetail.backButton || 'Назад'}
+        </button>
+      </div>
+
       {/* Галерея изображений */}
       {property.images?.length ? (
         <div className="relative mb-4">
@@ -264,7 +278,8 @@ function PublicPropertyDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsLeadOpen(false)} />
           <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md z-10">
-            <h3 className="text-lg font-semibold mb-4">{t.leadForm.writeToAgent}</h3>
+            <h3 className="text-lg font-semibold mb-2">{t.leadForm.leaveRequestToAgent}</h3>
+            <p className="text-sm text-gray-600 mb-4">{t.leadForm.agentContactInfo}</p>
             <div className="space-y-3">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">{t.leadForm.name}</label>
@@ -284,6 +299,17 @@ function PublicPropertyDetail() {
                   className="w-full border rounded px-3 py-2"
                 />
               </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">{t.leadForm.messengerLabel}</label>
+                <select
+                  value={leadMessenger}
+                  onChange={(e) => setLeadMessenger(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="whatsapp">{t.leadForm.whatsapp}</option>
+                  <option value="telegram">{t.leadForm.telegram}</option>
+                </select>
+              </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button onClick={() => setIsLeadOpen(false)} className="px-4 py-2 border rounded">
                   {t.leadForm.cancel}
@@ -300,6 +326,7 @@ function PublicPropertyDetail() {
                       await addDoc(collection(db, 'clientLeads'), {
                         name: leadName,
                         phone: leadPhone,
+                        messenger: leadMessenger,
                         propertyId: id || null,
                         createdAt: serverTimestamp(),
                       });
@@ -307,9 +334,18 @@ function PublicPropertyDetail() {
                       setIsLeadOpen(false);
                       setLeadName('');
                       setLeadPhone('');
+                      setLeadMessenger('whatsapp');
                     } catch (e) {
                       console.error('Lead save failed', e);
-                      showError(t.leadForm.sentError);
+                      let errorMsg = t.leadForm.sentError;
+                      if (e.code === 'permission-denied') {
+                        errorMsg = t.leadForm.accessError;
+                      } else if (e.code === 'unavailable') {
+                        errorMsg = t.leadForm.serviceUnavailable;
+                      } else if (e.message) {
+                        errorMsg = `${t.leadForm.errorPrefix}${e.message}`;
+                      }
+                      showError(errorMsg);
                     } finally {
                       setLeadSending(false);
                     }

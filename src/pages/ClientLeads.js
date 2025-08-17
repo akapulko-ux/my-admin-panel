@@ -13,6 +13,7 @@ const ClientLeads = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [propertyMap, setPropertyMap] = useState({});
+  const [agentMap, setAgentMap] = useState({});
 
   useEffect(() => {
     const loadLeads = async () => {
@@ -39,6 +40,52 @@ const ClientLeads = () => {
           }
         }));
         setPropertyMap(Object.fromEntries(entries));
+
+        // Загружаем информацию об агентах для объектов, добавленных агентами
+        const agentIds = Array.from(new Set(
+          Object.values(Object.fromEntries(entries))
+            .filter(p => p && p.addedByAgent === true && (p.createdBy || p.userId || p.agentId))
+            .map(p => p.createdBy || p.userId || p.agentId)
+        ));
+        
+        console.log('Found agent IDs:', agentIds);
+        
+        if (agentIds.length > 0) {
+          const agentEntries = await Promise.all(agentIds.map(async (agentId) => {
+            try {
+              console.log('Loading agent data for ID:', agentId);
+              // Сначала пробуем загрузить из коллекции users (основные данные)
+              let agentSnap = await getDoc(doc(db, 'users', agentId));
+              if (agentSnap.exists()) {
+                console.log('Agent found in users collection');
+                const agentData = { id: agentId, ...agentSnap.data() };
+                console.log('Loaded agent data from users:', agentData);
+                console.log('Agent data fields:', Object.keys(agentData));
+                return [agentId, agentData];
+              }
+              
+              // Если не найден в users, пробуем в agents
+              console.log('Agent not found in users collection, trying agents collection');
+              agentSnap = await getDoc(doc(db, 'agents', agentId));
+              if (agentSnap.exists()) {
+                console.log('Agent found in agents collection');
+                const agentData = { id: agentId, ...agentSnap.data() };
+                console.log('Loaded agent data from agents:', agentData);
+                console.log('Agent data fields:', Object.keys(agentData));
+                return [agentId, agentData];
+              }
+              
+              console.log('Agent not found in either collection');
+              return [agentId, null];
+            } catch (error) {
+              console.error('Error loading agent:', error);
+              return [agentId, null];
+            }
+          }));
+          const agentMapData = Object.fromEntries(agentEntries);
+          console.log('Final agent map:', agentMapData);
+          setAgentMap(agentMapData);
+        }
       } catch (e) {
         console.error('Failed to load leads', e);
       } finally {
@@ -77,6 +124,14 @@ const ClientLeads = () => {
         <div className="space-y-4">
           {leads.map(lead => {
             const p = lead.propertyId ? propertyMap[lead.propertyId] : null;
+            // Отладочная информация (можно убрать после исправления)
+            if (p && p.addedByAgent === true) {
+              console.log('Property with addedByAgent:', p);
+              console.log('Property createdBy:', p.createdBy);
+              const agentId = p.createdBy || p.userId || p.agentId;
+              console.log('Using agent ID:', agentId);
+              console.log('Agent data for this property:', agentMap[agentId]);
+            }
             return (
               <div key={lead.id} className="p-4 border rounded-md">
                 <div className="font-semibold">{lead.name} • {lead.phone}</div>
@@ -85,32 +140,82 @@ const ClientLeads = () => {
                 )}
 
                 {p ? (
-                  <Link to={`/property/${p.id}`} className="mt-3 flex items-stretch cursor-pointer hover:bg-gray-50 transition-colors gap-4 p-4 rounded-md border">
-                    <div className="relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 w-48 h-32 min-w-48">
-                      {p.images?.length ? (
-                        <img src={p.images[0]} alt={safeDisplay(p.type) || t.propertiesGallery.propertyAltText} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                          <Building2 className="w-8 h-8" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col text-gray-900 space-y-0.5">
-                      {(p.complexName || p.complex || p.propertyName) && (
-                        <span className="font-semibold leading-none text-black text-lg">{safeDisplay(p.complexName || p.complex || p.propertyName)}</span>
-                      )}
-                      <span className="font-semibold leading-none text-lg">{formatPrice(p.price)}</span>
-                      {p.type && <span className="text-sm">{translatePropertyType(safeDisplay(p.type), language)}</span>}
-                      {p.area && <span className="text-sm">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>}
-                      {p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== '' && (
-                        <span className="text-sm">{p.bedrooms === 0 ? t.propertiesGallery.studio : `${t.propertiesGallery.bedroomsText}: ${safeDisplay(p.bedrooms)}`}</span>
-                      )}
-                      {p.unitsCount !== undefined && p.unitsCount !== null && p.unitsCount !== '' && (
-                        <span className="text-sm">{t.propertiesGallery.unitsCountText}: {safeDisplay(p.unitsCount)}</span>
-                      )}
-                      {p.district && <span className="text-sm">{translateDistrict(safeDisplay(p.district), language)}</span>}
-                    </div>
-                  </Link>
+                  <div className="mt-3 flex items-stretch gap-4 p-4 rounded-md border">
+                    <Link to={`/property/${p.id}`} className="flex items-stretch cursor-pointer hover:bg-gray-50 transition-colors gap-4 flex-1">
+                      <div className="relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 w-48 h-32 min-w-48">
+                        {p.images?.length ? (
+                          <>
+                            <img src={p.images[0]} alt={safeDisplay(p.type) || t.propertiesGallery.propertyAltText} className="w-full h-full object-cover" />
+                            {p.addedByAgent === true && (
+                              <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-md font-medium">
+                                {t.leadForm.addedByAgent}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                            <Building2 className="w-8 h-8" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col text-gray-900 space-y-0.5">
+                        {(p.complexName || p.complex || p.propertyName) && (
+                          <span className="font-semibold leading-none text-black text-lg">{safeDisplay(p.complexName || p.complex || p.propertyName)}</span>
+                        )}
+                        <span className="font-semibold leading-none text-lg">{formatPrice(p.price)}</span>
+                        {p.type && <span className="text-sm">{translatePropertyType(safeDisplay(p.type), language)}</span>}
+                        {p.area && <span className="text-sm">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>}
+                        {p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== '' && (
+                          <span className="text-sm">{p.bedrooms === 0 ? t.propertiesGallery.studio : `${t.propertiesGallery.bedroomsText}: ${safeDisplay(p.bedrooms)}`}</span>
+                        )}
+                        {p.unitsCount !== undefined && p.unitsCount !== null && p.unitsCount !== '' && (
+                          <span className="text-sm">{t.propertiesGallery.unitsCountText}: {safeDisplay(p.unitsCount)}</span>
+                        )}
+                        {p.district && <span className="text-sm">{translateDistrict(safeDisplay(p.district), language)}</span>}
+                      </div>
+                    </Link>
+                    
+                    {/* Информация об агенте справа */}
+                    {p.addedByAgent === true && (p.createdBy || p.userId || p.agentId) && (
+                      <div className="flex-shrink-0 w-64 border-l pl-4">
+                        <h4 className="font-semibold text-sm text-gray-700 mb-2">{t.leadForm.agentInfo}</h4>
+                        {(() => {
+                          const agentId = p.createdBy || p.userId || p.agentId;
+                          const agentData = agentMap[agentId];
+                          return agentData ? (
+                            <div className="space-y-1 text-xs text-gray-600">
+                              <div>
+                                <span className="font-medium">{t.leadForm.agentName}:</span> {
+                                  agentData.name || 
+                                  agentData.displayName || 
+                                  agentData.fullName ||
+                                  agentData.firstName ||
+                                  agentData.lastName ||
+                                  agentData.username ||
+                                  '—'
+                                }
+                              </div>
+                              {(agentData.phone || agentData.phoneNumber || agentData.tel) && (
+                                <div>
+                                  <span className="font-medium">{t.leadForm.agentPhone}:</span> {agentData.phone || agentData.phoneNumber || agentData.tel}
+                                </div>
+                              )}
+                              {(agentData.email || agentData.emailAddress) && (
+                                <div>
+                                  <span className="font-medium">{t.leadForm.agentEmail}:</span> {agentData.email || agentData.emailAddress}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-500">
+                              <div>ID агента: {agentId}</div>
+                              <div>Данные агента загружаются...</div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
                 ) : lead.propertyId ? (
                   <div className="mt-3 text-sm text-gray-500">Объект не найден (ID: {lead.propertyId})</div>
                 ) : null}

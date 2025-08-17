@@ -279,7 +279,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+              {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/property/gallery" 
                   icon={Home}
@@ -289,7 +289,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+              {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/complex/gallery" 
                   icon={Building2}
@@ -558,13 +558,13 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/property/gallery" icon={Home}>
             {nav.propertyGallery}
           </NavItem>
         )}
 
-        {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/complex/gallery" icon={Building2}>
             {nav.complexGallery}
           </NavItem>

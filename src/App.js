@@ -255,6 +255,13 @@ function App() {
                 </ProtectedRoute>
               } />
 
+              {/* Детальная страница объекта без боковой панели */}
+              <Route path="/property/:id/standalone" element={
+                <ProtectedRoute>
+                  <PropertyDetail />
+                </ProtectedRoute>
+              } />
+
               {/* Административные маршруты - с оболочкой админ-панели */}
               <Route path="*" element={
                 <AdminLayout>

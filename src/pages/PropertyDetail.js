@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query, orderBy } from "firebase/firestore";
+import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query, orderBy, addDoc, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
 import {
@@ -65,6 +65,33 @@ function PropertyDetail() {
   const { language } = useLanguage();
   const t = translations[language];
   
+  // Функция для локализации названия чата
+  const localizeChatName = (chatName) => {
+    if (!chatName) return 'Чат';
+    
+    // Заменяем "Написать агенту от" на локализованный текст
+    let localized = chatName.replace('Написать агенту от', t.propertyDetail.applicationFromAgent);
+    
+    // Локализуем типы недвижимости (передаем русские названия)
+    const propertyTypes = {
+      'Вилла': translatePropertyType('Вилла', language),
+      'Апартаменты': translatePropertyType('Апартаменты', language),
+      'Дом': translatePropertyType('Дом', language),
+      'Дюплекс': translatePropertyType('Дюплекс', language),
+      'Коммерческая недвижимость': translatePropertyType('Коммерческая недвижимость', language),
+      'Апарт-вилла': translatePropertyType('Апарт-вилла', language),
+      'Таунхаус': translatePropertyType('Таунхаус', language),
+      'Земельный участок': translatePropertyType('Земельный участок', language)
+    };
+    
+    // Заменяем русские названия типов на локализованные
+    Object.entries(propertyTypes).forEach(([russian, localizedType]) => {
+      localized = localized.replace(new RegExp(russian, 'g'), localizedType);
+    });
+    
+    return localized;
+  };
+  
   // Новые состояния для редактирования
   const [isEditing, setIsEditing] = useState(false);
   const [editedValues, setEditedValues] = useState({});
@@ -90,6 +117,17 @@ function PropertyDetail() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [chatCache, setChatCache] = useState({}); // Кеш для сообщений чатов
+  const [clientLeadsCache, setClientLeadsCache] = useState(null); // Кеш для заявок клиентов
+  const messagesEndRef = useRef(null); // Ref для автоматической прокрутки к последнему сообщению
+  const [isClientLeadsExpanded, setIsClientLeadsExpanded] = useState(false); // Состояние свернутости секции заявок клиентов
+  const [isAgentChatsExpanded, setIsAgentChatsExpanded] = useState(false); // Состояние свернутости секции чатов
+
+  // Заявки клиентов по объекту
+  const [clientLeads, setClientLeads] = useState([]);
+  const [clientLeadsLoading, setClientLeadsLoading] = useState(false);
 
   // Список застройщиков для выбора
   const [developersList, setDevelopersList] = useState([]);
@@ -122,6 +160,34 @@ function PropertyDetail() {
     }
     loadDevelopers();
   }, []);
+
+  // Очистка кеша чатов и заявок клиентов при смене объекта
+  useEffect(() => {
+    setChatCache({});
+    setClientLeadsCache(null);
+    setChatMessages([]);
+    setClientLeads([]);
+    setSelectedChat(null);
+    setIsChatOpen(false);
+    setIsClientLeadsExpanded(false);
+    setIsAgentChatsExpanded(false);
+  }, [id]);
+
+  // Функция для автоматической прокрутки к последнему сообщению
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+  };
+
+  // Автоматическая прокрутка при изменении сообщений
+  useEffect(() => {
+    if (chatMessages.length > 0 && isChatOpen) {
+      // Небольшая задержка для гарантии рендеринга DOM
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 10);
+      return () => clearTimeout(timer);
+    }
+  }, [chatMessages, isChatOpen]);
 
   // Функция для проверки, может ли пользователь редактировать объект
   const canEdit = () => {
@@ -751,10 +817,58 @@ function PropertyDetail() {
     loadAgentChats();
   }, [property, id]);
 
+  // Загрузка заявок клиентов по объекту
+  useEffect(() => {
+    async function loadClientLeads() {
+      try {
+        if (!property?.addedByAgent || !id) return;
+        
+        // Проверяем кеш
+        if (clientLeadsCache) {
+          setClientLeads(clientLeadsCache);
+          setClientLeadsLoading(false);
+          return;
+        }
+        
+        setClientLeadsLoading(true);
+        
+        // Загружаем заявки из коллекции clientLeads
+        const leadsQuery = query(
+          collection(db, 'clientLeads'),
+          where('propertyId', '==', id),
+          orderBy('createdAt', 'desc')
+        );
+        
+        const leadsSnap = await getDocs(leadsQuery);
+        const leads = leadsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        // Сохраняем в кеш и устанавливаем заявки
+        setClientLeadsCache(leads);
+        setClientLeads(leads);
+      } catch (e) {
+        console.error('Failed to load client leads', e);
+      } finally {
+        setClientLeadsLoading(false);
+      }
+    }
+    loadClientLeads();
+  }, [property, id, clientLeadsCache]);
+
   const openChatViewer = async (chat) => {
     try {
       setSelectedChat(chat);
       setIsChatOpen(true);
+      setNewMessage(''); // Очищаем поле ввода при открытии чата
+      
+      // Проверяем кеш
+      const cacheKey = `${chat.id}`;
+      if (chatCache[cacheKey]) {
+        setChatMessages(chatCache[cacheKey]);
+        setIsChatLoading(false);
+        return;
+      }
+      
+      // Если в кеше нет, загружаем сообщения
       setIsChatLoading(true);
       const agentMsgsQ = query(collection(db, 'agents', property.createdBy, 'chats', chat.id, 'messages'), orderBy('timestamp', 'asc'));
       const agentMsgsSnap = await getDocs(agentMsgsQ);
@@ -805,6 +919,12 @@ function PropertyDetail() {
         const t2 = m2.timestamp?.toDate ? m2.timestamp.toDate().getTime() : 0;
         return t1 - t2;
       });
+      
+      // Сохраняем в кеш и устанавливаем сообщения
+      setChatCache(prev => ({
+        ...prev,
+        [cacheKey]: allMsgs
+      }));
       setChatMessages(allMsgs);
     } catch (e) {
       console.error('Failed to load chat messages', e);
@@ -814,7 +934,176 @@ function PropertyDetail() {
     }
   };
 
+  // Функция для отправки нового сообщения в чат
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedChat || !property?.createdBy) return;
+    
+    try {
+      setIsSendingMessage(true);
+      
+      const messageData = {
+        text: newMessage.trim(),
+        timestamp: serverTimestamp(),
+        sender_id: currentUser?.uid || 'admin',
+        sender_role: role || 'admin',
+        sender_name: currentUser?.displayName || currentUser?.email || 'Admin',
+        propertyId: id
+      };
 
+      // Сохраняем сообщение в коллекцию агента
+      const agentChatRef = doc(db, 'agents', property.createdBy, 'chats', selectedChat.id);
+      const agentMessagesRef = collection(agentChatRef, 'messages');
+      await addDoc(agentMessagesRef, messageData);
+
+      // Если есть clientUserId, сохраняем сообщение и в коллекцию клиента
+      if (selectedChat.clientUserId) {
+        try {
+          const clientChatRef = doc(db, 'agents', selectedChat.clientUserId, 'chats', selectedChat.id);
+          const clientMessagesRef = collection(clientChatRef, 'messages');
+          await addDoc(clientMessagesRef, messageData);
+        } catch (e) {
+          console.warn('Failed to save message to client collection', e);
+        }
+      }
+
+      // Очищаем поле ввода
+      setNewMessage('');
+      
+      // Создаем новое сообщение для добавления в кеш
+      const newMessageData = {
+        id: `temp_${Date.now()}`,
+        text: messageData.text,
+        timestamp: messageData.timestamp,
+        sender_id: messageData.sender_id,
+        sender_role: messageData.sender_role,
+        sender_name: messageData.sender_name,
+        propertyId: messageData.propertyId,
+        source: 'agent'
+      };
+      
+      // Обновляем кеш и локальное состояние
+      const cacheKey = `${selectedChat.id}`;
+      const updatedMessages = [...chatMessages, newMessageData];
+      
+      setChatCache(prev => ({
+        ...prev,
+        [cacheKey]: updatedMessages
+      }));
+      setChatMessages(updatedMessages);
+      
+      toast.success('Сообщение отправлено');
+    } catch (e) {
+      console.error('Failed to send message', e);
+      toast.error('Ошибка при отправке сообщения');
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  // Функция для принудительного обновления кеша чата
+  const refreshChatCache = async (chatId) => {
+    if (!chatId || !property?.createdBy) return;
+    
+    try {
+      const agentMsgsQ = query(collection(db, 'agents', property.createdBy, 'chats', chatId, 'messages'), orderBy('timestamp', 'asc'));
+      const agentMsgsSnap = await getDocs(agentMsgsQ);
+      const agentMsgs = agentMsgsSnap.docs.map(d => ({ id: `a:${d.id}`, source: 'agent', ...d.data() }));
+      
+      // Получаем информацию о чате для проверки clientUserId
+      const chatDoc = await getDoc(doc(db, 'agents', property.createdBy, 'chats', chatId));
+      const chatData = chatDoc.data();
+      
+      let allMsgs = agentMsgs;
+      if (chatData?.clientUserId) {
+        try {
+          const clientMsgsQ = query(collection(db, 'agents', chatData.clientUserId, 'chats', chatId, 'messages'), orderBy('timestamp', 'asc'));
+          const clientMsgsSnap = await getDocs(clientMsgsQ);
+          const clientMsgs = clientMsgsSnap.docs.map(d => ({ id: `c:${d.id}`, source: 'client', ...d.data() }));
+          allMsgs = [...agentMsgs, ...clientMsgs];
+        } catch (e) {
+          console.warn('Failed to load client side messages', e);
+        }
+      }
+      
+      // Дедупликация и сортировка
+      const toSecond = (ts) => {
+        try {
+          return ts?.toDate ? Math.floor(ts.toDate().getTime() / 1000) : 0;
+        } catch { return 0; }
+      };
+      const buildKey = (m) => {
+        const senderId = m.sender_id || m.senderId || '';
+        const role = m.sender_role || '';
+        const text = m.text || '';
+        const prop = m.propertyId || '';
+        const sec = toSecond(m.timestamp);
+        return `${senderId}__${role}__${text}__${prop}__${sec}`;
+      };
+      const uniqueMap = new Map();
+      for (const m of allMsgs) {
+        const key = buildKey(m);
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, m);
+        } else {
+          const existing = uniqueMap.get(key);
+          const isExistingAgent = existing?.source === 'agent' || String(existing?.id || '').startsWith('a:');
+          const isCurrentAgent = m?.source === 'agent' || String(m?.id || '').startsWith('a:');
+          if (!isExistingAgent && isCurrentAgent) {
+            uniqueMap.set(key, m);
+          }
+        }
+      }
+      allMsgs = Array.from(uniqueMap.values());
+      allMsgs.sort((m1, m2) => {
+        const t1 = m1.timestamp?.toDate ? m1.timestamp.toDate().getTime() : 0;
+        const t2 = m2.timestamp?.toDate ? m2.timestamp.toDate().getTime() : 0;
+        return t1 - t2;
+      });
+      
+      // Обновляем кеш
+      const cacheKey = `${chatId}`;
+      setChatCache(prev => ({
+        ...prev,
+        [cacheKey]: allMsgs
+      }));
+      
+      // Если чат открыт, обновляем и локальное состояние
+      if (selectedChat?.id === chatId) {
+        setChatMessages(allMsgs);
+      }
+    } catch (e) {
+      console.error('Failed to refresh chat cache', e);
+    }
+  };
+
+  // Функция для принудительного обновления кеша заявок клиентов
+  const refreshClientLeadsCache = async () => {
+    if (!property?.addedByAgent || !id) return;
+    
+    try {
+      setClientLeadsLoading(true);
+      
+      const leadsQuery = query(
+        collection(db, 'clientLeads'),
+        where('propertyId', '==', id),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const leadsSnap = await getDocs(leadsQuery);
+      const leads = leadsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Обновляем кеш и локальное состояние
+      setClientLeadsCache(leads);
+      setClientLeads(leads);
+      
+      toast.success('Заявки клиентов обновлены');
+    } catch (e) {
+      console.error('Failed to refresh client leads cache', e);
+      toast.error('Ошибка при обновлении заявок клиентов');
+    } finally {
+      setClientLeadsLoading(false);
+    }
+  };
 
   // Добавляем списки значений для выпадающих списков
   const typeOptions = [
@@ -2261,31 +2550,155 @@ function PropertyDetail() {
         </div>
       </div>
 
+      {/* Заявки клиентов по объекту */}
+      {property.addedByAgent && (
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsClientLeadsExpanded(!isClientLeadsExpanded)}
+                className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+                title={isClientLeadsExpanded ? "Свернуть секцию" : "Развернуть секцию"}
+              >
+                <svg 
+                  className={`w-5 h-5 transition-transform ${isClientLeadsExpanded ? 'rotate-90' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              <h3 className="text-xl font-bold text-gray-800">
+                {t.leadForm.clientLeadsTitle} ({clientLeads.length})
+              </h3>
+            </div>
+            <button
+              onClick={refreshClientLeadsCache}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Обновить заявки клиентов"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Содержимое секции (отображается только при развернутом состоянии) */}
+          {isClientLeadsExpanded && (
+            <>
+              {clientLeadsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin h-6 w-6 rounded-full border-2 border-gray-400 border-b-transparent" />
+                </div>
+              ) : clientLeads.length === 0 ? (
+                <div className="text-sm text-gray-500 py-4">{t.leadForm.noClientLeads}</div>
+              ) : (
+                <div className="space-y-3">
+                  {clientLeads.map(lead => (
+                    <div key={lead.id} className="p-4 border rounded-lg bg-gray-50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="mb-2">
+                            <div className="font-medium text-gray-900 mb-1">
+                              {t.leadForm.clientName}: {lead.name}
+                            </div>
+                            <div className="text-sm text-gray-600 flex items-center gap-2">
+                              <span>{t.leadForm.clientPhone}: {lead.phone}</span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(lead.phone);
+                                  toast.success(t.leadForm.phoneCopied);
+                                }}
+                                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                title={t.leadForm.copyPhoneTooltip}
+                              >
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {lead.messenger && (
+                            <div className="text-sm text-gray-600 mb-2">
+                              {t.leadForm.clientMessenger}: {
+                                lead.messenger === 'whatsapp' ? t.leadForm.whatsapp : t.leadForm.telegram
+                              }
+                            </div>
+                          )}
+                          
+                          {lead.createdAt && (
+                            <div className="text-xs text-gray-500">
+                              {t.leadForm.requestDate}: {
+                                lead.createdAt.toDate ? 
+                                  lead.createdAt.toDate().toLocaleString() : 
+                                  new Date(lead.createdAt).toLocaleString()
+                              }
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        )}
+
       {/* Чаты по объекту (iOS) */}
       {property.addedByAgent && agentChats && (
         <div className="mt-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-3">{t.propertyDetail.agentChatsTitle || 'Чаты по объекту'}</h3>
-          {agentChats.length === 0 ? (
-            <div className="text-sm text-gray-500">{t.propertyDetail.noChats || 'Чатов по объекту пока нет'}</div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {agentChats.map(chat => (
-                <button
-                  key={chat.id}
-                  onClick={() => openChatViewer(chat)}
-                  className="flex items-center justify-between w-full px-4 py-2 border rounded-lg hover:bg-gray-50 text-left"
-                >
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-800">{chat.chatName || 'Чат'}</span>
-                    <span className="text-xs text-gray-500">
-                      {(chat.timestamp?.toDate && chat.timestamp.toDate().toLocaleString()) || ''}
-                      {chat.chatType ? ` • ${chat.chatType}` : ''}
-                    </span>
-                  </div>
-                  <span className="text-xs text-blue-600">{t.propertyDetail.openChat || 'Открыть чат'}</span>
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-3 mb-3">
+            <button
+              onClick={() => setIsAgentChatsExpanded(!isAgentChatsExpanded)}
+              className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+              title={isAgentChatsExpanded ? "Свернуть секцию" : "Развернуть секцию"}
+            >
+              <svg 
+                className={`w-5 h-5 transition-transform ${isAgentChatsExpanded ? 'rotate-90' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <h3 className="text-xl font-bold text-gray-800">
+              {t.propertyDetail.agentChatsTitle || 'Чаты по объекту'} ({agentChats.length})
+            </h3>
+          </div>
+          
+          {/* Содержимое секции (отображается только при развернутом состоянии) */}
+          {isAgentChatsExpanded && (
+            <>
+              {agentChats.length === 0 ? (
+                <div className="text-sm text-gray-500">{t.propertyDetail.noChats}</div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {agentChats.map(chat => (
+                    <button
+                      key={chat.id}
+                      onClick={() => openChatViewer(chat)}
+                      className="flex items-center justify-between w-full px-4 py-2 border rounded-lg hover:bg-gray-50 text-left"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-800">
+                          {localizeChatName(chat.chatName)}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {(chat.timestamp?.toDate && chat.timestamp.toDate().toLocaleString()) || ''}
+                          {chat.chatType ? ` • ${chat.chatType}` : ''}
+                        </span>
+                      </div>
+                      <span className="text-xs text-blue-600">{t.propertyDetail.openChat || 'Открыть чат'}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -2337,10 +2750,32 @@ function PropertyDetail() {
       )}
 
       {/* Chat Viewer Dialog */}
-      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+      <Dialog open={isChatOpen} onOpenChange={(open) => {
+        setIsChatOpen(open);
+        if (!open) {
+          setNewMessage('');
+          setSelectedChat(null);
+        }
+      }}>
         <DialogContent className="max-w-2xl w-full">
           <DialogHeader>
-            <DialogTitle>{selectedChat?.chatName || t.propertyDetail.chatDialogTitle || 'Переписка'}</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>
+                {selectedChat?.chatName ? 
+                  localizeChatName(selectedChat.chatName) : 
+                  (t.propertyDetail.chatDialogTitle || 'Переписка')
+                }
+              </DialogTitle>
+              <button
+                onClick={() => refreshChatCache(selectedChat?.id)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Обновить чат"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
           </DialogHeader>
           <div className="mt-2 max-h-[70vh] overflow-y-auto space-y-3">
             {isChatLoading ? (
@@ -2368,6 +2803,34 @@ function PropertyDetail() {
                 </div>
               ))
             )}
+            {/* Невидимый элемент для автоматической прокрутки */}
+            <div ref={messagesEndRef} />
+          </div>
+          
+          {/* Форма ввода нового сообщения */}
+          <div className="mt-4 border-t pt-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder={t.propertyDetail.messagePlaceholder}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSendingMessage}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={!newMessage.trim() || isSendingMessage}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSendingMessage ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-b-transparent rounded-full" />
+                ) : (
+                  t.propertyDetail.sendButton
+                )}
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

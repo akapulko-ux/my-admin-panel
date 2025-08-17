@@ -1,14 +1,36 @@
 export const translations = {
   en: {
     leadForm: {
-              writeToAgent: 'Write to agent',
-        manageProperty: 'Manage property',
+                    writeToAgent: 'Leave a request',
+      leaveRequestToAgent: 'Leave a request to the agent',
+      agentContactInfo: 'The agent will contact you in a convenient messenger to provide all details about the property',
+      messengerLabel: 'Preferred messenger',
+      whatsapp: 'Contact via WhatsApp',
+      telegram: 'Contact via Telegram',
+      manageProperty: 'Manage property',
       name: 'Name',
       phone: 'Phone',
       cancel: 'Cancel',
       send: 'Send',
       sentSuccess: 'Your request has been sent',
-      sentError: 'Failed to send the request'
+      sentError: 'Failed to send the request',
+      accessError: 'Access error. Please try again.',
+      serviceUnavailable: 'Service temporarily unavailable. Please try later.',
+      errorPrefix: 'Error: ',
+      addedByAgent: 'Added by agent',
+      agentInfo: 'Agent Information',
+      agentName: 'Agent Name',
+      agentPhone: 'Agent Phone',
+      agentEmail: 'Agent Email',
+      clientLeadsTitle: 'Client Requests',
+      clientLeadsSubtitle: 'Requests from clients for this property',
+      noClientLeads: 'No client requests for this property yet',
+      clientName: 'Client Name',
+      clientPhone: 'Client Phone',
+      clientMessenger: 'Preferred Messenger',
+      requestDate: 'Request Date',
+      phoneCopied: 'Phone number copied',
+      copyPhoneTooltip: 'Copy phone number'
     },
     // Page 1: Summary
     title: 'Investor ROI Presentation',
@@ -590,7 +612,7 @@ _________________               _________________
       removeFromListing: 'Remove from listing',
       returnToListing: 'Return to listing',
       removedFromListing: 'Removed from listing',
-      addPhotoButton: 'Add Photo / PDF',
+      addPhotoButton: 'Add Photo',
       uploadingText: 'Uploading...',
       watchVideoButton: 'Complex Video',
       view3DTourButton: 'View 3D Tour',
@@ -704,6 +726,7 @@ _________________               _________________
       uploading: 'Uploading...',
       
       // Navigation
+      backButton: 'Back',
       backToGallery: 'Back to Gallery',
       onMap: 'on map',
       
@@ -711,7 +734,7 @@ _________________               _________________
       editButton: 'Edit',
       saveButton: 'Save',
       cancelButton: 'Cancel',
-      addPhotoButton: 'Add Photo / PDF',
+      addPhotoButton: 'Add Photo',
       addPhotoButtonSimple: 'Add Photo',
       createObjectButton: 'Create Object',
       creatingText: 'Creating...',
@@ -725,6 +748,10 @@ _________________               _________________
       chatDialogTitle: 'Conversation',
       loadingMessages: 'Loading messages…',
       propertyCardMessage: 'Property card',
+      noChats: 'No chats for this property yet',
+      applicationFromAgent: 'Application from agent',
+      messagePlaceholder: 'Enter message...',
+      sendButton: 'Send',
       
       // Field labels
       bedrooms: 'Bedrooms',
@@ -824,7 +851,6 @@ _________________               _________________
       fileNotUploaded: 'File not uploaded',
       floorText: 'floor',
       floorsText: 'floors',
-      noChats: 'No chats for this property yet',
       
       // Success messages
       changesSaved: 'Changes saved successfully',
@@ -1608,14 +1634,36 @@ _________________               _________________
   },
   ru: {
     leadForm: {
-              writeToAgent: 'Написать агенту',
+              writeToAgent: 'Оставить заявку',
+        leaveRequestToAgent: 'Оставьте заявку агенту',
+        agentContactInfo: 'Агент свяжется с вами в удобном для вас мессенджере для предоставления всех деталей по объекту',
+        messengerLabel: 'Предпочитаемый мессенджер',
+        whatsapp: 'Связаться в WhatsApp',
+        telegram: 'Связаться в Telegram',
         manageProperty: 'Управлять объектом',
       name: 'Имя',
       phone: 'Телефон',
       cancel: 'Отменить',
       send: 'Отправить',
       sentSuccess: 'Ваша заявка отправлена',
-      sentError: 'Не удалось отправить заявку'
+      sentError: 'Не удалось отправить заявку',
+      accessError: 'Ошибка доступа. Попробуйте еще раз.',
+      serviceUnavailable: 'Сервис временно недоступен. Попробуйте позже.',
+      errorPrefix: 'Ошибка: ',
+      addedByAgent: 'Добавлено агентом',
+      agentInfo: 'Информация об агенте',
+      agentName: 'Имя агента',
+      agentPhone: 'Телефон агента',
+      agentEmail: 'Email агента',
+      clientLeadsTitle: 'Заявки клиентов',
+      clientLeadsSubtitle: 'Заявки от клиентов по этому объекту',
+      noClientLeads: 'Заявок от клиентов по этому объекту пока нет',
+      clientName: 'Имя клиента',
+      clientPhone: 'Телефон клиента',
+      clientMessenger: 'Предпочитаемый мессенджер',
+      requestDate: 'Дата заявки',
+      phoneCopied: 'Номер телефона скопирован',
+      copyPhoneTooltip: 'Копировать номер телефона'
     },
     // Page 1: Summary
     title: 'Инвестиционная презентация ROI',
@@ -2218,7 +2266,7 @@ _________________               _________________
       removeFromListing: 'Убрать из листинга',
       returnToListing: 'Вернуть в листинг',
       removedFromListing: 'Убран из листинга',
-      addPhotoButton: 'Добавить фото / PDF',
+      addPhotoButton: 'Добавить фото',
       uploadingText: 'Загрузка...',
       watchVideoButton: 'Видео о комплексе',
       view3DTourButton: 'Посмотреть 3D тур',
@@ -2332,6 +2380,7 @@ _________________               _________________
       uploading: 'Загрузка...',
       
       // Navigation
+      backButton: 'Назад',
       backToGallery: 'Вернуться в галерею',
       onMap: 'на карте',
       
@@ -2339,7 +2388,7 @@ _________________               _________________
       editButton: 'Редактировать',
       saveButton: 'Сохранить',
       cancelButton: 'Отменить',
-      addPhotoButton: 'Добавить фото / PDF',
+      addPhotoButton: 'Добавить фото',
       addPhotoButtonSimple: 'Добавить фото',
       createObjectButton: 'Создать объект',
       creatingText: 'Создание...',
@@ -2353,6 +2402,10 @@ _________________               _________________
       chatDialogTitle: 'Переписка',
       loadingMessages: 'Загрузка сообщений…',
       propertyCardMessage: 'Карточка объекта',
+      noChats: 'Чатов по объекту пока нет',
+      applicationFromAgent: 'Заявка от агента',
+      messagePlaceholder: 'Введите сообщение...',
+      sendButton: 'Отправить',
       
       // Field labels
       bedrooms: 'Спален',
@@ -2452,7 +2505,6 @@ _________________               _________________
       fileNotUploaded: 'Файл не загружен',
       floorText: 'этаж',
       floorsText: 'этажа',
-      noChats: 'Чатов по объекту пока нет',
       
       // Success messages
       changesSaved: 'Изменения успешно сохранены',
@@ -3241,14 +3293,36 @@ _________________               _________________
   },
   id: {
     leadForm: {
-              writeToAgent: 'Tulis ke agen',
+              writeToAgent: 'Ajukan permintaan',
+        leaveRequestToAgent: 'Ajukan permintaan ke agen',
+        agentContactInfo: 'Agen akan menghubungi Anda di messenger yang nyaman untuk memberikan semua detail tentang properti',
+        messengerLabel: 'Messenger yang disukai',
+        whatsapp: 'Hubungi melalui WhatsApp',
+        telegram: 'Hubungi melalui Telegram',
         manageProperty: 'Kelola properti',
       name: 'Nama',
       phone: 'Telepon',
       cancel: 'Batal',
       send: 'Kirim',
       sentSuccess: 'Permintaan Anda telah dikirim',
-      sentError: 'Gagal mengirim permintaan'
+      sentError: 'Gagal mengirim permintaan',
+      accessError: 'Kesalahan akses. Silakan coba lagi.',
+      serviceUnavailable: 'Layanan sementara tidak tersedia. Silakan coba nanti.',
+      errorPrefix: 'Kesalahan: ',
+      addedByAgent: 'Ditambahkan oleh agen',
+      agentInfo: 'Informasi Agen',
+      agentName: 'Nama Agen',
+      agentPhone: 'Telepon Agen',
+      agentEmail: 'Email Agen',
+      clientLeadsTitle: 'Permintaan Klien',
+      clientLeadsSubtitle: 'Permintaan dari klien untuk properti ini',
+      noClientLeads: 'Belum ada permintaan klien untuk properti ini',
+      clientName: 'Nama Klien',
+      clientPhone: 'Telepon Klien',
+      clientMessenger: 'Messenger yang Disukai',
+      requestDate: 'Tanggal Permintaan',
+      phoneCopied: 'Nomor telepon disalin',
+      copyPhoneTooltip: 'Salin nomor telepon'
     },
     // Page 1: Summary
     title: 'Presentasi ROI Investor',
@@ -3851,7 +3925,7 @@ _________________               _________________
       removeFromListing: 'Hapus dari listing',
       returnToListing: 'Kembalikan ke listing',
       removedFromListing: 'Dihapus dari listing',
-      addPhotoButton: 'Tambah Foto / PDF',
+      addPhotoButton: 'Tambah Foto',
       uploadingText: 'Mengupload...',
       watchVideoButton: 'Video Komplek',
       view3DTourButton: 'Lihat Tur 3D',
@@ -3965,6 +4039,7 @@ _________________               _________________
       uploading: 'Mengunggah...',
       
       // Navigation
+      backButton: 'Kembali',
       backToGallery: 'Kembali ke Galeri',
       onMap: 'di peta',
       
@@ -3972,7 +4047,7 @@ _________________               _________________
       editButton: 'Edit',
       saveButton: 'Simpan',
       cancelButton: 'Batal',
-      addPhotoButton: 'Tambah Foto / PDF',
+      addPhotoButton: 'Tambah Foto',
       addPhotoButtonSimple: 'Tambah Foto',
       createObjectButton: 'Buat Objek',
       creatingText: 'Membuat...',
@@ -3986,6 +4061,10 @@ _________________               _________________
       chatDialogTitle: 'Percakapan',
       loadingMessages: 'Memuat pesan…',
       propertyCardMessage: 'Kartu properti',
+      noChats: 'Belum ada obrolan untuk properti ini',
+      applicationFromAgent: 'Permintaan dari agen',
+      messagePlaceholder: 'Masukkan pesan...',
+      sendButton: 'Kirim',
       
       // Field labels
       bedrooms: 'Kamar Tidur',
@@ -4085,7 +4164,6 @@ _________________               _________________
       fileNotUploaded: 'File tidak diunggah',
       floorText: 'lantai',
       floorsText: 'lantai',
-      noChats: 'Belum ada obrolan untuk properti ini',
       
       // Success messages
       changesSaved: 'Perubahan berhasil disimpan',

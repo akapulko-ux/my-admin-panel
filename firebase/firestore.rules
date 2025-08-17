@@ -356,6 +356,16 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
     }
 
+    // === Client Leads (Заявки клиентов на объекты) ===
+    match /clientLeads/{leadId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Создание доступно всем (для отправки заявок от клиентов)
+      allow create: if true;
+      // Чтение и обновление только для админов и агентов
+      allow read, update: if isAdmin() || isAnyAgent();
+    }
+
     // === Фоллбэк для любых новых коллекций ===
     match /{path=**} {
       // Админ имеет АБСОЛЮТНО ПОЛНЫЕ права на всё
