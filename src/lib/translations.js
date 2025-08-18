@@ -620,6 +620,7 @@ _________________               _________________
       openChessboardButton: 'Objects Chessboard',
       linksAndDocuments: 'Links and Documents',
       description: 'Description',
+      translating: 'Translating...',
       priceFromLabel: 'Price from',
       priceMinFromObjects: '(minimum from objects)',
       priceFromComplex: '(complex price)',
@@ -816,6 +817,21 @@ _________________               _________________
         apartVilla: 'Apart-Villa',
         townhouse: 'Townhouse',
         land: 'Land Plot'
+      },
+
+      // Translation Manager
+      translationManager: {
+        title: 'Translation Manager',
+        originalDescription: 'Original Description',
+        noDescription: 'No description',
+        availableTranslations: 'Available Translations',
+        delete: 'Delete',
+        deleteAll: 'Delete All',
+        noTranslations: 'No translations available',
+        noTranslationsHint: 'Translations will appear here when users view the property in different languages',
+        stats: 'Translation Statistics',
+        totalTranslations: 'Total translations',
+        languages: 'Languages'
       },
       
       buildingTypeOptions: {
@@ -2274,6 +2290,7 @@ _________________               _________________
       openChessboardButton: 'Шахматка объектов',
       linksAndDocuments: 'Ссылки и документы',
       description: 'Описание',
+      translating: 'Переводится...',
       priceFromLabel: 'Цена от',
       priceMinFromObjects: '(минимальная из объектов)',
       priceFromComplex: '(цена комплекса)',
@@ -2470,6 +2487,21 @@ _________________               _________________
         apartVilla: 'Апарт-вилла',
         townhouse: 'Таунхаус',
         land: 'Земельный участок'
+      },
+
+      // Translation Manager
+      translationManager: {
+        title: 'Менеджер переводов',
+        originalDescription: 'Оригинальное описание',
+        noDescription: 'Описание отсутствует',
+        availableTranslations: 'Доступные переводы',
+        delete: 'Удалить',
+        deleteAll: 'Удалить все',
+        noTranslations: 'Переводы отсутствуют',
+        noTranslationsHint: 'Переводы появятся здесь, когда пользователи будут просматривать объект на разных языках',
+        stats: 'Статистика переводов',
+        totalTranslations: 'Всего переводов',
+        languages: 'Языки'
       },
       
       buildingTypeOptions: {
@@ -3933,6 +3965,7 @@ _________________               _________________
       openChessboardButton: 'Papan Catur Unit',
       linksAndDocuments: 'Tautan dan Dokumen',
       description: 'Deskripsi',
+      translating: 'Menerjemahkan...',
       priceFromLabel: 'Harga dari',
       priceMinFromObjects: '(minimum dari objek)',
       priceFromComplex: '(harga kompleks)',
@@ -4129,6 +4162,21 @@ _________________               _________________
         apartVilla: 'Apart-Vila',
         townhouse: 'Rumah Teres',
         land: 'Tanah'
+      },
+
+      // Translation Manager
+      translationManager: {
+        title: 'Manajer Terjemahan',
+        originalDescription: 'Deskripsi Asli',
+        noDescription: 'Tidak ada deskripsi',
+        availableTranslations: 'Terjemahan yang Tersedia',
+        delete: 'Hapus',
+        deleteAll: 'Hapus Semua',
+        noTranslations: 'Tidak ada terjemahan yang tersedia',
+        noTranslationsHint: 'Terjemahan akan muncul di sini ketika pengguna melihat properti dalam bahasa yang berbeda',
+        stats: 'Statistik Terjemahan',
+        totalTranslations: 'Total terjemahan',
+        languages: 'Bahasa'
       },
       
       buildingTypeOptions: {

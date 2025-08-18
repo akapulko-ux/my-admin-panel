@@ -1175,3 +1175,371 @@ exports.getDeveloperNotificationStats = functions.https.onCall(async (data, cont
     throw new functions.https.HttpsError('internal', 'Ошибка при получении статистики');
   }
 });
+
+// ==================== AI TRANSLATION FUNCTIONS ====================
+
+// Импортируем OpenAI
+let OpenAI;
+let openai;
+
+// Функция для инициализации OpenAI с секретом
+function initializeOpenAI(apiKey) {
+  try {
+    const OpenAI = require('openai');
+    return new OpenAI({
+      apiKey: apiKey
+    });
+  } catch (error) {
+    console.error('Failed to initialize OpenAI:', error);
+    return null;
+  }
+}
+
+/**
+ * Определяет язык текста с помощью ИИ
+ * @param {string} text - текст для определения языка
+ * @returns {Promise<string>} - код языка (например, 'ru', 'en', 'id')
+ */
+async function detectLanguage(text) {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a language detection expert. Analyze the given text and respond with ONLY the ISO 639-1 language code (e.g., "ru" for Russian, "en" for English, "id" for Indonesian, "fr" for French, "de" for German, "es" for Spanish, "it" for Italian, "pt" for Portuguese, "zh" for Chinese, "ja" for Japanese, "ko" for Korean, "ar" for Arabic, "hi" for Hindi, "th" for Thai, "vi" for Vietnamese). Do not include any other text or explanation.'
+        },
+        {
+          role: 'user',
+          content: text
+        }
+      ],
+      max_tokens: 10,
+      temperature: 0
+    });
+
+    const detectedLanguage = response.choices[0]?.message?.content?.trim().toLowerCase();
+    
+    // Валидация кода языка
+    const validLanguages = ['ru', 'en', 'id', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ko', 'ar', 'hi', 'th', 'vi'];
+    if (validLanguages.includes(detectedLanguage)) {
+      return detectedLanguage;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error detecting language:', error);
+    return null;
+  }
+}
+
+/**
+ * Переводит текст с помощью ИИ
+ * @param {string} text - текст для перевода
+ * @param {string} targetLanguage - целевой язык (код языка)
+ * @param {string} sourceLanguage - исходный язык (код языка, опционально)
+ * @returns {Promise<string>} - переведенный текст
+ */
+async function translateText(text, targetLanguage, sourceLanguage = null) {
+  try {
+    const languageNames = {
+      'ru': 'Russian',
+      'en': 'English',
+      'id': 'Indonesian',
+      'fr': 'French',
+      'de': 'German',
+      'es': 'Spanish',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'zh': 'Chinese',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'ar': 'Arabic',
+      'hi': 'Hindi',
+      'th': 'Thai',
+      'vi': 'Vietnamese'
+    };
+
+    const targetLangName = languageNames[targetLanguage] || targetLanguage;
+    const sourceLangName = sourceLanguage ? languageNames[sourceLanguage] || sourceLanguage : 'auto';
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a professional translator. Translate the given text from ${sourceLangName} to ${targetLangName}. Maintain the original meaning, tone, and formatting. If the text contains technical terms or proper nouns, translate them appropriately for the target language. Respond with ONLY the translated text, no explanations or additional text.`
+        },
+        {
+          role: 'user',
+          content: text
+        }
+      ],
+      max_tokens: 2000,
+      temperature: 0.3
+    });
+
+    const translatedText = response.choices[0]?.message?.content?.trim();
+    
+    return translatedText || text;
+  } catch (error) {
+    console.error('Error translating text:', error);
+    return text;
+  }
+}
+
+/**
+ * Автоматически переводит текст на целевой язык
+ * @param {string} text - текст для перевода
+ * @param {string} targetLanguage - целевой язык
+ * @returns {Promise<string>} - переведенный текст
+ */
+async function autoTranslate(text, targetLanguage) {
+  if (!text || !targetLanguage) {
+    return text;
+  }
+
+  try {
+    // Определяем язык оригинала
+    const sourceLanguage = await detectLanguage(text);
+    
+    // Если язык не определен или совпадает с целевым, возвращаем оригинал
+    if (!sourceLanguage || sourceLanguage === targetLanguage) {
+      return text;
+    }
+
+    // Переводим текст
+    const translatedText = await translateText(text, targetLanguage, sourceLanguage);
+    
+    return translatedText;
+  } catch (error) {
+    console.error('Error in auto-translation:', error);
+    return text;
+  }
+}
+
+/**
+ * Автоматически переводит текст на целевой язык с переданным клиентом
+ * @param {string} text - текст для перевода
+ * @param {string} targetLanguage - целевой язык
+ * @param {Object} openaiClient - клиент OpenAI
+ * @returns {Promise<Object>} - объект с переведенным текстом и языком оригинала
+ */
+async function autoTranslateWithClient(text, targetLanguage, openaiClient) {
+  if (!text || !targetLanguage || !openaiClient) {
+    return { translatedText: text, sourceLanguage: 'unknown' };
+  }
+
+  try {
+    // Определяем язык оригинала
+    const sourceLanguage = await detectLanguageWithClient(text, openaiClient);
+    
+    // Если язык не определен или совпадает с целевым, возвращаем оригинал
+    if (!sourceLanguage || sourceLanguage === targetLanguage) {
+      return { translatedText: text, sourceLanguage: sourceLanguage || 'unknown' };
+    }
+
+    // Переводим текст
+    const translatedText = await translateTextWithClient(text, targetLanguage, sourceLanguage, openaiClient);
+    
+    return { translatedText, sourceLanguage };
+  } catch (error) {
+    console.error('Error in auto-translation with client:', error);
+    return { translatedText: text, sourceLanguage: 'unknown' };
+  }
+}
+
+/**
+ * Определяет язык текста с помощью ИИ (с переданным клиентом)
+ * @param {string} text - текст для определения языка
+ * @param {Object} openaiClient - клиент OpenAI
+ * @returns {Promise<string>} - код языка (например, 'ru', 'en', 'id')
+ */
+async function detectLanguageWithClient(text, openaiClient) {
+  try {
+    const response = await openaiClient.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a language detection expert. Analyze the given text and respond with ONLY the ISO 639-1 language code (e.g., "ru" for Russian, "en" for English, "id" for Indonesian, "fr" for French, "de" for German, "es" for Spanish, "it" for Italian, "pt" for Portuguese, "zh" for Chinese, "ja" for Japanese, "ko" for Korean, "ar" for Arabic, "hi" for Hindi, "th" for Thai, "vi" for Vietnamese). Do not include any other text or explanation.'
+        },
+        {
+          role: 'user',
+          content: text
+        }
+      ],
+      max_tokens: 10,
+      temperature: 0
+    });
+
+    const detectedLanguage = response.choices[0]?.message?.content?.trim().toLowerCase();
+    
+    // Валидация кода языка
+    const validLanguages = ['ru', 'en', 'id', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ko', 'ar', 'hi', 'th', 'vi'];
+    if (validLanguages.includes(detectedLanguage)) {
+      return detectedLanguage;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error detecting language with client:', error);
+    return null;
+  }
+}
+
+/**
+ * Переводит текст с помощью ИИ (с переданным клиентом)
+ * @param {string} text - текст для перевода
+ * @param {string} targetLanguage - целевой язык (код языка)
+ * @param {string} sourceLanguage - исходный язык (код языка, опционально)
+ * @param {Object} openaiClient - клиент OpenAI
+ * @returns {Promise<string>} - переведенный текст
+ */
+async function translateTextWithClient(text, targetLanguage, sourceLanguage = null, openaiClient) {
+  try {
+    const languageNames = {
+      'ru': 'Russian',
+      'en': 'English',
+      'id': 'Indonesian',
+      'fr': 'French',
+      'de': 'German',
+      'es': 'Spanish',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'zh': 'Chinese',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'ar': 'Arabic',
+      'hi': 'Hindi',
+      'th': 'Thai',
+      'vi': 'Vietnamese'
+    };
+
+    const targetLangName = languageNames[targetLanguage] || targetLanguage;
+    const sourceLangName = sourceLanguage ? languageNames[sourceLanguage] || sourceLanguage : 'auto';
+
+    const response = await openaiClient.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a professional translator. Translate the given text from ${sourceLangName} to ${targetLangName}. Maintain the original meaning, tone, and formatting. If the text contains technical terms or proper nouns, translate them appropriately for the target language. Respond with ONLY the translated text, no explanations or additional text.`
+        },
+        {
+          role: 'user',
+          content: text
+        }
+      ],
+      max_tokens: 2000,
+      temperature: 0.3
+    });
+
+    const translatedText = response.choices[0]?.message?.content?.trim();
+    
+    return translatedText || text;
+  } catch (error) {
+    console.error('Error translating text with client:', error);
+    return text;
+  }
+}
+
+// Firebase Function для перевода текста (Callable)
+exports.translateText = functions.https.onCall(async (data, context) => {
+  try {
+    const { text, targetLanguage } = data;
+
+    // Валидация входных данных
+    if (!text || !targetLanguage) {
+      throw new functions.https.HttpsError('invalid-argument', 'Text and targetLanguage are required');
+    }
+
+    // Проверяем, что targetLanguage является валидным
+    const validLanguages = ['ru', 'en', 'id', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ko', 'ar', 'hi', 'th', 'vi'];
+    if (!validLanguages.includes(targetLanguage)) {
+      throw new functions.https.HttpsError('invalid-argument', 'Invalid targetLanguage');
+    }
+
+    console.log(`🔄 Starting translation: ${targetLanguage}, text length: ${text.length}`);
+
+    // Инициализируем OpenAI с переменной окружения
+    const openaiClient = initializeOpenAI(process.env.OPENAI_API_KEY);
+
+    if (!openaiClient) {
+      throw new functions.https.HttpsError('internal', 'OpenAI client not available');
+    }
+
+    // Выполняем автоматический перевод с новым клиентом
+    const result = await autoTranslateWithClient(text, targetLanguage, openaiClient);
+
+    console.log(`✅ Translation completed: ${targetLanguage}`);
+
+    return {
+      success: true,
+      translatedText: result.translatedText,
+      targetLanguage,
+      sourceLanguage: result.sourceLanguage
+    };
+
+  } catch (error) {
+    console.error('❌ Translation error:', error);
+    
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    
+    throw new functions.https.HttpsError('internal', 'Ошибка при переводе текста');
+  }
+});
+
+// Firebase Function для перевода текста (HTTP endpoint с CORS)
+const cors = require('cors')({ origin: true });
+
+exports.translateTextHttp = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    try {
+      // Проверяем метод запроса
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+      }
+
+      const { text, targetLanguage } = req.body;
+
+      // Валидация входных данных
+      if (!text || !targetLanguage) {
+        return res.status(400).json({ error: 'Text and targetLanguage are required' });
+      }
+
+      // Проверяем, что targetLanguage является валидным
+      const validLanguages = ['ru', 'en', 'id', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ko', 'ar', 'hi', 'th', 'vi'];
+      if (!validLanguages.includes(targetLanguage)) {
+        return res.status(400).json({ error: 'Invalid targetLanguage' });
+      }
+
+      console.log(`🔄 Starting translation (HTTP): ${targetLanguage}, text length: ${text.length}`);
+
+      // Инициализируем OpenAI с переменной окружения
+      const openaiClient = initializeOpenAI(process.env.OPENAI_API_KEY);
+
+      if (!openaiClient) {
+        return res.status(500).json({ error: 'OpenAI client not available' });
+      }
+
+      // Выполняем автоматический перевод с новым клиентом
+      const result = await autoTranslateWithClient(text, targetLanguage, openaiClient);
+
+      console.log(`✅ Translation completed (HTTP): ${targetLanguage}`);
+
+      return res.status(200).json({
+        success: true,
+        translatedText: result.translatedText,
+        targetLanguage,
+        sourceLanguage: result.sourceLanguage
+      });
+
+    } catch (error) {
+      console.error('❌ Translation error (HTTP):', error);
+      return res.status(500).json({ error: 'Ошибка при переводе текста' });
+    }
+  });
+});

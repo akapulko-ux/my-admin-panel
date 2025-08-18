@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query } from "firebase/firestore";
+import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc } from "firebase/firestore";
 import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Waves, Bed, Ruler, MapPin, Hammer, Layers, Bath, FileText, Calendar, DollarSign, Settings } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
@@ -19,6 +19,7 @@ import {
 } from "../lib/utils";
 import { showError, showSuccess } from "../utils/notifications";
 import { Badge } from "../components/ui/badge";
+import { translateWithCache } from "../utils/aiTranslation";
 
 function PublicPropertyDetail() {
   const { id } = useParams();
@@ -36,6 +37,8 @@ function PublicPropertyDetail() {
   const [leadPhone, setLeadPhone] = useState('');
   const [leadMessenger, setLeadMessenger] = useState('whatsapp');
   const [leadSending, setLeadSending] = useState(false);
+  const [translatedDescription, setTranslatedDescription] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
   
   // Состояние для свайпов
   const [touchStart, setTouchStart] = useState(null);
@@ -56,6 +59,74 @@ function PublicPropertyDetail() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
+  };
+
+  // Функция для работы с переводами описания
+  const handleDescriptionTranslation = async (propertyData, targetLanguage) => {
+    if (!propertyData?.description || !targetLanguage) {
+      setTranslatedDescription(propertyData?.description || '');
+      return;
+    }
+
+    try {
+      // Проверяем, есть ли уже сохраненный перевод на нужном языке
+      const descriptions = propertyData.descriptions || {};
+      
+      if (descriptions[targetLanguage]) {
+        // Если перевод уже есть в БД, используем его
+        console.log(`📋 Using cached translation from DB for ${targetLanguage}`);
+        setTranslatedDescription(descriptions[targetLanguage]);
+        return;
+      }
+
+      // Если перевода нет, выполняем перевод
+      setIsTranslating(true);
+      console.log(`🔄 Translating description to ${targetLanguage}`);
+      
+      const translated = await translateWithCache(propertyData.description, targetLanguage);
+      
+      // Сохраняем перевод в БД
+      if (translated && translated !== propertyData.description) {
+        await saveTranslationToDB(propertyData.id, targetLanguage, translated);
+        console.log(`💾 Translation saved to DB for ${targetLanguage}`);
+      }
+      
+      setTranslatedDescription(translated);
+    } catch (error) {
+      console.error('Error handling description translation:', error);
+      setTranslatedDescription(propertyData.description);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Функция для сохранения перевода в БД
+  const saveTranslationToDB = async (propertyId, language, translatedText) => {
+    try {
+      const propertyRef = doc(db, "properties", propertyId);
+      
+      // Получаем текущие данные объекта
+      const propertySnap = await getDoc(propertyRef);
+      if (!propertySnap.exists()) {
+        console.error('Property not found');
+        return;
+      }
+
+      const currentData = propertySnap.data();
+      const descriptions = currentData.descriptions || {};
+      
+      // Добавляем новый перевод
+      descriptions[language] = translatedText;
+      
+      // Обновляем документ
+      await updateDoc(propertyRef, {
+        descriptions: descriptions
+      });
+      
+      console.log(`✅ Translation saved to DB: ${language}`);
+    } catch (error) {
+      console.error('Error saving translation to DB:', error);
+    }
   };
 
   // Функция для перехода к управлению объектом
@@ -87,6 +158,14 @@ function PublicPropertyDetail() {
       setCurrentImg(prev => prev - 1);
     }
   };
+
+  // useEffect для автоматического перевода описания
+  useEffect(() => {
+    if (property) {
+      // Обрабатываем перевод описания с кэшированием в БД
+      handleDescriptionTranslation(property, language);
+    }
+  }, [property, language]);
 
   useEffect(() => {
     async function fetchData() {
@@ -133,6 +212,9 @@ function PublicPropertyDetail() {
               data.isDeveloperApproved = false;
             }
           } catch {}
+          
+          // Добавляем ID объекта в данные для использования в функциях
+          data.id = id;
           setProperty(data);
         }
       } finally {
@@ -587,8 +669,17 @@ function PublicPropertyDetail() {
       {/* Поле "Описание" */}
       {property.description && (
         <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.description}</h3>
-          <p className="text-gray-600 whitespace-pre-line">{property.description}</p>
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            {t.propertyDetail.description}
+            {isTranslating && (
+              <span className="ml-2 text-sm text-gray-500">
+                ({t.propertyDetail.translating})
+              </span>
+            )}
+          </h3>
+          <p className="text-gray-600 whitespace-pre-line">
+            {translatedDescription || property.description}
+          </p>
         </div>
       )}
 
