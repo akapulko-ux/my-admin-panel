@@ -78,6 +78,10 @@ import ClientFixations from "./pages/ClientFixations";
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
 import GeneralOverview from "./pages/GeneralOverview";
+
+// Дашборд аналитики
+import Dashboard from "./pages/Dashboard";
+
 import AccessClosed from "./pages/AccessClosed";
 
 // Заявки на регистрацию
@@ -416,6 +420,13 @@ function App() {
                     <Route path="/general-overview" element={
                       <ProtectedRoute>
                         <GeneralOverview />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Дашборд аналитики */}
+                    <Route path="/dashboard" element={
+                      <ProtectedRoute>
+                        <Dashboard />
                       </ProtectedRoute>
                     } />
 

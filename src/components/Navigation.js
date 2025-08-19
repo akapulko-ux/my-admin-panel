@@ -31,7 +31,8 @@ import {
   BarChart3,
   Briefcase,
   CheckSquare,
-  List
+  List,
+  Activity
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -414,6 +415,17 @@ const Navigation = () => {
                 </NavItem>
               )}
 
+              {/* Дашборд аналитики */}
+              {['admin', 'moderator'].includes(role) && (
+                <NavItem 
+                  to="/dashboard" 
+                  icon={Activity}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.dashboard}
+                </NavItem>
+              )}
+
               {role === 'admin' && (
                 <NavItem 
                   to="/registration-requests" 
@@ -644,6 +656,13 @@ const Navigation = () => {
         {['admin', 'moderator'].includes(role) && (
           <NavItem to="/general-overview" icon={BarChart3}>
             {nav.generalOverview}
+          </NavItem>
+        )}
+
+        {/* Дашборд аналитики */}
+        {['admin', 'moderator'].includes(role) && (
+          <NavItem to="/dashboard" icon={Activity}>
+            {nav.dashboard}
           </NavItem>
         )}
 

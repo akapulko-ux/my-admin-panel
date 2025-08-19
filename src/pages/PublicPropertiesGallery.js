@@ -9,6 +9,7 @@ import { translations } from "../lib/translations";
 import { translateDistrict, translatePropertyType, translateConstructionStatus } from "../lib/utils";
 import { landingTranslations } from "../lib/landingTranslations";
 import { useAuth } from "../AuthContext";
+import { initPageTracking } from "../utils/pageAnalytics";
 
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -57,6 +58,12 @@ function PublicPropertiesGallery() {
     onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Инициализация отслеживания страницы для аналитики
+  useEffect(() => {
+    const cleanup = initPageTracking('/public');
+    return cleanup;
   }, []);
 
   const searchPlaceholder = useMemo(() => {

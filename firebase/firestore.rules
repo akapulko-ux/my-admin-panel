@@ -247,6 +247,66 @@ service cloud.firestore {
       allow read, create, update, delete: if canManageProperties();
     }
 
+    // === Page Visits Analytics ===
+    match /pageVisits/{visitId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Создание доступно всем (для сбора аналитики)
+      allow create: if true;
+      // Чтение только для админов и модераторов
+      allow read: if isAdmin() || isModerator();
+      // Обновление и удаление только для админов
+      allow update, delete: if isAdmin();
+    }
+
+    // === User Authentication Logs ===
+    match /userAuthLogs/{logId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Создание доступно всем (для сбора аналитики)
+      allow create: if true;
+      // Чтение только для админов и модераторов
+      allow read: if isAdmin() || isModerator();
+      // Обновление и удаление только для админов
+      allow update, delete: if isAdmin();
+    }
+
+    // === User Interactions Analytics ===
+    match /userInteractions/{interactionId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Создание доступно всем (для сбора аналитики)
+      allow create: if true;
+      // Чтение только для админов и модераторов
+      allow read: if isAdmin() || isModerator();
+      // Обновление и удаление только для админов
+      allow update, delete: if isAdmin();
+    }
+
+    // === Performance Analytics ===
+    match /performance/{performanceId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Создание доступно всем (для сбора аналитики)
+      allow create: if true;
+      // Чтение только для админов и модераторов
+      allow read: if isAdmin() || isModerator();
+      // Обновление и удаление только для админов
+      allow update, delete: if isAdmin();
+    }
+
+    // === Error Analytics ===
+    match /errors/{errorId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Создание доступно всем (для сбора аналитики)
+      allow create: if true;
+      // Чтение только для админов и модераторов
+      allow read: if isAdmin() || isModerator();
+      // Обновление и удаление только для админов
+      allow update, delete: if isAdmin();
+    }
+
     // === System Settings ===
     match /settings/{settingId} {
       // Админ имеет полные права

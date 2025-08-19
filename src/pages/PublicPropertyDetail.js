@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc } from "firebase/firestore";
@@ -20,6 +20,7 @@ import {
 import { showError, showSuccess } from "../utils/notifications";
 import { Badge } from "../components/ui/badge";
 import { translateWithCache } from "../utils/aiTranslation";
+import { trackPropertyVisit } from "../utils/pageAnalytics";
 
 function PublicPropertyDetail() {
   const { id } = useParams();
@@ -61,8 +62,37 @@ function PublicPropertyDetail() {
     }).format(price);
   };
 
+  // Функция для сохранения перевода в БД
+  const saveTranslationToDB = async (propertyId, language, translatedText) => {
+    try {
+      const propertyRef = doc(db, "properties", propertyId);
+      
+      // Получаем текущие данные объекта
+      const propertySnap = await getDoc(propertyRef);
+      if (!propertySnap.exists()) {
+        console.error('Property not found');
+        return;
+      }
+
+      const currentData = propertySnap.data();
+      const descriptions = currentData.descriptions || {};
+      
+      // Добавляем новый перевод
+      descriptions[language] = translatedText;
+      
+      // Обновляем документ
+      await updateDoc(propertyRef, {
+        descriptions: descriptions
+      });
+      
+      console.log(`✅ Translation saved to DB: ${language}`);
+    } catch (error) {
+      console.error('Error saving translation to DB:', error);
+    }
+  };
+
   // Функция для работы с переводами описания
-  const handleDescriptionTranslation = async (propertyData, targetLanguage) => {
+  const handleDescriptionTranslation = useCallback(async (propertyData, targetLanguage) => {
     if (!propertyData?.description || !targetLanguage) {
       setTranslatedDescription(propertyData?.description || '');
       return;
@@ -98,36 +128,7 @@ function PublicPropertyDetail() {
     } finally {
       setIsTranslating(false);
     }
-  };
-
-  // Функция для сохранения перевода в БД
-  const saveTranslationToDB = async (propertyId, language, translatedText) => {
-    try {
-      const propertyRef = doc(db, "properties", propertyId);
-      
-      // Получаем текущие данные объекта
-      const propertySnap = await getDoc(propertyRef);
-      if (!propertySnap.exists()) {
-        console.error('Property not found');
-        return;
-      }
-
-      const currentData = propertySnap.data();
-      const descriptions = currentData.descriptions || {};
-      
-      // Добавляем новый перевод
-      descriptions[language] = translatedText;
-      
-      // Обновляем документ
-      await updateDoc(propertyRef, {
-        descriptions: descriptions
-      });
-      
-      console.log(`✅ Translation saved to DB: ${language}`);
-    } catch (error) {
-      console.error('Error saving translation to DB:', error);
-    }
-  };
+  }, [setTranslatedDescription, setIsTranslating]);
 
   // Функция для перехода к управлению объектом
   const handleManageProperty = () => {
@@ -165,7 +166,7 @@ function PublicPropertyDetail() {
       // Обрабатываем перевод описания с кэшированием в БД
       handleDescriptionTranslation(property, language);
     }
-  }, [property, language]);
+  }, [property, language, handleDescriptionTranslation]);
 
   useEffect(() => {
     async function fetchData() {
@@ -216,6 +217,22 @@ function PublicPropertyDetail() {
           // Добавляем ID объекта в данные для использования в функциях
           data.id = id;
           setProperty(data);
+          
+          // Отслеживаем переход на объект для аналитики
+          try {
+            await trackPropertyVisit(
+              id, 
+              data.title || data.name || `Объект ${id}`,
+              {
+                propertyType: data.type,
+                propertyStatus: data.status,
+                propertyDistrict: data.district,
+                propertyPrice: data.price
+              }
+            );
+          } catch (error) {
+            console.log('Ошибка при отслеживании перехода на объект:', error);
+          }
         }
       } finally {
         setLoading(false);

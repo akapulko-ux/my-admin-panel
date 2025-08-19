@@ -203,7 +203,9 @@ export const translations = {
       deals: 'Deals',
       tasks: 'Tasks',
       lists: 'Lists',
-      agentRegistrationRequests: 'Agent Requests'
+      agentRegistrationRequests: 'Agent Requests',
+      // Dashboard
+      dashboard: 'Dashboard'
     },
 
     // Public Page
@@ -1878,7 +1880,9 @@ _________________               _________________
       lists: 'Списки',
       createdAt: 'Создан',
       updatedAt: 'Обновлен',
-      agentRegistrationRequests: 'Заявки агентов'
+      agentRegistrationRequests: 'Заявки агентов',
+      // Dashboard
+      dashboard: 'Дашборд'
     },
 
     // Public Page
@@ -3553,7 +3557,9 @@ _________________               _________________
       lists: 'Daftar',
       createdAt: 'Dibuat',
       updatedAt: 'Diperbarui',
-      agentRegistrationRequests: 'Permintaan Agen'
+      agentRegistrationRequests: 'Permintaan Agen',
+      // Dashboard
+      dashboard: 'Dasbor'
     },
 
     // Public Page
