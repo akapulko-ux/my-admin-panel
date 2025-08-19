@@ -1213,11 +1213,15 @@ function PropertyDetail() {
   // Обновляем функцию рендеринга значения
   const renderEditableValue = (field, value, type, options) => {
     if (isEditing && !nonEditableFields.includes(field)) {
-      // Проверяем права доступа для полей "Застройщик" и "Статус земли"
-      if ((field === 'developer' || field === 'landStatus') && 
-          currentUser && property?.createdBy === currentUser.uid && 
-          role !== 'admin' && role !== 'moderator') {
-        return null; // Не показываем эти поля для создателей объектов (не админов/модераторов)
+      // Проверяем права доступа для застройщиков и премиум застройщиков
+      if (['застройщик', 'премиум застройщик'].includes(role) && 
+          ['developer', 'complex', 'district', 'landStatus'].includes(field)) {
+        // Для этих ролей показываем поля как обычный текст (нередактируемые)
+        return (
+          <div className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
+            {value}
+          </div>
+        );
       }
       
       // Получаем исходное значение из объекта property, а не отформатированное value
