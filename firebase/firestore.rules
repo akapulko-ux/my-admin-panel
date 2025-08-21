@@ -422,8 +422,8 @@ service cloud.firestore {
       allow read, write, delete: if isAdmin();
       // Создание доступно всем (для отправки заявок от клиентов)
       allow create: if true;
-      // Чтение и обновление только для админов и агентов
-      allow read, update: if isAdmin() || isAnyAgent();
+      // Чтение и обновление для админов, агентов и модераторов
+      allow read, update: if isAdmin() || isAnyAgent() || isModerator();
     }
 
     // === Фоллбэк для любых новых коллекций ===

@@ -46,6 +46,7 @@ const ROUTE_ACCESS = {
     '/gallery/*',
     '/support/*',
     '/client-fixations',
+    '/client-leads',
     '/building-progress/*',
     '/general-overview',
     '/users/manage'

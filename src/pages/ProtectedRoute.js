@@ -25,6 +25,7 @@ const ROUTE_ACCESS = {
     '/general-overview',
     '/users/manage',
     '/dashboard',
+    '/client-leads',
   ],
   'premium agent': [
     '/property/gallery',
