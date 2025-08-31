@@ -1054,6 +1054,7 @@ _________________               _________________
       unitIdRequired: 'Unit ID is required',
       invalidArea: 'Invalid area value',
       invalidPrice: 'Invalid price value',
+      complexRequired: 'Please select a complex',
       
       // Additional editing texts
       editingChessboard: 'Editing Chessboard',
@@ -2726,6 +2727,7 @@ _________________               _________________
       unitIdRequired: 'ID юнита обязателен',
       invalidArea: 'Неверное значение площади',
       invalidPrice: 'Неверное значение цены',
+      complexRequired: 'Пожалуйста, выберите комплекс',
       
       // Additional editing texts
       editingChessboard: 'Редактирование шахматки',
@@ -4403,6 +4405,7 @@ _________________               _________________
       unitIdRequired: 'ID unit wajib diisi',
       invalidArea: 'Nilai luas tidak valid',
       invalidPrice: 'Nilai harga tidak valid',
+      complexRequired: 'Silakan pilih kompleks',
       
       // Additional editing texts
       editingChessboard: 'Mengedit Papan Catur',

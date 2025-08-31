@@ -732,6 +732,7 @@ const Chessboard = () => {
   const [selectedComplexId, setSelectedComplexId] = useState('');
   const [complexError, setComplexError] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [hasAttemptedSave, setHasAttemptedSave] = useState(false);
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -1096,11 +1097,12 @@ const Chessboard = () => {
 
   // Сохранение шахматки
   const handleSave = async () => {
+    setHasAttemptedSave(true);
     setIsSaving(true);
     try {
       // Валидация
-      if (!id && !selectedComplexId) {
-        showError("Пожалуйста, выберите комплекс");
+      if ((!id || id === "new") && !selectedComplexId) {
+        showError(t.chessboards.complexRequired || "Пожалуйста, выберите комплекс");
         setIsSaving(false);
         return;
       }
@@ -1370,7 +1372,8 @@ const Chessboard = () => {
               <Button 
                 onClick={handleSave} 
                 className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full h-12 order-1' : ''}`}
-                disabled={isSaving}
+                disabled={isSaving || ((!id || id === "new") && !selectedComplexId)}
+                title={(!id || id === "new") && !selectedComplexId ? t.chessboards.complexRequired : ""}
               >
                 {isSaving ? (
                   <>
@@ -1414,8 +1417,19 @@ const Chessboard = () => {
                   if (selectedComplex) {
                     setName(selectedComplex.name);
                   }
+                  // Очищаем ошибки при выборе
+                  if (complexError) {
+                    setComplexError('');
+                  }
+                  if (hasAttemptedSave) {
+                    setHasAttemptedSave(false);
+                  }
                 }}
-                className="w-full p-2 border rounded-md"
+                className={`w-full p-2 border rounded-md ${
+                  hasAttemptedSave && (!id || id === "new") && !selectedComplexId 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                } focus:outline-none focus:ring-2`}
                 required
               >
                 <option value="">{t.chessboards.selectComplex}</option>
@@ -1429,6 +1443,12 @@ const Chessboard = () => {
                 <p className="text-red-500 text-sm mt-1 flex items-center">
                   <AlertCircle className="w-4 h-4 mr-1" />
                   {complexError}
+                </p>
+              )}
+              {hasAttemptedSave && (!id || id === "new") && !selectedComplexId && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {t.chessboards.complexRequired}
                 </p>
               )}
               {complexes.length === 0 && !complexError && (

@@ -301,7 +301,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/agent-properties" 
                   icon={List}
@@ -311,7 +311,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/property/list" 
                   icon={Building}
@@ -321,7 +321,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/complex/list" 
                   icon={Building2}
@@ -331,7 +331,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/developers/list" 
                   icon={Building2}
@@ -341,7 +341,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/landmark/list" 
                   icon={Landmark}
@@ -361,7 +361,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/support/chats" 
                   icon={MessageSquare}
@@ -371,7 +371,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator', 'premium agent', 'agent'].includes(role) && (
+              {['admin', 'premium agent', 'agent'].includes(role) && (
                 <NavItem 
                   to="/roi-calculator" 
                   icon={Calculator}
@@ -382,7 +382,7 @@ const Navigation = () => {
               )}
 
               {/* CRM System */}
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <CrmMenuItem onClick={() => setIsMobileMenuOpen(false)} />
               )}
 
@@ -396,7 +396,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/users/manage" 
                   icon={Users2}
@@ -406,7 +406,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/general-overview" 
                   icon={BarChart3}
@@ -417,7 +417,7 @@ const Navigation = () => {
               )}
 
               {/* Дашборд аналитики */}
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/dashboard" 
                   icon={Activity}
@@ -447,7 +447,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin'].includes(role) && (
                 <NavItem 
                   to="/referral-map" 
                   icon={Network}
@@ -583,31 +583,31 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
             <NavItem to="/agent-properties" icon={List}>
               {nav.agentProperties}
             </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
             <NavItem to="/property/list" icon={Building}>
               {nav.properties}
             </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
             <NavItem to="/complex/list" icon={Building2}>
               {nav.complexes}
             </NavItem>
         )}
 
-        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
+        {['admin', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/developers/list" icon={Building2}>
             {['застройщик', 'премиум застройщик'].includes(role) ? translations[language]?.developersList?.titleForDeveloper || nav.developers : nav.developers}
           </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
             <NavItem to="/landmark/list" icon={Landmark}>
               {nav.landmarks}
             </NavItem>
@@ -619,20 +619,20 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
           <NavItem to="/support/chats" icon={MessageSquare}>
             {nav.support}
           </NavItem>
         )}
 
-        {['admin', 'moderator', 'premium agent', 'agent'].includes(role) && (
+        {['admin', 'premium agent', 'agent'].includes(role) && (
           <NavItem to="/roi-calculator" icon={Calculator}>
             {nav.roiCalculator}
           </NavItem>
         )}
 
         {/* CRM System */}
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
           <CrmMenuItem />
         )}
 
@@ -642,26 +642,26 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
           <NavItem to="/client-leads" icon={Users2}>
             {nav.clientLeads}
           </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
           <NavItem to="/users/manage" icon={Users2}>
             {nav.userManagement}
           </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
           <NavItem to="/general-overview" icon={BarChart3}>
             {nav.generalOverview}
           </NavItem>
         )}
 
         {/* Дашборд аналитики */}
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
           <NavItem to="/dashboard" icon={Activity}>
             {nav.dashboard}
           </NavItem>
@@ -679,7 +679,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin'].includes(role) && (
           <NavItem to="/referral-map" icon={Network}>
             {nav.referralMap}
           </NavItem>
