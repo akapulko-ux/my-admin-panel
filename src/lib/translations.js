@@ -204,6 +204,7 @@ export const translations = {
       tasks: 'Tasks',
       lists: 'Lists',
       agentRegistrationRequests: 'Agent Requests',
+      technicalSupervision: 'Technical Supervision',
       // Dashboard
       dashboard: 'Dashboard'
     },
@@ -1649,6 +1650,84 @@ _________________               _________________
       saveSuccess: 'Saved!',
       saveError: 'Error saving!',
       loadError: 'Error loading data!'
+    },
+
+    // Technical Supervision
+    technicalSupervision: {
+      title: 'Technical Supervision',
+      subtitle: 'Management of technical supervision reports for construction projects',
+      accessDenied: 'Access Denied',
+      adminOnlyAccess: 'Technical Supervision section is available only to administrators',
+      
+      // Projects
+      addProject: 'Add Project',
+      createProject: 'Create Project',
+      editProject: 'Edit Project',
+      projectName: 'Project Name',
+      projectNamePlaceholder: 'e.g.: Sunny Complex, House on Pushkin St.',
+      projectDescriptionPlaceholder: 'Brief project description',
+      noProjects: 'No Projects',
+      noProjectsDescription: 'Create the first project to start working with technical supervision',
+      createFirstProject: 'Create First Project',
+      projectHasSections: 'Cannot delete project that contains sections',
+      totalSections: 'Total Sections',
+      currentProject: 'Current Project',
+      backToProjects: 'Back to Projects',
+      address: 'Address',
+      addressPlaceholder: 'Full object address',
+
+      // Sections
+      addSection: 'Add Section',
+      createSection: 'Create Section',
+      editSection: 'Edit Section',
+      sectionName: 'Section Name',
+      sectionNamePlaceholder: 'e.g.: Foundation, Walls, Electrical',
+      sectionDescriptionPlaceholder: 'Brief section description',
+      noSections: 'No Sections',
+      noSectionsDescription: 'Create the first section to start working with technical supervision',
+      createFirstSection: 'Create First Section',
+      sectionHasInspections: 'Cannot delete section that contains inspections',
+      totalInspections: 'Total Inspections',
+      
+      // Inspections
+      addInspection: 'Add Inspection',
+      createInspection: 'Create Inspection',
+      editInspection: 'Edit Inspection',
+      inspectionTitle: 'Inspection Title',
+      inspectionTitlePlaceholder: 'e.g.: Plastering, Wiring',
+      inspectionsIn: 'Inspections in section',
+      
+      // Fields
+      location: 'Location',
+      locationPlaceholder: 'Floor, room, area',
+      description: 'Description',
+      descriptionPlaceholder: 'General description of the inspection performed',
+      defects: 'Defects and Issues',
+      defectsPlaceholder: 'Description of found defects and violations',
+      risks: 'Risks and Hazards',
+      risksPlaceholder: 'What are the dangers of the found defects',
+      recommendations: 'Recommendations for Elimination',
+      recommendationsPlaceholder: 'How to fix the found problems',
+      
+      // Status
+      status: 'Status',
+      statusPending: 'Pending',
+      statusInProgress: 'In Progress',
+      statusCompleted: 'Completed',
+      statusCritical: 'Critical',
+      completed: 'Completed',
+      inProgress: 'In Progress',
+      critical: 'Critical',
+      
+      // Photos
+      photos: 'Photos',
+      uploadPhotos: 'Upload Photos',
+      uploading: 'Uploading...',
+      photosUploadSuccess: 'Photos uploaded successfully',
+      photosUploadError: 'Error uploading photos',
+      
+      // Common
+      created: 'Created'
     }
   },
   ru: {
@@ -1882,6 +1961,7 @@ _________________               _________________
       createdAt: 'Создан',
       updatedAt: 'Обновлен',
       agentRegistrationRequests: 'Заявки агентов',
+      technicalSupervision: 'Технадзор',
       // Dashboard
       dashboard: 'Дашборд'
     },
@@ -3327,6 +3407,84 @@ _________________               _________________
       moderation: {
         onModeration: 'На модерации'
       }
+    },
+
+    // Technical Supervision
+    technicalSupervision: {
+      title: 'Технический надзор',
+      subtitle: 'Управление отчетами технического надзора строительных объектов',
+      accessDenied: 'Доступ запрещен',
+      adminOnlyAccess: 'Раздел "Технадзор" доступен только администраторам',
+      
+      // Projects
+      addProject: 'Добавить проект',
+      createProject: 'Создать проект',
+      editProject: 'Редактировать проект',
+      projectName: 'Название проекта',
+      projectNamePlaceholder: 'Например: ЖК Солнечный, Дом по ул. Пушкина',
+      projectDescriptionPlaceholder: 'Краткое описание проекта',
+      noProjects: 'Нет проектов',
+      noProjectsDescription: 'Создайте первый проект для начала работы с техническим надзором',
+      createFirstProject: 'Создать первый проект',
+      projectHasSections: 'Нельзя удалить проект, в котором есть разделы',
+      totalSections: 'Всего разделов',
+      currentProject: 'Текущий проект',
+      backToProjects: 'Назад к проектам',
+      address: 'Адрес',
+      addressPlaceholder: 'Полный адрес объекта',
+
+      // Sections
+      addSection: 'Добавить раздел',
+      createSection: 'Создать раздел',
+      editSection: 'Редактировать раздел',
+      sectionName: 'Название раздела',
+      sectionNamePlaceholder: 'Например: Фундамент, Стены, Электрика',
+      sectionDescriptionPlaceholder: 'Краткое описание раздела',
+      noSections: 'Нет разделов',
+      noSectionsDescription: 'Создайте первый раздел для начала работы с техническим надзором',
+      createFirstSection: 'Создать первый раздел',
+      sectionHasInspections: 'Нельзя удалить раздел, в котором есть обследования',
+      totalInspections: 'Всего обследований',
+      
+      // Inspections
+      addInspection: 'Добавить обследование',
+      createInspection: 'Создать обследование',
+      editInspection: 'Редактировать обследование',
+      inspectionTitle: 'Название обследования',
+      inspectionTitlePlaceholder: 'Например: Штукатурка, Проводка',
+      inspectionsIn: 'Обследования в разделе',
+      
+      // Fields
+      location: 'Расположение',
+      locationPlaceholder: 'Этаж, комната, участок',
+      description: 'Описание',
+      descriptionPlaceholder: 'Общее описание проведенного обследования',
+      defects: 'Замечания и дефекты',
+      defectsPlaceholder: 'Описание найденных дефектов и нарушений',
+      risks: 'Риски и опасности',
+      risksPlaceholder: 'Чем опасны найденные дефекты',
+      recommendations: 'Рекомендации по устранению',
+      recommendationsPlaceholder: 'Как устранить найденные проблемы',
+      
+      // Status
+      status: 'Статус',
+      statusPending: 'В ожидании',
+      statusInProgress: 'В процессе',
+      statusCompleted: 'Завершено',
+      statusCritical: 'Критично',
+      completed: 'Завершено',
+      inProgress: 'В процессе',
+      critical: 'Критично',
+      
+      // Photos
+      photos: 'Фотографии',
+      uploadPhotos: 'Загрузить фотографии',
+      uploading: 'Загрузка...',
+      photosUploadSuccess: 'Фотографии загружены успешно',
+      photosUploadError: 'Ошибка загрузки фотографий',
+      
+      // Common
+      created: 'Создано'
     }
   },
   id: {
@@ -3560,6 +3718,7 @@ _________________               _________________
       createdAt: 'Dibuat',
       updatedAt: 'Diperbarui',
       agentRegistrationRequests: 'Permintaan Agen',
+      technicalSupervision: 'Pengawasan Teknis',
       // Dashboard
       dashboard: 'Dasbor'
     },
@@ -5005,6 +5164,84 @@ _________________               _________________
       moderation: {
         onModeration: 'Sedang Dimoderasi'
       }
+    },
+
+    // Technical Supervision
+    technicalSupervision: {
+      title: 'Pengawasan Teknis',
+      subtitle: 'Manajemen laporan pengawasan teknis untuk proyek konstruksi',
+      accessDenied: 'Akses Ditolak',
+      adminOnlyAccess: 'Bagian Pengawasan Teknis hanya tersedia untuk administrator',
+      
+      // Projects
+      addProject: 'Tambah Proyek',
+      createProject: 'Buat Proyek',
+      editProject: 'Edit Proyek',
+      projectName: 'Nama Proyek',
+      projectNamePlaceholder: 'mis.: Kompleks Matahari, Rumah di Jl. Pushkin',
+      projectDescriptionPlaceholder: 'Deskripsi singkat proyek',
+      noProjects: 'Tidak Ada Proyek',
+      noProjectsDescription: 'Buat proyek pertama untuk mulai bekerja dengan pengawasan teknis',
+      createFirstProject: 'Buat Proyek Pertama',
+      projectHasSections: 'Tidak dapat menghapus proyek yang berisi bagian',
+      totalSections: 'Total Bagian',
+      currentProject: 'Proyek Saat Ini',
+      backToProjects: 'Kembali ke Proyek',
+      address: 'Alamat',
+      addressPlaceholder: 'Alamat lengkap objek',
+
+      // Sections
+      addSection: 'Tambah Bagian',
+      createSection: 'Buat Bagian',
+      editSection: 'Edit Bagian',
+      sectionName: 'Nama Bagian',
+      sectionNamePlaceholder: 'mis.: Fondasi, Dinding, Listrik',
+      sectionDescriptionPlaceholder: 'Deskripsi singkat bagian',
+      noSections: 'Tidak Ada Bagian',
+      noSectionsDescription: 'Buat bagian pertama untuk mulai bekerja dengan pengawasan teknis',
+      createFirstSection: 'Buat Bagian Pertama',
+      sectionHasInspections: 'Tidak dapat menghapus bagian yang berisi inspeksi',
+      totalInspections: 'Total Inspeksi',
+      
+      // Inspections
+      addInspection: 'Tambah Inspeksi',
+      createInspection: 'Buat Inspeksi',
+      editInspection: 'Edit Inspeksi',
+      inspectionTitle: 'Judul Inspeksi',
+      inspectionTitlePlaceholder: 'mis.: Plesteran, Kabel',
+      inspectionsIn: 'Inspeksi di bagian',
+      
+      // Fields
+      location: 'Lokasi',
+      locationPlaceholder: 'Lantai, ruangan, area',
+      description: 'Deskripsi',
+      descriptionPlaceholder: 'Deskripsi umum inspeksi yang dilakukan',
+      defects: 'Cacat dan Masalah',
+      defectsPlaceholder: 'Deskripsi cacat dan pelanggaran yang ditemukan',
+      risks: 'Risiko dan Bahaya',
+      risksPlaceholder: 'Bahaya dari cacat yang ditemukan',
+      recommendations: 'Rekomendasi Perbaikan',
+      recommendationsPlaceholder: 'Cara memperbaiki masalah yang ditemukan',
+      
+      // Status
+      status: 'Status',
+      statusPending: 'Menunggu',
+      statusInProgress: 'Sedang Berlangsung',
+      statusCompleted: 'Selesai',
+      statusCritical: 'Kritis',
+      completed: 'Selesai',
+      inProgress: 'Sedang Berlangsung',
+      critical: 'Kritis',
+      
+      // Photos
+      photos: 'Foto',
+      uploadPhotos: 'Unggah Foto',
+      uploading: 'Mengunggah...',
+      photosUploadSuccess: 'Foto berhasil diunggah',
+      photosUploadError: 'Error mengunggah foto',
+      
+      // Common
+      created: 'Dibuat'
     }
   }
 }; 

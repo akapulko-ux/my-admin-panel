@@ -32,7 +32,8 @@ import {
   Briefcase,
   CheckSquare,
   List,
-  Activity
+  Activity,
+  HardHat
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -447,6 +448,16 @@ const Navigation = () => {
                 </NavItem>
               )}
 
+              {role === 'admin' && (
+                <NavItem 
+                  to="/technical-supervision" 
+                  icon={HardHat}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.technicalSupervision}
+                </NavItem>
+              )}
+
               {['admin'].includes(role) && (
                 <NavItem 
                   to="/referral-map" 
@@ -676,6 +687,12 @@ const Navigation = () => {
         {role === 'admin' && (
           <NavItem to="/agent-registration-requests" icon={UserCheck}>
             {nav.agentRegistrationRequests}
+          </NavItem>
+        )}
+
+        {role === 'admin' && (
+          <NavItem to="/technical-supervision" icon={HardHat}>
+            {nav.technicalSupervision}
           </NavItem>
         )}
 

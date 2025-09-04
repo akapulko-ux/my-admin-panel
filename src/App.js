@@ -96,6 +96,9 @@ import ReferralMap from "./pages/ReferralMap";
 // Настройки
 import Settings from "./pages/Settings";
 
+// Технический надзор
+import TechnicalSupervision from "./pages/TechnicalSupervision";
+
 // Новые разделы для застройщиков
 import PremiumFeatures from "./pages/PremiumFeatures";
 import Notifications from "./pages/Notifications";
@@ -484,6 +487,13 @@ function App() {
                     <Route path="/settings" element={
                       <ProtectedRoute>
                         <Settings />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Технический надзор */}
+                    <Route path="/technical-supervision" element={
+                      <ProtectedRoute>
+                        <TechnicalSupervision />
                       </ProtectedRoute>
                     } />
 
