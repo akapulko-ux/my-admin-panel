@@ -12,6 +12,7 @@ const TechnicalSupervisionImageViewer = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [zoom, setZoom] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
 
   const currentImage = images[currentIndex];
 
@@ -56,10 +57,10 @@ const TechnicalSupervisionImageViewer = ({
         break;
       case '+':
       case '=':
-        setZoom(prev => Math.min(prev + 0.2, 3));
+        if (!isMobile) setZoom(prev => Math.min(prev + 0.2, 3));
         break;
       case '-':
-        setZoom(prev => Math.max(prev - 0.2, 0.5));
+        if (!isMobile) setZoom(prev => Math.max(prev - 0.2, 0.5));
         break;
       default:
         break;
@@ -71,11 +72,30 @@ const TechnicalSupervisionImageViewer = ({
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen]);
+  }, [isOpen, isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     setCurrentIndex(initialIndex);
+    setZoom(1); // Сброс масштаба при смене изображения
   }, [initialIndex]);
+
+  // Определение мобильного устройства
+  React.useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  // Сброс масштаба при открытии на мобильных устройствах
+  React.useEffect(() => {
+    if (isOpen && isMobile) {
+      setZoom(1);
+    }
+  }, [isOpen, isMobile]);
 
   if (!isOpen || !images.length) return null;
 
@@ -91,28 +111,32 @@ const TechnicalSupervisionImageViewer = ({
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Управление масштабом */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setZoom(prev => Math.max(prev - 0.2, 0.5))}
-            className="text-white hover:bg-white/20"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          
-          <span className="text-sm text-gray-300 min-w-[60px] text-center">
-            {Math.round(zoom * 100)}%
-          </span>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setZoom(prev => Math.min(prev + 0.2, 3))}
-            className="text-white hover:bg-white/20"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
+          {/* Управление масштабом - скрыто на мобильных */}
+          {!isMobile && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom(prev => Math.max(prev - 0.2, 0.5))}
+                className="text-white hover:bg-white/20"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              
+              <span className="text-sm text-gray-300 min-w-[60px] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom(prev => Math.min(prev + 0.2, 3))}
+                className="text-white hover:bg-white/20"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </>
+          )}
 
           {/* Скачать */}
           <Button
@@ -149,16 +173,16 @@ const TechnicalSupervisionImageViewer = ({
       )}
 
       {/* Изображение */}
-      <div className="relative max-w-[90vw] max-h-[90vh] overflow-auto">
+      <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
         <img
           src={currentImage}
           alt={`${inspectionTitle} ${currentIndex + 1}`}
-          className="max-w-none cursor-move"
+          className="max-w-full max-h-full object-contain cursor-move md:max-w-none"
           style={{ 
             transform: `scale(${zoom})`,
             transformOrigin: 'center center'
           }}
-          onDoubleClick={() => setZoom(zoom === 1 ? 2 : 1)}
+          onDoubleClick={() => !isMobile && setZoom(zoom === 1 ? 2 : 1)}
           draggable={false}
         />
       </div>

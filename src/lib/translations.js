@@ -1700,6 +1700,7 @@ _________________               _________________
       // Fields
       location: 'Location',
       locationPlaceholder: 'Floor, room, area',
+      orderNumber: 'Order Number',
       description: 'Description',
       descriptionPlaceholder: 'General description of the inspection performed',
       defects: 'Defects and Issues',
@@ -1727,7 +1728,20 @@ _________________               _________________
       photosUploadError: 'Error uploading photos',
       
       // Common
-      created: 'Created'
+      created: 'Created',
+      
+      // Public page
+      publicPageSubtitle: 'Technical Supervision Report',
+      projectNotFound: 'Project not found',
+      loadError: 'Error loading data',
+      copyPublicLink: 'Copy public page link',
+      publicLinkCopied: 'Public page link copied',
+      publicLinkCopyError: 'Error copying link',
+      projectInfo: 'Report Information',
+      projectCreated: 'Report created',
+      lastUpdated: 'Last updated',
+      noInspectionsInSection: 'No inspections in this section yet',
+      noSectionsInProject: 'This project has no technical supervision sections yet'
     }
   },
   ru: {
@@ -3457,6 +3471,7 @@ _________________               _________________
       // Fields
       location: 'Расположение',
       locationPlaceholder: 'Этаж, комната, участок',
+      orderNumber: 'Номер очередности',
       description: 'Описание',
       descriptionPlaceholder: 'Общее описание проведенного обследования',
       defects: 'Замечания и дефекты',
@@ -3484,7 +3499,20 @@ _________________               _________________
       photosUploadError: 'Ошибка загрузки фотографий',
       
       // Common
-      created: 'Создано'
+      created: 'Создано',
+      
+      // Public page
+      publicPageSubtitle: 'Отчет технического надзора',
+      projectNotFound: 'Проект не найден',
+      loadError: 'Ошибка загрузки данных',
+      copyPublicLink: 'Скопировать ссылку на публичную страницу',
+      publicLinkCopied: 'Ссылка на публичную страницу скопирована',
+      publicLinkCopyError: 'Ошибка копирования ссылки',
+      projectInfo: 'Информация об отчете',
+      projectCreated: 'Отчет создан',
+      lastUpdated: 'Последнее обновление',
+      noInspectionsInSection: 'Обследований в данном разделе пока нет',
+      noSectionsInProject: 'В данном проекте пока нет разделов технического надзора'
     }
   },
   id: {
@@ -5214,6 +5242,7 @@ _________________               _________________
       // Fields
       location: 'Lokasi',
       locationPlaceholder: 'Lantai, ruangan, area',
+      orderNumber: 'Nomor Urutan',
       description: 'Deskripsi',
       descriptionPlaceholder: 'Deskripsi umum inspeksi yang dilakukan',
       defects: 'Cacat dan Masalah',
@@ -5241,7 +5270,20 @@ _________________               _________________
       photosUploadError: 'Error mengunggah foto',
       
       // Common
-      created: 'Dibuat'
+      created: 'Dibuat',
+      
+      // Public page
+      publicPageSubtitle: 'Laporan Pengawasan Teknis',
+      projectNotFound: 'Proyek tidak ditemukan',
+      loadError: 'Error memuat data',
+      copyPublicLink: 'Salin link halaman publik',
+      publicLinkCopied: 'Link halaman publik disalin',
+      publicLinkCopyError: 'Error menyalin link',
+      projectInfo: 'Informasi Laporan',
+      projectCreated: 'Laporan dibuat',
+      lastUpdated: 'Terakhir diperbarui',
+      noInspectionsInSection: 'Belum ada inspeksi di bagian ini',
+      noSectionsInProject: 'Proyek ini belum memiliki bagian pengawasan teknis'
     }
   }
 }; 

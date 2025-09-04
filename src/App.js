@@ -98,6 +98,7 @@ import Settings from "./pages/Settings";
 
 // Технический надзор
 import TechnicalSupervision from "./pages/TechnicalSupervision";
+import PublicTechnicalSupervision from "./pages/PublicTechnicalSupervision";
 
 // Новые разделы для застройщиков
 import PremiumFeatures from "./pages/PremiumFeatures";
@@ -245,6 +246,7 @@ function App() {
               <Route path="/public-roi/property/:propertyId" element={<PublicPropertyRoiPage />} />
               <Route path="/public-building-progress/:type/:id" element={<PublicBuildingProgress />} />
               <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
+              <Route path="/public-technical-supervision/:projectId" element={<PublicTechnicalSupervision />} />
               <Route path="/public" element={<PublicPropertiesGallery />} />
               <Route path="/public/complex/:id" element={<PublicComplexDetail />} />
               <Route path="/public/property/:id" element={<PublicPropertyDetail />} />

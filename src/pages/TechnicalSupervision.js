@@ -35,7 +35,8 @@ import {
   AlertTriangle,
   MapPin,
   CheckCircle,
-  Clock
+  Clock,
+  ExternalLink
 } from 'lucide-react';
 
 import imageCompression from 'browser-image-compression';
@@ -74,6 +75,7 @@ const TechnicalSupervision = () => {
     risks: '',
     recommendations: '',
     status: 'pending',
+    orderNumber: 1,
     images: []
   });
 
@@ -144,7 +146,17 @@ const TechnicalSupervision = () => {
 
       setProjects(projectsData);
       setSections(sectionsData);
-      setInspections(inspectionsData);
+      // Сортируем обследования по номеру очередности, затем по дате создания
+      const sortedInspections = inspectionsData.sort((a, b) => {
+        const orderA = a.orderNumber || 999;
+        const orderB = b.orderNumber || 999;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        // Если номера одинаковые, сортируем по дате создания
+        return a.createdAt?.seconds - b.createdAt?.seconds || 0;
+      });
+      setInspections(sortedInspections);
     } catch (error) {
       console.error('Ошибка загрузки данных технадзора:', error);
     } finally {
@@ -480,6 +492,7 @@ const TechnicalSupervision = () => {
       risks: '',
       recommendations: '',
       status: 'pending',
+      orderNumber: 1,
       images: []
     });
   };
@@ -490,6 +503,29 @@ const TechnicalSupervision = () => {
     setViewerInitialIndex(initialIndex);
     setViewerTitle(title);
     setImageViewerOpen(true);
+  };
+
+  // Копирование ссылки на публичную страницу проекта
+  const copyPublicLink = async (projectId) => {
+    const publicUrl = `${window.location.origin}/public-technical-supervision/${projectId}`;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      showSuccess(t.technicalSupervision?.publicLinkCopied || 'Ссылка на публичную страницу скопирована');
+    } catch (error) {
+      console.error('Ошибка копирования ссылки:', error);
+      showError(t.technicalSupervision?.publicLinkCopyError || 'Ошибка копирования ссылки');
+    }
+  };
+
+  // Функция для форматирования текста с переносами строк
+  const formatText = (text) => {
+    if (!text) return null;
+    return text.split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
   };
 
   // Вспомогательные функции
@@ -649,6 +685,17 @@ const TechnicalSupervision = () => {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
+                          copyPublicLink(project.id);
+                        }}
+                        title={t.technicalSupervision?.copyPublicLink || 'Скопировать ссылку на публичную страницу'}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           openProjectModal(project);
                         }}
                       >
@@ -784,12 +831,26 @@ const TechnicalSupervision = () => {
             <div className="space-y-4">
               {inspections
                 .filter(inspection => inspection.sectionId === selectedSection.id)
+                .sort((a, b) => {
+                  const orderA = a.orderNumber || 999;
+                  const orderB = b.orderNumber || 999;
+                  if (orderA !== orderB) {
+                    return orderA - orderB;
+                  }
+                  // Если номера одинаковые, сортируем по дате создания
+                  return a.createdAt?.seconds - b.createdAt?.seconds || 0;
+                })
                 .map(inspection => (
                   <Card key={inspection.id} className="border-l-4 border-l-blue-500">
                     <CardContent className="pt-4">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                          <h4 className="font-semibold">{inspection.title}</h4>
+                          <h4 className="font-semibold">
+                            {inspection.orderNumber && (
+                              <span className="text-blue-600 mr-2">#{inspection.orderNumber}</span>
+                            )}
+                            {inspection.title}
+                          </h4>
                           {inspection.location && (
                             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                               <MapPin className="h-3 w-3" />
@@ -818,27 +879,27 @@ const TechnicalSupervision = () => {
                       </div>
 
                       {inspection.description && (
-                        <p className="text-sm mb-2">{inspection.description}</p>
+                        <p className="text-sm mb-2 whitespace-pre-wrap">{formatText(inspection.description)}</p>
                       )}
 
                       {inspection.defects && (
                         <div className="text-sm mb-2">
                           <span className="font-medium text-red-600">{t.technicalSupervision?.defects || 'Замечания'}: </span>
-                          {inspection.defects}
+                          <span className="whitespace-pre-wrap">{formatText(inspection.defects)}</span>
                         </div>
                       )}
 
                       {inspection.risks && (
                         <div className="text-sm mb-2">
                           <span className="font-medium text-orange-600">{t.technicalSupervision?.risks || 'Риски'}: </span>
-                          {inspection.risks}
+                          <span className="whitespace-pre-wrap">{formatText(inspection.risks)}</span>
                         </div>
                       )}
 
                       {inspection.recommendations && (
                         <div className="text-sm mb-2">
                           <span className="font-medium text-green-600">{t.technicalSupervision?.recommendations || 'Рекомендации'}: </span>
-                          {inspection.recommendations}
+                          <span className="whitespace-pre-wrap">{formatText(inspection.recommendations)}</span>
                         </div>
                       )}
 
@@ -1113,21 +1174,37 @@ const TechnicalSupervision = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="inspectionStatus">
-                  {t.technicalSupervision?.status || 'Статус'}
-                </Label>
-                <select
-                  id="inspectionStatus"
-                  value={inspectionForm.status}
-                  onChange={(e) => setInspectionForm(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full p-2 border border-input rounded-md bg-background"
-                >
-                  <option value="pending">{t.technicalSupervision?.statusPending || 'В ожидании'}</option>
-                  <option value="in_progress">{t.technicalSupervision?.statusInProgress || 'В процессе'}</option>
-                  <option value="completed">{t.technicalSupervision?.statusCompleted || 'Завершено'}</option>
-                  <option value="critical">{t.technicalSupervision?.statusCritical || 'Критично'}</option>
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="inspectionStatus">
+                    {t.technicalSupervision?.status || 'Статус'}
+                  </Label>
+                  <select
+                    id="inspectionStatus"
+                    value={inspectionForm.status}
+                    onChange={(e) => setInspectionForm(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full p-2 border border-input rounded-md bg-background"
+                  >
+                    <option value="pending">{t.technicalSupervision?.statusPending || 'В ожидании'}</option>
+                    <option value="in_progress">{t.technicalSupervision?.statusInProgress || 'В процессе'}</option>
+                    <option value="completed">{t.technicalSupervision?.statusCompleted || 'Завершено'}</option>
+                    <option value="critical">{t.technicalSupervision?.statusCritical || 'Критично'}</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="inspectionOrderNumber">
+                    {t.technicalSupervision?.orderNumber || 'Номер очередности'}
+                  </Label>
+                  <Input
+                    id="inspectionOrderNumber"
+                    type="number"
+                    min="1"
+                    value={inspectionForm.orderNumber}
+                    onChange={(e) => setInspectionForm(prev => ({ ...prev, orderNumber: parseInt(e.target.value) || 1 }))}
+                    placeholder="1"
+                  />
+                </div>
               </div>
 
               {/* Загрузка фотографий */}
