@@ -229,7 +229,9 @@ service cloud.firestore {
     match /developers/{developerId} {
       // Админ имеет полные права
       allow read, write, delete: if isAdmin();
-      allow read, create, update, delete: if canManageProperties();
+      // Публичное чтение для показа бейджа "Проверено сервисом"
+      allow read: if true;
+      allow create, update, delete: if canManageProperties();
     }
 
     // === Landmarks (Достопримечательности) ===  

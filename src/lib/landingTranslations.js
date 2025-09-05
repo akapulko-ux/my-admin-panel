@@ -95,7 +95,7 @@ export const landingTranslations = {
     
     // Property Placement Modal
     placePropertyTitle: "Place Property",
-    placePropertyDescription: "Are you a realtor and already using the IT Agent app? Log in with your credentials",
+    placePropertyDescription: "Log in with your credentials",
     loginTab: "Login",
     registrationTab: "Registration Request",
     email: "Email",
@@ -103,6 +103,7 @@ export const landingTranslations = {
     loginButton: "Login",
     registrationDescription: "Are you a realtor but not yet registered in the IT Agent app? {link}",
     submitRegistrationRequest: "Submit Registration Request",
+    registerLink: "Register",
     modalName: "Name",
     modalPhone: "Phone",
     status: "Status",
@@ -110,8 +111,11 @@ export const landingTranslations = {
     statusAgency: "Agency",
     statusDeveloper: "Developer",
     modalSubmitRequest: "Submit Request",
+    modalRegister: "Register",
+    modalPasswordConfirm: "Confirm Password",
     backButton: "Back",
     registrationTitle: "Registration Request in IT Agent",
+    registrationTitleNew: "Registration in IT Agent",
     // Success modal
     successTitle: "Thank you for your application!",
     successMessage: "Our specialists will contact you soon.",
@@ -214,7 +218,7 @@ export const landingTranslations = {
     
     // Property Placement Modal
     placePropertyTitle: "Разместить объект",
-    placePropertyDescription: "Вы риелтор и уже пользуетесь приложением IT Agent? Авторизуйтесь с вашими учетными данными",
+    placePropertyDescription: "Авторизуйтесь с вашими учетными данными",
     loginTab: "Вход",
     registrationTab: "Заявка на регистрацию",
     email: "Email",
@@ -222,6 +226,7 @@ export const landingTranslations = {
     loginButton: "Войти",
     registrationDescription: "Вы риелтор, но всё ещё не зарегистрированы в приложении IT Agent? {link}",
     submitRegistrationRequest: "Подать заявку на регистрацию",
+    registerLink: "Зарегистрироваться",
     modalName: "Имя",
     modalPhone: "Телефон",
     status: "Статус",
@@ -229,8 +234,11 @@ export const landingTranslations = {
     statusAgency: "Агентство",
     statusDeveloper: "Застройщик",
     modalSubmitRequest: "Подать заявку",
+    modalRegister: "Зарегистрироваться",
+    modalPasswordConfirm: "Подтвердить пароль",
     backButton: "Назад",
     registrationTitle: "Заявка на регистрацию в IT Agent",
+    registrationTitleNew: "Регистрация в IT Agent",
     // Success modal
     successTitle: "Спасибо за вашу заявку!",
     successMessage: "Наши специалисты свяжутся с вами в ближайшее время.",
@@ -333,7 +341,7 @@ export const landingTranslations = {
     
     // Property Placement Modal
     placePropertyTitle: "Tempatkan Properti",
-    placePropertyDescription: "Apakah Anda agen real estate dan sudah menggunakan aplikasi IT Agent? Masuk dengan kredensial Anda",
+    placePropertyDescription: "Masuk dengan kredensial Anda",
     loginTab: "Masuk",
     registrationTab: "Permintaan Pendaftaran",
     email: "Email",
@@ -341,6 +349,7 @@ export const landingTranslations = {
     loginButton: "Masuk",
     registrationDescription: "Apakah Anda agen real estate tetapi belum terdaftar di aplikasi IT Agent? {link}",
     submitRegistrationRequest: "Ajukan Permintaan Pendaftaran",
+    registerLink: "Daftar",
     modalName: "Nama",
     modalPhone: "Telepon",
     status: "Status",
@@ -348,8 +357,11 @@ export const landingTranslations = {
     statusAgency: "Agensi",
     statusDeveloper: "Pengembang",
     modalSubmitRequest: "Ajukan Permintaan",
+    modalRegister: "Daftar",
+    modalPasswordConfirm: "Konfirmasi Kata Sandi",
     backButton: "Kembali",
     registrationTitle: "Permintaan Pendaftaran di IT Agent",
+    registrationTitleNew: "Pendaftaran di IT Agent",
     // Success modal
     successTitle: "Terima kasih atas aplikasi Anda!",
     successMessage: "Para spesialis kami akan segera menghubungi Anda.",

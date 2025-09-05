@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "./firebaseConfig";
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
@@ -209,7 +209,24 @@ export function AuthProvider({ children }) {
   const logout = () => signOut(auth);
 
   return (
-    <AuthContext.Provider value={{ currentUser, role, login, logout, loading }}>
+    <AuthContext.Provider value={{ currentUser, role, login, logout, loading, register: async (email, password, name) => {
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      if (name) {
+        try { await updateProfile(userCred.user, { displayName: name }); } catch {}
+      }
+      const userDocRef = doc(db, "users", userCred.user.uid);
+      await setDoc(userDocRef, {
+        uid: userCred.user.uid,
+        email: userCred.user.email,
+        role: "agent",
+        createdAt: new Date(),
+        displayName: name || userCred.user.displayName || '',
+        name: name || userCred.user.displayName || '',
+        language: localStorage.getItem('selectedLanguage') || 'ru'
+      }, { merge: true });
+      setRole('agent');
+      return userCred;
+    } }}>
       {!loading ? children : <div>Загрузка...</div>}
     </AuthContext.Provider>
   );

@@ -6,10 +6,9 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { countryDialCodes } from '../lib/countryDialCodes';
 
 import { X } from 'lucide-react';
-import { db } from '../firebaseConfig';
-import { doc, setDoc, collection } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 export default function PropertyPlacementModal({ isOpen, onClose }) {
@@ -17,7 +16,7 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
   const [showSuccess, setShowSuccess] = useState(false); // новое состояние для окна успеха
   const [showError, setShowError] = useState(false); // состояние для показа ошибок
   const [errorMessage, setErrorMessage] = useState(''); // сообщение об ошибке
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const { language } = useLanguage();
   const t = landingTranslations[language];
 
@@ -28,15 +27,19 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
 
   // register state
   const [regName, setRegName] = useState('');
+  const [regPhoneCode, setRegPhoneCode] = useState('+62');
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regStatus, setRegStatus] = useState('agent');
+  const [regPassword, setRegPassword] = useState('');
+  const [regPasswordConfirm, setRegPasswordConfirm] = useState('');
   const [isRegLoading, setIsRegLoading] = useState(false);
 
   const statuses = [
     { value: 'agent', ru: 'Агент', en: 'Agent', id: 'Agen' },
     { value: 'agency', ru: 'Агентство', en: 'Agency', id: 'Agensi' },
     { value: 'developer', ru: 'Застройщик', en: 'Developer', id: 'Pengembang' },
+    { value: 'owner', ru: 'Собственник', en: 'Owner', id: 'Pemilik' },
   ];
 
   const statusLabel = (code) => {
@@ -64,42 +67,43 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
     e.preventDefault();
     try {
       setIsRegLoading(true);
-      
-      // Создаем заявку на регистрацию
-      const registrationRequest = {
-        name: regName,
-        phone: regPhone,
-        email: regEmail,
-        userStatus: regStatus, // статус пользователя (агент/агентство/застройщик)
-        requestStatus: 'pending', // статус заявки
-        createdAt: new Date(),
-        language: language || 'ru'
-      };
-      
-      // Сохраняем заявку в отдельную коллекцию для агентов
-      const requestRef = doc(collection(db, 'agentRegistrationRequests'));
-      await setDoc(requestRef, registrationRequest);
-      
-      // Показываем окно успешной подачи заявки
-      setShowSuccess(true);
+      // Проверяем обязательные поля
+      if (!regName || !regPhone || !regEmail || !regPassword || !regPasswordConfirm || !regStatus) {
+        setErrorMessage(language === 'ru' ? 'Пожалуйста, заполните все поля' : language === 'id' ? 'Harap isi semua kolom' : 'Please fill in all fields');
+        setShowError(true);
+        return;
+      }
+      if (regPassword !== regPasswordConfirm) {
+        setErrorMessage(language === 'ru' ? 'Пароли не совпадают' : language === 'id' ? 'Kata sandi tidak cocok' : 'Passwords do not match');
+        setShowError(true);
+        return;
+      }
+
+      // Простейшая валидация телефона: от 6 до 20 цифр (без кода)
+      const digitsOnly = regPhone.replace(/\D/g, '');
+      if (digitsOnly.length < 6 || digitsOnly.length > 20) {
+        setErrorMessage(language === 'ru' ? 'Некорректный номер телефона' : language === 'id' ? 'Nomor telepon tidak valid' : 'Invalid phone number');
+        setShowError(true);
+        return;
+      }
+
+      // Регистрируем пользователя сразу как агента
+      await register(regEmail, regPassword, regName);
+      onClose();
+      toast.success(language === 'ru' ? 'Вы успешно зарегистрированы' : language === 'id' ? 'Anda berhasil terdaftar' : 'You have successfully registered');
     } catch (err) {
       console.error('Registration request error', err);
-      
-      // Определяем понятное сообщение об ошибке
-      let errorMsg = 'Ошибка при отправке заявки. Попробуйте еще раз.';
-      
-      if (err.code === 'permission-denied') {
-        errorMsg = 'Ошибка доступа. Попробуйте еще раз.';
-      } else if (err.code === 'unavailable') {
-        errorMsg = 'Сервис временно недоступен. Попробуйте позже.';
+      let errorMsg = language === 'ru' ? 'Ошибка регистрации. Попробуйте ещё раз.' : language === 'id' ? 'Kesalahan pendaftaran. Coba lagi.' : 'Registration error. Try again.';
+      if (err.code === 'auth/email-already-in-use') {
+        errorMsg = language === 'ru' ? 'Email уже используется' : language === 'id' ? 'Email sudah digunakan' : 'Email already in use';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMsg = language === 'ru' ? 'Неверный формат email' : language === 'id' ? 'Format email tidak valid' : 'Invalid email format';
+      } else if (err.code === 'auth/weak-password') {
+        errorMsg = language === 'ru' ? 'Слабый пароль (минимум 6 символов)' : language === 'id' ? 'Kata sandi lemah (minimal 6 karakter)' : 'Weak password (min 6 chars)';
       } else if (err.message) {
-        errorMsg = `Ошибка: ${err.message}`;
+        errorMsg = `${language === 'ru' ? 'Ошибка: ' : language === 'id' ? 'Kesalahan: ' : 'Error: '}${err.message}`;
       }
-      
-      // Показываем ошибку через toast
       toast.error(errorMsg);
-      
-      // Также показываем в UI
       setErrorMessage(errorMsg);
       setShowError(true);
     } finally {
@@ -282,22 +286,18 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
               </form>
               
               <div className="text-center">
-                <p className="text-gray-600 text-sm">
-                  {t.registrationDescription.split('{link}')[0]}
-                  <button 
-                    type="button"
-                    onClick={() => setTab('register')}
-                    className="text-blue-600 hover:text-blue-800 underline text-sm cursor-pointer"
-                  >
-                    {t.submitRegistrationRequest}
-                  </button>
-                  {t.registrationDescription.split('{link}')[1]}
-                </p>
+                <button 
+                  type="button"
+                  onClick={() => setTab('register')}
+                  className="text-blue-600 hover:text-blue-800 underline text-sm cursor-pointer"
+                >
+                  {t.registerLink}
+                </button>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{t.registrationTitle}</h3>
+              <h3 className="text-lg font-semibold">{t.registrationTitleNew}</h3>
               
               <form onSubmit={handleRegister} className="space-y-3">
                 <div className="space-y-1">
@@ -311,12 +311,25 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="phone">{t.modalPhone}</Label>
-                  <Input 
-                    id="phone" 
-                    value={regPhone} 
-                    onChange={(e) => setRegPhone(e.target.value)} 
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <Select value={regPhoneCode} onValueChange={setRegPhoneCode}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64 overflow-auto">
+                        {countryDialCodes.map(({ code, label }) => (
+                          <SelectItem key={code} value={code}>{code} {label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input 
+                      id="phone" 
+                      value={regPhone} 
+                      onChange={(e) => setRegPhone(e.target.value.replace(/[^\d\s-]/g, ''))} 
+                      placeholder={language === 'ru' ? 'номер телефона' : language === 'id' ? 'nomor telepon' : 'phone number'}
+                      required
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="regEmail">{t.email}</Label>
@@ -325,6 +338,26 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
                     type="email" 
                     value={regEmail} 
                     onChange={(e) => setRegEmail(e.target.value)} 
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="regPassword">{t.modalPassword}</Label>
+                  <Input 
+                    id="regPassword" 
+                    type="password" 
+                    value={regPassword} 
+                    onChange={(e) => setRegPassword(e.target.value)} 
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="regPasswordConfirm">{t.modalPasswordConfirm}</Label>
+                  <Input 
+                    id="regPasswordConfirm" 
+                    type="password" 
+                    value={regPasswordConfirm} 
+                    onChange={(e) => setRegPasswordConfirm(e.target.value)} 
                     required
                   />
                 </div>
@@ -344,7 +377,7 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
                   </Select>
                 </div>
                 <Button type="submit" className="w-full" disabled={isRegLoading}>
-                  {isRegLoading ? t.sending : t.modalSubmitRequest}
+                  {isRegLoading ? t.sending : t.modalRegister}
                 </Button>
               </form>
             </div>

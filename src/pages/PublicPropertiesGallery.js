@@ -578,7 +578,7 @@ function PublicPropertiesGallery() {
                   {p.isDeveloperApproved === true && (
                     <div className="mb-1">
                       <Badge className="border bg-green-100 text-green-800 border-green-200">
-                        {t.propertyDetail?.serviceVerified || 'Проверено сервисом'}
+                        {t.serviceVerified || 'Проверено сервисом'}
                       </Badge>
                     </div>
                   )}
