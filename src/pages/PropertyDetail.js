@@ -55,6 +55,9 @@ function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
   const { id } = useParams();
   console.log('PropertyDetail: Got id from params:', id);
+  
+  // Определяем, находимся ли мы на standalone странице
+  const isStandalone = window.location.pathname.includes('/standalone');
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
@@ -315,6 +318,41 @@ function PropertyDetail() {
     }
     // Специальная обработка для поля площади
     else if (field === 'area') {
+      // Разрешаем цифры, точки и пустые значения
+      processedValue = value.replace(/[^\d.]/g, '');
+      // Убираем множественные точки
+      processedValue = processedValue.replace(/\.+/g, '.');
+      // Убираем точки в начале
+      processedValue = processedValue.replace(/^\./, '');
+      // Разрешаем пустые значения для возможности полного удаления
+      if (processedValue !== '' && processedValue !== '.') {
+        const numValue = parseFloat(processedValue);
+        processedValue = !isNaN(numValue) ? numValue : '';
+      }
+    }
+    // Специальная обработка для поля ROI
+    else if (field === 'manualRoi') {
+      // Разрешаем цифры, точки и пустые значения
+      processedValue = value.replace(/[^\d.]/g, '');
+      // Убираем множественные точки
+      processedValue = processedValue.replace(/\.+/g, '.');
+      // Убираем точки в начале
+      processedValue = processedValue.replace(/^\./, '');
+      // Разрешаем пустые значения для возможности полного удаления
+      if (processedValue !== '' && processedValue !== '.') {
+        const numValue = parseFloat(processedValue);
+        // Ограничиваем ROI от 0 до 100%
+        if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+          processedValue = numValue;
+        } else if (!isNaN(numValue) && numValue > 100) {
+          processedValue = 100;
+        } else {
+          processedValue = '';
+        }
+      }
+    }
+    // Специальная обработка для поля площади земли
+    else if (field === 'landArea') {
       // Разрешаем цифры, точки и пустые значения
       processedValue = value.replace(/[^\d.]/g, '');
       // Убираем множественные точки
@@ -775,7 +813,7 @@ function PropertyDetail() {
   };
 
   // Список неизменяемых полей
-  const nonEditableFields = ['pricePerSqm', 'roi'];
+  const nonEditableFields = ['pricePerSqm', 'roi', 'calculatedRoi'];
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -1296,6 +1334,69 @@ function PropertyDetail() {
             />
           );
         }
+        // Специальная обработка для поля ROI
+        if (field === 'manualRoi') {
+          return (
+            <div className="flex items-center space-x-2">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+                onChange={(e) => handleValueChange(field, e.target.value)}
+                className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line flex-1 border border-gray-300 rounded px-2 py-1"
+                placeholder={t.propertyDetail.expectedRoiPlaceholder}
+              />
+              <span className="text-sm text-gray-600">%</span>
+            </div>
+          );
+        }
+        // Специальная обработка для поля площади земли
+        if (field === 'landArea') {
+          return (
+            <input
+              type="number"
+              step="0.1"
+              min="0.1"
+              value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+              onChange={(e) => handleValueChange(field, e.target.value)}
+              className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+              placeholder={t.propertyDetail.landAreaPlaceholder}
+            />
+          );
+        }
+        // Специальная обработка для поля ожидаемой стоимости
+        if (field === 'expectedCost') {
+          const formatPrice = (price) => {
+            if (!price) return "";
+            return new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }).format(price);
+          };
+          
+          return (
+            <div className="flex flex-col space-y-1">
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={editedValues.hasOwnProperty(field) ? editedValues[field] : (originalValue || '')}
+                onChange={(e) => handleValueChange(field, e.target.value)}
+                className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line w-full border border-gray-300 rounded px-2 py-1"
+                placeholder={t.propertyDetail.expectedCostPlaceholder}
+              />
+              {(editedValues.hasOwnProperty(field) ? editedValues[field] : originalValue) && (
+                <span className="text-xs text-gray-500">
+                  {formatPrice(editedValues.hasOwnProperty(field) ? editedValues[field] : originalValue)}
+                </span>
+              )}
+            </div>
+          );
+        }
         if (field === 'agentCommission') {
           const commissionRaw = editedValues.agentCommission !== undefined ? editedValues.agentCommission : property.agentCommission;
           const price = editedValues.price !== undefined ? editedValues.price : property.price;
@@ -1757,8 +1858,13 @@ function PropertyDetail() {
   const showTotalArea = isEditing || (!!property.totalArea && property.totalArea !== '');
   const showManagementCompany = isEditing || (!!property.managementCompany && property.managementCompany !== '');
   
-  // Фильтруем атрибуты для создателей объектов (не админов/модераторов)
+  // Фильтруем атрибуты для создателей объектов (не админов/модераторов) и standalone страниц
   const filteredAttributesBase = attributesBase.filter(attr => {
+    // На standalone странице скрываем поля "Застройщик" и "Название"
+    if (isStandalone && (attr.field === 'developer' || attr.field === 'complex')) {
+      return false;
+    }
+    
     // Если пользователь админ или модератор - показываем все поля
     if (role === 'admin' || role === 'moderator') return true;
     
@@ -1783,10 +1889,19 @@ function PropertyDetail() {
       icon: Ruler,
       type: "text"
     },
-    ...(roiPercent !== null ? [{
-      label: t.roiShort,
+    // Expected ROI field (editable)
+    {
+      label: t.propertyDetail.expectedRoi,
+      value: property.manualRoi ? `${Number(property.manualRoi).toFixed(2)}%` : "—",
+      field: "manualRoi",
+      icon: Star,
+      type: "number"
+    },
+    // Calculated ROI (read-only, if exists)
+    ...(roiPercent !== null && roiPercent !== property.manualRoi ? [{
+      label: `${t.roiShort} (${t.roiCalculator.title})`,
       value: `${Number(roiPercent).toFixed(2)}%`,
-      field: "roi",
+      field: "calculatedRoi",
       icon: Star,
       type: "text"
     }] : []),
@@ -1797,6 +1912,27 @@ function PropertyDetail() {
       icon: Ruler,
       type: "number"
     }] : []),
+    // Land area field
+    {
+      label: t.propertyDetail.landArea,
+      value: property.landArea ? translateAreaUnit(formatArea(property.landArea), language) : "—",
+      field: "landArea",
+      icon: Ruler,
+      type: "number"
+    },
+    // Expected cost field
+    {
+      label: t.propertyDetail.expectedCost,
+      value: property.expectedCost ? new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(property.expectedCost) : "—",
+      field: "expectedCost",
+      icon: Star,
+      type: "number"
+    },
     ...(showManagementCompany ? [{
       label: t.propertyDetail.managementCompany,
       value: safeDisplay(property.managementCompany),
@@ -2053,7 +2189,34 @@ function PropertyDetail() {
               <Icon className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-gray-500 leading-none mb-1">{label}</div>
+              <div className="text-xs text-gray-500 leading-none mb-1 flex items-center gap-1">
+                {label}
+                {field === 'area' && (
+                  <AdaptiveTooltip content={t.propertyDetail.areaTooltip}>
+                    <span className="cursor-help text-gray-400 hover:text-gray-600">ⓘ</span>
+                  </AdaptiveTooltip>
+                )}
+                {field === 'totalArea' && (
+                  <AdaptiveTooltip content={t.propertyDetail.totalAreaTooltip}>
+                    <span className="cursor-help text-gray-400 hover:text-gray-600">ⓘ</span>
+                  </AdaptiveTooltip>
+                )}
+                {field === 'landArea' && (
+                  <AdaptiveTooltip content={t.propertyDetail.landAreaTooltip}>
+                    <span className="cursor-help text-gray-400 hover:text-gray-600">ⓘ</span>
+                  </AdaptiveTooltip>
+                )}
+                {field === 'expectedCost' && (
+                  <AdaptiveTooltip content={t.propertyDetail.expectedCostTooltip}>
+                    <span className="cursor-help text-gray-400 hover:text-gray-600">ⓘ</span>
+                  </AdaptiveTooltip>
+                )}
+                {field === 'manualRoi' && (
+                  <AdaptiveTooltip content={t.propertyDetail.expectedRoiTooltip}>
+                    <span className="cursor-help text-gray-400 hover:text-gray-600">ⓘ</span>
+                  </AdaptiveTooltip>
+                )}
+              </div>
               {renderEditableValue(field, value, type, options)}
             </div>
           </div>

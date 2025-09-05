@@ -407,7 +407,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin'].includes(role) && (
+              {['admin', 'moderator'].includes(role) && (
                 <NavItem 
                   to="/general-overview" 
                   icon={BarChart3}
@@ -665,7 +665,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin'].includes(role) && (
+        {['admin', 'moderator'].includes(role) && (
           <NavItem to="/general-overview" icon={BarChart3}>
             {nav.generalOverview}
           </NavItem>

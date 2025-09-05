@@ -6,6 +6,7 @@ import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Wa
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { useAuth } from "../AuthContext";
+import { AdaptiveTooltip } from "../components/ui/tooltip";
 import {
   translateDistrict,
   translatePropertyType,
@@ -295,6 +296,23 @@ function PublicPropertyDetail() {
     </div>
   );
 
+  const renderAttributeWithTooltip = (label, value, IconComp, tooltip) => (
+    <div className="flex items-center gap-3">
+      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+        <IconComp className="w-5 h-5" />
+      </div>
+      <div>
+        <div className="text-xs text-gray-500 leading-none mb-1 flex items-center gap-1">
+          {label}
+          <AdaptiveTooltip content={tooltip}>
+            <span className="cursor-help text-gray-400 hover:text-gray-600">ⓘ</span>
+          </AdaptiveTooltip>
+        </div>
+        <div className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line">{value}</div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-2xl mx-auto p-4">
       {/* Кнопка "Назад" */}
@@ -498,10 +516,11 @@ function PublicPropertyDetail() {
           Bed
         )}
 
-        {renderAttribute(
+        {renderAttributeWithTooltip(
           t.propertyDetail.area,
           property.area ? translateAreaUnit(formatArea(property.area), language) : "—",
-          Ruler
+          Ruler,
+          t.propertyDetail.areaTooltip
         )}
 
         {renderAttribute(
@@ -547,7 +566,28 @@ function PublicPropertyDetail() {
         )}
 
         {property.totalArea !== undefined && property.totalArea !== null && property.totalArea !== '' && (
-          renderAttribute(t.propertyDetail.totalArea, safeDisplay(property.totalArea), Ruler)
+          renderAttributeWithTooltip(t.propertyDetail.totalArea, safeDisplay(property.totalArea), Ruler, t.propertyDetail.totalAreaTooltip)
+        )}
+
+        {property.landArea !== undefined && property.landArea !== null && property.landArea !== '' && (
+          renderAttributeWithTooltip(t.propertyDetail.landArea, `${safeDisplay(property.landArea)} м²`, Ruler, t.propertyDetail.landAreaTooltip)
+        )}
+
+        {property.expectedCost !== undefined && 
+         property.expectedCost !== null && 
+         property.expectedCost !== '' && 
+         (property.status === 'Проект' || property.status === 'Строится') && (
+          renderAttributeWithTooltip(
+            t.propertyDetail.expectedCost, 
+            new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }).format(property.expectedCost), 
+            Star,
+            t.propertyDetail.expectedCostTooltip
+          )
         )}
 
         {property.managementCompany && (
@@ -582,12 +622,22 @@ function PublicPropertyDetail() {
           DollarSign
         )}
 
-        {/* ROI после даты завершения (если сохранён) */}
-        {roiPercent !== null && (
-          renderAttribute(
-            t.roiShort,
-            `${Number(roiPercent).toFixed(2)}%`,
-            Star
+        {/* Expected ROI (если указан) - приоритет над рассчетным */}
+        {property.manualRoi ? (
+          renderAttributeWithTooltip(
+            t.propertyDetail.expectedRoi,
+            `${Number(property.manualRoi).toFixed(2)}%`,
+            Star,
+            t.propertyDetail.expectedRoiTooltip
+          )
+        ) : (
+          /* Calculated ROI (если нет ожидаемого ROI и есть рассчетный) */
+          roiPercent !== null && (
+            renderAttribute(
+              `${t.roiShort} (${t.roiCalculator.title})`,
+              `${Number(roiPercent).toFixed(2)}%`,
+              Star
+            )
           )
         )}
 
