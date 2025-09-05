@@ -71,8 +71,8 @@ const MainLandingPage = () => {
       setIsLoading(true);
       await login(email, password);
       setIsAuthModalOpen(false);
-      // Перенаправляем на страницу /public после успешного входа
-      navigate('/public');
+      // Перенаправляем на публичную галерею по корню
+      navigate('/');
     } catch (err) {
       console.error(err);
       setErrorMessage('Ошибка входа. Проверьте email и пароль.');
@@ -141,7 +141,7 @@ const MainLandingPage = () => {
           "Professional investment consultation"
         ],
         cta: "Explore Investments",
-        link: "/public"
+        link: "/"
       },
       agents: {
         title: "For Real Estate Agents",
@@ -154,7 +154,7 @@ const MainLandingPage = () => {
           "Professional realtor tools"
         ],
         cta: "Join as Agent",
-        link: "/public"
+        link: "/"
       },
       developers: {
         title: "For Developers",
@@ -230,7 +230,7 @@ const MainLandingPage = () => {
           "Профессиональная инвестиционная консультация"
         ],
         cta: "Изучить инвестиции",
-        link: "/public"
+        link: "/"
       },
       agents: {
         title: "Для риелторов",
@@ -243,7 +243,7 @@ const MainLandingPage = () => {
           "Профессиональные инструменты риелтора"
         ],
         cta: "Присоединиться как агент",
-        link: "/public"
+        link: "/"
       },
       developers: {
         title: "Для застройщиков",
@@ -319,7 +319,7 @@ const MainLandingPage = () => {
           "Konsultasi investasi profesional"
         ],
         cta: "Jelajahi Investasi",
-        link: "/public"
+        link: "/"
       },
       agents: {
         title: "Untuk Agen Properti",
@@ -332,7 +332,7 @@ const MainLandingPage = () => {
           "Alat profesional untuk agen properti"
         ],
         cta: "Bergabung sebagai Agen",
-        link: "/public"
+        link: "/"
       },
       developers: {
         title: "Untuk Pengembang",
@@ -418,7 +418,7 @@ const MainLandingPage = () => {
           ))}
         </ul>
         
-        {link === "/public" && (cta === "Присоединиться как агент" || cta === "Join as Agent" || cta === "Bergabung sebagai Agen") ? (
+        {link === "/" && (cta === "Присоединиться как агент" || cta === "Join as Agent" || cta === "Bergabung sebagai Agen") ? (
           <Button 
             onClick={() => setIsAuthModalOpen(true)} 
             className="w-full gap-2" 
@@ -437,7 +437,7 @@ const MainLandingPage = () => {
         )}
         
         {/* Дополнительная кнопка "Установить IT Agent" для карточки агентов */}
-        {link === "/public" && (cta === "Присоединиться как агент" || cta === "Join as Agent" || cta === "Bergabung sebagai Agen") && (
+        {link === "/" && (cta === "Присоединиться как агент" || cta === "Join as Agent" || cta === "Bergabung sebagai Agen") && (
           <a
             href="https://apps.apple.com/id/app/it-agent-bali/id6746729723"
             target="_blank"
@@ -459,7 +459,7 @@ const MainLandingPage = () => {
       {/* Header */}
       <header className="border-b border-gray-700 bg-black">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold text-white">
+          <Link to="/public" className="text-2xl font-bold text-white">
             IT Agent
           </Link>
           <div className="flex items-center gap-4">

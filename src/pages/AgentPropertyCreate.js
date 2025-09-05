@@ -353,8 +353,8 @@ function PropertyCreate() {
       await setDoc(newPropertyRef, processedValues);
       
       showSuccess('Объект успешно создан');
-      // Перенаправляем на публичную страницу объектов
-      window.location.href = '/public';
+      // Перенаправляем на публичную страницу объектов (теперь по корню)
+      window.location.href = '/';
     } catch (error) {
       console.error("Ошибка при создании объекта:", error);
       showError('Ошибка при создании объекта');
@@ -1062,14 +1062,14 @@ function PropertyCreate() {
   // Проверяем права доступа при монтировании компонента
   useEffect(() => {
     if (!currentUser) {
-      // Перенаправляем на страницу /public если не авторизован
-      window.location.href = '/public';
+      // Перенаправляем на главную публичную страницу, если не авторизован
+      window.location.href = '/';
               return;
     }
     
     if (!canCreate()) {
-      // Перенаправляем на страницу /public если нет прав
-      window.location.href = '/public';
+      // Перенаправляем на главную публичную страницу, если нет прав
+      window.location.href = '/';
     }
   }, [currentUser, canCreate]);
 

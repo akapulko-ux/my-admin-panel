@@ -247,7 +247,7 @@ function App() {
               <Route path="/public-building-progress/:type/:id" element={<PublicBuildingProgress />} />
               <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
               <Route path="/public-technical-supervision/:projectId" element={<PublicTechnicalSupervision />} />
-              <Route path="/public" element={<PublicPropertiesGallery />} />
+              <Route path="/public" element={<MainLandingPage />} />
               <Route path="/public/complex/:id" element={<PublicComplexDetail />} />
               <Route path="/public/property/:id" element={<PublicPropertyDetail />} />
               <Route path="/public-agent-page/:developerId" element={<ProtectedRoute><PublicPageAgent /></ProtectedRoute>} />
@@ -258,8 +258,8 @@ function App() {
               <Route path="/roi-calculator" element={<RoiCalculator />} />
               <Route path="/access-closed" element={<AccessClosed />} />
 
-              {/* Главная страница - новый лендинг */}
-              <Route path="/" element={<MainLandingPage />} />
+              {/* Главная страница - теперь публичная галерея */}
+              <Route path="/" element={<PublicPropertiesGallery />} />
               
               {/* Лендинг для застройщиков */}
               <Route path="/dev" element={<DevLandingPage />} />

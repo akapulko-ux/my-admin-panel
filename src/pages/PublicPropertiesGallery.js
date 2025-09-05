@@ -62,7 +62,7 @@ function PublicPropertiesGallery() {
 
   // Инициализация отслеживания страницы для аналитики
   useEffect(() => {
-    const cleanup = initPageTracking('/public');
+    const cleanup = initPageTracking('/');
     return cleanup;
   }, []);
 

@@ -119,7 +119,7 @@ const ProtectedRoute = ({ children, isPublic = false }) => {
     if (currentPath.startsWith('/public-agent-page')) {
       return <Navigate to={`/public-agent-auth?redirect=${encodeURIComponent(currentPath)}`} />;
     }
-    return <Navigate to="/" />;
+    return <Navigate to="/public" />;
   }
 
   // Проверяем, не является ли пользователь заблокированным

@@ -187,20 +187,35 @@ const Dashboard = () => {
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       }
 
-      // Получаем логи посещений страницы /public
-      const visitsQuery = query(
+      // Получаем логи посещений главной публичной страницы (учитываем исторический '/public' и текущий '/')
+      const visitsQueryPublic = query(
         collection(db, 'pageVisits'),
         where('page', '==', '/public'),
         where('timestamp', '>=', startDate),
         orderBy('timestamp', 'desc')
       );
+      const visitsQueryRoot = query(
+        collection(db, 'pageVisits'),
+        where('page', '==', '/'),
+        where('timestamp', '>=', startDate),
+        orderBy('timestamp', 'desc')
+      );
 
-      const visitsSnapshot = await getDocs(visitsQuery);
+      const [visitsSnapshotPublic, visitsSnapshotRoot] = await Promise.all([
+        getDocs(visitsQueryPublic),
+        getDocs(visitsQueryRoot)
+      ]);
       
       // Получаем данные об авторизациях пользователей
-      const authQuery = query(
+      const authQueryPublic = query(
         collection(db, 'userAuthLogs'),
         where('page', '==', '/public'),
+        where('timestamp', '>=', startDate),
+        orderBy('timestamp', 'desc')
+      );
+      const authQueryRoot = query(
+        collection(db, 'userAuthLogs'),
+        where('page', '==', '/'),
         where('timestamp', '>=', startDate),
         orderBy('timestamp', 'desc')
       );
@@ -218,7 +233,12 @@ const Dashboard = () => {
       let propertyVisitsSnapshot;
       
       try {
-        authSnapshot = await getDocs(authQuery);
+        const [authSnapPublic, authSnapRoot] = await Promise.all([
+          getDocs(authQueryPublic),
+          getDocs(authQueryRoot)
+        ]);
+        // Объединяем снапшоты авторизаций
+        authSnapshot = { empty: authSnapPublic.empty && authSnapRoot.empty, docs: [...authSnapPublic.docs, ...authSnapRoot.docs] };
       } catch (error) {
         console.log('Коллекция userAuthLogs не найдена, продолжаем без данных авторизации');
         authSnapshot = { empty: true, docs: [] };
@@ -231,7 +251,12 @@ const Dashboard = () => {
         propertyVisitsSnapshot = { empty: true, docs: [] };
       }
       
-      if (visitsSnapshot.empty && authSnapshot.empty && propertyVisitsSnapshot.empty) {
+      const visits = [
+        ...(visitsSnapshotPublic.empty ? [] : visitsSnapshotPublic.docs.map(doc => doc.data())),
+        ...(visitsSnapshotRoot.empty ? [] : visitsSnapshotRoot.docs.map(doc => doc.data()))
+      ];
+
+      if (visits.length === 0 && authSnapshot.empty && propertyVisitsSnapshot.empty) {
         setAnalytics({
           totalVisits: 0,
           uniqueVisitors: 0,
@@ -258,7 +283,6 @@ const Dashboard = () => {
         return;
       }
 
-      const visits = visitsSnapshot.empty ? [] : visitsSnapshot.docs.map(doc => doc.data());
       const auths = authSnapshot.empty ? [] : authSnapshot.docs.map(doc => doc.data());
       const propertyVisits = propertyVisitsSnapshot.empty ? [] : propertyVisitsSnapshot.docs.map(doc => doc.data());
       
@@ -566,7 +590,7 @@ const Dashboard = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Дашборд аналитики</h1>
           <p className="text-muted-foreground">
-            Аналитика использования страницы /public
+            Аналитика использования публичной главной страницы
           </p>
         </div>
         
@@ -1002,12 +1026,12 @@ const Dashboard = () => {
       {/* Кнопка для перехода на публичную страницу */}
       <div className="text-center">
         <Button
-          onClick={() => window.open('/public', '_blank')}
+          onClick={() => window.open('/', '_blank')}
           className="gap-2"
           size="lg"
         >
           <ExternalLink className="h-4 w-4" />
-          Открыть страницу /public
+          Открыть главную страницу
         </Button>
       </div>
     </div>

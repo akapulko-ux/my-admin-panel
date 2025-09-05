@@ -318,7 +318,7 @@ function PublicPropertyDetail() {
       {/* Кнопка "Назад" */}
       <div className="mb-4">
         <button
-          onClick={() => navigate('/public')}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

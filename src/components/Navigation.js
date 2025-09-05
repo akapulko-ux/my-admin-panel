@@ -272,7 +272,7 @@ const Navigation = () => {
               {/* Публичная галерея - ПЕРВОЙ в списке, открывается в новой вкладке */}
               {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
-                  to="/public" 
+                  to="/" 
                   icon={Globe}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -577,7 +577,7 @@ const Navigation = () => {
       <nav className="space-y-1">
         {/* Публичная галерея - ПЕРВОЙ в списке, открывается в новой вкладке */}
         {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
-          <NavItem to="/public" icon={Globe} target="_blank" rel="noopener noreferrer">
+          <NavItem to="/" icon={Globe} target="_blank" rel="noopener noreferrer">
             {nav.publicGallery}
           </NavItem>
         )}
