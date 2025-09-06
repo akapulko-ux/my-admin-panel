@@ -511,8 +511,8 @@ function PublicPropertyDetail() {
       {/* Характеристики (только просмотр) */}
       <div className="grid grid-cols-2 gap-4">
         {renderAttribute(
-          shouldShowUnitsCount ? t.propertyDetail.unitsCount : (property.bedrooms === 0 ? t.propertyDetail.studio : t.propertyDetail.bedrooms),
-          shouldShowUnitsCount ? safeDisplay(property.unitsCount) : (property.bedrooms === 0 ? t.propertyDetail.studio : safeDisplay(property.bedrooms)),
+          shouldShowUnitsCount ? t.propertyDetail.unitsCount : ((property.bedrooms === 0 || property.bedrooms === "Студия") ? t.propertyDetail.studio : t.propertyDetail.bedrooms),
+          shouldShowUnitsCount ? safeDisplay(property.unitsCount) : ((property.bedrooms === 0 || property.bedrooms === "Студия") ? t.propertyDetail.studio : safeDisplay(property.bedrooms)),
           Bed
         )}
 

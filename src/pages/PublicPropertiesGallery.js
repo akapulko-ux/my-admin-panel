@@ -251,17 +251,30 @@ function PublicPropertiesGallery() {
       const statusTranslated = property.status
         ? translateConstructionStatus(String(property.status), language).toLowerCase()
         : '';
+      const districtTranslated = property.district
+        ? translateDistrict(String(property.district), language).toLowerCase()
+        : '';
+      const typeTranslated = property.type
+        ? translatePropertyType(String(property.type), language).toLowerCase()
+        : '';
       const matchesSearch =
         !searchQuery ||
+        // Поиск по району (как по исходному значению, так и по переводу)
         (property.district && property.district.toLowerCase().includes(searchText)) ||
+        (districtTranslated && districtTranslated.includes(searchText)) ||
+        // Поиск по типу (как по исходному значению, так и по переводу)
         (property.type && property.type.toLowerCase().includes(searchText)) ||
+        (typeTranslated && typeTranslated.includes(searchText)) ||
         // Поиск по статусу (как по исходному значению, так и по переводу)
         (property.status && String(property.status).toLowerCase().includes(searchText)) ||
         (statusTranslated && statusTranslated.includes(searchText)) ||
         // Поиск по числовым полям
         (property.price !== undefined && property.price !== null && String(property.price).toLowerCase().includes(searchText)) ||
         (property.area !== undefined && property.area !== null && String(property.area).toLowerCase().includes(searchText)) ||
-        (property.bedrooms !== undefined && property.bedrooms !== null && String(property.bedrooms).toLowerCase().includes(searchText)) ||
+        (property.bedrooms !== undefined && property.bedrooms !== null && (
+          String(property.bedrooms).toLowerCase().includes(searchText) ||
+          ((property.bedrooms === 0 || property.bedrooms === "Студия") && t.propertiesGallery.studio.toLowerCase().includes(searchText))
+        )) ||
         (property.unitsCount !== undefined && property.unitsCount !== null && String(property.unitsCount).toLowerCase().includes(searchText));
 
       const matchesPrice =
@@ -280,7 +293,7 @@ function PublicPropertiesGallery() {
 
       return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType && matchesStatus && matchesAddedByMe;
     });
-  }, [properties, searchQuery, filters, language, currentUser, isSelectionMode, selectedPropertyIds]);
+  }, [properties, searchQuery, filters, language, currentUser, isSelectionMode, selectedPropertyIds, t.propertiesGallery.studio]);
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -481,57 +494,59 @@ function PublicPropertiesGallery() {
               </div>
             </Card>
           </CollapsibleContent>
-              
-              {/* Кнопки-фильтры по статусу */}
-              <div className="flex flex-wrap gap-2">
-          <Button
-            variant={filters.status === "all" ? "default" : "outline"}
-            onClick={() => setFilters(prev => ({ ...prev, status: "all", addedByMe: false }))}
-            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          >
-            {t.propertiesGallery.allStatuses || 'Все статусы'}
-          </Button>
-          <Button
-            variant={filters.status === "Проект" ? "default" : "outline"}
-            onClick={() => setFilters(prev => ({ ...prev, status: "Проект", addedByMe: false }))}
-            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          >
-            {t.propertiesGallery.statusProject || 'Проект'}
-          </Button>
-          <Button
-            variant={filters.status === "Строится" ? "default" : "outline"}
-            onClick={() => setFilters(prev => ({ ...prev, status: "Строится", addedByMe: false }))}
-            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          >
-            {t.propertiesGallery.statusUnderConstruction || 'Строится'}
-          </Button>
-          <Button
-            variant={filters.status === "Готовый" ? "default" : "outline"}
-            onClick={() => setFilters(prev => ({ ...prev, status: "Готовый", addedByMe: false }))}
-            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          >
-            {t.propertiesGallery.statusReady || 'Готовый'}
-          </Button>
-          <Button
-            variant={filters.status === "От собственника" ? "default" : "outline"}
-            onClick={() => setFilters(prev => ({ ...prev, status: "От собственника", addedByMe: false }))}
-            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          >
-            {t.propertiesGallery.statusFromOwner || 'От собственника'}
-          </Button>
-          
-          {/* Кнопка "Добавлено мной" для авторизованных пользователей с объектами */}
-          {hasUserProperties && (
+            </Collapsible>
+          </div>
+        )}
+
+        {/* Кнопки-фильтры по статусу - отдельная строка */}
+        {!isSelectionMode && (
+          <div className="flex flex-wrap gap-2 justify-start">
             <Button
-              variant={filters.addedByMe ? "default" : "outline"}
-              onClick={() => setFilters(prev => ({ ...prev, addedByMe: !prev.addedByMe, status: "all" }))}
+              variant={filters.status === "all" ? "default" : "outline"}
+              onClick={() => setFilters(prev => ({ ...prev, status: "all", addedByMe: false }))}
               className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
             >
-              {t.propertiesGallery.addedByMe || 'Добавлено мной'}
+              {t.propertiesGallery.allStatuses || 'Все статусы'}
             </Button>
-          )}
-              </div>
-            </Collapsible>
+            <Button
+              variant={filters.status === "Проект" ? "default" : "outline"}
+              onClick={() => setFilters(prev => ({ ...prev, status: "Проект", addedByMe: false }))}
+              className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            >
+              {t.propertiesGallery.statusProject || 'Проект'}
+            </Button>
+            <Button
+              variant={filters.status === "Строится" ? "default" : "outline"}
+              onClick={() => setFilters(prev => ({ ...prev, status: "Строится", addedByMe: false }))}
+              className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            >
+              {t.propertiesGallery.statusUnderConstruction || 'Строится'}
+            </Button>
+            <Button
+              variant={filters.status === "Готовый" ? "default" : "outline"}
+              onClick={() => setFilters(prev => ({ ...prev, status: "Готовый", addedByMe: false }))}
+              className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            >
+              {t.propertiesGallery.statusReady || 'Готовый'}
+            </Button>
+            <Button
+              variant={filters.status === "От собственника" ? "default" : "outline"}
+              onClick={() => setFilters(prev => ({ ...prev, status: "От собственника", addedByMe: false }))}
+              className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            >
+              {t.propertiesGallery.statusFromOwner || 'От собственника'}
+            </Button>
+            
+            {/* Кнопка "Добавлено мной" для авторизованных пользователей с объектами */}
+            {hasUserProperties && (
+              <Button
+                variant={filters.addedByMe ? "default" : "outline"}
+                onClick={() => setFilters(prev => ({ ...prev, addedByMe: !prev.addedByMe, status: "all" }))}
+                className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+              >
+                {t.propertiesGallery.addedByMe || 'Добавлено мной'}
+              </Button>
+            )}
           </div>
         )}
         
@@ -604,7 +619,7 @@ function PublicPropertiesGallery() {
                   {p.isDeveloperApproved === true && (
                     <div className="mb-1">
                       <Badge className="border bg-green-100 text-green-800 border-green-200">
-                        {t.serviceVerified || 'Проверено сервисом'}
+                        {t.propertyDetail.serviceVerified}
                       </Badge>
                     </div>
                   )}
@@ -641,7 +656,7 @@ function PublicPropertiesGallery() {
                     <span className="text-sm">
                       <span className="text-gray-600">{t.propertiesGallery.bedroomsLabel}:</span>
                       <span className="ml-2">
-                        {p.bedrooms === 0 ? t.propertiesGallery.studio : safeDisplay(p.bedrooms)}
+                        {(p.bedrooms === 0 || p.bedrooms === "Студия") ? t.propertiesGallery.studio : safeDisplay(p.bedrooms)}
                       </span>
                     </span>
                   )}

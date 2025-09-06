@@ -409,7 +409,7 @@ function PublicComplexDetail() {
                   {p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== '' && (
                     <span className="text-sm">
                       <span className="text-gray-600">{t.propertiesGallery?.bedroomsLabel}:</span>
-                      <span className="ml-2">{p.bedrooms === 0 ? t.propertiesGallery?.studio : String(p.bedrooms)}</span>
+                      <span className="ml-2">{(p.bedrooms === 0 || p.bedrooms === "Студия") ? t.propertiesGallery?.studio : String(p.bedrooms)}</span>
                     </span>
                   )}
                   {p.status && (

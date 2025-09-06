@@ -285,7 +285,7 @@ const PropertyCard = ({ property, onDuplicate, isMobile }) => {
           
           {property.bedrooms !== undefined && property.bedrooms !== null && property.bedrooms !== "" && (
             <div className="text-sm text-gray-600">
-              {property.bedrooms === 0 ? t.propertiesGallery.studio : `${t.propertiesGallery.bedroomsText}: ${safeDisplay(property.bedrooms)}`}
+              {(property.bedrooms === 0 || property.bedrooms === "Студия") ? t.propertiesGallery.studio : `${t.propertiesGallery.bedroomsText}: ${safeDisplay(property.bedrooms)}`}
             </div>
           )}
 
