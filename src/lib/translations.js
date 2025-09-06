@@ -720,7 +720,11 @@ _________________               _________________
       statusProject: 'Project',
       statusUnderConstruction: 'Under Construction',
       statusReady: 'Ready',
-      statusFromOwner: 'From Owner'
+      statusFromOwner: 'From Owner',
+      // Selection mode texts
+      selectionTitle: 'Property Selection',
+      selectionSubtitle: 'Curated by AI assistant specifically for you',
+      selectionResultsText: 'Found {count} property(ies) in selection'
     },
 
     // Property Detail
@@ -2499,7 +2503,11 @@ _________________               _________________
       statusProject: 'Проект',
       statusUnderConstruction: 'Строится',
       statusReady: 'Готовый',
-      statusFromOwner: 'От собственника'
+      statusFromOwner: 'От собственника',
+      // Selection mode texts
+      selectionTitle: 'Подборка объектов',
+      selectionSubtitle: 'Отобрано ИИ-ассистентом специально для вас',
+      selectionResultsText: 'Найдено {count} объект(ов) в подборке'
     },
 
     // Property Detail
@@ -4283,7 +4291,11 @@ _________________               _________________
       statusProject: 'Proyek',
       statusUnderConstruction: 'Sedang Dibangun',
       statusReady: 'Siap',
-      statusFromOwner: 'Dari Pemilik'
+      statusFromOwner: 'Dari Pemilik',
+      // Selection mode texts
+      selectionTitle: 'Pilihan Properti',
+      selectionSubtitle: 'Dipilih oleh asisten AI khusus untuk Anda',
+      selectionResultsText: 'Ditemukan {count} properti dalam pilihan'
     },
 
     // Property Detail

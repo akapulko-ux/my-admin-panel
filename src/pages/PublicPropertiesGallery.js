@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, getDocs, where, query, collection } from "firebase/firestore";
 import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCache } from "../CacheContext";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
@@ -30,6 +30,7 @@ function PublicPropertiesGallery() {
   const { language } = useLanguage();
   const { currentUser, role } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const t = translations[language];
   const lt = landingTranslations[language];
   
@@ -39,18 +40,27 @@ function PublicPropertiesGallery() {
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
   const [hasUserProperties, setHasUserProperties] = useState(false);
-  const [filters, setFilters] = useState({
-    priceMin: "",
-    priceMax: "",
-    areaMin: "",
-    areaMax: "",
-    bedrooms: "all",
-    district: "all",
-    type: "all",
-    status: "all",
-    addedByMe: false,
+  
+  // Проверяем, есть ли параметр selection с ID объектов
+  const selectionIds = searchParams.get('selection');
+  const isSelectionMode = !!selectionIds;
+  const selectedPropertyIds = isSelectionMode ? selectionIds.split(',') : [];
+  
+  const [filters, setFilters] = useState(() => {
+    // Инициализация фильтров из URL параметров
+    return {
+      priceMin: searchParams.get('priceMin') || "",
+      priceMax: searchParams.get('priceMax') || "",
+      areaMin: searchParams.get('areaMin') || "",
+      areaMax: searchParams.get('areaMax') || "",
+      bedrooms: searchParams.get('bedrooms') || "all",
+      district: searchParams.get('district') || "all",
+      type: searchParams.get('type') || "all",
+      status: searchParams.get('status') || "all",
+      addedByMe: searchParams.get('addedByMe') === 'true',
+    };
   });
 
   useEffect(() => {
@@ -230,6 +240,12 @@ function PublicPropertiesGallery() {
   };
 
   const filteredProperties = useMemo(() => {
+    // Если режим подборки - показываем только выбранные объекты
+    if (isSelectionMode) {
+      return properties.filter(property => selectedPropertyIds.includes(property.id));
+    }
+    
+    // Обычная фильтрация
     return properties.filter((property) => {
       const searchText = searchQuery.toLowerCase();
       const statusTranslated = property.status
@@ -264,7 +280,7 @@ function PublicPropertiesGallery() {
 
       return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType && matchesStatus && matchesAddedByMe;
     });
-  }, [properties, searchQuery, filters, language, currentUser]);
+  }, [properties, searchQuery, filters, language, currentUser, isSelectionMode, selectedPropertyIds]);
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -294,70 +310,75 @@ function PublicPropertiesGallery() {
       <div className={`mx-auto space-y-4 p-4 ${isMobile ? "max-w-full" : "max-w-4xl"}`}>
         {/* Заголовок, кнопка размещения объекта и переключатель языка в одной строке */}
         <div className="flex items-center justify-between gap-3">
-          <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
-            {t.navigation?.publicInvestorTitle || 'IT AGENT BALI'}
-          </h1>
-          <div className="flex items-center gap-3">
-                            {!isMobile && (
-                  <Button
-                    onClick={handlePlaceProperty}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    {lt.placePropertyTitle}
-                  </Button>
-                )}
-            <LanguageSwitcher />
+          <div>
+            <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
+              {isSelectionMode ? t.propertiesGallery.selectionTitle : (t.navigation?.publicInvestorTitle || 'IT AGENT BALI')}
+            </h1>
+            {isSelectionMode && (
+              <p className="text-sm text-gray-600 mt-1">
+                {t.propertiesGallery.selectionSubtitle}
+              </p>
+            )}
           </div>
-        </div>
-        
-        {/* Кнопка размещения объекта на отдельной строке для мобильных устройств */}
-                    {isMobile && (
+          <div className="flex items-center gap-3">
+            {!isSelectionMode && !isMobile && (
               <Button
                 onClick={handlePlaceProperty}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 {lt.placePropertyTitle}
               </Button>
             )}
-
-        <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              type="text"
-              placeholder={searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+            <LanguageSwitcher />
           </div>
-          <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="relative">
-                <Filter className="h-4 w-4 mr-2" />
-                {t.propertiesGallery.filtersTitle}
-                <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
-                  {[
-                    filters.priceMin,
-                    filters.priceMax,
-                    filters.areaMin,
-                    filters.areaMax,
-                    filters.bedrooms !== "all" ? 1 : 0,
-                    filters.district !== "all" ? 1 : 0,
-                    filters.type !== "all" ? 1 : 0,
-                    filters.status !== "all" ? 1 : 0,
-                    filters.addedByMe ? 1 : 0,
-                  ].filter(Boolean).length}
-                </Badge>
-                <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isFiltersOpen ? "transform rotate-180" : ""}`} />
-              </Button>
-            </CollapsibleTrigger>
-          </Collapsible>
         </div>
+        
+        {/* Кнопка размещения объекта на отдельной строке для мобильных устройств */}
+        {!isSelectionMode && isMobile && (
+          <Button
+            onClick={handlePlaceProperty}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {lt.placePropertyTitle}
+          </Button>
+        )}
 
-        <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+        {/* Поиск и фильтры - скрываем в режиме подборки */}
+        {!isSelectionMode && (
+          <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                type="text"
+                placeholder={searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="relative">
+                  <Filter className="h-4 w-4 mr-2" />
+                  {t.propertiesGallery.filtersTitle}
+                  <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
+                    {[
+                      filters.priceMin,
+                      filters.priceMax,
+                      filters.areaMin,
+                      filters.areaMax,
+                      filters.bedrooms !== "all" ? 1 : 0,
+                      filters.district !== "all" ? 1 : 0,
+                      filters.type !== "all" ? 1 : 0,
+                      filters.status !== "all" ? 1 : 0,
+                      filters.addedByMe ? 1 : 0,
+                    ].filter(Boolean).length}
+                  </Badge>
+                  <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isFiltersOpen ? "transform rotate-180" : ""}`} />
+                </Button>
+              </CollapsibleTrigger>
           <CollapsibleContent>
             <Card className="p-4 mt-2">
               <div className="space-y-4">
@@ -460,10 +481,9 @@ function PublicPropertiesGallery() {
               </div>
             </Card>
           </CollapsibleContent>
-        </Collapsible>
-
-        {/* Кнопки-фильтры по статусу */}
-        <div className="flex flex-wrap gap-2">
+              
+              {/* Кнопки-фильтры по статусу */}
+              <div className="flex flex-wrap gap-2">
           <Button
             variant={filters.status === "all" ? "default" : "outline"}
             onClick={() => setFilters(prev => ({ ...prev, status: "all", addedByMe: false }))}
@@ -510,10 +530,16 @@ function PublicPropertiesGallery() {
               {t.propertiesGallery.addedByMe || 'Добавлено мной'}
             </Button>
           )}
-        </div>
-
+              </div>
+            </Collapsible>
+          </div>
+        )}
+        
         <div className="text-sm text-gray-500 mb-4">
-          {t.propertiesGallery.searchResultsText.replace("{count}", filteredProperties.length)}
+          {isSelectionMode 
+            ? t.propertiesGallery.selectionResultsText.replace("{count}", filteredProperties.length)
+            : t.propertiesGallery.searchResultsText.replace("{count}", filteredProperties.length)
+          }
         </div>
       </div>
 
