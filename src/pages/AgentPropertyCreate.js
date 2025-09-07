@@ -719,6 +719,7 @@ function PropertyCreate() {
     { value: "Улувату", label: "Улувату" },
     { value: "Умалас", label: "Умалас" },
     { value: "Унгасан", label: "Унгасан" },
+    { value: "Чандидаса", label: "Чандидаса" },
     { value: "Чангу", label: "Чангу" },
     { value: "Чемаги", label: "Чемаги" },
     { value: "Гили Траванган", label: "Гили Траванган" },

@@ -612,6 +612,7 @@ function CreateProperty() {
                     <SelectItem value="Улувату">Улувату</SelectItem>
                     <SelectItem value="Умалас">Умалас</SelectItem>
                     <SelectItem value="Унгасан">Унгасан</SelectItem>
+                    <SelectItem value="Чандидаса">Чандидаса</SelectItem>
                     <SelectItem value="Чангу">Чангу</SelectItem>
                     <SelectItem value="Чемаги">Чемаги</SelectItem>
                     <SelectItem value="Гили Траванган">Гили Траванган</SelectItem>
