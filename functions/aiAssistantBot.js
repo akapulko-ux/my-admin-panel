@@ -510,6 +510,31 @@ async function sendTelegramMessage(chatId, text, replyMarkup = null) {
   return data;
 }
 
+// Индикация набора текста ("печатает...")
+async function sendTyping(chatId) {
+  const botToken = getBotToken();
+  if (!botToken) throw new Error('BOT_TOKEN_MISSING');
+  try {
+    await fetch(`https://api.telegram.org/bot${botToken}/sendChatAction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, action: 'typing' })
+    });
+  } catch (_) { /* игнорируем */ }
+}
+
+// Запускает цикл отправки "typing" каждые ~4s до остановки
+function startTypingLoop(chatId) {
+  let stopped = false;
+  async function tick() {
+    if (stopped) return;
+    try { await sendTyping(chatId); } catch (_) {}
+    setTimeout(tick, 4000);
+  }
+  tick();
+  return () => { stopped = true; };
+}
+
 // Утилита: отправка фото-карточки объекта
 async function sendTelegramPhoto(chatId, photoUrl, caption, replyMarkup = null) {
   const botToken = getBotToken();
@@ -610,16 +635,16 @@ function analyzeUserRequest(message) {
   return criteria;
 }
 
-// Поиск в Firestore по критериям (часть фильтров серверные, остальное локально)
+// Поиск в Firestore по критериям (всё критичное фильтруем локально, чтобы не терять объекты из‑за разных записей в БД)
 async function searchProperties(criteria) {
-  let query = getDb().collection('properties');
+  const db = getDb();
 
-  if (criteria.propertyType) query = query.where('type', '==', criteria.propertyType);
-  if (criteria.status) query = query.where('status', '==', criteria.status);
+  // Расширяем лимит, если есть множественные районы/абстрактные запросы
+  const fetchLimit = Array.isArray(criteria.districts) && criteria.districts.length > 0 ? 800 : 500;
 
-  // Берём больший лимит для работы с множественными районами
-  const snap = await query.limit(100).get();
-  let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Загружаем общий пул объектов и фильтруем локально по канонам (тип/район/статус могут быть записаны по‑разному)
+  const snap = await db.collection('properties').limit(fetchLimit).get();
+  let items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   function canonicalType(raw) {
     const t = (raw || '').toString().trim().toLowerCase();
@@ -650,7 +675,11 @@ async function searchProperties(criteria) {
       ['унгасан','ugs:ungasan'], ['ungasan','ugs:ungasan'],
       ['денпасар','dps:denpasar'], ['denpasar','dps:denpasar'],
       ['табанан','tbn:tabanan'], ['tabanan','tbn:tabanan'],
-      ['легиан','lgn:legian'], ['legian','lgn:legian']
+      ['легиан','lgn:legian'], ['legian','lgn:legian'],
+      ['бингин','bgn:bingin'], ['bingin','bgn:bingin'],
+      ['дримленд','drm:dreamland'], ['dreamland','drm:dreamland'],
+      ['баланган','blg:balangan'], ['balangan','blg:balangan'],
+      ['пекату','pct:pecatu'], ['pecatu','pct:pecatu']
     ]);
     for (const [k,v] of map.entries()) {
       if (t.includes(k)) return v;
@@ -710,7 +739,8 @@ async function searchProperties(criteria) {
   const filtered = items.filter(matchesLocal);
   // Сортировка по цене по возрастанию (виллы до бюджета будут выше)
   filtered.sort((a, b) => priceOf(a) - priceOf(b));
-  return filtered.slice(0, 10);
+  // Возвращаем больше результатов, чтобы покрыть больше районов и объектов
+  return filtered.slice(0, 30);
 }
 
 // Умная функция поиска с географической логикой
@@ -809,12 +839,158 @@ async function searchPropertiesByDistricts(criteria, districts) {
     return priceA - priceB;
   });
   
-  return uniqueProperties.slice(0, 10);
+  return uniqueProperties.slice(0, 30);
 }
 
 function formatMoneyUSD(n) {
   const val = typeof n === 'number' ? n : Number(n) || 0;
   return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
+// ====== Новый LLM-пайплайн отбора ======
+function getRegionForDistrict(district) {
+  const name = (district || '').toString();
+  for (const [regionKey, regionData] of Object.entries(baliGeography.regions || {})) {
+    if (Array.isArray(regionData.districts) && regionData.districts.includes(name)) return regionKey;
+  }
+  return 'Unknown';
+}
+
+function deriveDistrictTags(rawDistrict) {
+  const district = (rawDistrict || '').toString();
+  const tags = [];
+  // Признаки побережья
+  const info = (baliGeography.districts && baliGeography.districts[district]) || null;
+  if (info && info.coastline === true) tags.push('coastal');
+  // Букит
+  if (baliGeography.regions && baliGeography.regions.Bukit && baliGeography.regions.Bukit.districts.includes(district)) {
+    tags.push('bukit');
+  }
+  // Атмосфера
+  if (info && typeof info.atmosphere === 'string') {
+    const a = info.atmosphere.toLowerCase();
+    if (a.includes('surf')) tags.push('surf');
+    if (a.includes('nightlife')) tags.push('nightlife');
+    if (a.includes('family')) tags.push('family');
+    if (a.includes('quiet')) tags.push('quiet');
+    if (a.includes('luxury')) tags.push('luxury');
+  }
+  return tags;
+}
+
+function derivePriceBand(price) {
+  const p = typeof price === 'number' ? price : Number(price) || 0;
+  if (p >= 700000) return 'lux';
+  if (p >= 300000) return 'mid';
+  return 'budget';
+}
+
+function generateCandidateLine(p) {
+  const id = p.id || '';
+  const type = (p.type || p.propertyType || '').toString();
+  const district = (p.district || '').toString();
+  const region = getRegionForDistrict(district);
+  const price = typeof p.price === 'number' ? p.price : Number(p.price) || 0;
+  const bedrooms = parseInt(p.bedrooms, 10);
+  const area = typeof p.area === 'number' ? p.area : Number(p.area) || 0;
+  const status = (p.status || '').toString();
+  const pool = p.pool ? 'Да' : 'Нет';
+  const tags = [...deriveDistrictTags(district), derivePriceBand(price)];
+  const desc = (p.description || '').toString().replace(/\s+/g, ' ').slice(0, 80);
+  const coastal = (baliGeography.districts && baliGeography.districts[district]?.coastline) ? 'true' : 'false';
+  return `ID:${id} | ${type} | ${district} | region:${region} | coastal:${coastal} | $${price} | ${Number.isFinite(bedrooms) ? bedrooms + ' сп' : ''} | ${area} м² | ${status} | Бассейн:${pool} | tags:${tags.join(',')} | ${desc}...`;
+}
+
+async function loadCandidatesForAI(baseLimit = 1200) {
+  const db = getDb();
+  const snap = await db.collection('properties').limit(baseLimit).get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+function prefilterCandidatesByStrategy(candidates, strategy) {
+  let items = Array.isArray(candidates) ? candidates.slice() : [];
+  // Жестко не режем по району — оставляем LLM, но мягко сокращаем по типу/цене/статусу
+  if (strategy && strategy.propertyType) {
+    items = items.filter(p => {
+      const t = (p.type || p.propertyType || '').toString().toLowerCase();
+      if (strategy.propertyType === 'Вилла') return /(вил+|villa)/i.test(t);
+      if (strategy.propertyType === 'Апартаменты') return /(апарт|apart|apartment)/i.test(t);
+      if (strategy.propertyType === 'Дом') return /(дом|house)/i.test(t);
+      return true;
+    });
+  }
+  if (strategy && Number.isFinite(strategy.maxPrice)) {
+    const max = Number(strategy.maxPrice);
+    items = items.filter(p => (typeof p.price === 'number' ? p.price : Number(p.price) || 0) <= max * 1.2);
+  }
+  if (strategy && Number.isFinite(strategy.minPrice)) {
+    const min = Number(strategy.minPrice);
+    items = items.filter(p => (typeof p.price === 'number' ? p.price : Number(p.price) || 0) >= min * 0.8);
+  }
+  return items;
+}
+
+async function selectWithAIEnhanced(userText, candidates) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || !OpenAI) return null;
+  const client = new OpenAI({ apiKey });
+
+  // Компрессируем объекты в строки
+  const lines = candidates.map(generateCandidateLine).join('\n');
+  const geographyContext = [
+    'ГЕОГРАФИЯ:',
+    '- Букит (Bukit Peninsula) включает строго: Uluwatu, Ungasan, Jimbaran, Nusa Dua, Pecatu, Bingin, Dreamland, Balangan.',
+    '- West Coast: Seminyak, Canggu, Pererenan, Kuta, Legian.',
+    '- Central: Ubud, Denpasar, Sanur (у Sanur — побережье, у Ubud/Denpasar — нет).',
+    'ВАЖНО: Canggu/Pererenan/Legian — НЕ БУКИТ.',
+  ].join('\n');
+
+  const systemPrompt = [
+    'Ты — эксперт по недвижимости Бали. Ты работаешь на ЖИВОЙ базе объектов (см. ниже).',
+    geographyContext,
+    'Цель: выбрать ВСЕ релевантные объекты под смысл запроса. Придерживайся географических ограничений запроса (например, "Букит" должен исключать Canggu/Pererenan и т.п.).',
+    'Выполни самопроверку перед ответом: исключены ли объекты вне требуемых районов/береговости.',
+    'Верни ТОЛЬКО JSON:',
+    '{ "selectedIds": ["id1","id2",...], "reason": "почему выбраны эти районы/объекты и чем они соответствуют" }'
+  ].join('\n');
+
+  // Явные ограничения из запроса
+  const lower = userText.toLowerCase();
+  const constraints = {
+    requireBukit: /\bбукит\b|\bbukit\b/.test(lower) || false,
+    requireCoastal: /(море|пляж|берег|coast|beach)/.test(lower) || false,
+  };
+
+  const userMessage = [
+    `Запрос: "${userText}"`,
+    `Ограничения: ${JSON.stringify(constraints)}`,
+    'Кандидаты (ID | тип | район | region | coastal | цена | спальни | площадь | статус | бассейн | tags | desc):',
+    lines
+  ].join('\n');
+
+  const completion = await client.chat.completions.create({
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage }
+    ],
+    temperature: 0.2,
+    max_tokens: 800
+  });
+
+  const content = completion.choices?.[0]?.message?.content || '';
+  const jsonMatch = content.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return null;
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    const ids = Array.isArray(parsed.selectedIds) ? parsed.selectedIds : [];
+    const selected = ids
+      .map(id => candidates.find(p => String(p.id) === String(id)))
+      .filter(Boolean);
+    return { properties: selected.slice(0, 30), reason: parsed.reason || null };
+  } catch (_) {
+    return null;
+  }
 }
 
 // Функция для умного анализа запроса с помощью ИИ
@@ -1249,6 +1425,8 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
 
     // Обрабатываем только текстовые запросы
     if (typeof text === 'string' && text.trim().length > 0) {
+      // Включаем индикацию набора на время обработки запроса
+      let stopTyping = startTypingLoop(chatId);
       // Определяем язык запроса
       const detectedLanguage = detectLanguage(text);
       const t = botTranslations[detectedLanguage] || botTranslations.ru;
@@ -1258,15 +1436,23 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
         const aiCriteria = await analyzeRequestWithAI(text, detectedLanguage);
         console.log('[aiAssistantBot] AI criteria:', aiCriteria);
         
-        // Если ИИ определил конкретные районы, используем их
+        // Если ИИ определил конкретные районы, используем их; иначе — умный поиск
         let searchResult;
+        const coastalDistricts = ['Seminyak','Canggu','Pererenan','Kuta','Legian','Uluwatu','Jimbaran','Sanur','Nusa Dua','Bingin','Dreamland','Balangan'];
+        const bukitDistricts = ['Uluwatu','Ungasan','Jimbaran','Nusa Dua','Pecatu','Bingin','Dreamland','Balangan'];
+
         if (aiCriteria.districts && aiCriteria.districts.length > 0) {
-          const properties = await searchProperties(aiCriteria);
-          searchResult = {
-            properties,
-            message: aiCriteria._aiReasoning || null,
-            type: 'ai_search'
-          };
+          let properties = await searchProperties(aiCriteria);
+          // Фоллбек-расширение, если ничего не нашлось
+          if (properties.length === 0) {
+            const lower = text.toLowerCase();
+            if (lower.includes('море') || lower.includes('пляж') || lower.includes('берег') || lower.includes('beach')) {
+              properties = await searchProperties({ ...aiCriteria, districts: coastalDistricts });
+            } else if (lower.includes('букит') || lower.includes('bukit')) {
+              properties = await searchProperties({ ...aiCriteria, districts: bukitDistricts });
+            }
+          }
+          searchResult = { properties, message: aiCriteria._aiReasoning || null, type: 'ai_search' };
         } else {
           // Fallback на старую логику, если ИИ не определил районы
           searchResult = await smartSearchProperties(text, detectedLanguage);
@@ -1284,21 +1470,44 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
             ]]
           };
           
+          // Останавливаем индикацию перед отправкой ответа
+          if (typeof stopTyping === 'function') stopTyping();
           await sendTelegramMessage(chatId, searchResult.message, keyboard);
           return res.status(200).send('OK');
         }
         
         let properties = searchResult.properties;
         
-        // Если есть объекты, пробуем улучшить результат с помощью ИИ
-        if (properties.length > 0) {
+        // Новый LLM‑пайплайн: если результатов мало (< 15) или запрос абстрактный — берём широкий пул и даём LLM выбрать
+        const lower = text.toLowerCase();
+        const isAbstract = /(море|пляж|берег|тихо|спокойно|семья|семейн|серф|nightlife|lux|люкс|букит|coast|beach|quiet|family|surf)/i.test(lower);
+        if (isAbstract || properties.length < 15) {
           try {
-            const picked = await selectWithAI(text, properties);
-            if (picked && picked.properties && picked.properties.length > 0) {
-              properties = picked.properties;
+            const wide = await loadCandidatesForAI(1200);
+            const narrowed = prefilterCandidatesByStrategy(wide, aiCriteria);
+            // Жесткое ограничение районов, если запрос явный (Букит/побережье)
+            let restrictTo = null;
+            const coastalDistricts = ['Seminyak','Canggu','Pererenan','Kuta','Legian','Uluwatu','Jimbaran','Sanur','Nusa Dua','Bingin','Dreamland','Balangan'];
+            const bukitDistricts = ['Uluwatu','Ungasan','Jimbaran','Nusa Dua','Pecatu','Bingin','Dreamland','Balangan'];
+            if (lower.includes('букит') || lower.includes('bukit')) restrictTo = bukitDistricts;
+            else if (/(море|пляж|берег|coast|beach)/i.test(lower)) restrictTo = coastalDistricts;
+            else if (Array.isArray(aiCriteria.districts) && aiCriteria.districts.length > 0) restrictTo = aiCriteria.districts;
+
+            let finalPool = narrowed;
+            if (restrictTo) {
+              const set = new Set(restrictTo.map(d => d.toString().toLowerCase()));
+              finalPool = narrowed.filter(p => set.has((p.district || '').toString().toLowerCase()));
+            }
+
+            const aiPick = await selectWithAIEnhanced(text, finalPool.slice(0, 1200));
+            if (aiPick && aiPick.properties && aiPick.properties.length > 0) {
+              properties = aiPick.properties;
+              if (!searchResult.message && aiPick.reason) {
+                searchResult.message = aiPick.reason;
+              }
             }
           } catch (e) {
-            console.error('[aiAssistantBot] AI selection error:', e);
+            console.error('[aiAssistantBot] Enhanced AI selection error:', e);
           }
         }
 
@@ -1314,7 +1523,8 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
           responseText += t.noResults + '\n\n' + t.yourQuery + '\n"' + text + '"';
         }
         
-        // Отправляем основной ответ
+        // Останавливаем индикацию и отправляем основной ответ
+        if (typeof stopTyping === 'function') stopTyping();
         if (properties.length > 0) {
           const propertyIds = properties.map(p => p.id).join(',');
           const webAppUrl = `${process.env.PUBLIC_GALLERY_BASE_URL || 'https://it-agent.pro'}/?selection=${encodeURIComponent(propertyIds)}`;
@@ -1330,6 +1540,7 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
         }
       } catch (error) {
         console.error('[aiAssistantBot] Smart search error:', error);
+        if (typeof stopTyping === 'function') stopTyping();
         // Фоллбек на старую логику
         const criteria = analyzeUserRequest(text);
         const properties = await searchProperties(criteria);
