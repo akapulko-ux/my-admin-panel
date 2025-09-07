@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const speech = require('@google-cloud/speech');
 let OpenAI;
 try {
   OpenAI = require('openai');
@@ -508,6 +509,47 @@ async function sendTelegramMessage(chatId, text, replyMarkup = null) {
     throw new Error(data.description || 'Telegram API error');
   }
   return data;
+}
+
+// Загрузка файла из Telegram по file_id
+async function fetchTelegramFileBuffer(fileId) {
+  const botToken = getBotToken();
+  if (!botToken || !fileId) throw new Error('MISSING_TOKEN_OR_FILE_ID');
+  const fileResp = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`);
+  const fileJson = await fileResp.json();
+  if (!fileResp.ok || !fileJson.ok || !fileJson.result || !fileJson.result.file_path) {
+    throw new Error('TELEGRAM_GET_FILE_FAILED');
+  }
+  const fileUrl = `https://api.telegram.org/file/bot${botToken}/${fileJson.result.file_path}`;
+  const binResp = await fetch(fileUrl);
+  if (!binResp.ok) throw new Error('TELEGRAM_FILE_DOWNLOAD_FAILED');
+  const buf = Buffer.from(await binResp.arrayBuffer());
+  return buf;
+}
+
+// Распознавание речи с помощью Google Cloud Speech (OGG_OPUS)
+async function transcribeTelegramVoice(fileId) {
+  const buf = await fetchTelegramFileBuffer(fileId);
+  const client = new speech.SpeechClient();
+  const audioBytes = buf.toString('base64');
+  const request = {
+    audio: { content: audioBytes },
+    config: {
+      encoding: 'OGG_OPUS',
+      sampleRateHertz: 48000,
+      audioChannelCount: 1,
+      enableAutomaticPunctuation: true,
+      languageCode: 'ru-RU',
+      alternativeLanguageCodes: ['en-US', 'id-ID']
+    }
+  };
+  const [response] = await client.recognize(request);
+  const transcription = (response.results || [])
+    .map(r => r.alternatives && r.alternatives[0] && r.alternatives[0].transcript || '')
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  return transcription || '';
 }
 
 // Индикация набора текста ("печатает...")
@@ -1422,9 +1464,44 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
 
     const chatId = message.chat.id;
     const text = message.text || '';
+    const voice = message.voice || null;
+
+    // Приветственное сообщение при /start (без кнопок)
+    if (typeof text === 'string' && text.trim().toLowerCase().startsWith('/start')) {
+      const welcome = [
+        'What can this bot do?\n1. Smart search for investment properties in Bali using simple text queries.\n2. Full list of Bali properties at the touch of the Properties list button.',
+        '',
+        'Что умеет этот бот? \n1. Умный поиск инвестиционной недвижимости Бали с помощью простых текстовых запросов. \n2. Полный список недвижимости Бали по нажатию кнопки Properties list.',
+        '',
+        'Apa yang bisa dilakukan bot ini?\n1. Pencarian cerdas properti investasi di Bali dengan permintaan teks sederhana.\n2. Daftar lengkap properti Bali dengan sekali klik tombol Properties list.'
+      ].join('\n');
+      await sendTelegramMessage(chatId, welcome);
+      return res.status(200).send('OK');
+    }
+
+    // Если пришёл голос — распознаём в текст
+    if (voice && voice.file_id) {
+      try {
+        let stopTyping = startTypingLoop(chatId);
+        const transcript = await transcribeTelegramVoice(voice.file_id);
+        if (typeof stopTyping === 'function') stopTyping();
+        if (transcript && transcript.trim().length > 0) {
+          // Подставляем распознанный текст как обычный пользовательский запрос
+          message.text = transcript;
+        } else {
+          await sendTelegramMessage(chatId, 'Не удалось распознать голос. Пожалуйста, повторите и говорите ближе к микрофону.');
+          return res.status(200).send('OK');
+        }
+      } catch (e) {
+        console.error('[aiAssistantBot] Voice transcription error:', e);
+        await sendTelegramMessage(chatId, 'Произошла ошибка распознавания голоса. Попробуйте ещё раз.');
+        return res.status(200).send('OK');
+      }
+    }
 
     // Обрабатываем только текстовые запросы
-    if (typeof text === 'string' && text.trim().length > 0) {
+    if (typeof message.text === 'string' && message.text.trim().length > 0) {
+      const text = message.text.trim();
       // Включаем индикацию набора на время обработки запроса
       let stopTyping = startTypingLoop(chatId);
       // Определяем язык запроса

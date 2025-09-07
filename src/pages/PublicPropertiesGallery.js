@@ -46,7 +46,9 @@ function PublicPropertiesGallery() {
   // Проверяем, есть ли параметр selection с ID объектов
   const selectionIds = searchParams.get('selection');
   const isSelectionMode = !!selectionIds;
-  const selectedPropertyIds = isSelectionMode ? selectionIds.split(',') : [];
+  const selectedPropertyIds = useMemo(() => (
+    isSelectionMode ? selectionIds.split(',') : []
+  ), [isSelectionMode, selectionIds]);
   
   const [filters, setFilters] = useState(() => {
     // Инициализация фильтров из URL параметров
@@ -634,6 +636,19 @@ function PublicPropertiesGallery() {
                   )}
 
 
+
+                  {(() => {
+                    const ratingRaw = p.reliabilityRating;
+                    const rating = Number.isFinite(Number(ratingRaw)) ? Math.max(0, Math.min(5, parseInt(ratingRaw))) : null;
+                    if (!rating) return null;
+                    return (
+                      <div className="flex items-center gap-1" aria-label={`${t.propertyDetail.reliabilityRating}: ${rating}`}>
+                        {Array.from({ length: rating }).map((_, idx) => (
+                          <span key={idx} className="text-yellow-400 text-2xl leading-none">★</span>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
                   <span className={isMobile ? "text-base" : "text-lg"}>
                     <span className="text-gray-600">{t.propertiesGallery.priceLabel}:</span>

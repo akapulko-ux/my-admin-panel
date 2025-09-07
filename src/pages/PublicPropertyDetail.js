@@ -478,8 +478,22 @@ function PublicPropertyDetail() {
       )}
       {/* Цена и кнопка "на карте" */}
       <div className="flex items-start justify-between mb-4">
-        <div className="text-4xl font-semibold text-gray-600">
+        <div className="text-4xl font-semibold text-gray-600 flex items-center gap-3">
           {formatPrice(property.price)}
+          {(() => {
+            const ratingRaw = property.reliabilityRating;
+            const rating = Number.isFinite(Number(ratingRaw)) ? Math.max(0, Math.min(5, parseInt(ratingRaw))) : null;
+            if (!rating) return null;
+            return (
+              <AdaptiveTooltip content={t.propertyDetail.reliabilityRatingTooltip}>
+                <div className="flex items-center gap-1 cursor-help" aria-label={`${t.propertyDetail.reliabilityRating}: ${rating}`}>
+                  {Array.from({ length: rating }).map((_, idx) => (
+                    <span key={idx} className="text-yellow-400 text-2xl leading-none">★</span>
+                  ))}
+                </div>
+              </AdaptiveTooltip>
+            );
+          })()}
         </div>
         {getLatLng() && (
           <button onClick={handleOpenMap} className="flex flex-col items-center text-blue-600 hover:underline">
@@ -621,6 +635,8 @@ function PublicPropertyDetail() {
             : "—",
           DollarSign
         )}
+
+        {/* Рейтинг надежности перенесен рядом с ценой */}
 
         {/* Expected ROI (если указан) - приоритет над рассчетным */}
         {property.manualRoi ? (

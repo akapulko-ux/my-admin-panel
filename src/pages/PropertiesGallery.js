@@ -561,6 +561,19 @@ function PropertiesGallery() {
                   </span>
                 )}
 
+                {(() => {
+                  const ratingRaw = p.reliabilityRating;
+                  const rating = Number.isFinite(Number(ratingRaw)) ? Math.max(0, Math.min(5, parseInt(ratingRaw))) : null;
+                  if (!rating) return null;
+                  return (
+                    <div className="flex items-center gap-1" aria-label={`${t.propertyDetail.reliabilityRating}: ${rating}`}>
+                      {Array.from({ length: rating }).map((_, idx) => (
+                        <span key={idx} className="text-yellow-400 text-2xl leading-none">★</span>
+                      ))}
+                    </div>
+                  );
+                })()}
+
                 {/* Цена с возможностью редактирования + лейбл */}
                 <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
                   <span className="text-sm text-gray-600">{t.propertiesGallery.priceLabel}:</span>

@@ -1879,6 +1879,14 @@ function PropertyDetail() {
   const attributes = [
     ...filteredAttributesBase,
     {
+      label: t.propertyDetail.reliabilityRating,
+      value: safeDisplay(property.reliabilityRating),
+      field: "reliabilityRating",
+      icon: Star,
+      type: "select",
+      options: [1,2,3,4,5].map((n) => ({ value: n, label: String(n) }))
+    },
+    {
       label: t.propertyDetail.pricePerSqm,
       value: property.price && property.area
         ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(

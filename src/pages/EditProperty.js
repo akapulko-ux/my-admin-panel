@@ -120,6 +120,9 @@ function EditProperty() {
   // Поле «Количество юнитов»
   const [unitsCount, setUnitsCount] = useState("");
 
+  // Рейтинг надежности (1-5)
+  const [reliabilityRating, setReliabilityRating] = useState("");
+
   // Дополнительные опции
   const [smartHome, setSmartHome] = useState(false);
   const [jacuzzi, setJacuzzi] = useState(false);
@@ -187,6 +190,13 @@ function EditProperty() {
           setLandLeaseEndDate(data.landLeaseEndDate || "");
           setLegalCompanyName(data.legalCompanyName || "");
           setUnitsCount(data.unitsCount ? data.unitsCount.toString() : "");
+
+          // Рейтинг надежности
+          if (data.reliabilityRating !== undefined && data.reliabilityRating !== null && data.reliabilityRating !== '') {
+            setReliabilityRating(String(data.reliabilityRating));
+          } else {
+            setReliabilityRating("");
+          }
 
           if (data.agentCommission !== undefined) {
             const val = String(data.agentCommission).replace(/[%\s]/g, '');
@@ -422,6 +432,7 @@ function EditProperty() {
         legalCompanyName,
         agentCommission: finalAgentCommission,
         unitsCount: unitsCount ? parseInt(unitsCount) : null,
+        reliabilityRating: reliabilityRating ? parseInt(reliabilityRating) : null,
         smartHome,
         jacuzzi,
         terrace,
@@ -681,6 +692,20 @@ function EditProperty() {
                     onChange={(e) => setUnitsCount(e.target.value)}
                     placeholder="Введите количество юнитов"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reliabilityRating">{t.propertyDetail.reliabilityRating}</Label>
+                  <Select value={reliabilityRating} onValueChange={setReliabilityRating}>
+                    <SelectTrigger id="reliabilityRating">
+                      <SelectValue placeholder="Выберите рейтинг (1–5)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1,2,3,4,5].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
