@@ -114,32 +114,117 @@ const districtTranslations = {
   'Balangan': { en: 'Balangan', id: 'Balangan', ru: 'Баланган' }
 };
 
-// География Бали - регионы и соседние районы
+// Расширенная география Бали с детальной информацией
 const baliGeography = {
   regions: {
     'Bukit': {
       en: 'Bukit Peninsula', 
       id: 'Semenanjung Bukit', 
       ru: 'полуостров Букит',
-      districts: ['Uluwatu', 'Ungasan', 'Jimbaran', 'Nusa Dua', 'Pecatu', 'Bingin', 'Dreamland', 'Balangan']
+      districts: ['Uluwatu', 'Ungasan', 'Jimbaran', 'Nusa Dua', 'Pecatu', 'Bingin', 'Dreamland', 'Balangan'],
+      characteristics: {
+        coastline: true,
+        beaches: ['Uluwatu Beach', 'Bingin Beach', 'Dreamland Beach', 'Balangan Beach', 'Jimbaran Beach'],
+        elevation: 'elevated',
+        atmosphere: 'luxury, cliffs, surfing',
+        distance_to_airport: 'close'
+      }
     },
     'Central': {
       en: 'Central Bali',
       id: 'Bali Tengah',
       ru: 'центральный Бали',
-      districts: ['Ubud', 'Denpasar', 'Sanur']
+      districts: ['Ubud', 'Denpasar', 'Sanur'],
+      characteristics: {
+        coastline: false, // кроме Sanur
+        atmosphere: 'cultural, rice fields, spiritual',
+        elevation: 'hills',
+        distance_to_airport: 'medium'
+      }
     },
     'West Coast': {
       en: 'West Coast',
       id: 'Pantai Barat',
       ru: 'западное побережье',
-      districts: ['Seminyak', 'Canggu', 'Pererenan', 'Kuta', 'Legian']
+      districts: ['Seminyak', 'Canggu', 'Pererenan', 'Kuta', 'Legian'],
+      characteristics: {
+        coastline: true,
+        beaches: ['Seminyak Beach', 'Double Six Beach', 'Canggu Beach', 'Echo Beach', 'Kuta Beach', 'Legian Beach'],
+        elevation: 'flat',
+        atmosphere: 'beach clubs, surfing, nightlife',
+        distance_to_airport: 'close'
+      }
     },
     'North': {
       en: 'North Bali',
       id: 'Bali Utara',
       ru: 'северный Бали',
-      districts: ['Tabanan']
+      districts: ['Tabanan'],
+      characteristics: {
+        coastline: false,
+        elevation: 'mountains',
+        atmosphere: 'quiet, nature, traditional',
+        distance_to_airport: 'far'
+      }
+    }
+  },
+  
+  // Детальная информация по районам
+  districts: {
+    'Seminyak': {
+      coastline: true,
+      beaches: ['Seminyak Beach', 'Double Six Beach'],
+      atmosphere: 'luxury, beach clubs, restaurants',
+      price_level: 'high',
+      distance_to_airport: '15min'
+    },
+    'Canggu': {
+      coastline: true,
+      beaches: ['Canggu Beach', 'Echo Beach', 'Berawa Beach'],
+      atmosphere: 'surfing, digital nomads, rice fields',
+      price_level: 'medium-high',
+      distance_to_airport: '25min'
+    },
+    'Uluwatu': {
+      coastline: true,
+      beaches: ['Uluwatu Beach', 'Padang Padang', 'Bingin Beach'],
+      atmosphere: 'cliffs, surfing, luxury villas',
+      price_level: 'high',
+      distance_to_airport: '20min'
+    },
+    'Jimbaran': {
+      coastline: true,
+      beaches: ['Jimbaran Beach'],
+      atmosphere: 'seafood restaurants, calm beach, family-friendly',
+      price_level: 'medium-high',
+      distance_to_airport: '10min'
+    },
+    'Ubud': {
+      coastline: false,
+      atmosphere: 'cultural center, rice terraces, yoga, art',
+      price_level: 'medium',
+      distance_to_airport: '60min'
+    },
+    'Sanur': {
+      coastline: true,
+      beaches: ['Sanur Beach'],
+      atmosphere: 'calm, family-friendly, traditional',
+      price_level: 'medium',
+      distance_to_airport: '30min'
+    },
+    'Kuta': {
+      coastline: true,
+      beaches: ['Kuta Beach'],
+      atmosphere: 'budget-friendly, nightlife, surfing lessons',
+      price_level: 'low-medium',
+      distance_to_airport: '5min'
+    },
+    'Nusa Dua': {
+      coastline: true,
+      beaches: ['Nusa Dua Beach'],
+      atmosphere: 'luxury resorts, golf, calm',
+      price_level: 'high',
+      distance_to_airport: '15min'
     }
   },
   
@@ -167,7 +252,29 @@ const baliGeography = {
     'кута': 'Kuta',
     'санур': 'Sanur',
     'джимбаран': 'Jimbaran',
-    'улувату': 'Uluwatu'
+    'улувату': 'Uluwatu',
+    // Добавляем понимание абстрактных запросов
+    'у моря': 'coastline',
+    'на берегу': 'coastline',
+    'beach': 'coastline',
+    'море': 'coastline',
+    'пляж': 'coastline',
+    'побережье': 'coastline',
+    'клифы': 'Bukit',
+    'скалы': 'Bukit',
+    'cliffs': 'Bukit',
+    'центр': 'Central',
+    'культурный': 'Ubud',
+    'тихо': 'Sanur',
+    'спокойно': 'Sanur',
+    'серфинг': 'Canggu',
+    'surfing': 'Canggu',
+    'ночная жизнь': 'Seminyak',
+    'nightlife': 'Seminyak',
+    'бюджетно': 'Kuta',
+    'budget': 'Kuta',
+    'люкс': 'Nusa Dua',
+    'luxury': 'Nusa Dua'
   }
 };
 
@@ -510,9 +617,9 @@ async function searchProperties(criteria) {
   if (criteria.propertyType) query = query.where('type', '==', criteria.propertyType);
   if (criteria.status) query = query.where('status', '==', criteria.status);
 
-  // Берём разумный лимит, чтобы дальше дорезать локально
-  const snap = await query.limit(50).get();
-  const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Берём больший лимит для работы с множественными районами
+  const snap = await query.limit(100).get();
+  let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   function canonicalType(raw) {
     const t = (raw || '').toString().trim().toLowerCase();
@@ -562,11 +669,23 @@ async function searchProperties(criteria) {
       const pt = canonicalType(p.type || p.propertyType || '');
       if (pt !== criteria.propertyType) return false;
     }
-    if (criteria.district) {
+    
+    // Поддержка множественных районов (новая логика)
+    if (criteria.districts && Array.isArray(criteria.districts)) {
+      const propDistrictKey = canonicalDistrict(p.district);
+      const matchesAnyDistrict = criteria.districts.some(district => {
+        const needKey = canonicalDistrict(district);
+        return propDistrictKey && needKey && propDistrictKey === needKey;
+      });
+      if (!matchesAnyDistrict) return false;
+    }
+    // Старая логика для одного района (обратная совместимость)
+    else if (criteria.district) {
       const propDistrictKey = canonicalDistrict(p.district);
       const needKey = canonicalDistrict(criteria.district);
       if (!propDistrictKey || !needKey || propDistrictKey !== needKey) return false;
     }
+    
     if (criteria.minPrice != null && priceOf(p) < criteria.minPrice) return false;
     if (criteria.maxPrice != null && priceOf(p) > criteria.maxPrice) return false;
     if (criteria.bedrooms != null) {
@@ -696,6 +815,114 @@ async function searchPropertiesByDistricts(criteria, districts) {
 function formatMoneyUSD(n) {
   const val = typeof n === 'number' ? n : Number(n) || 0;
   return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
+// Функция для умного анализа запроса с помощью ИИ
+async function analyzeRequestWithAI(userText, language = 'ru') {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || !OpenAI) {
+    console.log('[aiAssistantBot] OpenAI not available, using fallback');
+    return analyzeUserRequest(userText); // fallback на старый метод
+  }
+
+  try {
+    // Подготавливаем контекст о географии Бали
+    const geographyContext = `
+ГЕОГРАФИЯ БАЛИ:
+
+РЕГИОНЫ И РАЙОНЫ:
+- Букит (Bukit Peninsula): Uluwatu, Ungasan, Jimbaran, Nusa Dua, Pecatu, Bingin, Dreamland, Balangan
+  * У моря, на скалах, люкс виллы, близко к аэропорту
+- Западное побережье: Seminyak, Canggu, Pererenan, Kuta, Legian  
+  * Пляжи, серфинг, ночная жизнь, близко к аэропорту
+- Центральный Бали: Ubud, Denpasar, Sanur
+  * Ubud - культурный центр, рисовые поля (НЕ у моря)
+  * Sanur - спокойный пляжный район
+
+РАЙОНЫ У МОРЯ: Seminyak, Canggu, Uluwatu, Jimbaran, Sanur, Kuta, Legian, Nusa Dua, Bingin, Dreamland, Balangan
+РАЙОНЫ НЕ У МОРЯ: Ubud, Denpasar
+
+ЦЕНОВЫЕ КАТЕГОРИИ:
+- Люкс: Seminyak, Uluwatu, Nusa Dua, Jimbaran
+- Средний: Canggu, Sanur, Ubud  
+- Бюджет: Kuta, Legian
+
+АТМОСФЕРА:
+- Серфинг: Canggu, Uluwatu, Kuta
+- Ночная жизнь: Seminyak, Kuta
+- Спокойно: Sanur, Nusa Dua, Jimbaran
+- Культура: Ubud
+`;
+
+    const systemPrompt = `Ты эксперт по недвижимости Бали. Проанализируй запрос пользователя и верни JSON с критериями поиска.
+
+${geographyContext}
+
+ВАЖНО:
+- Если запрос "у моря", "на берегу", "beach" - это означает ТОЛЬКО прибрежные районы
+- "Букит" означает ВСЕ районы полуострова Букит
+- Абстрактные запросы типа "тихое место" = Sanur, Nusa Dua
+- "Серфинг" = Canggu, Uluwatu, Kuta
+- Понимай контекст и атмосферу
+
+Верни ТОЛЬКО JSON:
+{
+  "districts": ["район1", "район2"] или null,
+  "propertyType": "Вилла|Апартаменты|Дом" или null,
+  "minPrice": число или null,
+  "maxPrice": число или null,
+  "bedrooms": число или null,
+  "minArea": число или null,
+  "hasPool": true/false или null,
+  "status": "Готово|В строительстве" или null,
+  "reasoning": "объяснение логики выбора районов"
+}`;
+
+    const client = new OpenAI({ apiKey });
+    const completion = await client.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Запрос пользователя: "${userText}"` }
+      ],
+      temperature: 0.1,
+      max_tokens: 800
+    });
+
+    const content = completion.choices?.[0]?.message?.content || '';
+    console.log('[aiAssistantBot] AI analysis response:', content);
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.log('[aiAssistantBot] No JSON found in AI response, using fallback');
+      return analyzeUserRequest(userText);
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    console.log('[aiAssistantBot] AI parsed criteria:', parsed);
+    
+    // Преобразуем результат в формат, совместимый с существующим кодом
+    const criteria = {};
+    if (parsed.districts && Array.isArray(parsed.districts)) {
+      criteria.districts = parsed.districts;
+    }
+    if (parsed.propertyType) criteria.propertyType = parsed.propertyType;
+    if (parsed.minPrice) criteria.minPrice = parsed.minPrice;
+    if (parsed.maxPrice) criteria.maxPrice = parsed.maxPrice;
+    if (parsed.bedrooms) criteria.bedrooms = parsed.bedrooms;
+    if (parsed.minArea) criteria.minArea = parsed.minArea;
+    if (parsed.hasPool !== null) criteria.hasPool = parsed.hasPool;
+    if (parsed.status) criteria.status = parsed.status;
+    
+    // Добавляем reasoning для отладки
+    criteria._aiReasoning = parsed.reasoning;
+    
+    return criteria;
+    
+  } catch (error) {
+    console.error('[aiAssistantBot] AI analysis error:', error);
+    return analyzeUserRequest(userText); // fallback
+  }
 }
 
 // Попытка умного подбора с OpenAI (как в iOS):
@@ -978,6 +1205,40 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
 
   try {
     const update = req.body;
+    
+    // Обработка callback query (нажатие на inline кнопки)
+    if (update.callback_query) {
+      const callbackQuery = update.callback_query;
+      const chatId = callbackQuery.message.chat.id;
+      const data = callbackQuery.data;
+      
+      if (data.startsWith('neighbors_yes_')) {
+        try {
+          const jsonData = data.replace('neighbors_yes_', '');
+          const parsed = JSON.parse(jsonData);
+          const { districts, criteria } = parsed;
+          
+          // Выполняем поиск по соседним районам
+          const searchCriteria = { ...criteria, districts };
+          const properties = await searchProperties(searchCriteria);
+          
+          const detectedLanguage = detectLanguage(callbackQuery.message.text || 'ru');
+          const summary = summarizeResultsText(properties, `поиск в районах: ${districts.join(', ')}`, detectedLanguage);
+          
+          await sendTelegramMessage(chatId, summary);
+          
+        } catch (error) {
+          console.error('[aiAssistantBot] Callback processing error:', error);
+          await sendTelegramMessage(chatId, 'Произошла ошибка при обработке запроса');
+        }
+      } else if (data === 'neighbors_no') {
+        const t = botTranslations.ru; // можно улучшить определение языка
+        await sendTelegramMessage(chatId, 'Попробуйте уточнить запрос или выбрать другой район');
+      }
+      
+      return res.status(200).send('OK');
+    }
+    
     const message = update && update.message;
     if (!message || !message.chat || !message.chat.id) {
       return res.status(200).send('OK');
@@ -993,8 +1254,23 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
       const t = botTranslations[detectedLanguage] || botTranslations.ru;
       
       try {
-        // Используем умный поиск с географической логикой
-        const searchResult = await smartSearchProperties(text, detectedLanguage);
+        // Сначала анализируем запрос с помощью ИИ
+        const aiCriteria = await analyzeRequestWithAI(text, detectedLanguage);
+        console.log('[aiAssistantBot] AI criteria:', aiCriteria);
+        
+        // Если ИИ определил конкретные районы, используем их
+        let searchResult;
+        if (aiCriteria.districts && aiCriteria.districts.length > 0) {
+          const properties = await searchProperties(aiCriteria);
+          searchResult = {
+            properties,
+            message: aiCriteria._aiReasoning || null,
+            type: 'ai_search'
+          };
+        } else {
+          // Fallback на старую логику, если ИИ не определил районы
+          searchResult = await smartSearchProperties(text, detectedLanguage);
+        }
         
         if (searchResult.type === 'suggest_neighbors') {
           // Предлагаем соседние районы
@@ -1038,7 +1314,7 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
           responseText += t.noResults + '\n\n' + t.yourQuery + '\n"' + text + '"';
         }
         
-        // Кнопка "Открыть подборку" только если есть объекты
+        // Отправляем основной ответ
         if (properties.length > 0) {
           const propertyIds = properties.map(p => p.id).join(',');
           const webAppUrl = `${process.env.PUBLIC_GALLERY_BASE_URL || 'https://it-agent.pro'}/?selection=${encodeURIComponent(propertyIds)}`;
