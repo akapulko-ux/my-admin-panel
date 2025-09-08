@@ -209,6 +209,22 @@ export const translations = {
       // Dashboard
       dashboard: 'Dashboard'
     },
+    // Public menu
+    publicMenu: {
+      favorites: 'Favorites',
+      services: 'Services',
+      loginRegister: 'Login / Register',
+      account: 'My Account'
+    },
+    accountPage: {
+      title: 'My Account',
+      logout: 'Logout',
+      myProperties: 'My Properties',
+      myLeads: 'My Leads',
+      noProperties: 'You have not added any properties yet',
+      noLeads: 'You have no leads yet',
+      goToProperty: 'Go to property'
+    },
 
     // Public Page
     publicPage: {
@@ -817,6 +833,7 @@ _________________               _________________
       
       // Document labels
       documentsSection: 'Documents',
+      characteristicsSection: 'Characteristics',
       legalCompanyName: 'Legal Company Name:',
       taxNumber: 'Tax Number (NPWP):',
       landUsePermit: 'Land Use Permit (PKKPR):',
@@ -2000,6 +2017,22 @@ _________________               _________________
       // Dashboard
       dashboard: 'Дашборд'
     },
+    // Public menu
+    publicMenu: {
+      favorites: 'Избранное',
+      services: 'Услуги',
+      loginRegister: 'Вход / Регистрация',
+      account: 'Личный кабинет'
+    },
+    accountPage: {
+      title: 'Личный кабинет',
+      logout: 'Выйти',
+      myProperties: 'Мои объекты',
+      myLeads: 'Мои заявки',
+      noProperties: 'Вы ещё не добавили ни одного объекта',
+      noLeads: 'У вас пока нет заявок',
+      goToProperty: 'Перейти к объекту'
+    },
 
     // Public Page
     publicPage: {
@@ -2603,6 +2636,7 @@ _________________               _________________
       
       // Document labels
       documentsSection: 'Документы',
+      characteristicsSection: 'Характеристики',
       legalCompanyName: 'Название компании:',
       taxNumber: 'Налоговый номер (NPWP):',
       landUsePermit: 'Разрешение на использование земли (PKKPR):',
@@ -3791,6 +3825,22 @@ _________________               _________________
       // Dashboard
       dashboard: 'Dasbor'
     },
+    // Public menu
+    publicMenu: {
+      favorites: 'Favorit',
+      services: 'Layanan',
+      loginRegister: 'Masuk / Daftar',
+      account: 'Akun Saya'
+    },
+    accountPage: {
+      title: 'Akun Saya',
+      logout: 'Keluar',
+      myProperties: 'Properti Saya',
+      myLeads: 'Lead Saya',
+      noProperties: 'Anda belum menambahkan properti apa pun',
+      noLeads: 'Anda belum memiliki lead',
+      goToProperty: 'Buka properti'
+    },
 
     // Public Page
     publicPage: {
@@ -4394,6 +4444,7 @@ _________________               _________________
       
       // Document labels
       documentsSection: 'Dokumen',
+      characteristicsSection: 'Karakteristik',
       legalCompanyName: 'Nama Perusahaan Legal:',
       taxNumber: 'Nomor Pajak (NPWP):',
       landUsePermit: 'Izin Penggunaan Tanah (PKKPR):',

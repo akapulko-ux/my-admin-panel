@@ -431,18 +431,24 @@ service cloud.firestore {
     // === Фоллбэк для любых новых коллекций ===
     // === Technical Supervision ===
     match /technicalSupervisionProjects/{projectId} {
-      // Только админы могут управлять проектами технадзора
-      allow read, write, delete: if isAdmin();
+      // Публичное чтение для публичной страницы технадзора
+      allow read: if true;
+      // Управление проектами технадзора — только админы
+      allow create, update, delete: if isAdmin();
     }
 
     match /technicalSupervisionSections/{sectionId} {
-      // Только админы могут управлять разделами технадзора
-      allow read, write, delete: if isAdmin();
+      // Публичное чтение для публичной страницы технадзора
+      allow read: if true;
+      // Управление разделами технадзора — только админы
+      allow create, update, delete: if isAdmin();
     }
 
     match /technicalSupervisionInspections/{inspectionId} {
-      // Только админы могут управлять обследованиями технадзора
-      allow read, write, delete: if isAdmin();
+      // Публичное чтение для публичной страницы технадзора
+      allow read: if true;
+      // Управление обследованиями технадзора — только админы
+      allow create, update, delete: if isAdmin();
     }
 
     match /{path=**} {

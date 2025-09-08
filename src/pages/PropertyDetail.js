@@ -713,6 +713,22 @@ function PropertyDetail() {
       setUploading(prev => ({ ...prev, [fieldName]: true }));
       
       try {
+        // Предварительное сжатие изображений (для PDF и DOC/* сжатие не применяем)
+        let fileToUpload = file;
+        if (file.type && file.type.startsWith('image/')) {
+          const compressionOptions = {
+            maxSizeMB: 10,
+            maxWidthOrHeight: 2000,
+            useWebWorker: true,
+            initialQuality: 0.8
+          };
+          try {
+            fileToUpload = await imageCompression(file, compressionOptions);
+          } catch (e) {
+            console.warn('Image compression failed, uploading original file', e);
+          }
+        }
+
         // Определяем подпапку в зависимости от типа файла
         let folder;
         if (fieldName === 'layoutFileURL') {
@@ -729,7 +745,7 @@ function PropertyDetail() {
           folder = 'documents';
         }
         
-        const url = await uploadToFirebaseStorageInFolder(file, folder);
+        const url = await uploadToFirebaseStorageInFolder(fileToUpload, folder);
         
         // Обновляем объект в базе данных
         const propertyRef = doc(db, "properties", id);
@@ -791,8 +807,24 @@ function PropertyDetail() {
           folder = 'documents';
         }
         
+        // Предварительное сжатие изображений (для PDF и DOC/* сжатие не применяем)
+        let fileToUpload = file;
+        if (file.type && file.type.startsWith('image/')) {
+          const compressionOptions = {
+            maxSizeMB: 10,
+            maxWidthOrHeight: 2000,
+            useWebWorker: true,
+            initialQuality: 0.8
+          };
+          try {
+            fileToUpload = await imageCompression(file, compressionOptions);
+          } catch (e) {
+            console.warn('Image compression failed, uploading original file', e);
+          }
+        }
+
         // Загружаем новый файл
-        const url = await uploadToFirebaseStorageInFolder(file, folder);
+        const url = await uploadToFirebaseStorageInFolder(fileToUpload, folder);
         
         // Обновляем объект в базе данных
         const propertyRef = doc(db, "properties", id);
@@ -2459,8 +2491,8 @@ function PropertyDetail() {
         </div>
       )}
 
-      {/* Добавляем кнопки "Расчет ROI" после характеристик объекта */}
-              {['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+      {/* Добавляем кнопки "Расчет ROI" после характеристик объекта (скрыто для модератора) */}
+              {['admin', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
         <div className="mt-8">
           <div className="mt-6 flex gap-4">
             <button
@@ -2474,8 +2506,8 @@ function PropertyDetail() {
         </div>
       )}
 
-      {/* Модальное окно с калькулятором ROI */}
-              {showRoiCalculator && ['admin', 'moderator', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+      {/* Модальное окно с калькулятором ROI (скрыто для модератора) */}
+              {showRoiCalculator && ['admin', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
         <PropertyRoiCalculator
           propertyId={id}
           propertyData={property}

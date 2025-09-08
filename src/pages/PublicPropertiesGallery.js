@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, getDocs, where, query, collection } from "firebase/firestore";
-import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus } from "lucide-react";
+import { doc, getDoc, Timestamp, getDocs, where, query, collection, setDoc, deleteDoc } from "firebase/firestore";
+import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCache } from "../CacheContext";
 import { useLanguage } from "../lib/LanguageContext";
@@ -10,6 +10,7 @@ import { translateDistrict, translatePropertyType, translateConstructionStatus }
 import { landingTranslations } from "../lib/landingTranslations";
 import { useAuth } from "../AuthContext";
 import { initPageTracking } from "../utils/pageAnalytics";
+// removed duplicate firestore import
 
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -42,6 +43,7 @@ function PublicPropertiesGallery() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
   const [hasUserProperties, setHasUserProperties] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState(() => new Set());
   
   // Проверяем, есть ли параметр selection с ID объектов
   const selectionIds = searchParams.get('selection');
@@ -71,6 +73,68 @@ function PublicPropertiesGallery() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // Загрузка избранного для текущего пользователя/сессии
+  useEffect(() => {
+    async function loadFavorites() {
+      try {
+        if (currentUser) {
+          const favCol = collection(db, 'users', currentUser.uid, 'favorites');
+          const snap = await getDocs(favCol);
+          const ids = new Set();
+          snap.forEach(d => {
+            const pid = d.id;
+            if (pid) ids.add(pid);
+          });
+          setFavoriteIds(ids);
+        } else {
+          const raw = sessionStorage.getItem('favoritesPropertyIds');
+          const arr = raw ? JSON.parse(raw) : [];
+          setFavoriteIds(new Set(Array.isArray(arr) ? arr : []));
+        }
+      } catch (e) {
+        console.error('Ошибка загрузки избранного:', e);
+      }
+    }
+    loadFavorites();
+  }, [currentUser]);
+
+  const isFavorite = useCallback((propertyId) => favoriteIds.has(propertyId), [favoriteIds]);
+
+  const toggleFavorite = useCallback(async (propertyId) => {
+    try {
+      if (!propertyId) return;
+      if (currentUser) {
+        const favRef = doc(db, 'users', currentUser.uid, 'favorites', propertyId);
+        if (favoriteIds.has(propertyId)) {
+          await deleteDoc(favRef);
+          setFavoriteIds(prev => {
+            const next = new Set(prev);
+            next.delete(propertyId);
+            return next;
+          });
+        } else {
+          await setDoc(favRef, { createdAt: Timestamp.now() });
+          setFavoriteIds(prev => new Set(prev).add(propertyId));
+        }
+      } else {
+        // sessionStorage
+        setFavoriteIds(prev => {
+          const next = new Set(prev);
+          if (next.has(propertyId)) {
+            next.delete(propertyId);
+          } else {
+            next.add(propertyId);
+          }
+          const arr = Array.from(next);
+          sessionStorage.setItem('favoritesPropertyIds', JSON.stringify(arr));
+          return next;
+        });
+      }
+    } catch (e) {
+      console.error('Ошибка переключения избранного:', e);
+    }
+  }, [currentUser, favoriteIds]);
 
   // Инициализация отслеживания страницы для аналитики
   useEffect(() => {
@@ -250,32 +314,37 @@ function PublicPropertiesGallery() {
     // Обычная фильтрация
     return properties.filter((property) => {
       const searchText = searchQuery.toLowerCase();
-      const statusTranslated = property.status
-        ? translateConstructionStatus(String(property.status), language).toLowerCase()
-        : '';
-      const districtTranslated = property.district
-        ? translateDistrict(String(property.district), language).toLowerCase()
-        : '';
-      const typeTranslated = property.type
-        ? translatePropertyType(String(property.type), language).toLowerCase()
-        : '';
+      const langs = ['ru', 'en', 'id'];
+      const statusTranslatedAll = property.status
+        ? langs.map(l => translateConstructionStatus(String(property.status), l).toLowerCase())
+        : [];
+      const districtTranslatedAll = property.district
+        ? langs.map(l => translateDistrict(String(property.district), l).toLowerCase())
+        : [];
+      const typeTranslatedAll = property.type
+        ? langs.map(l => translatePropertyType(String(property.type), l).toLowerCase())
+        : [];
+      const studioTranslationsAll = langs
+        .map(l => translations[l]?.propertiesGallery?.studio)
+        .filter(Boolean)
+        .map(s => String(s).toLowerCase());
       const matchesSearch =
         !searchQuery ||
         // Поиск по району (как по исходному значению, так и по переводу)
         (property.district && property.district.toLowerCase().includes(searchText)) ||
-        (districtTranslated && districtTranslated.includes(searchText)) ||
+        (districtTranslatedAll.some(s => s.includes(searchText))) ||
         // Поиск по типу (как по исходному значению, так и по переводу)
         (property.type && property.type.toLowerCase().includes(searchText)) ||
-        (typeTranslated && typeTranslated.includes(searchText)) ||
+        (typeTranslatedAll.some(s => s.includes(searchText))) ||
         // Поиск по статусу (как по исходному значению, так и по переводу)
         (property.status && String(property.status).toLowerCase().includes(searchText)) ||
-        (statusTranslated && statusTranslated.includes(searchText)) ||
+        (statusTranslatedAll.some(s => s.includes(searchText))) ||
         // Поиск по числовым полям
         (property.price !== undefined && property.price !== null && String(property.price).toLowerCase().includes(searchText)) ||
         (property.area !== undefined && property.area !== null && String(property.area).toLowerCase().includes(searchText)) ||
         (property.bedrooms !== undefined && property.bedrooms !== null && (
           String(property.bedrooms).toLowerCase().includes(searchText) ||
-          ((property.bedrooms === 0 || property.bedrooms === "Студия") && t.propertiesGallery.studio.toLowerCase().includes(searchText))
+          ((property.bedrooms === 0 || property.bedrooms === "Студия") && studioTranslationsAll.some(s => s.includes(searchText)))
         )) ||
         (property.unitsCount !== undefined && property.unitsCount !== null && String(property.unitsCount).toLowerCase().includes(searchText));
 
@@ -287,7 +356,17 @@ function PublicPropertiesGallery() {
         (!filters.areaMin || property.area >= Number(filters.areaMin)) &&
         (!filters.areaMax || property.area <= Number(filters.areaMax));
 
-      const matchesBedrooms = filters.bedrooms === "all" || property.bedrooms === Number(filters.bedrooms);
+      const matchesBedrooms = (() => {
+        if (filters.bedrooms === "all") return true;
+        if (filters.bedrooms === "0") {
+          const val = property.bedrooms;
+          return val === 0 || String(val).trim().toLowerCase() === "студия";
+        }
+        const selectedNum = Number(filters.bedrooms);
+        if (!Number.isFinite(selectedNum)) return true;
+        const propNum = Number(property.bedrooms);
+        return Number.isFinite(propNum) && propNum === selectedNum;
+      })();
       const matchesDistrict = filters.district === "all" || property.district === filters.district;
       const matchesType = filters.type === "all" || property.type === filters.type;
       const matchesStatus = filters.status === "all" || property.status === filters.status;
@@ -295,7 +374,7 @@ function PublicPropertiesGallery() {
 
       return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType && matchesStatus && matchesAddedByMe;
     });
-  }, [properties, searchQuery, filters, language, currentUser, isSelectionMode, selectedPropertyIds, t.propertiesGallery.studio]);
+  }, [properties, searchQuery, filters, currentUser, isSelectionMode, selectedPropertyIds]);
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -325,7 +404,62 @@ function PublicPropertiesGallery() {
       <div className={`mx-auto space-y-4 p-4 ${isMobile ? "max-w-full" : "max-w-4xl"}`}>
         {/* Заголовок, кнопка размещения объекта и переключатель языка в одной строке */}
         <div className="flex items-center justify-between gap-3">
-          <div>
+          <div className="flex items-center gap-2">
+            {/* Гамбургер меню слева */}
+            <div className="relative">
+              <button
+                className="p-2 rounded-md border border-gray-200 hover:bg-gray-50"
+                aria-label="menu"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const panel = document.getElementById('public-menu-dropdown');
+                  if (panel) {
+                    panel.classList.toggle('hidden');
+                  }
+                }}
+              >
+                <Menu className="w-5 h-5 text-gray-700" />
+              </button>
+              {/* Выпадающее меню */}
+              <div
+                id="public-menu-dropdown"
+                className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg hidden z-20"
+                onMouseLeave={(e) => {
+                  const panel = document.getElementById('public-menu-dropdown');
+                  if (panel) panel.classList.add('hidden');
+                }}
+              >
+                {/* Login / Register first */}
+                {currentUser ? (
+                  <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2" onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); navigate('/public/account'); }}>
+                    <LogIn className="w-4 h-4 text-gray-700" />
+                    <span>{t.publicMenu.account}</span>
+                  </button>
+                ) : (
+                  <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2" onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); setIsPlacementModalOpen(true); }}>
+                    <LogIn className="w-4 h-4 text-gray-700" />
+                    <span>{t.publicMenu.loginRegister}</span>
+                  </button>
+                )}
+                {/* Place Property */}
+                <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2" onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); handlePlaceProperty(); }}>
+                  <Plus className="w-4 h-4 text-gray-700" />
+                  <span>{lt.placePropertyTitle}</span>
+                </button>
+                {/* Favorites */}
+                <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2" onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); navigate('/public/favorites'); }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={favoriteIds.size > 0 ? '#ef4444' : 'none'} stroke="#ef4444" strokeWidth="2" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  </svg>
+                  <span>{t.publicMenu.favorites}</span>
+                </button>
+                {/* Services */}
+                <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
+                  <Wrench className="w-4 h-4 text-gray-700" />
+                  <span>{t.publicMenu.services}</span>
+                </button>
+              </div>
+            </div>
             <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
               {isSelectionMode ? t.propertiesGallery.selectionTitle : (t.navigation?.publicInvestorTitle || 'IT AGENT BALI')}
             </h1>
@@ -336,29 +470,10 @@ function PublicPropertiesGallery() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            {!isSelectionMode && !isMobile && (
-              <Button
-                onClick={handlePlaceProperty}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {lt.placePropertyTitle}
-              </Button>
-            )}
             <LanguageSwitcher />
           </div>
         </div>
         
-        {/* Кнопка размещения объекта на отдельной строке для мобильных устройств */}
-        {!isSelectionMode && isMobile && (
-          <Button
-            onClick={handlePlaceProperty}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {lt.placePropertyTitle}
-          </Button>
-        )}
 
         {/* Поиск и фильтры - скрываем в режиме подборки */}
         {!isSelectionMode && (
@@ -442,12 +557,14 @@ function PublicPropertiesGallery() {
                       options={[
                         { label: t.propertiesGallery.allBedrooms, value: "all" },
                         { label: t.propertiesGallery.studio, value: "0" },
-                        ...filterOptions.bedrooms
+                        ...Array.from(new Set(
+                          filterOptions.bedrooms
                           .filter((num) => num !== "" && num !== null && num !== undefined)
-                          .map((num) => ({
-                            label: String(num),
-                            value: String(num),
-                          })),
+                            .map((num) => String(num).trim())
+                            .filter((label) => label !== "0" && label.toLowerCase() !== "студия")
+                        ))
+                          .sort((a, b) => Number(a) - Number(b))
+                          .map((label) => ({ label, value: label })),
                       ]}
                     />
                   </div>
@@ -613,6 +730,18 @@ function PublicPropertiesGallery() {
                       <Building2 className="w-8 h-8" />
                     </div>
                   )}
+                  {/* Favorite button */}
+                  <button
+                    className={`absolute top-2 left-2 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition ${
+                      isFavorite(p.id) ? 'bg-white/90' : 'bg-white/80 hover:bg-white'
+                    }`}
+                    aria-label="favorite"
+                    onClick={(e) => { e.preventDefault(); toggleFavorite(p.id); }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={isFavorite(p.id) ? '#ef4444' : 'none'} stroke="#ef4444" strokeWidth="2" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                  </button>
                 </div>
 
                 <div className="flex flex-col text-gray-900 space-y-1">

@@ -93,6 +93,15 @@ service firebase.storage {
                        request.resource.contentType.matches('image/.*')); // PDF или изображения
     }
 
+    // === Правила для Due Diligence документов (из админки, увеличен лимит) ===
+    match /documents/due-diligence/{fileName} {
+      allow read: if true; // Публичное чтение
+      allow write: if request.auth != null
+                   && request.resource.size < 50 * 1024 * 1024 // Максимум 50MB
+                   && (request.resource.contentType.matches('application/pdf') ||
+                       request.resource.contentType.matches('image/.*'));
+    }
+
     // === Правила для документов (из админки, увеличены лимиты) ===
     match /documents/{documentId} {
       allow read: if request.auth != null;
