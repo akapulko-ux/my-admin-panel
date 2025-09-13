@@ -11,6 +11,7 @@ const telegramTranslations = require("./telegramTranslations");
 const { sendFixationCreatedWebhook, sendFixationStatusChangedWebhook, sendFixationExpiredWebhook, sendFixationRejectedWebhook } = require("./webhookService");
 // Новый AI Assistant Telegram Bot (изолированный)
 const { aiAssistantTelegramWebhook, aiAssistantSetWebhook, aiTenantTelegramWebhook } = require('./aiAssistantBot');
+const { baliSupervisionTelegramWebhook, baliSupervisionSetWebhook } = require('./baliSupervisionBot');
 
 // Telegram Bot Token
 const BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM";
@@ -568,6 +569,8 @@ exports.api = functions.https.onRequest(apiApp);
 
 // Multi-tenant Telegram webhook
 exports.aiTenantTelegramWebhook = aiTenantTelegramWebhook;
+exports.baliSupervisionTelegramWebhook = baliSupervisionTelegramWebhook;
+exports.baliSupervisionSetWebhook = baliSupervisionSetWebhook;
 
 // Callable: первичная индексация properties в Qdrant
 exports.indexPropertiesEmbeddings = functions.https.onCall(async (data, context) => {

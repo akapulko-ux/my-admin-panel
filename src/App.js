@@ -20,6 +20,7 @@ import './testLanguageUpdate'; // Импортируем тестовую фун
 // Лендинги
 import DevLandingPage from "./pages/DevLandingPage";
 import MainLandingPage from "./pages/MainLandingPage";
+import ConstructionSupervisionLanding from "./pages/ConstructionSupervisionLanding";
 
 // Комплексы
 import CreateComplex from "./pages/CreateComplex";
@@ -252,6 +253,7 @@ function App() {
               <Route path="/public-building-progress/:type/:id" element={<PublicBuildingProgress />} />
               <Route path="/public-building-progress/:type/:id/:monthKey" element={<PublicBuildingProgressDetail />} />
               <Route path="/public-technical-supervision/:projectId" element={<PublicTechnicalSupervision />} />
+              <Route path="/construction-supervision" element={<ConstructionSupervisionLanding />} />
               <Route path="/public" element={<MainLandingPage />} />
               <Route path="/public/complex/:id" element={<PublicComplexDetail />} />
               <Route path="/public/property/:id" element={<PublicPropertyDetail />} />
