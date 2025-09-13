@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const speech = require("@google-cloud/speech");
 const { Storage } = require("@google-cloud/storage");
 const path = require("path");
@@ -9,7 +10,7 @@ const fs = require("fs");
 const telegramTranslations = require("./telegramTranslations");
 const { sendFixationCreatedWebhook, sendFixationStatusChangedWebhook, sendFixationExpiredWebhook, sendFixationRejectedWebhook } = require("./webhookService");
 // Новый AI Assistant Telegram Bot (изолированный)
-const { aiAssistantTelegramWebhook, aiAssistantSetWebhook } = require('./aiAssistantBot');
+const { aiAssistantTelegramWebhook, aiAssistantSetWebhook, aiTenantTelegramWebhook } = require('./aiAssistantBot');
 
 // Telegram Bot Token
 const BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM";
@@ -564,6 +565,269 @@ const sendTelegramMessage = async (chatId, text, replyMarkup = null) => {
 // API Function
 const apiApp = require('./api');
 exports.api = functions.https.onRequest(apiApp);
+
+// Multi-tenant Telegram webhook
+exports.aiTenantTelegramWebhook = aiTenantTelegramWebhook;
+
+// Callable: первичная индексация properties в Qdrant
+exports.indexPropertiesEmbeddings = functions.https.onCall(async (data, context) => {
+  const { getEmbedding } = require('./utils/embeddings');
+  const { ensureCollection, upsertPoints } = require('./utils/qdrant');
+  const db = admin.firestore();
+  const dim = Number(process.env.EMBEDDING_DIM || 1536);
+  await ensureCollection(dim);
+  const batchSize = Number(data?.batchSize || 200);
+  let lastDoc = null;
+  let indexed = 0;
+  while (true) {
+    let q = db.collection('properties').orderBy('__name__').limit(batchSize);
+    if (lastDoc) q = q.startAfter(lastDoc);
+    const snap = await q.get();
+    if (snap.empty) break;
+    const points = [];
+    const { uuidFromString } = require('./utils/id');
+    for (const doc of snap.docs) {
+      const p = doc.data();
+      const text = [
+        p.type || '', p.district || '', p.status || '',
+        `price:${p.price || ''}`, `bedrooms:${p.bedrooms || ''}`, `area:${p.area || ''}`,
+        (p.description || '').toString().slice(0, 500)
+      ].join(' | ');
+      const vec = await getEmbedding(text);
+      const qId = uuidFromString(doc.id);
+      points.push({ id: qId, vector: vec, payload: { docId: doc.id, district: p.district || null, type: p.type || null } });
+    }
+    await upsertPoints(points);
+    indexed += points.length;
+    lastDoc = snap.docs[snap.docs.length - 1];
+    if (snap.size < batchSize) break;
+  }
+  return { indexed };
+});
+
+// HTTP trigger для индексации (для админа; защитим секретом)
+exports.indexPropertiesEmbeddingsHttp = functions.https.onRequest(async (req, res) => {
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+  const secret = req.get('x-index-secret') || req.query.secret || '';
+  if (!process.env.INDEX_SECRET || secret !== process.env.INDEX_SECRET) return res.status(403).send('Forbidden');
+  try {
+    const { getEmbedding } = require('./utils/embeddings');
+    const { ensureCollection, upsertPoints } = require('./utils/qdrant');
+    const { uuidFromString } = require('./utils/id');
+    const dim = Number(process.env.EMBEDDING_DIM || 1536);
+    await ensureCollection(dim);
+    const db = admin.firestore();
+    const batchSize = Number((req.body && req.body.batchSize) || req.query.batchSize || 50);
+    const startAfterId = (req.body && req.body.startAfter) || req.query.startAfter || null;
+    let q = db.collection('properties').orderBy('__name__').limit(batchSize);
+    if (startAfterId) {
+      const startDoc = await db.collection('properties').doc(startAfterId).get();
+      if (startDoc.exists) q = q.startAfter(startDoc);
+    }
+    const snap = await q.get();
+    if (snap.empty) return res.json({ indexed: 0, nextPageToken: null });
+    const points = [];
+    for (const doc of snap.docs) {
+      const p = doc.data();
+      const text = [
+        p.type || '', p.district || '', p.status || '',
+        `price:${p.price || ''}`, `bedrooms:${p.bedrooms || ''}`, `area:${p.area || ''}`,
+        (p.description || '').toString().slice(0, 500)
+      ].join(' | ');
+      const vec = await getEmbedding(text);
+      const qId = uuidFromString(doc.id);
+      points.push({ id: qId, vector: vec, payload: { docId: doc.id, district: p.district || null, type: p.type || null } });
+    }
+    await upsertPoints(points);
+    console.log('[diag:indexProps] batch indexed:', points.length);
+    const lastDoc = snap.docs[snap.docs.length - 1];
+    const nextPageToken = lastDoc ? lastDoc.id : null;
+    res.json({ indexed: points.length, nextPageToken });
+  } catch (e) {
+    console.error('indexPropertiesEmbeddingsHttp error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// HTTP: Индексация БЗ в Qdrant (коллекция knowledge_kb)
+exports.indexKnowledgeEmbeddingsHttp = functions.https.onRequest(async (req, res) => {
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+  const secret = req.get('x-index-secret') || req.query.secret || '';
+  const expected = process.env.INDEX_SECRET || 'super-index-secret';
+  if (secret !== expected) return res.status(403).send('Forbidden');
+  try {
+    const { getEmbedding } = require('./utils/embeddings');
+    const { ensureCollectionFor, upsertPointsTo } = require('./utils/qdrant');
+    const { uuidFromString } = require('./utils/id');
+    const dim = Number(process.env.EMBEDDING_DIM || 1536);
+    const KB_COLLECTION = process.env.QDRANT_KB_COLLECTION || 'knowledge_kb';
+    await ensureCollectionFor(KB_COLLECTION, dim, ['tenantId', 'locale', 'tags']);
+    const db = admin.firestore();
+    const batchSize = Number((req.body && req.body.batchSize) || req.query.batchSize || 100);
+    const startAfterId = (req.body && req.body.startAfter) || req.query.startAfter || null;
+    // Без where/complex orderBy, чтобы не требовались индексы и не ловить ошибки Firestore
+    let q = db.collection('knowledge_docs').orderBy('__name__').limit(batchSize);
+    if (startAfterId) {
+      const startDoc = await db.collection('knowledge_docs').doc(startAfterId).get();
+      if (startDoc.exists) q = q.startAfter(startDoc);
+    }
+    const snap = await q.get();
+    if (snap.empty) return res.json({ indexed: 0, nextPageToken: null });
+    const points = [];
+    for (const doc of snap.docs) {
+      const meta = doc.data();
+      // Пропускаем деактивированные/архивные документы
+      if (meta?.active === false || meta?.status === 'archived') continue;
+      // читаем сырой контент (поддокумент raw/content)
+      let content = '';
+      try {
+        const raw = await db.collection('knowledge_docs').doc(doc.id).collection('raw').doc('content').get();
+        content = (raw.exists && raw.data()?.content) || '';
+      } catch (_) {}
+      const baseText = [meta.title || '', content || ''].join('\n').trim();
+      if (!baseText) continue;
+      // разрезаем на чанки 400-600 символов
+      const chunks = [];
+      const chunkSize = Number(process.env.KB_CHUNK_SIZE || 500);
+      for (let i = 0; i < baseText.length; i += chunkSize) {
+        chunks.push(baseText.slice(i, i + chunkSize));
+      }
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const vec = await getEmbedding(chunk);
+        const pid = uuidFromString(`${doc.id}#${i}`);
+        points.push({
+          id: pid,
+          vector: vec,
+          payload: {
+            docId: doc.id,
+            tenantId: meta.tenantId || null,
+            locale: meta.locale || null,
+            tags: Array.isArray(meta.tags) ? meta.tags : [],
+            title: meta.title || '',
+            idx: i
+          }
+        });
+      }
+    }
+    if (points.length > 0) await upsertPointsTo(KB_COLLECTION, points);
+    const lastDoc = snap.docs[snap.docs.length - 1];
+    const nextPageToken = lastDoc ? lastDoc.id : null;
+    res.json({ indexed: points.length, nextPageToken });
+  } catch (e) {
+    console.error('indexKnowledgeEmbeddingsHttp error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ==================== APP STATISTICS ====================
+// Документ с метриками: system/appStatistics
+// Структура: {
+//   totals: { totalUsers, activeUsers, appLogins, searches, views, favorites },
+//   startDate: Timestamp,           // дата начала роста
+//   lastIncrementDate: string,      // 'YYYY-MM-DD' последнего применения роста
+// }
+
+const APP_STATS_DOC_PATH = 'system/appStatistics';
+const APP_STATS_DEFAULTS = {
+  totalUsers: 171,
+  activeUsers: 104,
+  appLogins: 687,
+  searches: 193,
+  views: 1157,
+  favorites: 54,
+};
+
+function toYMD(date) {
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(date.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// Callable: Инициализация метрик (только админ/модератор)
+exports.initAppStatistics = functions.https.onCall(async (data, context) => {
+  const uid = context?.auth?.uid || null;
+  const tokenRole = context?.auth?.token?.role || null;
+  if (!uid || !['admin', 'moderator'].includes(tokenRole)) {
+    throw new functions.https.HttpsError('permission-denied', 'Недостаточно прав');
+  }
+
+  const db = admin.firestore();
+  const ref = db.doc(APP_STATS_DOC_PATH);
+  const snap = await ref.get();
+
+  const now = new Date();
+  now.setUTCHours(0,0,0,0);
+  const todayYmd = toYMD(now);
+
+  const payload = {
+    totals: {
+      totalUsers: Number(data?.totalUsers ?? APP_STATS_DEFAULTS.totalUsers),
+      activeUsers: Number(data?.activeUsers ?? APP_STATS_DEFAULTS.activeUsers),
+      appLogins: Number(data?.appLogins ?? APP_STATS_DEFAULTS.appLogins),
+      searches: Number(data?.searches ?? APP_STATS_DEFAULTS.searches),
+      views: Number(data?.views ?? APP_STATS_DEFAULTS.views),
+      favorites: Number(data?.favorites ?? APP_STATS_DEFAULTS.favorites),
+    },
+    startDate: admin.firestore.Timestamp.fromDate(now),
+    lastIncrementDate: todayYmd,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdBy: uid,
+  };
+
+  if (!snap.exists) {
+    await ref.set(payload);
+  } else {
+    await ref.update(payload);
+  }
+
+  return { success: true };
+});
+
+// Pub/Sub расписание: ежедневный рост на 2% (UTC 00:10)
+exports.incrementAppStatisticsDaily = onSchedule({ schedule: '10 0 * * *', timeZone: 'UTC' }, async () => {
+    const db = admin.firestore();
+    const ref = db.doc(APP_STATS_DOC_PATH);
+    const snap = await ref.get();
+
+    const now = new Date();
+    now.setUTCHours(0,0,0,0);
+    const todayYmd = toYMD(now);
+
+    if (!snap.exists) {
+      // Если документ не существует — создаём с дефолтами и считаем, что первый рост будет завтра
+      await ref.set({
+        totals: APP_STATS_DEFAULTS,
+        startDate: admin.firestore.Timestamp.fromDate(now),
+        lastIncrementDate: todayYmd,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log('App statistics initialized');
+      return null;
+    }
+
+    const data = snap.data() || {};
+    if (data.lastIncrementDate === todayYmd) {
+      console.log('Already incremented today');
+      return null;
+    }
+
+    const src = data.totals || APP_STATS_DEFAULTS;
+    // Умножаем на 1.02 и округляем
+    const next = Object.fromEntries(
+      Object.entries(src).map(([k, v]) => [k, Math.round(Number(v || 0) * 1.02)])
+    );
+
+    await ref.update({
+      totals: next,
+      lastIncrementDate: todayYmd,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log('App statistics incremented by 2%');
+    return null;
+  });
 
 // Функция для обработки webhook от Telegram Bot
 exports.telegramWebhook = functions.https.onRequest(async (req, res) => {

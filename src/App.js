@@ -81,6 +81,7 @@ import GeneralOverview from "./pages/GeneralOverview";
 
 // Дашборд аналитики
 import Dashboard from "./pages/Dashboard";
+import AppStatistics from "./pages/AppStatistics";
 
 import AccessClosed from "./pages/AccessClosed";
 
@@ -104,6 +105,8 @@ import PublicTechnicalSupervision from "./pages/PublicTechnicalSupervision";
 import PremiumFeatures from "./pages/PremiumFeatures";
 import Notifications from "./pages/Notifications";
 import PublicPage from "./pages/PublicPage";
+import BotsManager from "./pages/BotsManager";
+import KnowledgeBase from "./pages/KnowledgeBase";
 import PublicPageAgent from "./pages/PublicPageAgent";
 import PublicAgentAuth from "./pages/PublicAgentAuth";
 import PublicPropertiesGallery from "./pages/PublicPropertiesGallery";
@@ -432,6 +435,13 @@ function App() {
                       </ProtectedRoute>
                     } />
 
+                    {/* Статистика приложения */}
+                    <Route path="/app-statistics" element={
+                      <ProtectedRoute>
+                        <AppStatistics />
+                      </ProtectedRoute>
+                    } />
+
                     {/* Дашборд аналитики */}
                     <Route path="/dashboard" element={
                       <ProtectedRoute>
@@ -534,6 +544,20 @@ function App() {
                     <Route path="/public-page" element={
                       <ProtectedRoute>
                         <PublicPage />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Боты (admin, premium agent, премиум застройщик) */}
+                    <Route path="/bots" element={
+                      <ProtectedRoute>
+                        <BotsManager />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* База знаний */}
+                    <Route path="/knowledge" element={
+                      <ProtectedRoute>
+                        <KnowledgeBase />
                       </ProtectedRoute>
                     } />
 

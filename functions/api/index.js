@@ -31,6 +31,8 @@ app.use('/v1/properties', require('./routes/properties'));
 app.use('/v1/complexes', require('./routes/complexes'));
 app.use('/v1/webhooks', require('./routes/webhooks'));
 app.use('/v1/analytics', require('./routes/analytics'));
+app.use('/v1/bots', require('./routes/bots'));
+app.use('/v1/knowledge', require('./routes/knowledge'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

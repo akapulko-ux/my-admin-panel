@@ -417,6 +417,16 @@ const Navigation = () => {
                 </NavItem>
               )}
 
+              {['admin', 'moderator'].includes(role) && (
+                <NavItem 
+                  to="/app-statistics" 
+                  icon={Activity}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.appStatistics || 'Статистика приложения'}
+                </NavItem>
+              )}
+
               {/* Дашборд аналитики */}
               {['admin'].includes(role) && (
                 <NavItem 
@@ -671,6 +681,12 @@ const Navigation = () => {
           </NavItem>
         )}
 
+        {['admin', 'moderator'].includes(role) && (
+          <NavItem to="/app-statistics" icon={Activity}>
+            {nav.appStatistics || 'Статистика приложения'}
+          </NavItem>
+        )}
+
         {/* Дашборд аналитики */}
         {['admin'].includes(role) && (
           <NavItem to="/dashboard" icon={Activity}>
@@ -702,13 +718,13 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
+        {(['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role)) && (
           <NavItem to="/education" icon={GraduationCap}>
             {nav.education}
           </NavItem>
         )}
 
-        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
+        {(['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role)) && (
           <NavItem to="/settings" icon={Settings}>
             {nav.settings}
           </NavItem>
@@ -742,6 +758,19 @@ const Navigation = () => {
         {isPremiumDeveloper(role) && (
           <NavItem to="/public-page" icon={Globe}>
             {nav.publicPage}
+          </NavItem>
+        )}
+        {/* Боты */}
+        {['admin', 'premium agent', 'премиум застройщик'].includes(role) && (
+          <NavItem to="/bots" icon={Network}>
+            Bots
+          </NavItem>
+        )}
+
+        {/* База знаний */}
+        {['admin', 'premium agent', 'премиум застройщик'].includes(role) && (
+          <NavItem to="/knowledge" icon={ClipboardList}>
+            Knowledge
           </NavItem>
         )}
                        {isDeveloper(role) && (

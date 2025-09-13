@@ -1,31 +1,52 @@
 const admin = require('firebase-admin');
 
 const authenticateApiKey = async (req, res, next) => {
-  const apiKey = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
-  
-  if (!apiKey) {
-    return res.status(401).json({ error: 'API key required' });
-  }
-  
+  const authHeader = req.headers['authorization'] || '';
+  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  const apiKey = req.headers['x-api-key'];
+
   try {
+    // 1) Приоритет: Firebase ID Token (Bearer)
+    if (bearer && bearer.split('.').length === 3) {
+      try {
+        const decoded = await admin.auth().verifyIdToken(bearer);
+        const uid = decoded.uid;
+        const userDoc = await admin.firestore().collection('users').doc(uid).get();
+        if (!userDoc.exists) return res.status(401).json({ error: 'User not found' });
+        const userData = userDoc.data();
+        if (userData.role === 'closed') return res.status(403).json({ error: 'Account is blocked' });
+        req.user = userData;
+        req.userId = uid;
+        req.userRole = userData.role;
+        // Без apiKeyId (пропускаем лимиты ниже)
+        return next();
+      } catch (e) {
+        // Падать не будем — попробуем API key ниже
+        console.warn('Bearer verification failed, fallback to apiKey');
+      }
+    }
+
+    // 2) Fallback: x-api-key
+    if (!apiKey) {
+      return res.status(401).json({ error: 'Authorization required' });
+    }
+
     const apiKeyDoc = await admin.firestore()
       .collection('apiKeys')
       .where('key', '==', apiKey)
       .where('isActive', '==', true)
       .limit(1)
       .get();
-    
+
     if (apiKeyDoc.empty) {
       return res.status(401).json({ error: 'Invalid API key' });
     }
-    
+
     const keyData = apiKeyDoc.docs[0].data();
-    
-    // Проверяем истечение срока
     if (keyData.expiresAt && new Date() > keyData.expiresAt.toDate()) {
       return res.status(401).json({ error: 'API key expired' });
     }
-    
+
     req.apiKey = keyData;
     req.apiKeyId = apiKeyDoc.docs[0].id;
     next();
@@ -39,27 +60,30 @@ const checkUserAccess = async (req, res, next) => {
   const { apiKey, apiKeyId } = req;
   
   try {
-    // Получаем данные пользователя
-    const userDoc = await admin.firestore()
-      .collection('users')
-      .doc(apiKey.userId)
-      .get();
-    
-    if (!userDoc.exists()) {
-      return res.status(401).json({ error: 'User not found' });
+    // Если пользователь уже установлен (Bearer), пропускаем загрузку по apiKey
+    if (!req.user) {
+      const userDoc = await admin.firestore()
+        .collection('users')
+        .doc(apiKey.userId)
+        .get();
+      if (!userDoc.exists()) return res.status(401).json({ error: 'User not found' });
+      const userData = userDoc.data();
+      if (userData.role === 'closed') return res.status(403).json({ error: 'Account is blocked' });
+      req.user = userData;
+      req.userRole = userData.role;
+      req.userId = apiKey.userId;
     }
     
-    const userData = userDoc.data();
-    
-    // Проверяем, не заблокирован ли пользователь
-    if (userData.role === 'closed') {
-      return res.status(403).json({ error: 'Account is blocked' });
+    // Устанавливаем tenantId
+    const role = req.userRole;
+    let tenantId = req.user?.tenantId || null;
+    if (!tenantId) {
+      if (role === 'admin') tenantId = 'admin';
+      else if (['premium agent', 'премиум застройщик'].includes(role)) tenantId = req.userId;
+      else tenantId = req.userId;
     }
-    
-    req.user = userData;
-    req.userRole = userData.role;
-    req.userId = apiKey.userId;
-    
+    req.tenantId = tenantId;
+
     // Проверяем права доступа к запрашиваемому ресурсу
     const hasAccess = await checkResourceAccess(req.userRole, req.userId, req.path, req.method);
     
@@ -114,25 +138,24 @@ const checkResourceAccess = async (userRole, userId, path, method) => {
 const securityChecks = async (req, res, next) => {
   const { apiKey, userRole } = req;
   
-  // Проверяем лимиты использования
-  const usageCount = apiKey.usageCount || 0;
-  const maxUsage = getMaxUsageByRole(userRole);
-  
-  if (usageCount >= maxUsage) {
-    return res.status(429).json({ error: 'Usage limit exceeded' });
-  }
-  
-  // Обновляем счетчик использования
-  try {
-    await admin.firestore()
-      .collection('apiKeys')
-      .doc(req.apiKeyId)
-      .update({
-        usageCount: usageCount + 1,
-        lastUsed: admin.firestore.FieldValue.serverTimestamp()
-      });
-  } catch (error) {
-    console.error('Error updating usage count:', error);
+  // Для Bearer‑аутентификации (без apiKeyId) не применяем лимиты
+  if (req.apiKeyId) {
+    const usageCount = apiKey.usageCount || 0;
+    const maxUsage = getMaxUsageByRole(userRole);
+    if (usageCount >= maxUsage) {
+      return res.status(429).json({ error: 'Usage limit exceeded' });
+    }
+    try {
+      await admin.firestore()
+        .collection('apiKeys')
+        .doc(req.apiKeyId)
+        .update({
+          usageCount: usageCount + 1,
+          lastUsed: admin.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (error) {
+      console.error('Error updating usage count:', error);
+    }
   }
   
   next();

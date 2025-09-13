@@ -442,6 +442,11 @@ function PropertyDetail() {
         }
       }
 
+      // Запрет на изменение рейтинга надежности для всех, кроме админа и модератора
+      if (role !== 'admin' && role !== 'moderator' && processedValues.hasOwnProperty('reliabilityRating')) {
+        delete processedValues.reliabilityRating;
+      }
+
       await updateDoc(propertyRef, processedValues);
       setProperty(prev => ({ ...prev, ...processedValues }));
       setEditedValues({});
@@ -1287,6 +1292,14 @@ function PropertyDetail() {
       if (['застройщик', 'премиум застройщик'].includes(role) && 
           ['developer', 'complex', 'district', 'landStatus'].includes(field)) {
         // Для этих ролей показываем поля как обычный текст (нередактируемые)
+        return (
+          <div className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
+            {value}
+          </div>
+        );
+      }
+      // Поле "Рейтинг надежности" редактируется только админом и модератором
+      if (field === 'reliabilityRating' && role !== 'admin' && role !== 'moderator') {
         return (
           <div className="text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
             {value}

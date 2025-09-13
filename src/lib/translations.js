@@ -207,8 +207,13 @@ export const translations = {
       agentRegistrationRequests: 'Agent Requests',
       technicalSupervision: 'Technical Supervision',
       // Dashboard
-      dashboard: 'Dashboard'
+      dashboard: 'Dashboard',
+      appStatistics: 'App Statistics'
     },
+    
+
+    
+
     // Public menu
     publicMenu: {
       favorites: 'Favorites',
@@ -2015,7 +2020,8 @@ _________________               _________________
       agentRegistrationRequests: 'Заявки агентов',
       technicalSupervision: 'Технадзор',
       // Dashboard
-      dashboard: 'Дашборд'
+      dashboard: 'Дашборд',
+      appStatistics: 'Статистика приложения'
     },
     // Public menu
     publicMenu: {
@@ -3823,7 +3829,8 @@ _________________               _________________
       agentRegistrationRequests: 'Permintaan Agen',
       technicalSupervision: 'Pengawasan Teknis',
       // Dashboard
-      dashboard: 'Dasbor'
+      dashboard: 'Dasbor',
+      appStatistics: 'Statistik Aplikasi'
     },
     // Public menu
     publicMenu: {
