@@ -31,6 +31,7 @@ import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 import { showError, showSuccess } from '../utils/notifications';
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
+import { useAuth } from "../AuthContext";
 
 // Компонент фильтров
 const FilterSection = ({ 
@@ -187,6 +188,19 @@ const MassEditSection = ({
                 />
               </div>
             ))}
+
+            {/* Рейтинг надежности (ввод 1–5) */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Рейтинг надежности</label>
+              <Input
+                placeholder="Введите число от 1 до 5"
+                value={massEdit.reliabilityRating || ''}
+                onChange={(e) => handleMassEditChange('reliabilityRating', e.target.value)}
+                className="text-sm"
+                inputMode="numeric"
+                pattern="[0-9]*"
+              />
+            </div>
           </div>
           
           <div className={`flex gap-3 pt-4 border-t ${isMobile ? 'flex-col' : 'flex-row'}`}>
@@ -343,6 +357,7 @@ function ListProperties() {
   const [filters, setFilters] = useState({});
   const [massEdit, setMassEdit] = useState({});
   const [isMobile, setIsMobile] = useState(false);
+  const { role } = useAuth();
 
   // Проверка размера экрана
   useEffect(() => {
@@ -456,6 +471,13 @@ function ListProperties() {
       return;
     }
 
+    // Запрет изменения рейтинга надежности для всех, кроме админа и модератора
+    const wantsChangeReliability = massEdit.hasOwnProperty('reliabilityRating') && String(massEdit.reliabilityRating).trim() !== '';
+    if (wantsChangeReliability && role !== 'admin' && role !== 'moderator') {
+      showError('Поле "Рейтинг надежности" может изменять только администратор или модератор');
+      return;
+    }
+
     try {
       const updateData = {};
       Object.keys(massEdit).forEach(key => {
@@ -469,6 +491,12 @@ function ListProperties() {
             // Для agentCommission: убираем %, пробелы, запятые и добавляем % обратно
             let val = String(value).replace(/[%\s,]/g, '');
             updateData[key] = val ? val + '%' : '';
+          } else if (key === 'reliabilityRating') {
+            const parsed = parseInt(value, 10);
+            if (!Number.isNaN(parsed)) {
+              const clamped = Math.max(1, Math.min(5, parsed));
+              updateData[key] = clamped;
+            }
           } else {
             updateData[key] = value.trim();
           }

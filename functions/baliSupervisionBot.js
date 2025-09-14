@@ -38,7 +38,12 @@ async function forwardToManager(managerChatId, from, text) {
     userLink ? `Профиль: ${userLink}` : null,
   ].filter(Boolean).join('\n');
   const body = text ? (`\nСообщение:\n${text}`) : '';
-  const res = await sendMessage(managerChatId, `${header}${body}`);
+  const replyKeyboard = {
+    inline_keyboard: [[
+      { text: 'Ответить', callback_data: `reply:${from.id}` }
+    ]]
+  };
+  const res = await sendMessage(managerChatId, `${header}${body}`, replyKeyboard);
   // map forwarded manager message id -> original user chat id
   await mapsRef.doc(String(res.message_id)).set({ userChatId: String(from.id), createdAt: admin.firestore.FieldValue.serverTimestamp() });
   return res;
@@ -49,53 +54,61 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
   if (!getToken()) return res.status(500).send('Bot token is not configured');
   try {
     const update = req.body || {};
+    // Обработка callback-кнопок менеджера (Ответить)
+    if (update.callback_query && update.callback_query.data && update.callback_query.data.startsWith('reply:')) {
+      const managerChatId = update.callback_query.message.chat.id;
+      const userId = update.callback_query.data.split(':')[1];
+      const preset = `/reply ${userId} `;
+      await sendMessage(managerChatId, `Ответ пользователю <code>${userId}</code>:\n${preset}`);
+      return res.status(200).send('OK');
+    }
     const msg = update.message || update.edited_message || null;
     if (!msg) return res.status(200).send('OK');
-
     const chatId = msg.chat && msg.chat.id;
     const from = msg.from || {};
     const text = msg.text || '';
-
-    // Получаем конфиг (менеджерский чат)
     const cfgSnap = await cfgRef.get();
     const cfg = cfgSnap.exists ? (cfgSnap.data() || {}) : {};
     const managerChatId = cfg.managerChatId ? Number(cfg.managerChatId) : null;
-
-    // Менеджер присылает /start -> сохраняем chatId
     const isManager = (from.username || '').toLowerCase() === MANAGER_USERNAME.toLowerCase();
     if (isManager && typeof text === 'string' && text.trim().toLowerCase().startsWith('/start')) {
       await cfgRef.set({ managerChatId: String(chatId), managerUsername: MANAGER_USERNAME, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
       await sendMessage(chatId, '✅ Бот подключен. Теперь все обращения пользователей будут пересылаться сюда. Отвечайте, используя ответ на сообщении (Reply).');
       return res.status(200).send('OK');
     }
-
-    // Пользователь /start -> приветствие
+    // Текстовая команда для ответа: /reply <userId> <message>
+    if (isManager && typeof text === 'string' && text.trim().toLowerCase().startsWith('/reply')) {
+      const parts = text.split(' ');
+      const userId = parts[1];
+      const replyMsg = parts.slice(2).join(' ');
+      if (userId && replyMsg) {
+        await sendMessage(Number(userId), replyMsg);
+        await sendMessage(chatId, '✅ Отправлено пользователю.');
+      } else {
+        await sendMessage(chatId, 'Формат: /reply <userId> <сообщение>');
+      }
+      return res.status(200).send('OK');
+    }
     if (typeof text === 'string' && text.trim().toLowerCase().startsWith('/start')) {
       const welcome = [
-        'Здравствуйте! Это бот BALI SUPERVISION.\n',
+        'Здравствуйте! Это BALI SUPERVISION.\n',
         'Мы оказываем услуги технического надзора и приемки объектов на Бали: контроль качества и сроков работ, фото/видео фиксация, еженедельные отчёты, приемка готовых объектов.\n',
         'Опишите, пожалуйста, ваш запрос — объект, стадия (готов/строится), задачи и сроки. Менеджер ответит вам здесь в ближайшее время.'
       ].join('\n');
       await sendMessage(chatId, welcome);
-      // если менеджер известен — уведомим его о новом старте
       if (managerChatId) {
         await forwardToManager(managerChatId, from, '[Нажал /start]');
       }
       return res.status(200).send('OK');
     }
-
-    // Обычные сообщения пользователя → менеджеру
     if (!isManager) {
       if (!managerChatId) {
         await sendMessage(chatId, 'Благодарим! Менеджер скоро подключит бота и ответит вам.');
         return res.status(200).send('OK');
       }
       await forwardToManager(managerChatId, from, text || '[сообщение без текста]');
-      await sendMessage(chatId, '✅ Ваше сообщение отправлено менеджеру. Ожидайте ответа здесь.');
       return res.status(200).send('OK');
     }
-
-    // Ответ менеджера на пересланное ботом сообщение (reply) → пользователю
     if (isManager && msg.reply_to_message && msg.reply_to_message.message_id) {
       const mapSnap = await mapsRef.doc(String(msg.reply_to_message.message_id)).get();
       const mapping = mapSnap.exists ? mapSnap.data() : null;
@@ -103,11 +116,9 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
         await sendMessage(Number(mapping.userChatId), text || '');
         return res.status(200).send('OK');
       }
-      // если нет маппинга — попросим менеджера переслать с реплаем
-      await sendMessage(chatId, 'Не удалось определить получателя. Ответьте, используя Reply на сообщении пользователя.');
+      await sendMessage(chatId, 'Не удалось определить получателя. Ответьте Reply или используйте команду /reply <userId> <сообщение>.');
       return res.status(200).send('OK');
     }
-
     return res.status(200).send('OK');
   } catch (e) {
     console.error('[baliSupervisionBot] webhook error:', e);

@@ -417,7 +417,7 @@ const Navigation = () => {
                 </NavItem>
               )}
 
-              {['admin', 'moderator'].includes(role) && (
+              {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/app-statistics" 
                   icon={Activity}
@@ -681,7 +681,7 @@ const Navigation = () => {
           </NavItem>
         )}
 
-        {['admin', 'moderator'].includes(role) && (
+        {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
           <NavItem to="/app-statistics" icon={Activity}>
             {nav.appStatistics || 'Статистика приложения'}
           </NavItem>
@@ -764,6 +764,11 @@ const Navigation = () => {
         {['admin', 'premium agent', 'премиум застройщик'].includes(role) && (
           <NavItem to="/bots" icon={Network}>
             Bots
+          </NavItem>
+        )}
+        {['admin'].includes(role) && (
+          <NavItem to="/bots/monitoring" icon={MessageSquare}>
+            {translations[language]?.navigation?.botMonitoring || 'Мониторинг ботов'}
           </NavItem>
         )}
 

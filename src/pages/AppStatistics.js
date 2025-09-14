@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Users, UserCheck, LogIn, Search, Eye, Heart } from 'lucide-react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
 // Базовые значения (текущие на момент включения роста)
 const BASE_TOTALS = {
@@ -15,8 +17,7 @@ const BASE_TOTALS = {
   views: 1157,
   favorites: 54,
 };
-// Фиксированная дата старта роста (день после внедрения), 0-индексация месяцев: 8 = Сентябрь
-const GROWTH_START_DATE_MS = new Date(2025, 8, 14).setHours(0,0,0,0);
+// Значения по умолчанию до загрузки из БД
 
 const StatCard = ({ title, value, icon: Icon, subtitle }) => (
   <Card>
@@ -36,22 +37,26 @@ const AppStatistics = () => {
   const { language } = useLanguage();
   const t = translations[language];
 
-  const daysSinceStart = useMemo(() => {
-    const diffDays = Math.floor((Date.now() - GROWTH_START_DATE_MS) / 86400000);
-    return Math.max(0, diffDays);
+  // Текущее значение метрик из Firestore (рост обеспечивает бекенд по расписанию)
+  const [totals, setTotals] = useState(BASE_TOTALS);
+
+  useEffect(() => {
+    const ref = doc(db, 'system', 'appStatistics');
+    const unsub = onSnapshot(ref, (snap) => {
+      const data = snap.data();
+      if (data?.totals) {
+        setTotals({
+          totalUsers: Number(data.totals.totalUsers) || 0,
+          activeUsers: Number(data.totals.activeUsers) || 0,
+          appLogins: Number(data.totals.appLogins) || 0,
+          searches: Number(data.totals.searches) || 0,
+          views: Number(data.totals.views) || 0,
+          favorites: Number(data.totals.favorites) || 0,
+        });
+      }
+    });
+    return () => unsub();
   }, []);
-
-  const growthFactor = useMemo(() => Math.pow(1.02, daysSinceStart), [daysSinceStart]);
-
-  // Значения читаем из Firestore, а если документа нет — используем расчётную базу (на случай локальной разработки)
-  const totals = useMemo(() => ({
-    totalUsers: Math.round(BASE_TOTALS.totalUsers * growthFactor),
-    activeUsers: Math.round(BASE_TOTALS.activeUsers * growthFactor),
-    appLogins: Math.round(BASE_TOTALS.appLogins * growthFactor),
-    searches: Math.round(BASE_TOTALS.searches * growthFactor),
-    views: Math.round(BASE_TOTALS.views * growthFactor),
-    favorites: Math.round(BASE_TOTALS.favorites * growthFactor),
-  }), [growthFactor]);
 
   // Примечание: значения растут ежедневно на бэкенде; фронт использует базу с ростом от фиксированной даты
 
@@ -106,7 +111,7 @@ const AppStatistics = () => {
   });
   const maxMonthly = Math.max(...monthlySums);
 
-  if (!['admin', 'moderator'].includes(role)) {
+  if (!['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role)) {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">

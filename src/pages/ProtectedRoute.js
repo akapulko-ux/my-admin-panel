@@ -58,7 +58,8 @@ const ROUTE_ACCESS = {
     '/premium-features',
     '/notifications',
     '/public-page',
-    '/public-agent-page/*'
+    '/public-agent-page/*',
+    '/app-statistics'
   ],
   'премиум застройщик': [
     '/property/gallery',
@@ -76,7 +77,8 @@ const ROUTE_ACCESS = {
     '/premium-features',
     '/notifications',
     '/public-page',
-    '/public-agent-page/*'
+    '/public-agent-page/*',
+    '/app-statistics'
   ],
   user: [
     '/property/gallery',
@@ -119,7 +121,7 @@ const ProtectedRoute = ({ children, isPublic = false }) => {
     if (currentPath.startsWith('/public-agent-page')) {
       return <Navigate to={`/public-agent-auth?redirect=${encodeURIComponent(currentPath)}`} />;
     }
-    return <Navigate to="/public" />;
+    return <Navigate to="/dev" />;
   }
 
   // Проверяем, не является ли пользователь заблокированным

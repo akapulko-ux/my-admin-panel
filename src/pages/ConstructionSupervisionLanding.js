@@ -38,7 +38,8 @@ const ConstructionSupervisionLanding = () => {
           'Проверка актов выполненных и скрытых работ на соответствие.',
           'Формирование еженедельного отчета о ходе реализации проекта с указанием исправленных и не исправленных подрядчиком замечаний.',
           'Все отчеты оформляются в продвинутом IT интерфейсе с доступом с любого устройства на английском, русском и индонезийском языках.'
-        ]
+        ],
+        badges: ['Еженедельные отчеты', 'Фотофиксация', 'Контроль графика']
       },
       acceptance: {
         title: 'Приемка объектов',
@@ -58,6 +59,31 @@ const ConstructionSupervisionLanding = () => {
           'Повторная приемка после устранения замечаний и подтверждение качества (дополнительно).',
           'Все отчеты оформляются в продвинутом IT интерфейсе с доступом с любого устройства на английском, русском и индонезийском языках.'
         ]
+      },
+      build: {
+        title: 'Индивидуальное строительство',
+        priceLabel: 'Стоимость услуги',
+        priceValue: 'от $2000 / м²',
+        apply: 'Оставить заявку',
+        points: [
+          'Разработка концепции будущего объекта с учетом пожеланий заказчика и особенностей участка.',
+          'Подготовка технического задания и проектной документации под согласованный бюджет.',
+          'Создание детальной сметы на строительство и закупку материалов.',
+          'Подбор оптимальных решений для снижения расходов без потери качества.',
+          'Проведение всех согласований и юридическое сопровождение проекта.',
+          'Подача заявок во все необходимые инстанции для получения всех требуемых документов и согласований при строительстве.',
+          'Формирование удобного графика платежей, привязанного к этапам строительства.',
+          'Закупка и поставка строительных материалов с проверкой качества и соответствия проекту.',
+          'Организация и ведение строительных работ нашей командой «под ключ».',
+          'Составление и согласование плана производства работ, контроль сроков.',
+          'Ежедневное управление строительным процессом и контроль качества.',
+          'Регулярные отчеты о ходе строительства для заказчика.',
+          'Приемка выполненных этапов и подписание актов скрытых и завершенных работ.',
+          'Внесение необходимых корректировок в процессе реализации.',
+          'Собственное IT решение по прозрачному ведению и контролю всех строительных процессов и взаимодействию с заказчиком.',
+          'Сдача готового объекта заказчику в согласованные сроки.'
+        ],
+        badges: ['Проект и смета', 'Юридическое сопровождение', 'Под ключ']
       },
       contact: {
         title: 'Получите консультацию инженера',
@@ -98,7 +124,8 @@ const ConstructionSupervisionLanding = () => {
           'Verification of acts of completed and concealed works for compliance.',
           'Weekly project progress report indicating issues fixed and not fixed by the contractor.',
           'All reports are delivered in an advanced IT interface accessible from any device in English, Russian and Indonesian.'
-        ]
+        ],
+        badges: ['Weekly reports', 'Photo evidence', 'Schedule control']
       },
       acceptance: {
         title: 'Acceptance',
@@ -118,6 +145,31 @@ const ConstructionSupervisionLanding = () => {
           'Repeated acceptance after fixing issues and confirmation of quality (optional).',
           'All reports are delivered in an advanced IT interface accessible from any device in English, Russian and Indonesian.'
         ]
+      },
+      build: {
+        title: 'Custom Construction',
+        priceLabel: 'Service price',
+        priceValue: 'from $2000 / m²',
+        apply: 'Request consultation',
+        points: [
+          'Development of the concept considering client preferences and land specifics.',
+          'Preparation of a technical brief and project documentation within the agreed budget.',
+          'Creation of a detailed cost estimate for construction and materials procurement.',
+          'Selection of optimal solutions to reduce costs without loss of quality.',
+          'Handling all approvals and full legal support of the project.',
+          'Submitting applications to all required authorities to obtain permits and approvals.',
+          'Convenient payment schedule tied to construction milestones.',
+          'Procurement and delivery of materials with quality and compliance checks.',
+          'Turn‑key organization and management of construction works by our team.',
+          'Work production plan preparation and approval, schedule control.',
+          'Daily construction management and quality control.',
+          'Regular progress reports for the client.',
+          'Acceptance of completed stages and signing of hidden and completed work acts.',
+          'Introducing necessary adjustments during implementation.',
+          'Proprietary IT solution for transparent process tracking and client collaboration.',
+          'Handover of the finished property to the client on time.'
+        ],
+        badges: ['Design & estimate', 'Legal support', 'Turn‑key']
       },
       contact: {
         title: 'Get an engineer consultation',
@@ -139,13 +191,13 @@ const ConstructionSupervisionLanding = () => {
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/public" className="text-xl font-semibold">{tr.brand}</Link>
-          <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+          <Link to="/public" className="text-base md:text-xl font-semibold">{tr.brand}</Link>
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 md:p-1 shadow-sm">
               <Button
                 variant={language === 'ru' ? 'default' : 'ghost'}
                 size="sm"
-                className="px-3 text-sm"
+                className="px-2 md:px-3 text-xs md:text-sm"
                 onClick={() => changeLanguage('ru')}
               >
                 {tr.langRu}
@@ -153,13 +205,13 @@ const ConstructionSupervisionLanding = () => {
               <Button
                 variant={language === 'en' ? 'default' : 'ghost'}
                 size="sm"
-                className="px-3 text-sm"
+                className="px-2 md:px-3 text-xs md:text-sm"
                 onClick={() => changeLanguage('en')}
               >
                 {tr.langEn}
               </Button>
             </div>
-            <a href="#contact"><Button size="sm">{tr.headerCta}</Button></a>
+            <a href="#contact"><Button size="sm" className="px-2 md:px-3 text-xs md:text-sm">{tr.headerCta}</Button></a>
           </div>
         </div>
       </header>
@@ -229,8 +281,8 @@ const ConstructionSupervisionLanding = () => {
       </section>
 
       {/* Supervision Section */}
-      <section id="supervision" className="py-16 md:py-20 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-6xl">
+      <section id="supervision" className="py-16 md:py-20 px-0 bg-gray-50">
+        <div className="md:container md:mx-auto md:max-w-6xl px-0">
           <div className="flex items-center gap-3 mb-6">
             <Building2 className="h-6 w-6 text-blue-600"/>
             <h2 className="text-2xl md:text-3xl font-bold">{tr.supervision.title}</h2>
@@ -256,9 +308,9 @@ const ConstructionSupervisionLanding = () => {
                   <div className="text-sm text-gray-600 mb-1">{tr.supervision.priceLabel}</div>
                   <div className="text-3xl font-bold mb-4">{tr.supervision.priceValue}</div>
                   <div className="flex flex-wrap gap-2 mb-6">
-                    <Badge>Еженедельные отчеты</Badge>
-                    <Badge>Фотофиксация</Badge>
-                    <Badge>Контроль графика</Badge>
+                    {tr.supervision.badges.map((b, i) => (
+                      <Badge key={i}>{b}</Badge>
+                    ))}
                   </div>
                   <a href="#contact"><Button className="w-full">{tr.supervision.order}</Button></a>
                 </CardContent>
@@ -269,8 +321,8 @@ const ConstructionSupervisionLanding = () => {
       </section>
 
       {/* Acceptance Section */}
-      <section id="acceptance" className="py-16 md:py-20 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
+      <section id="acceptance" className="py-16 md:py-20 px-0 bg-white">
+        <div className="md:container md:mx-auto md:max-w-6xl px-0">
           <div className="flex items-center gap-3 mb-6">
             <ClipboardList className="h-6 w-6 text-blue-600"/>
             <h2 className="text-2xl md:text-3xl font-bold">{tr.acceptance.title}</h2>
@@ -297,11 +349,51 @@ const ConstructionSupervisionLanding = () => {
                   <div className="text-3xl font-bold mb-4">{tr.acceptance.priceValue}</div>
                   <div className="text-sm text-gray-600 mb-2">{tr.acceptance.includes}</div>
                   <div className="flex flex-wrap gap-2 mb-6">
-                    <Badge>{language === 'ru' ? 'Чек-лист 50+ пунктов' : 'Checklist 50+ items'}</Badge>
-                    <Badge>{language === 'ru' ? 'Инженерные системы' : 'Engineering systems'}</Badge>
+                    <Badge>{language === 'ru' ? 'Обследование объекта' : 'Site inspection'}</Badge>
                     <Badge>{language === 'ru' ? 'Фото/видеофиксация' : 'Photo/Video evidence'}</Badge>
+                    <Badge>{language === 'ru' ? 'Заключение эксперта' : 'Expert conclusion'}</Badge>
                   </div>
                   <a href="#contact"><Button className="w-full" variant="secondary">{tr.acceptance.apply}</Button></a>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Custom Build Section */}
+      <section id="custom-build" className="py-16 md:py-20 px-0 bg-gray-50">
+        <div className="md:container md:mx-auto md:max-w-6xl px-0">
+          <div className="flex items-center gap-3 mb-6">
+            <Building2 className="h-6 w-6 text-blue-600"/>
+            <h2 className="text-2xl md:text-3xl font-bold">{tr.build.title}</h2>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Card className="border-l-4 border-l-blue-600">
+                <CardContent className="pt-6">
+                  <ul className="space-y-3 text-gray-800">
+                    {tr.build.points.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0"/>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="lg:col-span-1">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-sm text-gray-600 mb-1">{tr.build.priceLabel}</div>
+                  <div className="text-3xl font-bold mb-4">{tr.build.priceValue}</div>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {tr.build.badges.map((b, i) => (
+                      <Badge key={i}>{b}</Badge>
+                    ))}
+                  </div>
+                  <a href="#contact"><Button className="w-full" variant="secondary">{tr.build.apply}</Button></a>
                 </CardContent>
               </Card>
             </div>
@@ -320,7 +412,7 @@ const ConstructionSupervisionLanding = () => {
                 <a href="https://t.me/bali_supervision_bot" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full">{tr.contact.telegram}</Button>
                 </a>
-                <a href="https://wa.me/" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/6282147824968" target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" className="w-full">{tr.contact.whatsapp}</Button>
                 </a>
               </div>

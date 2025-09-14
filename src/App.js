@@ -107,6 +107,8 @@ import PremiumFeatures from "./pages/PremiumFeatures";
 import Notifications from "./pages/Notifications";
 import PublicPage from "./pages/PublicPage";
 import BotsManager from "./pages/BotsManager";
+import BotMonitoring from "./pages/BotMonitoring";
+import BotChatViewer from "./pages/BotChatViewer";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import PublicPageAgent from "./pages/PublicPageAgent";
 import PublicAgentAuth from "./pages/PublicAgentAuth";
@@ -553,6 +555,16 @@ function App() {
                     <Route path="/bots" element={
                       <ProtectedRoute>
                         <BotsManager />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/bots/monitoring" element={
+                      <ProtectedRoute>
+                        <BotMonitoring />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/bots/chat/:botId/:chatId" element={
+                      <ProtectedRoute>
+                        <BotChatViewer />
                       </ProtectedRoute>
                     } />
 

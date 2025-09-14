@@ -21,6 +21,41 @@ function getDb() {
 }
 
 // =======================
+// Логирование сообщений ботов (per tenant bot)
+// =======================
+async function logBotMessage(botId, chatId, payload) {
+  try {
+    if (!botId || !chatId) return;
+    const db = getDb();
+    const convRef = db.collection('bots').doc(String(botId)).collection('conversations').doc(String(chatId));
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const base = {
+      botId: String(botId),
+      chatId: String(chatId),
+      updatedAt: now
+    };
+    const convUpdate = {
+      ...base,
+      lastAt: now,
+      lastMessage: (payload && payload.text) || (payload && payload.caption) || null,
+      lastDirection: payload && payload.direction ? payload.direction : null,
+      userId: payload && payload.userId ? String(payload.userId) : admin.firestore.FieldValue.delete(),
+      username: payload && payload.username ? String(payload.username) : admin.firestore.FieldValue.delete(),
+      firstName: payload && payload.firstName ? String(payload.firstName) : admin.firestore.FieldValue.delete(),
+      lastName: payload && payload.lastName ? String(payload.lastName) : admin.firestore.FieldValue.delete()
+    };
+    await convRef.set(convUpdate, { merge: true });
+    const msg = {
+      ...payload,
+      botId: String(botId),
+      chatId: String(chatId),
+      timestamp: now
+    };
+    await convRef.collection('messages').add(msg);
+  } catch (_) {}
+}
+
+// =======================
 // Память диалога (per chat)
 // =======================
 function getConversationRef(chatId) {
@@ -2161,8 +2196,10 @@ const aiTenantTelegramWebhook = functions.https.onRequest(async (req, res) => {
           const reply = await composeSmalltalkReply('Start', lang);
           if (typeof stopTyping === 'function') stopTyping();
           await sendTelegramMessage(chatId, reply, null, tokenOverride);
+          try { await logBotMessage(botId, chatId, { direction: 'out', text: reply }); } catch (_) {}
         } else if (data === 'neighbors_no') {
           await sendTelegramMessage(chatId, 'Попробуйте уточнить запрос или выбрать другой район', null, tokenOverride);
+          try { await logBotMessage(botId, chatId, { direction: 'out', text: 'Попробуйте уточнить запрос или выбрать другой район' }); } catch (_) {}
         }
       } catch (e) {
         console.error('[aiTenantBot] Callback error:', e);
@@ -2189,6 +2226,7 @@ const aiTenantTelegramWebhook = functions.https.onRequest(async (req, res) => {
         ]
       };
       await sendTelegramMessage(chatId, 'Please choose language / Выберите язык / Pilih bahasa:', keyboard, tokenOverride);
+      try { await logBotMessage(botId, chatId, { direction: 'out', text: 'Please choose language / Выберите язык / Pilih bahasa:' }); } catch (_) {}
       return res.status(200).send('OK');
     }
 
@@ -2212,6 +2250,19 @@ const aiTenantTelegramWebhook = functions.https.onRequest(async (req, res) => {
     }
 
     if (typeof text === 'string' && text.trim().length > 0) {
+      // Логируем входящее сообщение пользователя
+      try {
+        const from = (update && update.message && update.message.from) || {};
+        await logBotMessage(botId, chatId, {
+          direction: 'in',
+          text,
+          messageId: update && update.message ? update.message.message_id : null,
+          userId: from.id,
+          username: from.username || null,
+          firstName: from.first_name || null,
+          lastName: from.last_name || null
+        });
+      } catch (_) {}
       let stopTyping = startTypingLoop(chatId, tokenOverride);
       const memory = await readConversation(chatId);
       const preferredLang = (memory && memory.language) || null;
@@ -2223,6 +2274,7 @@ const aiTenantTelegramWebhook = functions.https.onRequest(async (req, res) => {
         if (typeof stopTyping === 'function') stopTyping();
         const reply = await composeSmalltalkReply(text, detectedLanguage);
         await sendTelegramMessage(chatId, reply, null, tokenOverride);
+        try { await logBotMessage(botId, chatId, { direction: 'out', text: reply }); } catch (_) {}
         await writeConversation(chatId, { lastSmalltalk: text });
         return res.status(200).send('OK');
       }
@@ -2252,6 +2304,7 @@ const aiTenantTelegramWebhook = functions.https.onRequest(async (req, res) => {
           ]] };
           if (typeof stopTyping === 'function') stopTyping();
           await sendTelegramMessage(chatId, searchResult.message, keyboard, tokenOverride);
+          try { await logBotMessage(botId, chatId, { direction: 'out', text: searchResult.message }); } catch (_) {}
           return res.status(200).send('OK');
         }
         
@@ -2294,8 +2347,10 @@ const aiTenantTelegramWebhook = functions.https.onRequest(async (req, res) => {
           const webAppUrl = `${process.env.PUBLIC_GALLERY_BASE_URL || 'https://it-agent.pro'}/?selection=${encodeURIComponent(propertyIds)}`;
           const keyboard = { inline_keyboard: [[ { text: t.openSelection, web_app: { url: webAppUrl } } ]] };
           await sendTelegramMessage(chatId, responseText, keyboard, tokenOverride);
+          try { await logBotMessage(botId, chatId, { direction: 'out', text: responseText }); } catch (_) {}
         } else {
           await sendTelegramMessage(chatId, responseText, null, tokenOverride);
+          try { await logBotMessage(botId, chatId, { direction: 'out', text: responseText }); } catch (_) {}
         }
       } catch (error) {
         console.error('[aiTenantBot] webhook error:', error);

@@ -219,7 +219,14 @@ export const translations = {
       favorites: 'Favorites',
       services: 'Services',
       loginRegister: 'Login / Register',
-      account: 'My Account'
+      account: 'My Account',
+      servicesList: {
+        legalDueDiligence: 'Detailed legal due diligence',
+        constructionSupervision: 'Construction technical supervision',
+        constructionAcceptance: 'Construction acceptance',
+        constructionManagement: 'Custom house construction',
+        architecturalDesign: 'Architectural design'
+      }
     },
     accountPage: {
       title: 'My Account',
@@ -2028,7 +2035,14 @@ _________________               _________________
       favorites: 'Избранное',
       services: 'Услуги',
       loginRegister: 'Вход / Регистрация',
-      account: 'Личный кабинет'
+      account: 'Личный кабинет',
+      servicesList: {
+        legalDueDiligence: 'Детальная юридическая проверка объекта',
+        constructionSupervision: 'Технадзор за строительством объекта',
+        constructionAcceptance: 'Строительная приемка объекта',
+        constructionManagement: 'Индивидуальное строительство',
+        architecturalDesign: 'Разработка архитектурного проекта'
+      }
     },
     accountPage: {
       title: 'Личный кабинет',
@@ -3837,7 +3851,14 @@ _________________               _________________
       favorites: 'Favorit',
       services: 'Layanan',
       loginRegister: 'Masuk / Daftar',
-      account: 'Akun Saya'
+      account: 'Akun Saya',
+      servicesList: {
+        legalDueDiligence: 'Pemeriksaan hukum mendetail',
+        constructionSupervision: 'Pengawasan teknis konstruksi',
+        constructionAcceptance: 'Penerimaan konstruksi',
+        constructionManagement: 'Konstruksi rumah kustom',
+        architecturalDesign: 'Desain arsitektur'
+      }
     },
     accountPage: {
       title: 'Akun Saya',

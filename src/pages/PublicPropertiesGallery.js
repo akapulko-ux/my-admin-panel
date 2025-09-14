@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, getDocs, where, query, collection, setDoc, deleteDoc } from "firebase/firestore";
-import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench } from "lucide-react";
+import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench, Scale, HardHat, ClipboardCheck, Ruler, Compass } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCache } from "../CacheContext";
 import { useLanguage } from "../lib/LanguageContext";
@@ -17,6 +17,7 @@ import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { CustomSelect } from "../components/ui/custom-select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import {
   Collapsible,
   CollapsibleContent,
@@ -25,6 +26,7 @@ import {
 import { Badge } from "../components/ui/badge";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import PropertyPlacementModal from "../components/PropertyPlacementModal";
+import { showInfo } from "../utils/notifications";
 
 function PublicPropertiesGallery() {
   const { forceRefreshPropertiesList } = useCache();
@@ -36,6 +38,7 @@ function PublicPropertiesGallery() {
   const lt = landingTranslations[language];
   
   const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
 
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -454,7 +457,7 @@ function PublicPropertiesGallery() {
                   <span>{t.publicMenu.favorites}</span>
                 </button>
                 {/* Services */}
-                <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2">
+                <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2" onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); setIsServicesOpen(true); }}>
                   <Wrench className="w-4 h-4 text-gray-700" />
                   <span>{t.publicMenu.services}</span>
                 </button>
@@ -849,6 +852,37 @@ function PublicPropertiesGallery() {
         isOpen={isPlacementModalOpen}
         onClose={() => setIsPlacementModalOpen(false)}
       />
+
+      {/* Модальное окно услуг */}
+      <Dialog open={isServicesOpen} onOpenChange={setIsServicesOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.publicMenu.services}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2">
+            <Button variant="outline" className="justify-start bg-white" onClick={() => { showInfo('Скоро'); }}>
+              <Scale className="mr-2 h-4 w-4 text-gray-700" />
+              {t.publicMenu.servicesList.legalDueDiligence}
+            </Button>
+            <Button variant="outline" className="justify-start bg-white" onClick={() => { setIsServicesOpen(false); navigate('/construction-supervision'); }}>
+              <Ruler className="mr-2 h-4 w-4 text-gray-700" />
+              {t.publicMenu.servicesList.constructionSupervision}
+            </Button>
+            <Button variant="outline" className="justify-start bg-white" onClick={() => { setIsServicesOpen(false); navigate('/construction-supervision'); }}>
+              <ClipboardCheck className="mr-2 h-4 w-4 text-gray-700" />
+              {t.publicMenu.servicesList.constructionAcceptance}
+            </Button>
+            <Button variant="outline" className="justify-start bg-white" onClick={() => { setIsServicesOpen(false); navigate('/construction-supervision'); }}>
+              <HardHat className="mr-2 h-4 w-4 text-gray-700" />
+              {t.publicMenu.servicesList.constructionManagement}
+            </Button>
+            <Button variant="outline" className="justify-start bg-white" onClick={() => { showInfo('Скоро'); }}>
+              <Compass className="mr-2 h-4 w-4 text-gray-700" />
+              {t.publicMenu.servicesList.architecturalDesign}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
