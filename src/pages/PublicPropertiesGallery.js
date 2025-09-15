@@ -774,7 +774,8 @@ function PublicPropertiesGallery() {
                     const rating = Number.isFinite(Number(ratingRaw)) ? Math.max(0, Math.min(5, parseInt(ratingRaw))) : null;
                     if (!rating) return null;
                     return (
-                      <div className="flex items-center gap-1" aria-label={`${t.propertyDetail.reliabilityRating}: ${rating}`}>
+                      <div className="flex items-center gap-2" aria-label={`${t.propertyDetail.reliabilityRating}: ${rating}`}>
+                        <span className="text-xs text-gray-600">{t.propertyDetail.reliabilityRating}</span>
                         {Array.from({ length: rating }).map((_, idx) => (
                           <span key={idx} className="text-yellow-400 text-2xl leading-none">★</span>
                         ))}

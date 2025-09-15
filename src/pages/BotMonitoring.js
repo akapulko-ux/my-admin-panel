@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, collectionGroup, getFirestore, onSnapshot, orderBy, query, where, limit } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -13,6 +14,7 @@ const db = getFirestore();
 export default function BotMonitoring() {
   const { language } = useLanguage();
   const t = translations[language];
+  const navigate = useNavigate();
   const [bots, setBots] = useState([]);
   const [activeBotId, setActiveBotId] = useState(null);
   const [conversations, setConversations] = useState([]);
@@ -187,7 +189,7 @@ export default function BotMonitoring() {
                   <div key={c.id} className="py-3 flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <div className="font-medium truncate">{c.firstName || c.username || c.lastName || 'User'} {c.lastName || ''}</div>
+                        <div className="font-medium truncate">{c.displayName || [c.firstName, c.lastName].filter(Boolean).join(' ') || (c.username ? `@${c.username}` : 'User')}</div>
                         <span className="text-xs text-muted-foreground">#{c.chatId || c.id}</span>
                       </div>
                       <div className="text-sm text-muted-foreground truncate">
@@ -196,7 +198,7 @@ export default function BotMonitoring() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">{c.lastDirection === 'in' ? (t.botMonitoring?.fromUser || 'от пользователя') : (t.botMonitoring?.fromBot || 'от бота')}</Badge>
-                      <Button size="sm" variant="outline" onClick={() => window.open(`/bots/chat/${encodeURIComponent(activeBotId)}/${encodeURIComponent(c.chatId || c.id)}`, '_blank')}>{t.botMonitoring?.open || 'Открыть'}</Button>
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/bots/chat/${encodeURIComponent(activeBotId)}/${encodeURIComponent(c.chatId || c.id)}`)}>{t.botMonitoring?.open || 'Открыть'}</Button>
                     </div>
                   </div>
                 ))}

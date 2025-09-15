@@ -1,4 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import DraggablePreviewItem from "../components/DraggablePreviewItem";
 import { useParams, Navigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query, orderBy, addDoc, serverTimestamp } from "firebase/firestore";
@@ -581,7 +584,9 @@ function PropertyDetail() {
         ctx.drawImage(img, 0, 0, width, height);
         
         canvas.toBlob((blob) => {
-          const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+          const baseName = (file && typeof file.name === 'string' && file.name) ? file.name : `image-${Date.now()}.jpg`;
+          const newName = baseName.includes('.') ? baseName.replace(/\.[^/.]+$/, '.jpg') : `${baseName}.jpg`;
+          const jpegFile = new File([blob], newName, {
             type: 'image/jpeg'
           });
           resolve(jpegFile);
@@ -736,7 +741,7 @@ function PropertyDetail() {
 
         // Определяем подпапку в зависимости от типа файла
         let folder;
-        if (fieldName === 'layoutFileURL') {
+        if (fieldName === 'layoutFileURL' || fieldName === 'layoutFileURL2' || fieldName === 'layoutFileURL3') {
           folder = 'documents/layout';
         } else if (fieldName === 'dueDiligenceFileURL') {
           folder = 'documents/due-diligence';
@@ -798,7 +803,7 @@ function PropertyDetail() {
         
         // Определяем подпапку в зависимости от типа файла
         let folder;
-        if (fieldName === 'layoutFileURL') {
+        if (fieldName === 'layoutFileURL' || fieldName === 'layoutFileURL2' || fieldName === 'layoutFileURL3') {
           folder = 'documents/layout';
         } else if (fieldName === 'dueDiligenceFileURL') {
           folder = 'documents/due-diligence';
@@ -2159,6 +2164,37 @@ function PropertyDetail() {
         </div>
       )}
 
+      {/* Сортировка фотографий в режиме редактирования */}
+      {isEditing && canEdit() && property.images?.length > 1 && (
+        <div className="mb-6">
+          <div className="text-sm text-gray-600 mb-2">{t.propertyDetail?.reorderPhotosHint || 'Перетащите фото, чтобы изменить порядок'}</div>
+          <DndProvider backend={HTML5Backend}>
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5'} gap-3`}>
+              {property.images.map((url, idx) => (
+                <DraggablePreviewItem
+                  key={`${url}-${idx}`}
+                  id={`${idx}`}
+                  index={idx}
+                  url={url}
+                  onRemove={() => handleImageDelete(idx)}
+                  moveImage={(dragIndex, hoverIndex) => {
+                    if (dragIndex === hoverIndex) return;
+                    setProperty(prev => {
+                      const newImages = [...(prev?.images || [])];
+                      const [moved] = newImages.splice(dragIndex, 1);
+                      newImages.splice(hoverIndex, 0, moved);
+                      return { ...prev, images: newImages };
+                    });
+                    setHasChanges(true);
+                  }}
+                />
+              ))}
+            </div>
+          </DndProvider>
+          <div className="mt-3 text-xs text-gray-500">{t.propertyDetail?.reorderPhotosSaveHint || 'Не забудьте нажать Сохранить, чтобы применить порядок.'}</div>
+        </div>
+      )}
+
       {/* Цена и кнопка "на карте" в одной строке */}
       <div className="flex items-start justify-between mb-4">
         <div className="text-4xl font-semibold text-gray-600">
@@ -2421,6 +2457,7 @@ function PropertyDetail() {
             </div>
           </div>
         </div>
+        
       ) : (
         (property.smartHome || property.jacuzzi || property.terrace || property.rooftop || property.balcony || property.bbq || property.furniture || property.washingMachine || property.distanceToBeach || property.distanceToCenter) && (
           <div className="mt-6">
@@ -2605,6 +2642,19 @@ function PropertyDetail() {
                       >
                         {uploading.layoutFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
                       </button>
+                  )}
+                  {canEdit() && !property.layoutFileURL2 && (
+                    <button 
+                      onClick={() => handleFileUpload('layoutFileURL2')}
+                      disabled={uploading.layoutFileURL2}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.layoutFileURL2 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.layoutFileURL2 ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
                   )}
                 </>
                               ) : (

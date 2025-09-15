@@ -38,6 +38,9 @@ import {
   formatArea,
   validateArea 
 } from "../lib/utils";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import DraggablePreviewItem from "../components/DraggablePreviewItem";
 
 
 function PropertyCreate() {
@@ -394,7 +397,9 @@ function PropertyCreate() {
         ctx.drawImage(img, 0, 0, width, height);
         
         canvas.toBlob((blob) => {
-          const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+          const baseName = (file && typeof file.name === 'string' && file.name) ? file.name : `image-${Date.now()}.jpg`;
+          const newName = baseName.includes('.') ? baseName.replace(/\.[^/.]+$/, '.jpg') : `${baseName}.jpg`;
+          const jpegFile = new File([blob], newName, {
             type: 'image/jpeg'
           });
           resolve(jpegFile);
@@ -1285,6 +1290,36 @@ function PropertyCreate() {
               {isSubmitting ? t.propertyDetail.creatingText : t.propertyDetail.createObjectButton}
               </button>
             </div>
+        </div>
+      )}
+
+      {/* Управление порядком фотографий (DnD) */}
+      {property.images?.length > 1 && (
+        <div className="mb-6">
+          <div className="text-sm text-gray-600 mb-2">{t.propertyDetail?.reorderPhotosHint || 'Перетащите фото, чтобы изменить порядок'}</div>
+          <DndProvider backend={HTML5Backend}>
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5'} gap-3`}>
+              {property.images.map((url, idx) => (
+                <DraggablePreviewItem
+                  key={`${url}-${idx}`}
+                  id={`${idx}`}
+                  index={idx}
+                  url={url}
+                  onRemove={() => handleImageDelete(idx)}
+                  moveImage={(dragIndex, hoverIndex) => {
+                    if (dragIndex === hoverIndex) return;
+                    setProperty(prev => {
+                      const newImages = [...(prev?.images || [])];
+                      const [moved] = newImages.splice(dragIndex, 1);
+                      newImages.splice(hoverIndex, 0, moved);
+                      return { ...prev, images: newImages };
+                    });
+                  }}
+                />
+              ))}
+            </div>
+          </DndProvider>
+          <div className="mt-3 text-xs text-gray-500">{t.propertyDetail?.reorderPhotosSaveHint || 'Порядок сохранится при создании объекта.'}</div>
         </div>
       )}
 

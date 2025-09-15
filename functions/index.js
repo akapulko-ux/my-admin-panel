@@ -10,8 +10,8 @@ const fs = require("fs");
 const telegramTranslations = require("./telegramTranslations");
 const { sendFixationCreatedWebhook, sendFixationStatusChangedWebhook, sendFixationExpiredWebhook, sendFixationRejectedWebhook } = require("./webhookService");
 // Новый AI Assistant Telegram Bot (изолированный)
-const { aiAssistantTelegramWebhook, aiAssistantSetWebhook, aiTenantTelegramWebhook } = require('./aiAssistantBot');
-const { baliSupervisionTelegramWebhook, baliSupervisionSetWebhook } = require('./baliSupervisionBot');
+const { aiAssistantTelegramWebhook, aiAssistantSetWebhook, aiTenantTelegramWebhook, forwardAdminBotMessage, sendBotMessage } = require('./aiAssistantBot');
+const { baliSupervisionTelegramWebhook, baliSupervisionSetWebhook, getSupervisionBotToken } = require('./baliSupervisionBot');
 
 // Telegram Bot Token
 const BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM";
@@ -937,6 +937,11 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
 // Новый бот ИИ ассистента (отдельный webhook и callable)
 exports.aiAssistantTelegramWebhook = aiAssistantTelegramWebhook;
 exports.aiAssistantSetWebhook = aiAssistantSetWebhook;
+exports.forwardAdminBotMessage = forwardAdminBotMessage;
+exports.sendBotMessage = sendBotMessage;
+
+// Пробрасываем доступ к токену технадзора для общих функций
+exports.getSupervisionBotToken = getSupervisionBotToken;
 
 // MARK: - Developer Push Notifications
 

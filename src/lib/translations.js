@@ -2653,6 +2653,8 @@ _________________               _________________
       // Photo counter
       photoCounter: 'Фото: {current} / {total}',
       swipeHint: 'Свайп влево/вправо для переключения фото',
+      reorderPhotosHint: 'Перетащите фото, чтобы изменить порядок',
+      reorderPhotosSaveHint: 'Не забудьте нажать Сохранить, чтобы применить порядок.',
       
       // Document labels
       documentsSection: 'Документы',

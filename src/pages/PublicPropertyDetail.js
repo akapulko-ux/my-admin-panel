@@ -657,19 +657,43 @@ function PublicPropertyDetail() {
           )
         )}
 
-        {/* Планировка (если загружен файл) */}
-        {property.layoutFileURL && (
+        {/* Планировка (если загружены один или несколько файлов) */}
+        {(property.layoutFileURL || property.layoutFileURL2 || property.layoutFileURL3) && (
           renderAttribute(
             t.propertyDetail.layout,
             (
-              <a
-                href={property.layoutFileURL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                {t.propertyDetail.viewButton}
-              </a>
+              <div className="flex gap-2">
+                {property.layoutFileURL && (
+                  <a
+                    href={property.layoutFileURL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {t.propertyDetail.viewButton}
+                  </a>
+                )}
+                {property.layoutFileURL2 && (
+                  <a
+                    href={property.layoutFileURL2}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {t.propertyDetail.viewButton}
+                  </a>
+                )}
+                {property.layoutFileURL3 && (
+                  <a
+                    href={property.layoutFileURL3}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {t.propertyDetail.viewButton}
+                  </a>
+                )}
+              </div>
             ),
             FileText
           )

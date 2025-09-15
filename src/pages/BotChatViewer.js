@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { collection, addDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getFirestore, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -34,10 +35,21 @@ export default function BotChatViewer() {
     const value = text.trim();
     if (!value) return;
     try {
+      // 1) Сразу пишем в Firestore — для мгновенного отображения в UI и как fallback
       const ref = collection(db, 'bots', String(botId), 'conversations', String(chatId), 'messages');
-      await addDoc(ref, { direction: 'out', text: value, timestamp: serverTimestamp() });
+      await addDoc(ref, { direction: 'out', text: value, source: 'admin', timestamp: serverTimestamp() });
+
+      // 2) Параллельно пытаемся отправить в Telegram через callable (не блокируем UI)
+      try {
+        const fn = httpsCallable(getFunctions(), 'sendBotMessage');
+        await fn({ botId: String(botId), chatId: String(chatId), text: value });
+      } catch (e) {
+        console.warn('sendBotMessage callable failed, fallback remains in Firestore:', e?.message || e);
+      }
       setText('');
-    } catch (e) {}
+    } catch (e) {
+      console.error('sendBotMessage error', e);
+    }
   };
 
   return (

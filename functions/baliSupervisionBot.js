@@ -2,8 +2,31 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 // Lazy init
-if (!admin.apps.length) {
-  admin.initializeApp();
+if (!admin.apps.length) { admin.initializeApp(); }
+
+function getDb() { return admin.firestore(); }
+
+async function ensureBotDoc(botId, data) {
+  try {
+    const ref = getDb().collection('bots').doc(String(botId));
+    await ref.set({ botId: String(botId), isActive: true, updatedAt: admin.firestore.FieldValue.serverTimestamp(), ...(data || {}) }, { merge: true });
+  } catch (_) {}
+}
+
+async function logBotMessage(botId, chatId, payload) {
+  try {
+    const db = getDb();
+    const convRef = db.collection('bots').doc(String(botId)).collection('conversations').doc(String(chatId));
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    await convRef.set({
+      botId: String(botId),
+      chatId: String(chatId),
+      lastAt: now,
+      lastMessage: (payload && payload.text) || null,
+      lastDirection: payload && payload.direction || null
+    }, { merge: true });
+    await convRef.collection('messages').add({ ...payload, botId: String(botId), chatId: String(chatId), timestamp: now });
+  } catch (_) {}
 }
 
 function getToken() {
@@ -54,6 +77,7 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
   if (!getToken()) return res.status(500).send('Bot token is not configured');
   try {
     const update = req.body || {};
+    await ensureBotDoc('supervision', { name: 'Bali Supervision Bot', slug: 'bali-supervision' });
     // Обработка callback-кнопок менеджера (Ответить)
     if (update.callback_query && update.callback_query.data && update.callback_query.data.startsWith('reply:')) {
       const managerChatId = update.callback_query.message.chat.id;
@@ -74,6 +98,7 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
     if (isManager && typeof text === 'string' && text.trim().toLowerCase().startsWith('/start')) {
       await cfgRef.set({ managerChatId: String(chatId), managerUsername: MANAGER_USERNAME, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
       await sendMessage(chatId, '✅ Бот подключен. Теперь все обращения пользователей будут пересылаться сюда. Отвечайте, используя ответ на сообщении (Reply).');
+      try { await logBotMessage('supervision', chatId, { direction: 'out', text: '✅ Бот подключен...' }); } catch (_) {}
       return res.status(200).send('OK');
     }
     // Текстовая команда для ответа: /reply <userId> <message>
@@ -83,6 +108,7 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
       const replyMsg = parts.slice(2).join(' ');
       if (userId && replyMsg) {
         await sendMessage(Number(userId), replyMsg);
+        try { await logBotMessage('supervision', String(userId), { direction: 'out', text: replyMsg }); } catch (_) {}
         await sendMessage(chatId, '✅ Отправлено пользователю.');
       } else {
         await sendMessage(chatId, 'Формат: /reply <userId> <сообщение>');
@@ -96,6 +122,23 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
         'Опишите, пожалуйста, ваш запрос — объект, стадия (готов/строится), задачи и сроки. Менеджер ответит вам здесь в ближайшее время.'
       ].join('\n');
       await sendMessage(chatId, welcome);
+      // Дополняем профиль беседы username/имя по возможности
+      try {
+        const token = getToken();
+        const resp = await fetch(`https://api.telegram.org/bot${token}/getChat?chat_id=${encodeURIComponent(chatId)}`);
+        const json = await resp.json();
+        if (resp.ok && json.ok && json.result) {
+          const dn = [json.result.first_name, json.result.last_name].filter(Boolean).join(' ').trim() || (json.result.username ? `@${json.result.username}` : null);
+          await admin.firestore().collection('bots').doc('supervision').collection('conversations').doc(String(chatId)).set({
+            username: json.result.username || admin.firestore.FieldValue.delete(),
+            firstName: json.result.first_name || admin.firestore.FieldValue.delete(),
+            lastName: json.result.last_name || admin.firestore.FieldValue.delete(),
+            displayName: dn || admin.firestore.FieldValue.delete(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+      } catch (_) {}
+      try { await logBotMessage('supervision', chatId, { direction: 'out', text: welcome }); } catch (_) {}
       if (managerChatId) {
         await forwardToManager(managerChatId, from, '[Нажал /start]');
       }
@@ -107,6 +150,7 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
         return res.status(200).send('OK');
       }
       await forwardToManager(managerChatId, from, text || '[сообщение без текста]');
+      try { await logBotMessage('supervision', chatId, { direction: 'in', text: text || '', userId: from.id, username: from.username || null }); } catch (_) {}
       return res.status(200).send('OK');
     }
     if (isManager && msg.reply_to_message && msg.reply_to_message.message_id) {
@@ -114,6 +158,7 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
       const mapping = mapSnap.exists ? mapSnap.data() : null;
       if (mapping && mapping.userChatId) {
         await sendMessage(Number(mapping.userChatId), text || '');
+        try { await logBotMessage('supervision', String(mapping.userChatId), { direction: 'out', text: text || '' }); } catch (_) {}
         return res.status(200).send('OK');
       }
       await sendMessage(chatId, 'Не удалось определить получателя. Ответьте Reply или используйте команду /reply <userId> <сообщение>.');
@@ -139,5 +184,8 @@ exports.baliSupervisionSetWebhook = functions.https.onCall(async (data, context)
   if (!resp.ok) throw new functions.https.HttpsError('internal', result.description || 'Telegram API error');
   return { success: true, result };
 });
+
+// Экспорт токена для использования в других функциях (UI-отправка)
+exports.getSupervisionBotToken = getToken;
 
 

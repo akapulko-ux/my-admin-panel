@@ -1,4 +1,5 @@
 const functions = require('firebase-functions');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const speech = require('@google-cloud/speech');
 const { cacheGet, cacheSet } = require('./utils/cache');
@@ -52,6 +53,40 @@ async function logBotMessage(botId, chatId, payload) {
       timestamp: now
     };
     await convRef.collection('messages').add(msg);
+  } catch (_) {}
+}
+
+// Загружает профиль чата (private) из Telegram и дополняет карточку беседы именем/username
+async function updateConversationProfileIfMissing(botId, chatId, tokenOverride) {
+  try {
+    const db = getDb();
+    const convRef = db.collection('bots').doc(String(botId)).collection('conversations').doc(String(chatId));
+    const snap = await convRef.get();
+    const data = snap.exists ? (snap.data() || {}) : {};
+    if (data && (data.username || data.firstName || data.lastName)) return; // уже заполнено
+    const botToken = tokenOverride || getBotToken();
+    if (!botToken) return;
+    const resp = await fetch(`https://api.telegram.org/bot${botToken}/getChat?chat_id=${encodeURIComponent(chatId)}`);
+    const json = await resp.json();
+    if (!resp.ok || !json.ok) return;
+    const info = json.result || {};
+    const patch = {};
+    if (info.username) patch.username = info.username;
+    if (info.first_name) patch.firstName = info.first_name;
+    if (info.last_name) patch.lastName = info.last_name;
+    const displayNameCandidate = [info.first_name, info.last_name].filter(Boolean).join(' ').trim() || (info.username ? `@${info.username}` : null);
+    if (displayNameCandidate) patch.displayName = displayNameCandidate;
+    if (Object.keys(patch).length > 0) {
+      patch.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+      await convRef.set(patch, { merge: true });
+    }
+  } catch (_) {}
+}
+
+async function ensureBotDoc(botId, data) {
+  try {
+    const ref = getDb().collection('bots').doc(String(botId));
+    await ref.set({ botId: String(botId), isActive: true, updatedAt: admin.firestore.FieldValue.serverTimestamp(), ...(data || {}) }, { merge: true });
   } catch (_) {}
 }
 
@@ -1856,6 +1891,8 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
 
   try {
     const update = req.body;
+    // Создадим запись одиночного бота для мониторинга
+    await ensureBotDoc('main', { name: 'Main Assistant', slug: 'main-assistant' });
     
     // Обработка callback query (нажатие на inline кнопки)
     if (update.callback_query) {
@@ -1911,6 +1948,22 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
     const chatId = message.chat.id;
     const text = message.text || '';
     const voice = message.voice || null;
+    // Обновим профиль беседы для main при любом апдейте
+    try { await updateConversationProfileIfMissing('main', chatId, null); } catch (_) {}
+    // Логируем входящее текстовое сообщение пользователя (если есть)
+    try {
+      const from = message.from || {};
+      if (typeof text === 'string' && text.trim().length > 0) {
+        await logBotMessage('main', chatId, {
+          direction: 'in',
+          text,
+          userId: from.id,
+          username: from.username || null,
+          firstName: from.first_name || null,
+          lastName: from.last_name || null
+        });
+      }
+    } catch (_) {}
 
     // /start → выбор языка через инлайн‑клавиатуру (English / Русский / Bahasa)
     if (typeof text === 'string' && text.trim().toLowerCase().startsWith('/start')) {
@@ -1922,6 +1975,7 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
         ]
       };
       await sendTelegramMessage(chatId, 'Please choose language / Выберите язык / Pilih bahasa:', keyboard);
+      try { await logBotMessage('main', chatId, { direction: 'out', text: 'Please choose language / Выберите язык / Pilih bahasa:' }); } catch (_) {}
       return res.status(200).send('OK');
     }
 
@@ -1940,6 +1994,18 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
           // Подставляем распознанный текст как обычный пользовательский запрос
           message.text = transcript;
           await writeConversation(chatId, { lastProcessedVoiceId: voice.file_unique_id || null, lastVoiceErrorAtMs: null });
+          // Логируем распознанное входящее сообщение
+          try {
+            const from = message.from || {};
+            await logBotMessage('main', chatId, {
+              direction: 'in',
+              text: transcript,
+              userId: from.id,
+              username: from.username || null,
+              firstName: from.first_name || null,
+              lastName: from.last_name || null
+            });
+          } catch (_) {}
         } else {
           // Анти-спам ошибки: не чаще раза в 60с
           const now = Date.now();
@@ -1983,6 +2049,7 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
         if (typeof stopTyping === 'function') stopTyping();
         const reply = await composeSmalltalkReply(message.text, detectedLanguage);
         await sendTelegramMessage(chatId, reply);
+        try { await logBotMessage('main', chatId, { direction: 'out', text: reply }); } catch (_) {}
         await writeConversation(chatId, { lastSmalltalk: message.text });
         return res.status(200).send('OK');
       }
@@ -2032,6 +2099,7 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
           // Останавливаем индикацию перед отправкой ответа
           if (typeof stopTyping === 'function') stopTyping();
           await sendTelegramMessage(chatId, searchResult.message, keyboard);
+          try { await logBotMessage('main', chatId, { direction: 'out', text: searchResult.message }); } catch (_) {}
           return res.status(200).send('OK');
         }
         
@@ -2096,8 +2164,10 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
           };
           
           await sendTelegramMessage(chatId, responseText, openSelectionKeyboard);
+          try { await logBotMessage('main', chatId, { direction: 'out', text: responseText }); } catch (_) {}
         } else {
           await sendTelegramMessage(chatId, responseText);
+          try { await logBotMessage('main', chatId, { direction: 'out', text: responseText }); } catch (_) {}
         }
 
         // Сохраняем важные предпочтения в памяти диалога
@@ -2121,6 +2191,7 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
         const properties = await searchProperties(criteria);
         const summary = summarizeResultsText(properties, message.text, detectedLanguage);
         await sendTelegramMessage(chatId, summary);
+        try { await logBotMessage('main', chatId, { direction: 'out', text: summary }); } catch (_) {}
       }
     }
 
@@ -2370,10 +2441,90 @@ const aiTenantTelegramWebhook = functions.https.onRequest(async (req, res) => {
   }
 });
 
+// Триггер (v2): отправка новых сообщений из админки в Telegram
+const forwardAdminBotMessage = onDocumentCreated('bots/{botId}/conversations/{chatId}/messages/{messageId}', async (event) => {
+  try {
+    const data = event.data && event.data.data ? event.data.data() : (event.data ? event.data : {});
+    const { botId, chatId } = event.params || {};
+    console.log('[forwardAdminBotMessage] trigger', { botId, chatId, hasData: !!data, direction: data && data.direction, source: data && data.source, hasText: !!(data && data.text) });
+    if (!data || !botId || !chatId) return null;
+    // Только исходящие из админки
+    if (data.direction !== 'out' || data.source !== 'admin' || !data.text) return null;
+
+    if (String(botId) === 'main') {
+      await sendTelegramMessage(chatId, data.text);
+      await logBotMessage('main', chatId, { direction: 'out', text: data.text });
+      console.log('[forwardAdminBotMessage] sent via main token');
+      // Попробуем дополнить профиль
+      try { await updateConversationProfileIfMissing(botId, chatId, null); } catch (_) {}
+      return null;
+    }
+
+    // tenant-боты: ищем токен в bots/{botId}
+    try {
+      const botDoc = await getDb().collection('bots').doc(String(botId)).get();
+      let tokenOverride = botDoc.exists ? botDoc.data().telegramBotToken : null;
+      if (!tokenOverride && String(botId) === 'supervision') {
+        tokenOverride = process.env.BALI_SUPERVISION_BOT_TOKEN || null;
+      }
+      if (!tokenOverride) {
+        console.warn('[forwardAdminBotMessage] missing token for bot', botId);
+        return null;
+      }
+      await sendTelegramMessage(chatId, data.text, null, tokenOverride);
+      await logBotMessage(botId, chatId, { direction: 'out', text: data.text });
+      try { await updateConversationProfileIfMissing(botId, chatId, tokenOverride); } catch (_) {}
+      console.log('[forwardAdminBotMessage] sent via tokenOverride for bot', botId);
+    } catch (_) {}
+    return null;
+  } catch (_) { return null; }
+});
+
 module.exports = {
   aiAssistantTelegramWebhook,
   aiAssistantSetWebhook,
   aiTenantTelegramWebhook,
+  forwardAdminBotMessage,
 };
+
+// Callable: отправить сообщение пользователю в Telegram от имени бота
+const sendBotMessage = functions.https.onCall(async (data, context) => {
+  try {
+    const payload = data && (data.data || data) || {};
+    const botId = String(payload.botId || '');
+    const chatId = String(payload.chatId || '');
+    const text = String(payload.text || '').trim();
+    if (!botId || !chatId || !text) {
+      throw new functions.https.HttpsError('invalid-argument', 'botId, chatId и text обязательны');
+    }
+    if (botId === 'main') {
+      await sendTelegramMessage(chatId, text);
+      await logBotMessage('main', chatId, { direction: 'out', text });
+    } else {
+      const botDoc = await getDb().collection('bots').doc(botId).get();
+      let tokenOverride = botDoc.exists ? botDoc.data().telegramBotToken : null;
+      if (!tokenOverride && botId === 'supervision') {
+        try {
+          // Падаем на getSupervisionBotToken (тот же источник, что у вебхука)
+          const { getSupervisionBotToken } = require('./baliSupervisionBot');
+          tokenOverride = getSupervisionBotToken();
+        } catch (_) {}
+        if (!tokenOverride) tokenOverride = process.env.BALI_SUPERVISION_BOT_TOKEN || null;
+      }
+      if (!tokenOverride) {
+        throw new functions.https.HttpsError('failed-precondition', `Не найден токен бота ${botId}`);
+      }
+      await sendTelegramMessage(chatId, text, null, tokenOverride);
+      await logBotMessage(botId, chatId, { direction: 'out', text });
+    }
+    return { success: true };
+  } catch (e) {
+    console.error('[sendBotMessage] error:', e);
+    if (e instanceof functions.https.HttpsError) throw e;
+    throw new functions.https.HttpsError('internal', e.message || 'Unknown error');
+  }
+});
+
+module.exports.sendBotMessage = sendBotMessage;
 
 

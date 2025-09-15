@@ -187,32 +187,16 @@ const Dashboard = () => {
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       }
 
-      // Получаем логи посещений главной публичной страницы (учитываем исторический '/public' и текущий '/')
-      const visitsQueryPublic = query(
-        collection(db, 'pageVisits'),
-        where('page', '==', '/public'),
-        where('timestamp', '>=', startDate),
-        orderBy('timestamp', 'desc')
-      );
+      // Получаем логи посещений главной публичной страницы (текущий маршрут '/')
       const visitsQueryRoot = query(
         collection(db, 'pageVisits'),
         where('page', '==', '/'),
         where('timestamp', '>=', startDate),
         orderBy('timestamp', 'desc')
       );
-
-      const [visitsSnapshotPublic, visitsSnapshotRoot] = await Promise.all([
-        getDocs(visitsQueryPublic),
-        getDocs(visitsQueryRoot)
-      ]);
+      const visitsSnapshotRoot = await getDocs(visitsQueryRoot);
       
       // Получаем данные об авторизациях пользователей
-      const authQueryPublic = query(
-        collection(db, 'userAuthLogs'),
-        where('page', '==', '/public'),
-        where('timestamp', '>=', startDate),
-        orderBy('timestamp', 'desc')
-      );
       const authQueryRoot = query(
         collection(db, 'userAuthLogs'),
         where('page', '==', '/'),
@@ -233,12 +217,8 @@ const Dashboard = () => {
       let propertyVisitsSnapshot;
       
       try {
-        const [authSnapPublic, authSnapRoot] = await Promise.all([
-          getDocs(authQueryPublic),
-          getDocs(authQueryRoot)
-        ]);
-        // Объединяем снапшоты авторизаций
-        authSnapshot = { empty: authSnapPublic.empty && authSnapRoot.empty, docs: [...authSnapPublic.docs, ...authSnapRoot.docs] };
+        const authSnapRoot = await getDocs(authQueryRoot);
+        authSnapshot = { empty: authSnapRoot.empty, docs: [...authSnapRoot.docs] };
       } catch (error) {
         console.log('Коллекция userAuthLogs не найдена, продолжаем без данных авторизации');
         authSnapshot = { empty: true, docs: [] };
@@ -252,7 +232,6 @@ const Dashboard = () => {
       }
       
       const visits = [
-        ...(visitsSnapshotPublic.empty ? [] : visitsSnapshotPublic.docs.map(doc => doc.data())),
         ...(visitsSnapshotRoot.empty ? [] : visitsSnapshotRoot.docs.map(doc => doc.data()))
       ];
 
