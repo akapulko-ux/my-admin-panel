@@ -743,6 +743,12 @@ function PropertyDetail() {
         let folder;
         if (fieldName === 'layoutFileURL' || fieldName === 'layoutFileURL2' || fieldName === 'layoutFileURL3') {
           folder = 'documents/layout';
+        } else if (fieldName === 'shgbFileURL' || fieldName === 'shgbFileURL2' || fieldName === 'shgbFileURL3') {
+          folder = 'documents/shgb';
+        } else if (fieldName === 'pbgFileURL') {
+          folder = 'documents/pbg';
+        } else if (fieldName === 'slfFileURL') {
+          folder = 'documents/slf';
         } else if (fieldName === 'dueDiligenceFileURL') {
           folder = 'documents/due-diligence';
         } else if (fieldName === 'pkkprFileURL') {
@@ -805,6 +811,12 @@ function PropertyDetail() {
         let folder;
         if (fieldName === 'layoutFileURL' || fieldName === 'layoutFileURL2' || fieldName === 'layoutFileURL3') {
           folder = 'documents/layout';
+        } else if (fieldName === 'shgbFileURL' || fieldName === 'shgbFileURL2' || fieldName === 'shgbFileURL3') {
+          folder = 'documents/shgb';
+        } else if (fieldName === 'pbgFileURL') {
+          folder = 'documents/pbg';
+        } else if (fieldName === 'slfFileURL') {
+          folder = 'documents/slf';
         } else if (fieldName === 'dueDiligenceFileURL') {
           folder = 'documents/due-diligence';
         } else if (fieldName === 'pkkprFileURL') {
@@ -2583,14 +2595,176 @@ function PropertyDetail() {
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm text-gray-600">{t.propertyDetail.landUsePermit}</span>
-            <div className="flex-1 ml-4">
-              {renderEditableValue('pkkpr', safeDisplay(property.pkkpr), 'text')}
+            <div className="flex-1 ml-4 flex flex-wrap items-center gap-2">
+              <div className="min-w-0 overflow-hidden truncate whitespace-nowrap">
+                {renderEditableValue('pkkpr', safeDisplay(property.pkkpr), 'text')}
+              </div>
+              <div className="flex items-center gap-2">
+                {property.pkkprFileURL ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.pkkprFileURL, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpdate('pkkprFileURL')}
+                        disabled={uploading.pkkprFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.pkkprFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.pkkprFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('pkkprFileURL')}
+                      disabled={uploading.pkkprFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.pkkprFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.pkkprFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm text-gray-600">{t.propertyDetail.landRightsCertificate}</span>
-            <div className="flex-1 ml-4">
-              {renderEditableValue('shgb', safeDisplay(property.shgb), 'text')}
+            <div className="flex-1 ml-4 flex flex-wrap items-center gap-2">
+              <div className="min-w-0 overflow-hidden truncate whitespace-nowrap">
+                {renderEditableValue('shgb', safeDisplay(property.shgb), 'text')}
+              </div>
+              <div className="flex items-center gap-2">
+                {/* SHGB файлы: до 3 файлов, логика как в Планировке */}
+                {/* Файл 1 */}
+                {property.shgbFileURL ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.shgbFileURL, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpdate('shgbFileURL')}
+                        disabled={uploading.shgbFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.shgbFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.shgbFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('shgbFileURL')}
+                      disabled={uploading.shgbFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.shgbFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.shgbFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+
+                {/* Файл 2 */}
+                {property.shgbFileURL2 ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.shgbFileURL2, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpdate('shgbFileURL2')}
+                        disabled={uploading.shgbFileURL2}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.shgbFileURL2 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.shgbFileURL2 ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  property.shgbFileURL && canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('shgbFileURL2')}
+                      disabled={uploading.shgbFileURL2}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.shgbFileURL2 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.shgbFileURL2 ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+
+                {/* Файл 3 */}
+                {property.shgbFileURL3 ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.shgbFileURL3, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpdate('shgbFileURL3')}
+                        disabled={uploading.shgbFileURL3}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.shgbFileURL3 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.shgbFileURL3 ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  property.shgbFileURL2 && canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('shgbFileURL3')}
+                      disabled={uploading.shgbFileURL3}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.shgbFileURL3 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.shgbFileURL3 ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -2601,8 +2775,49 @@ function PropertyDetail() {
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm text-gray-600">{t.propertyDetail.buildingPermit}</span>
-            <div className="flex-1 ml-4">
-              {renderEditableValue('pbg', safeDisplay(property.pbg), 'text')}
+            <div className="flex-1 ml-4 flex flex-wrap items-center gap-2">
+              <div className="min-w-0 overflow-hidden truncate whitespace-nowrap">
+                {renderEditableValue('pbg', safeDisplay(property.pbg), 'text')}
+              </div>
+              <div className="flex items-center gap-2">
+                {property.pbgFileURL ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.pbgFileURL, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpdate('pbgFileURL')}
+                        disabled={uploading.pbgFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.pbgFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.pbgFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('pbgFileURL')}
+                      disabled={uploading.pbgFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.pbgFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.pbgFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -2613,8 +2828,49 @@ function PropertyDetail() {
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm text-gray-600">{t.propertyDetail.buildingReadinessCertificate}</span>
-            <div className="flex-1 ml-4">
-              {renderEditableValue('slf', safeDisplay(property.slf), 'text')}
+            <div className="flex-1 ml-4 flex flex-wrap items-center gap-2">
+              <div className="min-w-0 overflow-hidden truncate whitespace-nowrap">
+                {renderEditableValue('slf', safeDisplay(property.slf), 'text')}
+              </div>
+              <div className="flex items-center gap-2">
+                {property.slfFileURL ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.slfFileURL, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canEdit() && (
+                      <button 
+                        onClick={() => handleFileUpdate('slfFileURL')}
+                        disabled={uploading.slfFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.slfFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.slfFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('slfFileURL')}
+                      disabled={uploading.slfFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.slfFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.slfFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           </div>
           
@@ -2770,51 +3026,7 @@ function PropertyDetail() {
             </div>
           </div>
           
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">{t.propertyDetail.pkkprFile}</span>
-            <div className="flex gap-2">
-              {property.pkkprFileURL ? (
-                <>
-                  <button 
-                    onClick={() => window.open(property.pkkprFileURL, '_blank')}
-                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
-                  >
-                    {t.propertyDetail.viewButton}
-                  </button>
-                  {canEdit() && (
-                    <button 
-                      onClick={() => handleFileUpdate('pkkprFileURL')}
-                      disabled={uploading.pkkprFileURL}
-                      className={`px-3 py-1 text-xs rounded ${
-                        uploading.pkkprFileURL 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-gray-600 hover:bg-gray-700'
-                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                    >
-                                              {uploading.pkkprFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
-                    </button>
-                  )}
-                </>
-                              ) : (
-                  <>
-                    <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
-                    {canEdit() && (
-                      <button 
-                        onClick={() => handleFileUpload('pkkprFileURL')}
-                      disabled={uploading.pkkprFileURL}
-                      className={`px-3 py-1 text-xs rounded ${
-                        uploading.pkkprFileURL 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-green-600 hover:bg-green-700'
-                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                    >
-                                              {uploading.pkkprFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+          {/* Удалили отдельное поле "Файл PKKPR" — функционал перенесен в строку PKKPR выше */}
           
 
         </div>

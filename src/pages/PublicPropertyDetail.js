@@ -846,12 +846,26 @@ function PublicPropertyDetail() {
             {t.leadForm.manageProperty}
           </button>
         ) : (
-          <button
-            onClick={() => setIsLeadOpen(true)}
-            className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            {t.leadForm.writeToAgent}
-          </button>
+          <div className="flex flex-col md:flex-row gap-2">
+            <button
+              onClick={() => setIsLeadOpen(true)}
+              className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {t.leadForm.writeToAgent}
+            </button>
+            <a
+              href={`https://wa.me/6282147824968?text=${encodeURIComponent(
+                `Здравствуйте! Хочу узнать подробности по объекту ${
+                  property?.propertyName || property?.name || property?.title || property?.complexName || ''
+                }${property?.id ? ` (ID: ${property.id})` : ''}. Источник: PublicPropertyDetail ${window.location.href}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-center"
+            >
+              {t.leadForm.writeInWhatsapp || 'Написать в WhatsApp'}
+            </a>
+          </div>
         )}
       </div>
     </div>

@@ -688,7 +688,13 @@ function PropertiesGallery() {
                   // Основные поля (Характеристики)
                   if (isEmpty(p.bedrooms)) characteristics.push(t.propertyDetail.bedrooms);
                   if (isEmpty(p.area)) characteristics.push(t.propertyDetail.area);
-                  if (isEmpty(p.landArea) && String(p.type || '').trim().toLowerCase() !== 'апартаменты') characteristics.push(t.propertyDetail.landArea);
+                  {
+                    const typeStr = String(p.type || '').trim().toLowerCase();
+                    const noLandAreaTypes = ['апартаменты', 'апарт-вилла', 'дюплекс', 'таунхаус'];
+                    if (isEmpty(p.landArea) && !noLandAreaTypes.includes(typeStr)) {
+                      characteristics.push(t.propertyDetail.landArea);
+                    }
+                  }
                   if (isEmpty(p.bathrooms)) characteristics.push(t.propertyDetail.bathrooms);
                   if (isEmpty(p.floors)) characteristics.push(t.propertyDetail.floors);
                   if (isEmpty(p.status)) characteristics.push(t.propertyDetail.constructionStatus);

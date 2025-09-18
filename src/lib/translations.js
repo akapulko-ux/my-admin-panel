@@ -2,6 +2,7 @@ export const translations = {
   en: {
     leadForm: {
                     writeToAgent: 'Leave a request',
+      writeInWhatsapp: 'Write in WhatsApp',
       leaveRequestToAgent: 'Leave a request to the agent',
       agentContactInfo: 'The agent will contact you in a convenient messenger to provide all details about the property',
       messengerLabel: 'Preferred messenger',
@@ -856,7 +857,7 @@ _________________               _________________
       buildingReadinessCertificate: 'Building Readiness Certificate (SLF):',
       layout: 'Layout:',
       dueDiligence: 'Due Diligence:',
-      unbrandedPresentation: 'Unbranded Presentation:',
+      unbrandedPresentation: 'Complex Presentation:',
       pkkprFile: 'PKKPR File:',
       
       // Options
@@ -1796,6 +1797,7 @@ _________________               _________________
   ru: {
     leadForm: {
               writeToAgent: 'Оставить заявку',
+      writeInWhatsapp: 'Написать в WhatsApp',
         leaveRequestToAgent: 'Оставьте заявку агенту',
         agentContactInfo: 'Агент свяжется с вами в удобном для вас мессенджере для предоставления всех деталей по объекту',
         messengerLabel: 'Предпочитаемый мессенджер',
@@ -2669,7 +2671,7 @@ _________________               _________________
       buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
       layout: 'Планировка:',
       dueDiligence: 'Due Diligence:',
-      unbrandedPresentation: 'Презентация без брендинга:',
+      unbrandedPresentation: 'Презентация комплекса:',
       pkkprFile: 'Файл PKKPR:',
       
       // Options
@@ -3613,7 +3615,8 @@ _________________               _________________
   },
   id: {
     leadForm: {
-              writeToAgent: 'Ajukan permintaan',
+      writeToAgent: 'Ajukan permintaan',
+      writeInWhatsapp: 'Tulis di WhatsApp',
         leaveRequestToAgent: 'Ajukan permintaan ke agen',
         agentContactInfo: 'Agen akan menghubungi Anda di messenger yang nyaman untuk memberikan semua detail tentang properti',
         messengerLabel: 'Messenger yang disukai',
@@ -4485,7 +4488,7 @@ _________________               _________________
       buildingReadinessCertificate: 'Sertifikat Kesiapan Bangunan (SLF):',
       layout: 'Tata Letak:',
       dueDiligence: 'Due Diligence:',
-      unbrandedPresentation: 'Presentasi Tanpa Brand:',
+      unbrandedPresentation: 'Presentasi Kompleks:',
       pkkprFile: 'File PKKPR:',
       
       // Options
