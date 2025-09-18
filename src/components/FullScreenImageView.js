@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { X, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react';
 import { useLanguage } from '../lib/LanguageContext';
@@ -68,15 +68,22 @@ const FullScreenImageView = ({
     setImageError(true);
   };
 
+  const isPdfUrl = (url) => {
+    if (!url) return false;
+    try {
+      const u = new URL(url);
+      return u.pathname.toLowerCase().endsWith('.pdf');
+    } catch (e) {
+      return /\.pdf($|\?)/i.test(url);
+    }
+  };
+
   const handleDownload = async () => {
     const currentImage = images[currentImageIndex];
     if (!currentImage) return;
 
     try {
-      // Простое решение - всегда сохраняем как .jpg
-      const fileName = `image_${Date.now()}.jpg`;
-      
-      // Скачиваем изображение как blob
+      // Скачиваем ресурс как blob
       const response = await fetch(currentImage);
       
       if (!response.ok) {
@@ -84,6 +91,9 @@ const FullScreenImageView = ({
       }
 
       const blob = await response.blob();
+      const mime = blob.type || (isPdfUrl(currentImage) ? 'application/pdf' : 'image/jpeg');
+      const ext = mime === 'application/pdf' ? 'pdf' : mime.startsWith('image/') ? mime.split('/')[1] : 'bin';
+      const fileName = `file_${Date.now()}.${ext}`;
       
       // Создаем URL для blob
       const blobUrl = window.URL.createObjectURL(blob);
@@ -114,17 +124,19 @@ const FullScreenImageView = ({
     if (!currentImage) return;
 
     try {
-      // Загружаем изображение как blob
+      // Загружаем ресурс как blob
       const response = await fetch(currentImage);
       if (!response.ok) {
         throw new Error('Ошибка при загрузке изображения');
       }
 
       const blob = await response.blob();
-      const fileName = `image_${Date.now()}.jpg`;
+      const mime = blob.type || (isPdfUrl(currentImage) ? 'application/pdf' : 'image/jpeg');
+      const ext = mime === 'application/pdf' ? 'pdf' : mime.startsWith('image/') ? mime.split('/')[1] : 'bin';
+      const fileName = `file_${Date.now()}.${ext}`;
       
       // Создаем файл из blob
-      const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+      const file = new File([blob], fileName, { type: mime });
 
       // Проверяем поддержку Web Share API с файлами
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -169,6 +181,8 @@ const FullScreenImageView = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-none w-screen h-screen p-0 bg-black border-0">
+        <DialogTitle className="sr-only">{(t.fixationChat && t.fixationChat.imageViewerTitle) || 'Просмотр файла'}</DialogTitle>
+        <DialogDescription className="sr-only">{(t.fixationChat && t.fixationChat.imageViewerDescription) || 'Просмотр изображения или PDF'}</DialogDescription>
         <div 
           className="fixed inset-0 bg-black flex items-center justify-center z-50"
           onKeyDown={handleKeyDown}
@@ -239,7 +253,7 @@ const FullScreenImageView = ({
             </Button>
           </div>
 
-          {/* Изображение */}
+          {/* Контент (изображение или PDF) */}
           <div className="w-full h-full flex items-center justify-center p-4">
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -253,21 +267,31 @@ const FullScreenImageView = ({
                 <p className="text-sm opacity-75">{t.fixationChat.imageLoadError}</p>
               </div>
             ) : (
-              <img
-                src={currentImage}
-                alt={`Изображение ${currentImageIndex + 1}`}
-                className="max-w-full max-h-full object-contain cursor-pointer"
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-                style={{ 
-                  display: isLoading ? 'none' : 'block',
-                  maxWidth: '100vw',
-                  maxHeight: '100vh',
-                  width: 'auto',
-                  height: 'auto'
-                }}
-                onClick={(e) => e.stopPropagation()}
-              />
+              isPdfUrl(currentImage) ? (
+                <iframe
+                  src={currentImage}
+                  title={`PDF ${currentImageIndex + 1}`}
+                  className="w-full h-full"
+                  style={{ display: isLoading ? 'none' : 'block' }}
+                  onLoad={handleImageLoad}
+                />
+              ) : (
+                <img
+                  src={currentImage}
+                  alt={`Изображение ${currentImageIndex + 1}`}
+                  className="max-w-full max-h-full object-contain cursor-pointer"
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                  style={{ 
+                    display: isLoading ? 'none' : 'block',
+                    maxWidth: '100vw',
+                    maxHeight: '100vh',
+                    width: 'auto',
+                    height: 'auto'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              )
             )}
           </div>
         </div>

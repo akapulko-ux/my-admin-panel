@@ -116,6 +116,72 @@ function PropertyDetail() {
   // Мобильное обнаружение
   const [isMobile, setIsMobile] = useState(false);
   const [roiPercent, setRoiPercent] = useState(null);
+  const [layoutThumbs, setLayoutThumbs] = useState({});
+
+  // Вспомогательные функции для превью документов
+  const isImageUrl = (url) => /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(String(url || ''));
+  const getFileExtension = (url) => {
+    try {
+      const path = String(url || '').split('?')[0];
+      const parts = path.split('.');
+      return parts.length > 1 ? parts.pop().toUpperCase() : '';
+    } catch { return ''; }
+  };
+
+  const handleDocumentDelete = async (fieldName) => {
+    if (!canEdit()) {
+      showError(t.propertyDetail.editPermissionError);
+      return;
+    }
+    const url = property?.[fieldName];
+    if (!url) return;
+    try {
+      try {
+        await deleteFileFromFirebaseStorage(url);
+      } catch (e) {
+        console.warn('Не удалось удалить файл из хранилища:', e);
+      }
+      const propertyRef = doc(db, 'properties', id);
+      await updateDoc(propertyRef, { [fieldName]: null, updatedAt: Timestamp.now() });
+      setProperty((prev) => ({ ...prev, [fieldName]: null }));
+      showSuccess(t.propertyDetail.fileDeleted || 'Файл удалён');
+    } catch (err) {
+      console.error('Ошибка удаления файла документа:', err);
+      showError(t.propertyDetail.saveError);
+    }
+  };
+
+  // Подготовка миниатюр планировок (включая PDF)
+  useEffect(() => {
+    const prepareThumb = async (url, key) => {
+      if (!url) return;
+      try {
+        if (isImageUrl(url)) {
+          setLayoutThumbs(prev => ({ ...prev, [key]: url }));
+          return;
+        }
+        if (/\.pdf(\?.*)?$/i.test(String(url))) {
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const file = new File([blob], 'layout.pdf', { type: blob.type || 'application/pdf' });
+          const pages = await convertPdfToImages(file);
+          if (pages && pages.length > 0) {
+            const first = pages[0];
+            const objectUrl = URL.createObjectURL(first);
+            setLayoutThumbs(prev => ({ ...prev, [key]: objectUrl }));
+          }
+          return;
+        }
+        // Фолбек: используем URL как есть
+        setLayoutThumbs(prev => ({ ...prev, [key]: url }));
+      } catch (e) {
+        console.warn('Не удалось подготовить превью планировки', key, e);
+      }
+    };
+    prepareThumb(property?.layoutFileURL, 'layoutFileURL');
+    prepareThumb(property?.layoutFileURL2, 'layoutFileURL2');
+    prepareThumb(property?.layoutFileURL3, 'layoutFileURL3');
+  }, [property?.layoutFileURL, property?.layoutFileURL2, property?.layoutFileURL3]);
 
   // Чаты по объекту (созданные в iOS)
   const [agentChats, setAgentChats] = useState([]);
@@ -720,6 +786,14 @@ function PropertyDetail() {
       const file = event.target.files[0];
       if (!file) return;
 
+      // Ограничение размера файла: 20 МБ
+      const MAX_SIZE_BYTES = 20 * 1024 * 1024;
+      if (file.size > MAX_SIZE_BYTES) {
+        showError(t.propertyDetail.fileTooLarge || 'Файл превышает 20 МБ. Уменьшите размер файла до менее 20 МБ и попробуйте снова.');
+        try { event.target.value = ''; } catch {}
+        return;
+      }
+
       setUploading(prev => ({ ...prev, [fieldName]: true }));
       
       try {
@@ -794,6 +868,14 @@ function PropertyDetail() {
     input.onchange = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
+
+      // Ограничение размера файла: 20 МБ
+      const MAX_SIZE_BYTES = 20 * 1024 * 1024;
+      if (file.size > MAX_SIZE_BYTES) {
+        showError(t.propertyDetail.fileTooLarge || 'Файл превышает 20 МБ. Уменьшите размер файла до менее 20 МБ и попробуйте снова.');
+        try { event.target.value = ''; } catch {}
+        return;
+      }
 
       setUploading(prev => ({ ...prev, [fieldName]: true }));
       
@@ -2874,65 +2956,7 @@ function PropertyDetail() {
             </div>
           </div>
           
-          {/* Файловые поля */}
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">{t.propertyDetail.layout}</span>
-            <div className="flex gap-2">
-              {property.layoutFileURL ? (
-                <>
-                  <button 
-                    onClick={() => window.open(property.layoutFileURL, '_blank')}
-                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
-                  >
-                    {t.propertyDetail.viewButton}
-                  </button>
-                  {canEdit() && (
-                                          <button 
-                        onClick={() => handleFileUpdate('layoutFileURL')}
-                        disabled={uploading.layoutFileURL}
-                        className={`px-3 py-1 text-xs rounded ${
-                          uploading.layoutFileURL 
-                            ? 'bg-gray-400 cursor-not-allowed' 
-                            : 'bg-gray-600 hover:bg-gray-700'
-                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                      >
-                        {uploading.layoutFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
-                      </button>
-                  )}
-                  {canEdit() && !property.layoutFileURL2 && (
-                    <button 
-                      onClick={() => handleFileUpload('layoutFileURL2')}
-                      disabled={uploading.layoutFileURL2}
-                      className={`px-3 py-1 text-xs rounded ${
-                        uploading.layoutFileURL2 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-green-600 hover:bg-green-700'
-                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                    >
-                      {uploading.layoutFileURL2 ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
-                    </button>
-                  )}
-                </>
-                              ) : (
-                  <>
-                    <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
-                    {canEdit() && (
-                      <button 
-                        onClick={() => handleFileUpload('layoutFileURL')}
-                        disabled={uploading.layoutFileURL}
-                        className={`px-3 py-1 text-xs rounded ${
-                          uploading.layoutFileURL 
-                            ? 'bg-gray-400 cursor-not-allowed' 
-                            : 'bg-green-600 hover:bg-green-700'
-                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
-                      >
-                        {uploading.layoutFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
-                      </button>
-                    )}
-                  </>
-                )}
-            </div>
-          </div>
+          
           
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm text-gray-600">{t.propertyDetail.dueDiligence}</span>
@@ -2980,6 +3004,7 @@ function PropertyDetail() {
             </div>
           </div>
           
+          {/* Файловые поля */}
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm text-gray-600">{t.propertyDetail.unbrandedPresentation}</span>
             <div className="flex gap-2">
@@ -3022,6 +3047,88 @@ function PropertyDetail() {
                     </button>
                   )}
                 </>
+              )}
+            </div>
+          </div>
+          
+          {/* Поле Планировка — переносим в самый конец секции */}
+          <div className="flex justify-between items-start py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600 mt-1">{t.propertyDetail.layout}</span>
+            <div className="flex-1 ml-4">
+              {(property.layoutFileURL || property.layoutFileURL2 || property.layoutFileURL3) ? (
+                <div className="flex flex-wrap gap-3 items-start">
+                  {[property.layoutFileURL, property.layoutFileURL2, property.layoutFileURL3]
+                    .filter(Boolean)
+                    .map((url, idx) => (
+                      <div key={idx} className="relative w-24 h-24 rounded overflow-hidden border bg-gray-100">
+                        <button
+                          onClick={() => window.open(url, '_blank')}
+                          className="absolute inset-0"
+                          title={t.propertyDetail.viewButton}
+                        >
+                          {layoutThumbs[idx === 0 ? 'layoutFileURL' : idx === 1 ? 'layoutFileURL2' : 'layoutFileURL3'] ? (
+                            <img src={layoutThumbs[idx === 0 ? 'layoutFileURL' : idx === 1 ? 'layoutFileURL2' : 'layoutFileURL3']} alt={`layout-${idx+1}`} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-gray-700 bg-white">
+                              {getFileExtension(url) || 'FILE'}
+                            </div>
+                          )}
+                        </button>
+                        {canEdit() && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDocumentDelete(idx === 0 ? 'layoutFileURL' : idx === 1 ? 'layoutFileURL2' : 'layoutFileURL3'); }}
+                            className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center"
+                            title={t.common?.delete || 'Удалить'}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  {canEdit() && !property.layoutFileURL2 && (
+                    <button 
+                      onClick={() => handleFileUpload('layoutFileURL2')}
+                      disabled={uploading.layoutFileURL2}
+                      className={`h-8 px-3 text-xs rounded ${
+                        uploading.layoutFileURL2 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white`}
+                    >
+                      {uploading.layoutFileURL2 ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )}
+                  {canEdit() && property.layoutFileURL2 && !property.layoutFileURL3 && (
+                    <button 
+                      onClick={() => handleFileUpload('layoutFileURL3')}
+                      disabled={uploading.layoutFileURL3}
+                      className={`h-8 px-3 text-xs rounded ${
+                        uploading.layoutFileURL3 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white`}
+                    >
+                      {uploading.layoutFileURL3 ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
+                  {canEdit() && (
+                    <button 
+                      onClick={() => handleFileUpload('layoutFileURL')}
+                      disabled={uploading.layoutFileURL}
+                      className={`h-8 px-3 text-xs rounded ${
+                        uploading.layoutFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white`}
+                    >
+                      {uploading.layoutFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>

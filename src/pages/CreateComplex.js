@@ -72,10 +72,10 @@ function CreateComplex() {
   // ----- Поля формы -----
   const [complexNumber, setComplexNumber] = useState("");
 
-  // "Название" (только заглавные английские буквы + пробелы)
+  // "Название" (только заглавные английские буквы + цифры + пробелы)
   const [name, setName] = useState("");
   const handleNameChange = (e) => {
-    const input = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
+    const input = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "");
     setName(input);
   };
 
@@ -442,7 +442,7 @@ function CreateComplex() {
                   id="name"
                   value={name}
                   onChange={handleNameChange}
-                  placeholder="ТОЛЬКО ЗАГЛАВНЫЕ БУКВЫ"
+                  placeholder="ЗАГЛАВНЫЕ БУКВЫ И ЦИФРЫ"
                   className="uppercase"
                 />
               </div>

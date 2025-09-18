@@ -498,8 +498,9 @@ function EditComplex() {
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Введите название комплекса"
+                  onChange={(e) => setName((e.target.value || '').toUpperCase().replace(/[^A-Z0-9 ]/g, ''))}
+                  placeholder="Введите название комплекса (A-Z, 0-9, пробел)"
+                  className="uppercase"
                 />
               </div>
               <div className="space-y-2">

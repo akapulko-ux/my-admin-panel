@@ -553,6 +553,11 @@ function PropertiesGallery() {
 
               {/* Текстовая информация */}
               <div className="flex flex-col text-gray-900 space-y-0.5 flex-1">
+                {p.isHidden && (
+                  <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-600 text-white w-fit">
+                    {t.propertyDetail.removedFromListing || 'Убран из листинга'}
+                  </span>
+                )}
                 {(p.complexName || p.complex || p.propertyName) && (
                   <span className={`font-semibold leading-none text-black ${
                     isMobile ? 'text-base' : 'text-lg'

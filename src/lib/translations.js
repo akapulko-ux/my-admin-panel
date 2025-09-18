@@ -119,6 +119,10 @@ export const translations = {
     
     // Error messages
     dataNotFound: 'Data Not Found',
+    publicDocs: {
+      title: 'View detailed information and documents',
+      openAccess: 'Open access'
+    },
     publicRoiNotAvailable: 'Public ROI page is not available',
     
     // Common words
@@ -779,6 +783,7 @@ _________________               _________________
       viewButton: 'View',
       updateButton: 'Update',
       uploadButton: 'Upload',
+      fileTooLarge: 'File exceeds 20 MB. Reduce file size below 20 MB and try again.',
       roiCalculatorButton: 'ROI Calculator',
       // Agent chats
       agentChatsTitle: 'Chats for this property',
@@ -855,7 +860,7 @@ _________________               _________________
       buildingPermit: 'Building Permit (PBG):',
       buildingPermitIMB: 'Building Permit (IMB):',
       buildingReadinessCertificate: 'Building Readiness Certificate (SLF):',
-      layout: 'Layout:',
+      layout: 'Unit Layout:',
       dueDiligence: 'Due Diligence:',
       unbrandedPresentation: 'Complex Presentation:',
       pkkprFile: 'PKKPR File:',
@@ -1914,6 +1919,10 @@ _________________               _________________
     
     // Error messages
     dataNotFound: 'Данные не найдены',
+    publicDocs: {
+      title: 'Просмотр детальной информации и документов',
+      openAccess: 'Открыть доступ'
+    },
     publicRoiNotAvailable: 'Публичная страница ROI недоступна',
     
     // Common words
@@ -2591,6 +2600,7 @@ _________________               _________________
       viewButton: 'Просмотр',
       updateButton: 'Обновить',
       uploadButton: 'Загрузить',
+      fileTooLarge: 'Файл превышает 20 МБ. Уменьшите размер файла до менее 20 МБ и попробуйте снова.',
       roiCalculatorButton: 'Калькулятор ROI',
       // Agent chats
       agentChatsTitle: 'Чаты по объекту',
@@ -2669,7 +2679,7 @@ _________________               _________________
       buildingPermit: 'Разрешение на строительство (PBG):',
       buildingPermitIMB: 'Разрешение на строительство (IMB):',
       buildingReadinessCertificate: 'Сертификат готовности здания (SLF):',
-      layout: 'Планировка:',
+      layout: 'Планировка объекта:',
       dueDiligence: 'Due Diligence:',
       unbrandedPresentation: 'Презентация комплекса:',
       pkkprFile: 'Файл PKKPR:',
@@ -3733,6 +3743,10 @@ _________________               _________________
     
     // Error messages
     dataNotFound: 'Data Tidak Ditemukan',
+    publicDocs: {
+      title: 'Lihat informasi dan dokumen detail',
+      openAccess: 'Buka akses'
+    },
     publicRoiNotAvailable: 'Halaman ROI publik tidak tersedia',
     
     // Common words
@@ -4486,7 +4500,7 @@ _________________               _________________
       buildingPermit: 'Izin Bangunan (PBG):',
       buildingPermitIMB: 'Izin Bangunan (IMB):',
       buildingReadinessCertificate: 'Sertifikat Kesiapan Bangunan (SLF):',
-      layout: 'Tata Letak:',
+      layout: 'Tata Letak Unit:',
       dueDiligence: 'Due Diligence:',
       unbrandedPresentation: 'Presentasi Kompleks:',
       pkkprFile: 'File PKKPR:',

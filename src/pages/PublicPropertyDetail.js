@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc } from "firebase/firestore";
@@ -22,6 +22,7 @@ import { showError, showSuccess } from "../utils/notifications";
 import { Badge } from "../components/ui/badge";
 import { translateWithCache } from "../utils/aiTranslation";
 import { trackPropertyVisit } from "../utils/pageAnalytics";
+import FullScreenImageView from "../components/FullScreenImageView";
 
 function PublicPropertyDetail() {
   const { id } = useParams();
@@ -33,7 +34,7 @@ function PublicPropertyDetail() {
   const [roiPercent, setRoiPercent] = useState(null);
   const { language } = useLanguage();
   const t = translations[language];
-  const { currentUser } = useAuth();
+  const { currentUser, role } = useAuth();
   const [isLeadOpen, setIsLeadOpen] = useState(false);
   const [leadName, setLeadName] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
@@ -41,6 +42,12 @@ function PublicPropertyDetail() {
   const [leadSending, setLeadSending] = useState(false);
   const [translatedDescription, setTranslatedDescription] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerImages, setViewerImages] = useState([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  // Автоскролл при раскрытии секции документов
+  const docsDetailsRef = useRef(null);
+  const docsContentRef = useRef(null);
   
   // Состояние для свайпов
   const [touchStart, setTouchStart] = useState(null);
@@ -495,12 +502,7 @@ function PublicPropertyDetail() {
             );
           })()}
         </div>
-        {getLatLng() && (
-          <button onClick={handleOpenMap} className="flex flex-col items-center text-blue-600 hover:underline">
-            <MapIcon className="w-6 h-6 mb-1 fill-blue-600 text-blue-600" />
-            <span className="text-xs">{t.propertyDetail.onMap}</span>
-          </button>
-        )}
+        {/* Кнопка "на карте" на карточке убрана по требованию */}
       </div>
 
       {/* Тип */}
@@ -664,34 +666,28 @@ function PublicPropertyDetail() {
             (
               <div className="flex gap-2">
                 {property.layoutFileURL && (
-                  <a
-                    href={property.layoutFileURL}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => { setViewerImages([property.layoutFileURL]); setViewerIndex(0); setViewerOpen(true); }}
                     className="text-blue-600 hover:underline"
                   >
                     {t.propertyDetail.viewButton}
-                  </a>
+                  </button>
                 )}
                 {property.layoutFileURL2 && (
-                  <a
-                    href={property.layoutFileURL2}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => { setViewerImages([property.layoutFileURL2]); setViewerIndex(0); setViewerOpen(true); }}
                     className="text-blue-600 hover:underline"
                   >
                     {t.propertyDetail.viewButton}
-                  </a>
+                  </button>
                 )}
                 {property.layoutFileURL3 && (
-                  <a
-                    href={property.layoutFileURL3}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => { setViewerImages([property.layoutFileURL3]); setViewerIndex(0); setViewerOpen(true); }}
                     className="text-blue-600 hover:underline"
                   >
                     {t.propertyDetail.viewButton}
-                  </a>
+                  </button>
                 )}
               </div>
             ),
@@ -868,6 +864,198 @@ function PublicPropertyDetail() {
           </div>
         )}
       </div>
+
+      {/* Секция: Просмотр детальной информации и документов */}
+      <div className="mt-6">
+        <details 
+          ref={docsDetailsRef}
+          className="group border rounded-lg"
+          onToggle={() => {
+            try {
+              if (docsDetailsRef.current && docsDetailsRef.current.open && docsContentRef.current) {
+                // Даём браузеру перестроить layout, затем скроллим к началу контента
+                requestAnimationFrame(() => {
+                  docsContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+              }
+            } catch {}
+          }}
+        >
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="font-medium text-gray-800">{t.publicDocs?.title}</span>
+            <span className="transition-transform group-open:rotate-180">▼</span>
+          </summary>
+          <div ref={docsContentRef} className="px-4 pb-4">
+            {(() => {
+              const normalizedRole = String(role || '').toLowerCase();
+              const allowed = ['admin','moderator','premium agent','премиум агент'].includes(normalizedRole);
+              if (allowed) {
+                const has = (v) => v !== undefined && v !== null && v !== '';
+                const npwpVal = property.npwp ?? property.taxNumber;
+                const preRows = [];
+                const docRows = [];
+                // Пре-данные: Комплекс / Застройщик / На карте (должны быть ПЕРЕД заголовком Документы)
+                if (has(property.complexName) || has(property.complex)) {
+                  preRows.push(
+                    <div key="complex" className="grid grid-cols-[auto,1fr] items-start gap-2">
+                      <span className="text-gray-600">{`${t.propertyDetail.complex}:`}</span>
+                      <span className="whitespace-pre-wrap break-words">{safeDisplay(property.complexName || property.complex)}</span>
+                    </div>
+                  );
+                }
+                if (has(property.developer)) {
+                  preRows.push(
+                    <div key="developer" className="grid grid-cols-[auto,1fr] items-start gap-2">
+                      <span className="text-gray-600">{`${t.propertyDetail.developer}:`}</span>
+                      <span className="whitespace-pre-wrap break-words">{safeDisplay(property.developer)}</span>
+                    </div>
+                  );
+                }
+                if (getLatLng()) {
+                  preRows.push(
+                    <div key="onmap" className="flex items-center">
+                      <button onClick={handleOpenMap} className="flex items-center gap-2 text-blue-600 hover:underline">
+                        <MapIcon className="w-4 h-4" />
+                        <span>{t.propertyDetail.onMap}</span>
+                      </button>
+                    </div>
+                  );
+                }
+                if (has(property.legalCompanyName)) docRows.push(
+                  <div key="legalCompanyName" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.legalCompanyName}</span>
+                    <span className="ml-4">{safeDisplay(property.legalCompanyName)}</span>
+                  </div>
+                );
+                if (has(npwpVal)) docRows.push(
+                  <div key="npwp" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.taxNumber}</span>
+                    <span className="ml-4">{safeDisplay(npwpVal)}</span>
+                  </div>
+                );
+                if (has(property.pkkpr) || has(property.pkkprFileURL)) docRows.push(
+                  <div key="pkkpr" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.landUsePermit}</span>
+                    <span className="ml-4 flex flex-wrap items-center gap-2">
+                      <span className="whitespace-pre-wrap break-words">{safeDisplay(property.pkkpr)}</span>
+                      {property.pkkprFileURL && (
+                        <span className="basis-full sm:basis-auto">
+                          <button onClick={() => { setViewerImages([property.pkkprFileURL]); setViewerIndex(0); setViewerOpen(true); }} className="text-blue-600 hover:underline">{t.propertyDetail.viewButton}</button>
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                );
+                if (has(property.shgb) || has(property.shgbFileURL) || has(property.shgbFileURL2) || has(property.shgbFileURL3)) docRows.push(
+                  <div key="shgb" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.landRightsCertificate}</span>
+                    <span className="ml-4 flex flex-wrap items-center gap-2">
+                      <span className="whitespace-pre-wrap break-words">{safeDisplay(property.shgb)}</span>
+                      <span className="flex gap-2 basis-full sm:basis-auto">
+                        {property.shgbFileURL && (
+                          <button onClick={() => { setViewerImages([property.shgbFileURL]); setViewerIndex(0); setViewerOpen(true); }} className="text-blue-600 hover:underline">{t.propertyDetail.viewButton}</button>
+                        )}
+                        {property.shgbFileURL2 && (
+                          <button onClick={() => { setViewerImages([property.shgbFileURL2]); setViewerIndex(0); setViewerOpen(true); }} className="text-blue-600 hover:underline">{t.propertyDetail.viewButton}</button>
+                        )}
+                        {property.shgbFileURL3 && (
+                          <button onClick={() => { setViewerImages([property.shgbFileURL3]); setViewerIndex(0); setViewerOpen(true); }} className="text-blue-600 hover:underline">{t.propertyDetail.viewButton}</button>
+                        )}
+                      </span>
+                    </span>
+                  </div>
+                );
+                if (has(property.landLeaseEndDate)) docRows.push(
+                  <div key="landLeaseEndDate" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.landLeaseEndDate}</span>
+                    <span className="ml-4">{safeDisplay(property.landLeaseEndDate)}</span>
+                  </div>
+                );
+                if (has(property.pbg) || has(property.pbgFileURL)) docRows.push(
+                  <div key="pbg" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.buildingPermit}</span>
+                    <span className="ml-4 flex flex-wrap items-center gap-2">
+                      <span className="whitespace-pre-wrap break-words">{safeDisplay(property.pbg)}</span>
+                      {property.pbgFileURL && (
+                        <span className="basis-full sm:basis-auto">
+                          <button onClick={() => { setViewerImages([property.pbgFileURL]); setViewerIndex(0); setViewerOpen(true); }} className="text-blue-600 hover:underline">{t.propertyDetail.viewButton}</button>
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                );
+                if (has(property.imb)) docRows.push(
+                  <div key="imb" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.buildingPermitIMB}</span>
+                    <span className="ml-4">{safeDisplay(property.imb)}</span>
+                  </div>
+                );
+                if (has(property.slf) || has(property.slfFileURL)) docRows.push(
+                  <div key="slf" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.buildingReadinessCertificate}</span>
+                    <span className="ml-4 flex flex-wrap items-center gap-2">
+                      <span className="whitespace-pre-wrap break-words">{safeDisplay(property.slf)}</span>
+                      {property.slfFileURL && (
+                        <span className="basis-full sm:basis-auto">
+                          <button onClick={() => { setViewerImages([property.slfFileURL]); setViewerIndex(0); setViewerOpen(true); }} className="text-blue-600 hover:underline">{t.propertyDetail.viewButton}</button>
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                );
+                if (has(property.dueDiligenceFileURL)) docRows.push(
+                  <div key="dd" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.dueDiligence}</span>
+                    <span className="ml-4">
+                      <button onClick={() => { setViewerImages([property.dueDiligenceFileURL]); setViewerIndex(0); setViewerOpen(true); }} className="text-blue-600 hover:underline">{t.propertyDetail.viewButton}</button>
+                    </span>
+                  </div>
+                );
+                if (has(property.unbrandedPresentationFileURL)) docRows.push(
+                  <div key="unbranded" className="flex justify-between">
+                    <span className="text-gray-600">{t.propertyDetail.unbrandedPresentation}</span>
+                    <span className="ml-4">
+                      <button onClick={() => { setViewerImages([property.unbrandedPresentationFileURL]); setViewerIndex(0); setViewerOpen(true); }} className="text-blue-600 hover:underline">{t.propertyDetail.viewButton}</button>
+                    </span>
+                  </div>
+                );
+
+                if (preRows.length === 0 && docRows.length === 0) {
+                  return <div className="text-sm text-gray-500">{t.propertyDetail.noDocuments || 'Документы отсутствуют'}</div>;
+                }
+
+                return (
+                  <div className="space-y-3">
+                    {preRows.length > 0 && (
+                      <div className="grid grid-cols-1 gap-2 text-sm">
+                        {preRows}
+                      </div>
+                    )}
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">{t.propertyDetail.documentsSection}</h3>
+                    {docRows.length > 0 && (
+                      <div className="grid grid-cols-1 gap-2 text-sm">
+                        {docRows}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <div className="py-2">
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{t.publicDocs?.openAccess}</button>
+                </div>
+              );
+            })()}
+          </div>
+        </details>
+      </div>
+      <FullScreenImageView
+        isOpen={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        images={viewerImages}
+        currentIndex={viewerIndex}
+        onIndexChange={setViewerIndex}
+      />
     </div>
   );
 }
