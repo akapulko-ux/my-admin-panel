@@ -293,6 +293,73 @@ exports.sendTelegramNotification = functions.https.onCall(async (data, context) 
   }
 });
 
+// Сообщение администратору о нажатии кнопки "Подписаться" в публичной галерее
+exports.notifySubscriptionInterest = functions.https.onCall(async (data, context) => {
+  try {
+    const payload = (data && (data.data || data)) || {};
+    const uid = context?.auth?.uid || String(payload.uid || '');
+    if (!uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Требуется аутентификация');
+    }
+
+    // Загружаем пользователя
+    const userRef = admin.firestore().collection('users').doc(uid);
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
+      throw new functions.https.HttpsError('not-found', 'Профиль пользователя не найден');
+    }
+    const u = userSnap.data() || {};
+    console.log('[notifySubscriptionInterest] from uid:', uid, 'email:', u.email || context?.auth?.token?.email || null);
+
+    // Ищем админов, подключенных к Telegram
+    const adminsSnap = await admin.firestore()
+      .collection('users')
+      .where('role', '==', 'admin')
+      .where('telegramConnected', '==', true)
+      .get();
+
+    if (adminsSnap.empty) {
+      console.warn('[notifySubscriptionInterest] Нет админов, подключенных к Telegram');
+      return { success: false, reason: 'no_admins' };
+    }
+
+    // Формируем сообщение c максимально полной информацией из БД
+    const lines = [];
+    lines.push('🧾 Заявка на подписку ($199 / мес.)');
+    lines.push('');
+    lines.push(`👤 Пользователь: ${u.name || u.displayName || u.fullName || '-'} (${uid})`);
+    lines.push(`📧 Email: ${u.email || context.auth.token.email || '-'}`);
+    lines.push(`📞 Телефон: ${u.phone || u.phoneNumber || '-'}`);
+    lines.push(`🧩 Роль: ${u.role || '-'}`);
+    if (u.developerId) lines.push(`🏗️ Developer ID: ${u.developerId}`);
+    if (u.telegramChatId) lines.push(`💬 Telegram: ${u.telegramChatId}`);
+    if (u.lang || u.language) lines.push(`🌐 Язык: ${u.lang || u.language}`);
+    if (u.createdAt) lines.push(`🕒 Создан: ${new Date((u.createdAt._seconds ? u.createdAt._seconds * 1000 : Date.now())).toLocaleString('ru-RU')}`);
+    const message = lines.join('\n');
+
+    // Отправляем каждому администратору
+    const promises = [];
+    adminsSnap.forEach(doc => {
+      const adminData = doc.data();
+      const chatId = adminData?.telegramChatId;
+      if (!chatId) return;
+      promises.push(fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' })
+      }).then(r => r.json()).catch(e => ({ error: e?.message || String(e) })));
+    });
+
+    const results = await Promise.all(promises);
+    console.log('[notifySubscriptionInterest] results:', results);
+    return { success: true };
+  } catch (e) {
+    console.error('[notifySubscriptionInterest] error:', e);
+    if (e instanceof functions.https.HttpsError) throw e;
+    throw new functions.https.HttpsError('internal', e.message || 'Unknown error');
+  }
+});
+
 // Функция для уведомления пользователей о новых фиксациях
 exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", async (event) => {
   const fixationData = event.data.data();

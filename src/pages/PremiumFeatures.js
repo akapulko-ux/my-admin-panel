@@ -16,7 +16,9 @@ import {
   ArrowRight,
   Crown,
   Zap,
-  Target
+  Target,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 
 function PremiumFeatures() {
@@ -43,6 +45,22 @@ function PremiumFeatures() {
     {
       icon: Globe,
       ...t.features.publicWebPage
+    },
+    {
+      icon: Star,
+      ...t.features.ratingBoost
+    },
+    {
+      icon: Bot,
+      ...t.features.aiTelegramBot
+    },
+    {
+      icon: Users,
+      ...t.features.crmSystem
+    },
+    {
+      icon: Sparkles,
+      ...t.features.contentFactory
     }
   ];
 

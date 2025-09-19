@@ -8,6 +8,7 @@ import { useLanguage } from '../lib/LanguageContext';
 
 const ConstructionSupervisionLanding = () => {
   const { language, changeLanguage } = useLanguage();
+  const [selectedService, setSelectedService] = React.useState(null); // 'supervision' | 'acceptance' | 'build'
 
   const t = {
     ru: {
@@ -186,6 +187,26 @@ const ConstructionSupervisionLanding = () => {
 
   const tr = t[language] || t.ru;
 
+  const getWhatsappLink = () => {
+    const base = 'https://wa.me/6282147824968';
+    let msgRu = 'Здравствуйте! Хочу получить консультацию.';
+    let msgEn = 'Hello! I would like to get a consultation.';
+    if (selectedService === 'supervision') {
+      msgRu = 'Здравствуйте! Хочу запросить технический надзор по объекту.';
+      msgEn = 'Hello! I would like to request technical supervision of a property.';
+    } else if (selectedService === 'acceptance') {
+      msgRu = 'Здравствуйте! Хочу заказать приемку объекта.';
+      msgEn = 'Hello! I would like to order a property acceptance inspection.';
+    } else if (selectedService === 'build') {
+      msgRu = 'Здравствуйте! Интересует индивидуальное строительство.';
+      msgEn = 'Hello! I am interested in custom construction.';
+    }
+    const msg = language === 'en' ? msgEn : msgRu;
+    const tail = `\n\nСтраница: ${typeof window !== 'undefined' ? window.location.href : 'landing'}`;
+    const text = encodeURIComponent(msg + tail);
+    return `${base}?text=${text}`;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -237,8 +258,8 @@ const ConstructionSupervisionLanding = () => {
                 {tr.heroSubtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 md:justify-end md:ml-auto">
-                <a href="#supervision"><Button size="lg" className="gap-2"><Shield className="h-4 w-4"/> {tr.heroButtons.supervision}</Button></a>
-                <a href="#acceptance"><Button variant="outline" size="lg" className="gap-2"><ClipboardList className="h-4 w-4"/> {tr.heroButtons.acceptance}</Button></a>
+                <a href="#supervision" onClick={() => setSelectedService('supervision')}><Button size="lg" className="gap-2"><Shield className="h-4 w-4"/> {tr.heroButtons.supervision}</Button></a>
+                <a href="#acceptance" onClick={() => setSelectedService('acceptance')}><Button variant="outline" size="lg" className="gap-2"><ClipboardList className="h-4 w-4"/> {tr.heroButtons.acceptance}</Button></a>
               </div>
             </div>
           </div>
@@ -312,7 +333,9 @@ const ConstructionSupervisionLanding = () => {
                       <Badge key={i}>{b}</Badge>
                     ))}
                   </div>
-                  <a href="#contact"><Button className="w-full">{tr.supervision.order}</Button></a>
+                  <a href={getWhatsappLink()} target="_blank" rel="noopener noreferrer" onClick={() => setSelectedService('supervision')}>
+                    <Button className="w-full">{tr.supervision.order}</Button>
+                  </a>
                 </CardContent>
               </Card>
             </div>
@@ -353,7 +376,9 @@ const ConstructionSupervisionLanding = () => {
                     <Badge>{language === 'ru' ? 'Фото/видеофиксация' : 'Photo/Video evidence'}</Badge>
                     <Badge>{language === 'ru' ? 'Заключение эксперта' : 'Expert conclusion'}</Badge>
                   </div>
-                  <a href="#contact"><Button className="w-full" variant="secondary">{tr.acceptance.apply}</Button></a>
+                  <a href={getWhatsappLink()} target="_blank" rel="noopener noreferrer" onClick={() => setSelectedService('acceptance')}>
+                    <Button className="w-full" variant="secondary">{tr.acceptance.apply}</Button>
+                  </a>
                 </CardContent>
               </Card>
             </div>
@@ -393,7 +418,9 @@ const ConstructionSupervisionLanding = () => {
                       <Badge key={i}>{b}</Badge>
                     ))}
                   </div>
-                  <a href="#contact"><Button className="w-full" variant="secondary">{tr.build.apply}</Button></a>
+                  <a href={getWhatsappLink()} target="_blank" rel="noopener noreferrer" onClick={() => setSelectedService('build')}>
+                    <Button className="w-full" variant="secondary">{tr.build.apply}</Button>
+                  </a>
                 </CardContent>
               </Card>
             </div>
@@ -412,7 +439,7 @@ const ConstructionSupervisionLanding = () => {
                 <a href="https://t.me/bali_supervision_bot" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full">{tr.contact.telegram}</Button>
                 </a>
-                <a href="https://wa.me/6282147824968" target="_blank" rel="noopener noreferrer">
+                <a href={getWhatsappLink()} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" className="w-full">{tr.contact.whatsapp}</Button>
                 </a>
               </div>

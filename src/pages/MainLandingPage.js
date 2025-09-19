@@ -4,16 +4,13 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import PropertyPlacementModal from '../components/PropertyPlacementModal';
 import {
   TrendingUp,
   Users2,
   Building2,
   ArrowRight,
   Globe,
-  BarChart3,
-  Shield,
-  Zap,
-  Target,
   X
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
@@ -40,6 +37,7 @@ const MainLandingPage = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
   
   // Состояние для формы входа
   const [email, setEmail] = useState('');
@@ -52,6 +50,7 @@ const MainLandingPage = () => {
   const [regEmail, setRegEmail] = useState('');
   const [regStatus, setRegStatus] = useState('agent');
   const [isRegLoading, setIsRegLoading] = useState(false);
+  const [footerModal, setFooterModal] = useState(null); // 'terms' | 'privacy' | 'support' | null
   
   const statuses = [
     { value: 'agent', ru: 'Агент', en: 'Agent', id: 'Agen' },
@@ -218,7 +217,7 @@ const MainLandingPage = () => {
     },
     ru: {
       title: "Добро пожаловать на платформу IT Agent",
-      subtitle: "Ваше комплексное решение для инвестиций в недвижимость на Бали",
+      subtitle: "Ваше комплексное решение для инвестиций в недвижимость",
       investors: {
         title: "Для инвесторов",
         subtitle: "Откройте прибыльные инвестиционные возможности",
@@ -235,7 +234,7 @@ const MainLandingPage = () => {
       agents: {
         title: "Для риелторов",
         subtitle: "Развивайте свой бизнес с мощными инструментами",
-        description: "Получите доступ к полному листингу объектов застройщиков Бали, продвинутым инструментам и комплексной поддержке для увеличения продаж и управления клиентами.",
+        description: "Получите доступ к полному листингу объектов застройщиков, продвинутым инструментам и комплексной поддержке для увеличения продаж и управления клиентами.",
         features: [
           "Полная база объектов",
           "Продвинутая система поиска",
@@ -420,7 +419,7 @@ const MainLandingPage = () => {
         
         {link === "/" && (cta === "Присоединиться как агент" || cta === "Join as Agent" || cta === "Bergabung sebagai Agen") ? (
           <Button 
-            onClick={() => setIsAuthModalOpen(true)} 
+            onClick={() => setIsPlacementModalOpen(true)} 
             className="w-full gap-2" 
             size="lg"
           >
@@ -437,19 +436,7 @@ const MainLandingPage = () => {
         )}
         
         {/* Дополнительная кнопка "Установить IT Agent" для карточки агентов */}
-        {link === "/" && (cta === "Присоединиться как агент" || cta === "Join as Agent" || cta === "Bergabung sebagai Agen") && (
-          <a
-            href="https://apps.apple.com/id/app/it-agent-bali/id6746729723"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors mt-3"
-          >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-            </svg>
-            {language === 'ru' ? 'Установить IT Agent' : language === 'id' ? 'Instal IT Agent' : 'Install IT Agent'}
-          </a>
-        )}
+        
       </CardContent>
     </Card>
   );
@@ -550,56 +537,23 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      {/* Features Overview */}
-      <section className="py-20 px-0 sm:px-4 bg-gray-200">
-        <div className="w-full sm:container sm:mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-            <div className="text-center">
-              <div className="mb-4 inline-block p-4 bg-primary/10 rounded-xl">
-                <BarChart3 className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{currentT.featuresOverview.analytics.title}</h3>
-              <p className="text-muted-foreground text-sm">{currentT.featuresOverview.analytics.description}</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="mb-4 inline-block p-4 bg-primary/10 rounded-xl">
-                <Shield className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{currentT.featuresOverview.security.title}</h3>
-              <p className="text-muted-foreground text-sm">{currentT.featuresOverview.security.description}</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="mb-4 inline-block p-4 bg-primary/10 rounded-xl">
-                <Zap className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{currentT.featuresOverview.performance.title}</h3>
-              <p className="text-muted-foreground text-sm">{currentT.featuresOverview.performance.description}</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="mb-4 inline-block p-4 bg-primary/10 rounded-xl">
-                <Target className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{currentT.featuresOverview.precision.title}</h3>
-              <p className="text-muted-foreground text-sm">{currentT.featuresOverview.precision.description}</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Footer */}
-      <footer className="border-t py-12 px-4 bg-gray-200">
-        <div className="container mx-auto text-center">
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold text-primary mb-2">IT Agent</h3>
-            <p className="text-black">{currentT.footer.tagline}</p>
+      <footer className="py-12 px-4 bg-black text-gray-300">
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-1 text-sm">
+              <p>© 2025 IT Agent. Все права защищены.</p>
+              <p>ИП Манова Вероника Алексеевна</p>
+              <p>ИНН 780631330106</p>
+            </div>
+            <div className="flex gap-8 text-sm">
+              <button type="button" className="hover:text-white" onClick={() => setFooterModal('terms')}>Условия использования</button>
+              <button type="button" className="hover:text-white" onClick={() => setFooterModal('privacy')}>Политика конфиденциальности</button>
+              <button type="button" className="hover:text-white" onClick={() => setFooterModal('support')}>Поддержка</button>
+            </div>
           </div>
-
-                     <p className="text-black text-sm">
-              {currentT.footer.copyright}
-            </p>
         </div>
       </footer>
 
@@ -758,18 +712,6 @@ const MainLandingPage = () => {
               </div>
               
               <div className="space-y-3">
-                <a
-                  href="https://apps.apple.com/id/app/it-agent-bali/id6746729723"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                  </svg>
-                  {currentT.authModal.installButton}
-                </a>
-                
                 <Button 
                   variant="outline" 
                   onClick={() => setShowSuccess(false)}
@@ -795,6 +737,129 @@ const MainLandingPage = () => {
             >
               {currentT.authModal.backButton}
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Общее модальное окно (как в публичной галерее) */}
+      <PropertyPlacementModal 
+        isOpen={isPlacementModalOpen}
+        onClose={() => setIsPlacementModalOpen(false)}
+      />
+
+      {/* Модальные окна футера */}
+      {footerModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">
+                  {footerModal === 'terms' && 'Условия использования'}
+                  {footerModal === 'privacy' && 'Политика конфиденциальности'}
+                  {footerModal === 'support' && 'Поддержка'}
+                </h2>
+                <button
+                  onClick={() => setFooterModal(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {footerModal === 'terms' && (
+                <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
+                  <p>
+                    Настоящие Условия использования регулируют порядок доступа и работы
+                    с сервисом IT Agent. Продолжая пользоваться сайтом, вы подтверждаете
+                    согласие с данными условиями.
+                  </p>
+                  <h3 className="font-semibold text-gray-900">1. Назначение сервиса</h3>
+                  <p>
+                    Сервис предоставляет информационные материалы о недвижимости и
+                    инструменты для работы риелторов и инвесторов. Сервис не является
+                    финансовым консультантом и не гарантирует доходность.
+                  </p>
+                  <h3 className="font-semibold text-gray-900">2. Аккаунт и доступ</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Вы несете ответственность за сохранность учетных данных.</li>
+                    <li>Мы вправе ограничить доступ при нарушении правил или закона.</li>
+                  </ul>
+                  <h3 className="font-semibold text-gray-900">3. Содержимое и права</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Все материалы защищены законодательством об интеллектуальной собственности.</li>
+                    <li>Запрещены копирование, скрейпинг и распространение без письменного разрешения.</li>
+                  </ul>
+                  <h3 className="font-semibold text-gray-900">4. Ограничение ответственности</h3>
+                  <p>
+                    Сервис предоставляется «как есть». Мы не отвечаем за косвенные убытки,
+                    вызванные использованием или невозможностью использования сервиса.
+                  </p>
+                  <h3 className="font-semibold text-gray-900">5. Изменения условий</h3>
+                  <p>
+                    Мы можем обновлять Условия. Актуальная версия публикуется на этой
+                    странице. Дата обновления: 19.09.2025.
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Правообладатель: ИП Манова Вероника Алексеевна, ИНН 780631330106.
+                  </p>
+                </div>
+              )}
+
+              {footerModal === 'privacy' && (
+                <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
+                  <p>
+                    Эта Политика описывает, какие данные мы обрабатываем при вашем
+                    использовании IT Agent и для каких целей.
+                  </p>
+                  <h3 className="font-semibold text-gray-900">1. Какие данные собираем</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Данные аккаунта (имя, email, телефон, статус пользователя).</li>
+                    <li>Технические данные (IP, тип устройства, cookies, статистика использования).</li>
+                  </ul>
+                  <h3 className="font-semibold text-gray-900">2. Для чего используем</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Предоставление функций сервиса и персонализация интерфейса.</li>
+                    <li>Связь с пользователями по вопросам обслуживания.</li>
+                    <li>Обеспечение безопасности и предотвращение злоупотреблений.</li>
+                  </ul>
+                  <h3 className="font-semibold text-gray-900">3. Хранение и передача</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Данные хранятся в защищенных системах и обрабатываются на законных основаниях.</li>
+                    <li>Мы не продаем персональные данные третьим лицам.</li>
+                  </ul>
+                  <h3 className="font-semibold text-gray-900">4. Права пользователя</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Доступ к данным, их исправление и удаление в пределах закона.</li>
+                    <li>Отзыв согласия на обработку, если основание — согласие.</li>
+                  </ul>
+                  <p className="text-xs text-gray-500">
+                    Ответственный за обработку: ИП Манова Вероника Алексеевна, ИНН 780631330106. Обновлено: 19.09.2025.
+                  </p>
+                </div>
+              )}
+
+              {footerModal === 'support' && (
+                <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
+                  <p>
+                    Раздел поддержки IT Agent помогает решить вопросы по работе
+                    платформы. Перед обращением попробуйте обновить страницу и
+                    убедиться в стабильности интернет-соединения.
+                  </p>
+                  <h3 className="font-semibold text-gray-900">Как ускорить решение</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Опишите проблему: что делали, что ожидали, что получили.</li>
+                    <li>Приложите скриншоты/видео и укажите время возникновения.</li>
+                    <li>Сообщите модель устройства и версию браузера.</li>
+                  </ul>
+                  <h3 className="font-semibold text-gray-900">Сроки ответа</h3>
+                  <p>
+                    Мы стараемся отвечать в течение 1–2 рабочих дней. Сложные
+                    технические вопросы могут потребовать больше времени на анализ.
+                  </p>
+                  <p className="text-xs text-gray-500">Обновлено: 19.09.2025.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

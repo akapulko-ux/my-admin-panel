@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc } from "firebase/firestore";
+import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc, onSnapshot } from "firebase/firestore";
 import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Waves, Bed, Ruler, MapPin, Hammer, Layers, Bath, FileText, Calendar, DollarSign, Settings } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { useAuth } from "../AuthContext";
+import PropertyPlacementModal from "../components/PropertyPlacementModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { AdaptiveTooltip } from "../components/ui/tooltip";
 import {
   translateDistrict,
@@ -35,6 +39,12 @@ function PublicPropertyDetail() {
   const { language } = useLanguage();
   const t = translations[language];
   const { currentUser, role } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [entitlementActive, setEntitlementActive] = useState(false);
+  const [usdRate, setUsdRate] = useState(null);
   const [isLeadOpen, setIsLeadOpen] = useState(false);
   const [leadName, setLeadName] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
@@ -167,6 +177,41 @@ function PublicPropertyDetail() {
       setCurrentImg(prev => prev - 1);
     }
   };
+
+  // Подписка на доступ к документам (entitlement) конкретного объекта
+  useEffect(() => {
+    if (!currentUser || !id) return;
+    const entId = `${currentUser.uid}_${id}`;
+    const ref = doc(db, 'entitlements', entId);
+    const unsub = onSnapshot(ref, (snap) => {
+      const data = snap.data();
+      const active = !!data && data.status === 'active';
+      setEntitlementActive(active);
+      if (active) {
+        setIsAccessModalOpen(false);
+        setIsPaymentModalOpen(false);
+      }
+    });
+    return () => unsub();
+  }, [currentUser, id]);
+
+  // Курс RUB→USD для отображения суммы в $ (оплата в RUB)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch('https://api.exchangerate.host/latest?base=RUB&symbols=USD');
+        if (!resp.ok) return;
+        const json = await resp.json();
+        const rate = Number(json?.rates?.USD);
+        if (!cancelled && rate && isFinite(rate)) setUsdRate(rate);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const ONE_TIME_PRICE_RUB = 4000;
+  const usdPrice = usdRate ? (ONE_TIME_PRICE_RUB * usdRate) : null;
 
   // useEffect для автоматического перевода описания
   useEffect(() => {
@@ -319,6 +364,11 @@ function PublicPropertyDetail() {
       </div>
     </div>
   );
+
+  const isPrivileged = (() => {
+    const normalizedRole = String(role || '').toLowerCase();
+    return ['admin', 'moderator', 'premium agent', 'премиум агент'].includes(normalizedRole);
+  })();
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -526,6 +576,20 @@ function PublicPropertyDetail() {
 
       {/* Характеристики (только просмотр) */}
       <div className="grid grid-cols-2 gap-4">
+        {isPrivileged && (property.complexName || property.complex) && (
+          renderAttribute(
+            t.propertyDetail.complex,
+            safeDisplay(property.complexName || property.complex),
+            Building2
+          )
+        )}
+        {isPrivileged && property.developer && (
+          renderAttribute(
+            t.propertyDetail.developer,
+            safeDisplay(property.developer),
+            Hammer
+          )
+        )}
         {renderAttribute(
           shouldShowUnitsCount ? t.propertyDetail.unitsCount : ((property.bedrooms === 0 || property.bedrooms === "Студия") ? t.propertyDetail.studio : t.propertyDetail.bedrooms),
           shouldShowUnitsCount ? safeDisplay(property.unitsCount) : ((property.bedrooms === 0 || property.bedrooms === "Студия") ? t.propertyDetail.studio : safeDisplay(property.bedrooms)),
@@ -652,7 +716,7 @@ function PublicPropertyDetail() {
           /* Calculated ROI (если нет ожидаемого ROI и есть рассчетный) */
           roiPercent !== null && (
             renderAttribute(
-              `${t.roiShort} (${t.roiCalculator.title})`,
+              t.roiShort,
               `${Number(roiPercent).toFixed(2)}%`,
               Star
             )
@@ -1042,13 +1106,109 @@ function PublicPropertyDetail() {
               }
               return (
                 <div className="py-2">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{t.publicDocs?.openAccess}</button>
+                  <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    onClick={() => {
+                      if (!currentUser) {
+                        setIsAuthModalOpen(true);
+                      } else {
+                        setIsAccessModalOpen(true);
+                      }
+                    }}
+                  >
+                    {t.publicDocs?.openAccess}
+                  </button>
                 </div>
               );
             })()}
           </div>
         </details>
       </div>
+      {/* Модалка авторизации/регистрации как в публичной галерее */}
+      <PropertyPlacementModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
+      {/* Модалка с выбором доступа для авторизованных */}
+      <Dialog open={isAccessModalOpen} onOpenChange={setIsAccessModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.publicDocs?.modal?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+            <Card className="p-4 h-full flex flex-col">
+              <h3 className="text-lg font-semibold mb-2">{t.publicDocs?.modal?.colOneTitle}</h3>
+              <p className="text-sm text-gray-600 mb-2">{t.publicDocs?.modal?.colOneDesc}</p>
+              <div className="mt-auto space-y-3">
+                {t.publicDocs?.modal?.colOnePrice && (
+                  <div className="text-base font-medium text-gray-900">{t.publicDocs.modal.colOnePrice}</div>
+                )}
+                {usdPrice && (
+                  <div className="text-xs text-gray-600">≈ USD ${usdPrice.toFixed(2)} (оплата в RUB {ONE_TIME_PRICE_RUB})</div>
+                )}
+              <Button className="w-full" disabled={entitlementActive} onClick={async () => {
+                try {
+                  if (!currentUser) { setIsAuthModalOpen(true); return; }
+                  const token = await currentUser.getIdToken();
+                  const resp = await fetch('/api/payments/robokassa/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ propertyId: id, isTest: false })
+                  });
+                  const json = await resp.json();
+                  if (resp.ok && json?.url) {
+                    setPaymentUrl(json.url);
+                    setIsPaymentModalOpen(true);
+                  } else {
+                    showError(json?.error || 'Failed to initialize payment');
+                  }
+                } catch (e) {
+                  console.error('create payment error', e);
+                  showError('Payment initialization error');
+                }
+              }}>
+                {t.publicDocs?.modal?.colOneButton}
+              </Button>
+              </div>
+            </Card>
+            <Card className="p-4 h-full flex flex-col">
+              <h3 className="text-lg font-semibold mb-2">{t.publicDocs?.modal?.colTwoTitle}</h3>
+              <p className="text-sm text-gray-600 mb-2">{t.publicDocs?.modal?.colTwoDesc}</p>
+              <div className="mt-auto space-y-3">
+                {t.publicDocs?.modal?.colTwoPrice && (
+                  <div className="text-base font-medium text-gray-900">{t.publicDocs.modal.colTwoPrice}</div>
+                )}
+              <Button className="w-full" variant="secondary" onClick={() => { /* заглушка */ }}>
+                {t.publicDocs?.modal?.colTwoButton}
+              </Button>
+              </div>
+            </Card>
+          </div>
+          <div className="pt-2">
+            <Button variant="ghost" className="w-full" onClick={() => setIsAccessModalOpen(false)}>
+              {t.publicDocs?.modal?.close}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Embedded Robokassa payment modal */}
+      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Complete payment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {usdPrice && (
+              <div className="text-sm text-gray-700">Amount: USD ${usdPrice.toFixed(2)} (charged in RUB {ONE_TIME_PRICE_RUB})</div>
+            )}
+            {paymentUrl ? (
+              <iframe title="Robokassa Payment" src={paymentUrl} className="w-full h-[540px] border rounded" allow="payment *;" />
+            ) : (
+              <div className="text-sm text-gray-500">Initializing…</div>
+            )}
+            <div className="text-xs text-gray-500">Payments are processed by Robokassa.</div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <FullScreenImageView
         isOpen={viewerOpen}
         onClose={() => setViewerOpen(false)}

@@ -121,7 +121,19 @@ export const translations = {
     dataNotFound: 'Data Not Found',
     publicDocs: {
       title: 'View detailed information and documents',
-      openAccess: 'Open access'
+      openAccess: 'Open access',
+      modal: {
+        title: 'Unlock full access',
+        colOneTitle: 'Unlock this property',
+        colOneDesc: 'One-time payment to view full details of this property, its complex, and documents.',
+        colOnePrice: '$49',
+        colOneButton: 'One-time purchase',
+        colTwoTitle: 'Get full access to all listings',
+        colTwoDesc: 'Subscription unlocks full information for all current and future properties for the duration of your plan.',
+        colTwoPrice: '$199 / month',
+        colTwoButton: 'Subscribe',
+        close: 'Close'
+      }
     },
     publicRoiNotAvailable: 'Public ROI page is not available',
     
@@ -225,6 +237,7 @@ export const translations = {
       services: 'Services',
       loginRegister: 'Login / Register',
       account: 'My Account',
+      subscription: 'Subscription',
       servicesList: {
         legalDueDiligence: 'Detailed legal due diligence',
         constructionSupervision: 'Construction technical supervision',
@@ -232,6 +245,18 @@ export const translations = {
         constructionManagement: 'Custom house construction',
         architecturalDesign: 'Architectural design'
       }
+    },
+    subscriptionModal: {
+      title: 'Premium subscription',
+      description: 'Get full access to all current and future listings with verified documents and professional tools.',
+      features: [
+        'Full information for all properties',
+        'Documents and legal details',
+        'Priority updates and new listings',
+        'Professional tools and analytics'
+      ],
+      price: '$199 / month',
+      subscribeButton: 'Subscribe'
     },
     accountPage: {
       title: 'My Account',
@@ -1559,6 +1584,26 @@ _________________               _________________
           title: 'Public web page',
           description: 'Full web page with information about your properties that can be used outside the app and shared with clients and partners.',
           benefit: 'Expanded sales channels'
+        },
+        ratingBoost: {
+          title: 'Higher ranking in catalogs',
+          description: 'Your properties get priority placement and highlighted star ratings like in the public gallery, helping buyers notice you faster.',
+          benefit: 'More impressions and clicks'
+        },
+        aiTelegramBot: {
+          title: 'Your AI Telegram bot',
+          description: 'Launch a branded AI assistant that answers client questions 24/7 and guides them to your properties, booking viewings and collecting requests.',
+          benefit: 'Automated lead generation 24/7'
+        },
+        crmSystem: {
+          title: 'Built‑in CRM for leads',
+          description: 'Collect and process leads from your public page and AI bot in one place, with integrations for external traffic sources.',
+          benefit: 'Faster response and higher conversion'
+        },
+        contentFactory: {
+          title: 'AI content factory',
+          description: 'Automate creation of posts, carousels and short videos for your social networks based on your listings and promotions.',
+          benefit: 'Consistent content without extra effort'
         }
       },
 
@@ -1921,7 +1966,19 @@ _________________               _________________
     dataNotFound: 'Данные не найдены',
     publicDocs: {
       title: 'Просмотр детальной информации и документов',
-      openAccess: 'Открыть доступ'
+      openAccess: 'Открыть доступ',
+      modal: {
+        title: 'Откройте полный доступ',
+        colOneTitle: 'Открыть доступ к этому объекту',
+        colOneDesc: 'Единоразовый платеж — и вы получите полную информацию об объекте, комплексе и его документах.',
+        colOnePrice: '$49',
+        colOneButton: 'Единоразовая покупка',
+        colTwoTitle: 'Полный доступ ко всем объектам',
+        colTwoDesc: 'Подписка дает полный доступ ко всей информации по всем текущим и будущим объектам на срок действия подписки.',
+        colTwoPrice: '$199 / мес.',
+        colTwoButton: 'Подписаться',
+        close: 'Закрыть'
+      }
     },
     publicRoiNotAvailable: 'Публичная страница ROI недоступна',
     
@@ -2047,6 +2104,7 @@ _________________               _________________
       services: 'Услуги',
       loginRegister: 'Вход / Регистрация',
       account: 'Личный кабинет',
+      subscription: 'Подписка',
       servicesList: {
         legalDueDiligence: 'Детальная юридическая проверка объекта',
         constructionSupervision: 'Технадзор за строительством объекта',
@@ -2054,6 +2112,18 @@ _________________               _________________
         constructionManagement: 'Индивидуальное строительство',
         architecturalDesign: 'Разработка архитектурного проекта'
       }
+    },
+    subscriptionModal: {
+      title: 'Премиум‑подписка',
+      description: 'Получите полный доступ ко всем текущим и будущим объектам с проверенными документами и профессиональными инструментами.',
+      features: [
+        'Полная информация по всем объектам',
+        'Документы и юридические детали',
+        'Приоритетные обновления и новые листинги',
+        'Профессиональные инструменты и аналитика'
+      ],
+      price: '$199 / мес.',
+      subscribeButton: 'Подписаться'
     },
     accountPage: {
       title: 'Личный кабинет',
@@ -3398,6 +3468,26 @@ _________________               _________________
           title: 'Публичная веб-страница',
           description: 'Полноценная веб-страница с информацией о ваших объектах, которую можно использовать вне приложения и делиться с клиентами и партнерами.',
           benefit: 'Расширенные каналы продаж'
+        },
+        ratingBoost: {
+          title: 'Повышение рейтинга объектов',
+          description: 'Ваши объекты получают приоритет в каталоге и акцентированное отображение звёзд рейтинга — так же, как в публичной галерее, чтобы покупатели замечали вас быстрее.',
+          benefit: 'Больше показов и переходов'
+        },
+        aiTelegramBot: {
+          title: 'Собственный ИИ Telegram‑бот',
+          description: 'Запустите брендированного ИИ‑ассистента, который 24/7 отвечает на вопросы клиентов, презентует объекты, записывает на показы и собирает заявки.',
+          benefit: 'Автогенерация лидов 24/7'
+        },
+        crmSystem: {
+          title: 'Встроенная CRM для лидов',
+          description: 'Единое место для приёма и обработки заявок с публичной страницы и ИИ‑бота, с возможностью подключения внешних источников трафика.',
+          benefit: 'Быстрая обработка и рост конверсии'
+        },
+        contentFactory: {
+          title: 'Контент‑завод на ИИ',
+          description: 'Автоматизируйте создание постов, каруселей и коротких видео для соцсетей на основе ваших объектов и акций.',
+          benefit: 'Стабильный контент без лишних усилий'
         }
       },
 
@@ -3745,7 +3835,19 @@ _________________               _________________
     dataNotFound: 'Data Tidak Ditemukan',
     publicDocs: {
       title: 'Lihat informasi dan dokumen detail',
-      openAccess: 'Buka akses'
+      openAccess: 'Buka akses',
+      modal: {
+        title: 'Buka akses penuh',
+        colOneTitle: 'Buka akses ke properti ini',
+        colOneDesc: 'Pembayaran satu kali untuk melihat detail lengkap properti ini, kompleksnya, dan dokumen.',
+        colOnePrice: '$49',
+        colOneButton: 'Pembelian sekali',
+        colTwoTitle: 'Akses penuh ke semua listing',
+        colTwoDesc: 'Langganan membuka informasi lengkap untuk semua properti saat ini dan yang akan datang selama masa berlangganan.',
+        colTwoPrice: '$199 / bln',
+        colTwoButton: 'Berlangganan',
+        close: 'Tutup'
+      }
     },
     publicRoiNotAvailable: 'Halaman ROI publik tidak tersedia',
     
@@ -3871,6 +3973,7 @@ _________________               _________________
       services: 'Layanan',
       loginRegister: 'Masuk / Daftar',
       account: 'Akun Saya',
+      subscription: 'Langganan',
       servicesList: {
         legalDueDiligence: 'Pemeriksaan hukum mendetail',
         constructionSupervision: 'Pengawasan teknis konstruksi',
@@ -3878,6 +3981,18 @@ _________________               _________________
         constructionManagement: 'Konstruksi rumah kustom',
         architecturalDesign: 'Desain arsitektur'
       }
+    },
+    subscriptionModal: {
+      title: 'Langganan Premium',
+      description: 'Dapatkan akses penuh ke semua listing saat ini dan mendatang dengan dokumen terverifikasi dan alat profesional.',
+      features: [
+        'Informasi lengkap untuk semua properti',
+        'Dokumen dan detail hukum',
+        'Pembaruan prioritas dan listing baru',
+        'Alat profesional dan analitik'
+      ],
+      price: '$199 / bln',
+      subscribeButton: 'Berlangganan'
     },
     accountPage: {
       title: 'Akun Saya',
@@ -5219,6 +5334,26 @@ _________________               _________________
           title: 'Halaman web publik',
           description: 'Halaman web lengkap dengan informasi tentang properti Anda yang dapat digunakan di luar aplikasi dan dibagikan dengan klien dan mitra.',
           benefit: 'Perluasan saluran penjualan'
+        },
+        ratingBoost: {
+          title: 'Peningkatan peringkat di katalog',
+          description: 'Properti Anda mendapatkan penempatan prioritas dan tampilan bintang peringkat yang disorot seperti di galeri publik, membantu calon pembeli menemukan Anda lebih cepat.',
+          benefit: 'Lebih banyak tayangan dan klik'
+        },
+        aiTelegramBot: {
+          title: 'Bot Telegram AI merek Anda',
+          description: 'Luncurkan asisten AI bermerk yang menjawab pertanyaan klien 24/7 dan mengarahkan mereka ke properti Anda, memesan kunjungan dan mengumpulkan lead.',
+          benefit: 'Generasi lead otomatis 24/7'
+        },
+        crmSystem: {
+          title: 'CRM bawaan untuk lead',
+          description: 'Kumpulkan dan proses lead dari halaman publik dan bot AI Anda dalam satu tempat, dengan integrasi untuk sumber trafik eksternal.',
+          benefit: 'Respon lebih cepat dan konversi lebih tinggi'
+        },
+        contentFactory: {
+          title: 'Pabrik konten berbasis AI',
+          description: 'Otomatiskan pembuatan posting, carousel, dan video pendek untuk media sosial Anda berdasarkan listing dan promosi Anda.',
+          benefit: 'Konten konsisten tanpa usaha ekstra'
         }
       },
 

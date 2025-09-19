@@ -4,15 +4,15 @@ import {
   collection,
   getDocs,
   doc,
-  getDoc,
-  addDoc,
-  updateDoc
+  updateDoc,
+  query,
+  where
 } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { showError, showSuccess, showInfo } from '../utils/notifications';
-import { Building2, Plus, Download, Filter, Edit, RefreshCw, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { showError, showSuccess } from '../utils/notifications';
+import { Plus, Download, Filter, Edit, RefreshCw, ChevronDown, ChevronUp, Loader2, Check } from "lucide-react";
 
 import {
   Card,
@@ -48,52 +48,52 @@ function ListComplexes() {
   const [filterName, setFilterName] = useState("");
   const [filterDeveloper, setFilterDeveloper] = useState("");
   const [filterDistrict, setFilterDistrict] = useState("");
-  const [filterCoordinates, setFilterCoordinates] = useState("");
-  const [filterPriceFrom, setFilterPriceFrom] = useState("");
-  const [filterAreaRange, setFilterAreaRange] = useState("");
-  const [filterDescription, setFilterDescription] = useState("");
-  const [filterProvince, setFilterProvince] = useState("");
-  const [filterCity, setFilterCity] = useState("");
-  const [filterRdtr, setFilterRdtr] = useState("");
-  const [filterManagementCompany, setFilterManagementCompany] = useState("");
-  const [filterOwnershipForm, setFilterOwnershipForm] = useState("");
-  const [filterLandStatus, setFilterLandStatus] = useState("");
-  const [filterCompletionDate, setFilterCompletionDate] = useState("");
-  const [filterVideoLink, setFilterVideoLink] = useState("");
-  const [filterDocsLink, setFilterDocsLink] = useState("");
-  const [filterLeaseYears, setFilterLeaseYears] = useState("");
-  const [filterShgb, setFilterShgb] = useState("");
-  const [filterPbg, setFilterPbg] = useState("");
-  const [filterSlf, setFilterSlf] = useState("");
-  const [filterLegalCompanyName, setFilterLegalCompanyName] = useState("");
+  const [filterCoordinates] = useState("");
+  const [filterPriceFrom] = useState("");
+  const [filterAreaRange] = useState("");
+  const [filterDescription] = useState("");
+  const [filterProvince] = useState("");
+  const [filterCity] = useState("");
+  const [filterRdtr] = useState("");
+  const [filterManagementCompany] = useState("");
+  const [filterOwnershipForm] = useState("");
+  const [filterLandStatus] = useState("");
+  const [filterCompletionDate] = useState("");
+  const [filterVideoLink] = useState("");
+  const [filterDocsLink] = useState("");
+  const [filterLeaseYears] = useState("");
+  const [filterShgb] = useState("");
+  const [filterPbg] = useState("");
+  const [filterSlf] = useState("");
+  const [filterLegalCompanyName] = useState("");
 
   // --- Поля для массового редактирования (аналогичные EditComplex) ---
   const [massEditNumber, setMassEditNumber] = useState("");
   const [massEditName, setMassEditName] = useState("");
   const [massEditDeveloper, setMassEditDeveloper] = useState("");
   const [massEditDistrict, setMassEditDistrict] = useState("");
-  const [massEditCoordinates, setMassEditCoordinates] = useState("");
-  const [massEditPriceFrom, setMassEditPriceFrom] = useState("");
-  const [massEditAreaRange, setMassEditAreaRange] = useState("");
-  const [massEditDescription, setMassEditDescription] = useState("");
-  const [massEditProvince, setMassEditProvince] = useState("");
-  const [massEditCity, setMassEditCity] = useState("");
-  const [massEditRdtr, setMassEditRdtr] = useState("");
-  const [massEditManagementCompany, setMassEditManagementCompany] = useState("");
-  const [massEditOwnershipForm, setMassEditOwnershipForm] = useState("");
-  const [massEditLandStatus, setMassEditLandStatus] = useState("");
-  const [massEditCompletionDate, setMassEditCompletionDate] = useState("");
-  const [massEditVideoLink, setMassEditVideoLink] = useState("");
-  const [massEditDocsLink, setMassEditDocsLink] = useState("");
-  const [massEditLeaseYears, setMassEditLeaseYears] = useState("");
-  const [massEditShgb, setMassEditShgb] = useState("");
-  const [massEditPbg, setMassEditPbg] = useState("");
-  const [massEditSlf, setMassEditSlf] = useState("");
-  const [massEditLegalCompanyName, setMassEditLegalCompanyName] = useState("");
+  const [massEditCoordinates] = useState("");
+  const [massEditPriceFrom] = useState("");
+  const [massEditAreaRange] = useState("");
+  const [massEditDescription] = useState("");
+  const [massEditProvince] = useState("");
+  const [massEditCity] = useState("");
+  const [massEditRdtr] = useState("");
+  const [massEditManagementCompany] = useState("");
+  const [massEditOwnershipForm] = useState("");
+  const [massEditLandStatus] = useState("");
+  const [massEditCompletionDate] = useState("");
+  const [massEditVideoLink] = useState("");
+  const [massEditDocsLink] = useState("");
+  const [massEditLeaseYears] = useState("");
+  const [massEditShgb] = useState("");
+  const [massEditPbg] = useState("");
+  const [massEditSlf] = useState("");
+  const [massEditLegalCompanyName] = useState("");
   // [NEW] Массовое редактирование «Вознаграждение»
-  const [massEditCommission, setMassEditCommission] = useState("");
+  const [massEditCommission] = useState("");
   // Добавляем недостающий state для massEditPool
-  const [massEditPool, setMassEditPool] = useState("");
+  const [massEditPool] = useState("");
 
   // --- Новые состояния для скачивания фотографий ---
   const [downloading, setDownloading] = useState(false);
@@ -255,28 +255,8 @@ function ListComplexes() {
   };
 
   // --- Дублирование комплекса ---
-  const handleDuplicate = async (docId) => {
-    try {
-      const ref = doc(db, "complexes", docId);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        showError("Документ не найден");
-        return;
-      }
-      const data = snap.data();
-
-      const { /* createdAt, */ ...rest } = data;
-      const newData = {
-        ...rest,
-      };
-
-      await addDoc(collection(db, "complexes"), newData);
-      showSuccess("Дубликат создан!");
-      fetchComplexes();
-    } catch (error) {
-      console.error("Ошибка при дублировании комплекса:", error);
-    }
-  };
+  // Оставлено как справочная заготовка; временно не используется, чтобы не засорять UI
+  // function handleDuplicate() {}
 
   // --- Массовое редактирование ---
   const handleMassEdit = async () => {
@@ -722,6 +702,36 @@ function ListComplexes() {
                         Подробнее
                       </Button>
                     </Link>
+                    <div className={`${isMobile ? 'w-full' : 'ml-auto'}`}>
+                      <button
+                        title="Отображать название комплекса"
+                        onClick={async () => {
+                          try {
+                            const current = Boolean(complex.visiblename);
+                            const next = !current;
+                            // 1) Обновляем флаг у самого комплекса
+                            await updateDoc(doc(db, 'complexes', complex.id), { visiblename: next });
+                            // 2) Обновляем объекты, связанные по названию комплекса
+                            const qy = query(collection(db, 'properties'), where('complex', '==', complex.name || ''));
+                            const snap = await getDocs(qy);
+                            const updates = snap.docs.map(d => updateDoc(d.ref, { visiblename: next }));
+                            await Promise.all(updates);
+                            showSuccess(`Флаг visiblename: ${next ? 'включен' : 'выключен'}`);
+                            // Локально обновим стейт
+                            setComplexes(prev => prev.map(c => c.id === complex.id ? { ...c, visiblename: next } : c));
+                            setFilteredComplexes(prev => prev.map(c => c.id === complex.id ? { ...c, visiblename: next } : c));
+                          } catch (e) {
+                            console.error('toggle visiblename error', e);
+                            showError('Ошибка переключения visiblename');
+                          }
+                        }}
+                        className={`inline-flex items-center justify-center rounded-md border px-3 py-2 ${
+                          complex.visiblename ? 'border-green-200 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-500'
+                        }`}
+                      >
+                        <Check className={`w-4 h-4 ${complex.visiblename ? 'text-green-600' : 'text-gray-400'}`} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </CardContent>

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { doc, getDoc, Timestamp, getDocs, where, query, collection, setDoc, deleteDoc } from "firebase/firestore";
 import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench, Scale, HardHat, ClipboardCheck, Ruler, Compass } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -32,6 +33,10 @@ function PublicPropertiesGallery() {
   const { forceRefreshPropertiesList } = useCache();
   const { language } = useLanguage();
   const { currentUser, role } = useAuth();
+  const isPrivileged = (() => {
+    const normalized = String(role || '').toLowerCase();
+    return ['admin', 'moderator', 'premium agent', 'премиум агент'].includes(normalized);
+  })();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const t = translations[language];
@@ -39,6 +44,7 @@ function PublicPropertiesGallery() {
   
   const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
 
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -178,6 +184,8 @@ function PublicPropertiesGallery() {
       const complexNumberById = {};
       const complexNumberByName = {};
       const complexIdByName = {};
+      const complexNameById = {};
+      const complexNameByName = {};
       complexesSnap.forEach((docSnap) => {
         const c = docSnap.data();
         let num = c?.number;
@@ -187,10 +195,12 @@ function PublicPropertiesGallery() {
         }
         if (typeof num !== 'number') num = null;
         complexNumberById[docSnap.id] = num;
+        complexNameById[docSnap.id] = c?.name || null;
         if (c?.name) {
           const key = String(c.name).trim().toLowerCase();
           complexNumberByName[key] = num;
           complexIdByName[key] = docSnap.id;
+          complexNameByName[key] = c.name;
         }
       });
 
@@ -202,6 +212,7 @@ function PublicPropertiesGallery() {
           if (property.complexId && Object.prototype.hasOwnProperty.call(complexNumberById, property.complexId)) {
             augmented.complexNumber = complexNumberById[property.complexId];
             augmented.complexResolvedId = property.complexId;
+            augmented.complexResolvedName = complexNameById[property.complexId] || null;
           } else if (property.complex) {
             const key = String(property.complex).trim().toLowerCase();
             augmented.complexNumber = Object.prototype.hasOwnProperty.call(complexNumberByName, key)
@@ -210,9 +221,13 @@ function PublicPropertiesGallery() {
             augmented.complexResolvedId = Object.prototype.hasOwnProperty.call(complexIdByName, key)
               ? complexIdByName[key]
               : null;
+            augmented.complexResolvedName = Object.prototype.hasOwnProperty.call(complexNameByName, key)
+              ? complexNameByName[key]
+              : property.complex;
           } else {
             augmented.complexNumber = null;
             augmented.complexResolvedId = null;
+            augmented.complexResolvedName = null;
           }
 
           // Статус проверки застройщика
@@ -461,6 +476,12 @@ function PublicPropertiesGallery() {
                   <Wrench className="w-4 h-4 text-gray-700" />
                   <span>{t.publicMenu.services}</span>
                 </button>
+
+              {/* Subscription - last item */}
+              <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2" onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); if (currentUser) { setIsSubscriptionOpen(true); } else { setIsPlacementModalOpen(true); } }}>
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M5 5h14a2 2 0 0 1 2 2v6a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7V7a2 2 0 0 1 2-2z"/></svg>
+                <span>{t.publicMenu.subscription}</span>
+              </button>
               </div>
             </div>
             <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
@@ -748,7 +769,11 @@ function PublicPropertiesGallery() {
                 </div>
 
                 <div className="flex flex-col text-gray-900 space-y-1">
-                  {/* ВНИМАНИЕ: умышленно НЕ показываем Название объекта, Комплекс и Застройщика */}
+                  {isPrivileged && (p.complexResolvedName || p.complex) && (
+                    <span className={`font-semibold leading-none text-black ${isMobile ? 'text-base' : 'text-lg'}`}>
+                      {safeDisplay(p.complexResolvedName || p.complex)}
+                    </span>
+                  )}
 
                   {p.isDeveloperApproved === true && (
                     <div className="mb-1">
@@ -787,6 +812,8 @@ function PublicPropertiesGallery() {
                     <span className="text-gray-600">{t.propertiesGallery.priceLabel}:</span>
                     <span className="ml-2 font-semibold">{formatPrice(p.price)}</span>
                   </span>
+
+                  
 
                   {p.type && (
                     <span className="text-sm">
@@ -880,6 +907,27 @@ function PublicPropertiesGallery() {
             <Button variant="outline" className="justify-start bg-white" onClick={() => { showInfo('Скоро'); }}>
               <Compass className="mr-2 h-4 w-4 text-gray-700" />
               {t.publicMenu.servicesList.architecturalDesign}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Модальное окно подписки */}
+      <Dialog open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
+            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+              {(t.subscriptionModal?.features || []).map((f, i) => (
+                <li key={i}>{f}</li>
+              ))}
+            </ul>
+            <div className="text-base font-semibold text-gray-900">{t.subscriptionModal?.price}</div>
+            <Button className="w-full" onClick={async () => { try { const fn = httpsCallable(getFunctions(), 'notifySubscriptionInterest'); await fn({ uid: currentUser?.uid }); } catch (e) { console.error('notifySubscriptionInterest error', e); } finally { setIsSubscriptionOpen(false); } }}>
+              {t.subscriptionModal?.subscribeButton}
             </Button>
           </div>
         </DialogContent>
