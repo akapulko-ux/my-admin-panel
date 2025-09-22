@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from "../firebaseConfig";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Building, Home, MapPin, ArrowLeft, DollarSign } from "lucide-react";
+import { Building, Home, ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { useLanguage } from '../lib/LanguageContext';
 import { chessboardTranslations } from '../lib/chessboardTranslations';
 
@@ -124,7 +123,7 @@ const ChessboardOverview = () => {
   }, [publicId, t.error.notFound, t.error.loading]);
 
   // Функция для расчета масштаба
-  const calculateScale = () => {
+  const calculateScale = useCallback(() => {
     if (contentRef.current && chessboard) {
       const content = contentRef.current;
       const contentWidth = content.scrollWidth;
@@ -140,7 +139,7 @@ const ChessboardOverview = () => {
       
       setScale(newScale);
     }
-  };
+  }, [chessboard]);
 
   // Обновляем масштаб при изменении размера окна
   useEffect(() => {
@@ -150,7 +149,7 @@ const ChessboardOverview = () => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [chessboard]);
+  }, [calculateScale]);
 
   // Обновляем масштаб при загрузке данных
   useEffect(() => {
@@ -160,7 +159,7 @@ const ChessboardOverview = () => {
         calculateScale();
       }, 100);
     }
-  }, [chessboard]);
+  }, [chessboard, calculateScale]);
 
   // Дополнительный useEffect для гарантированного расчета масштаба
   useEffect(() => {
@@ -172,7 +171,7 @@ const ChessboardOverview = () => {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [contentRef.current, chessboard]);
+  }, [chessboard, calculateScale]);
 
   if (loading) {
     return (
@@ -271,6 +270,7 @@ const ChessboardOverview = () => {
                                         {unit.propertyType === 'Вилла' && t.unit.propertyTypes.villa}
                                         {unit.propertyType === 'Апарт-вилла' && t.unit.propertyTypes.apartVilla}
                                         {unit.propertyType === 'Таунхаус' && t.unit.propertyTypes.townhouse}
+                                        {unit.propertyType === 'Пентхаус' && t.unit.propertyTypes.penthouse}
                                         {!unit.propertyType && t.unit.propertyTypes.apartments}
                                       </span>
                                     </div>

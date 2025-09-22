@@ -14,6 +14,7 @@ const ClientLeads = () => {
   const [loading, setLoading] = useState(true);
   const [propertyMap, setPropertyMap] = useState({});
   const [agentMap, setAgentMap] = useState({});
+  const [userMap, setUserMap] = useState({});
 
   useEffect(() => {
     const loadLeads = async () => {
@@ -86,6 +87,39 @@ const ClientLeads = () => {
           console.log('Final agent map:', agentMapData);
           setAgentMap(agentMapData);
         }
+
+        // Загружаем информацию о пользователях для заявок с userId
+        const userIds = Array.from(new Set(
+          data
+            .filter(lead => lead.userId)
+            .map(lead => lead.userId)
+        ));
+        
+        console.log('Found user IDs:', userIds);
+        
+        if (userIds.length > 0) {
+          const userEntries = await Promise.all(userIds.map(async (userId) => {
+            try {
+              console.log('Loading user data for ID:', userId);
+              const userSnap = await getDoc(doc(db, 'users', userId));
+              if (userSnap.exists()) {
+                console.log('User found in users collection');
+                const userData = { id: userId, ...userSnap.data() };
+                console.log('Loaded user data:', userData);
+                return [userId, userData];
+              }
+              
+              console.log('User not found in users collection');
+              return [userId, null];
+            } catch (error) {
+              console.error('Error loading user:', error);
+              return [userId, null];
+            }
+          }));
+          const userMapData = Object.fromEntries(userEntries);
+          console.log('Final user map:', userMapData);
+          setUserMap(userMapData);
+        }
       } catch (e) {
         console.error('Failed to load leads', e);
       } finally {
@@ -134,9 +168,56 @@ const ClientLeads = () => {
             }
             return (
               <div key={lead.id} className="p-4 border rounded-md">
-                <div className="font-semibold">{lead.name} • {lead.phone}</div>
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold">{lead.name} • {lead.phone}</div>
+                  {lead.source === 'iOS' && (
+                    <div className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-md font-medium">
+                      iOS приложение
+                    </div>
+                  )}
+                </div>
                 {lead.createdAt && (
                   <div className="text-xs text-gray-400 mt-1">{new Date(lead.createdAt.seconds ? lead.createdAt.seconds * 1000 : lead.createdAt).toLocaleString()}</div>
+                )}
+
+                {/* Информация о пользователе, если есть userId */}
+                {lead.userId && userMap[lead.userId] && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Информация о пользователе</h4>
+                    <div className="space-y-1 text-xs text-gray-600">
+                      <div>
+                        <span className="font-medium">Имя:</span> {
+                          userMap[lead.userId].name || 
+                          userMap[lead.userId].displayName || 
+                          userMap[lead.userId].fullName ||
+                          userMap[lead.userId].firstName ||
+                          userMap[lead.userId].lastName ||
+                          userMap[lead.userId].username ||
+                          '—'
+                        }
+                      </div>
+                      {(userMap[lead.userId].phone || userMap[lead.userId].phoneNumber || userMap[lead.userId].tel) && (
+                        <div>
+                          <span className="font-medium">Телефон:</span> {userMap[lead.userId].phone || userMap[lead.userId].phoneNumber || userMap[lead.userId].tel}
+                        </div>
+                      )}
+                      {(userMap[lead.userId].email || userMap[lead.userId].emailAddress) && (
+                        <div>
+                          <span className="font-medium">Email:</span> {userMap[lead.userId].email || userMap[lead.userId].emailAddress}
+                        </div>
+                      )}
+                      {userMap[lead.userId].role && (
+                        <div>
+                          <span className="font-medium">Роль:</span> {userMap[lead.userId].role}
+                        </div>
+                      )}
+                      {userMap[lead.userId].createdAt && (
+                        <div>
+                          <span className="font-medium">Регистрация:</span> {new Date(userMap[lead.userId].createdAt.seconds ? userMap[lead.userId].createdAt.seconds * 1000 : userMap[lead.userId].createdAt).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {p ? (

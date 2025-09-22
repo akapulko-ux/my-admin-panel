@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from "../firebaseConfig";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Building, Home, MapPin, Eye, Link as LinkIcon } from "lucide-react";
+import { Building, Home, Eye } from "lucide-react";
 import ChessboardOverview from './ChessboardOverview';
 import { Button } from "../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
@@ -30,19 +30,6 @@ const formatPriceUSD = (priceUSD) => {
   }).format(priceUSD);
 };
 
-// Компонент статуса
-const getStatusBadge = (status) => {
-  switch (status) {
-    case 'free':
-      return <Badge className="bg-emerald-500">Свободно</Badge>;
-    case 'booked':
-      return <Badge className="bg-amber-500">Забронировано</Badge>;
-    case 'sold':
-      return <Badge className="bg-rose-500">Продано</Badge>;
-    default:
-      return <Badge className="bg-gray-500">Неизвестно</Badge>;
-  }
-};
 
 // Стили статусов
 const getStatusColor = (status) => {
@@ -66,7 +53,6 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
   const t = chessboardTranslations[language];
   
   const [chessboard, setChessboard] = useState(null);
-  const [complex, setComplex] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
@@ -104,14 +90,6 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
           ...querySnapshot.docs[0].data()
         };
         setChessboard(chessboardData);
-
-        // Если есть привязанный комплекс, загружаем его данные
-        if (chessboardData.complexId) {
-          const complexDoc = await getDoc(doc(db, "complexes", chessboardData.complexId));
-          if (complexDoc.exists()) {
-            setComplex(complexDoc.data());
-          }
-        }
       } catch (error) {
         console.error("Ошибка загрузки:", error);
         setError(t.error.loading);
@@ -213,6 +191,7 @@ const PublicChessboard = ({ publicId: propPublicId }) => {
                                       {unit.propertyType === 'Вилла' && t.unit.propertyTypes.villa}
                                       {unit.propertyType === 'Апарт-вилла' && t.unit.propertyTypes.apartVilla}
                                       {unit.propertyType === 'Таунхаус' && t.unit.propertyTypes.townhouse}
+                                      {unit.propertyType === 'Пентхаус' && t.unit.propertyTypes.penthouse}
                                       {!unit.propertyType && t.unit.propertyTypes.apartments}
                                     </span>
                                   </div>

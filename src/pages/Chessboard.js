@@ -494,6 +494,7 @@ const SortableUnit = ({
             <option value="Вилла">{t.chessboards.propertyTypes.villa}</option>
             <option value="Апарт-вилла">{t.chessboards.propertyTypes.apartVilla}</option>
             <option value="Таунхаус">{t.chessboards.propertyTypes.townhouse}</option>
+            <option value="Пентхаус">{t.chessboards.propertyTypes.penthouse}</option>
           </select>
         </div>
         

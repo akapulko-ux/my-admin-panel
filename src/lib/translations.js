@@ -899,6 +899,7 @@ _________________               _________________
         commercial: 'Commercial Property',
         apartVilla: 'Apart-Villa',
         townhouse: 'Townhouse',
+        penthouse: 'Penthouse',
         land: 'Land Plot'
       },
 
@@ -1092,7 +1093,8 @@ _________________               _________________
         apartments: 'Apartments',
         villa: 'Villa',
         apartVilla: 'Apart-Villa',
-        townhouse: 'Townhouse'
+        townhouse: 'Townhouse',
+        penthouse: 'Penthouse'
       },
       
       views: {
@@ -1566,9 +1568,9 @@ _________________               _________________
       // Features
       features: {
         iosAppPlacement: {
-          title: 'Placement on iOS app homepage',
+          title: 'Placement on app homepage and website',
           description: 'Your properties and complexes will be displayed on the IT Agent app homepage for all real estate agents, significantly increasing the visibility of your offerings.',
-          benefit: 'Increased visibility among agents'
+          benefit: 'Increased visibility among agents and investors'
         },
         pushNotifications: {
           title: 'Push notifications to all agents',
@@ -1601,8 +1603,8 @@ _________________               _________________
           benefit: 'Faster response and higher conversion'
         },
         contentFactory: {
-          title: 'AI content factory',
-          description: 'Automate creation of posts, carousels and short videos for your social networks based on your listings and promotions.',
+          title: 'AI content creation',
+          description: 'Automate creation of posts for your social networks.',
           benefit: 'Consistent content without extra effort'
         }
       },
@@ -2763,6 +2765,7 @@ _________________               _________________
         commercial: 'Коммерческая недвижимость',
         apartVilla: 'Апарт-вилла',
         townhouse: 'Таунхаус',
+        penthouse: 'Пентхаус',
         land: 'Земельный участок'
       },
 
@@ -2956,7 +2959,8 @@ _________________               _________________
         apartments: 'Апартаменты',
         villa: 'Вилла',
         apartVilla: 'Апарт-вилла',
-        townhouse: 'Таунхаус'
+        townhouse: 'Таунхаус',
+        penthouse: 'Пентхаус'
       },
       
       views: {
@@ -3450,9 +3454,9 @@ _________________               _________________
       // Features
       features: {
         iosAppPlacement: {
-          title: 'Размещение на главной странице iOS приложения',
+          title: 'Размещение на главной странице приложения и сайта',
           description: 'Ваши объекты и комплексы будут отображаться на главной странице приложения IT Agent для всех риелторов, значительно увеличивая видимость ваших предложений.',
-          benefit: 'Повышенная видимость среди агентов'
+          benefit: 'Повышенная видимость среди агентов и инвесторов'
         },
         pushNotifications: {
           title: 'Push-уведомления всем агентам',
@@ -3485,8 +3489,8 @@ _________________               _________________
           benefit: 'Быстрая обработка и рост конверсии'
         },
         contentFactory: {
-          title: 'Контент‑завод на ИИ',
-          description: 'Автоматизируйте создание постов, каруселей и коротких видео для соцсетей на основе ваших объектов и акций.',
+          title: 'Создание контента с помощью ИИ',
+          description: 'Автоматизируйте создание постов для ваших социальных сетей.',
           benefit: 'Стабильный контент без лишних усилий'
         }
       },
@@ -4629,6 +4633,7 @@ _________________               _________________
         commercial: 'Properti Komersial',
         apartVilla: 'Apart-Vila',
         townhouse: 'Rumah Teres',
+        penthouse: 'Penthouse',
         land: 'Tanah'
       },
 
@@ -4822,7 +4827,8 @@ _________________               _________________
         apartments: 'Apartemen',
         villa: 'Villa',
         apartVilla: 'Apart Villa',
-        townhouse: 'Townhouse'
+        townhouse: 'Townhouse',
+        penthouse: 'Penthouse'
       },
       
       views: {
@@ -5316,9 +5322,9 @@ _________________               _________________
       // Features
       features: {
         iosAppPlacement: {
-          title: 'Penempatan di halaman utama aplikasi iOS',
+          title: 'Penempatan di halaman utama aplikasi dan website',
           description: 'Properti dan kompleks Anda akan ditampilkan di halaman utama aplikasi IT Agent untuk semua agen real estate, yang secara signifikan meningkatkan visibilitas penawaran Anda.',
-          benefit: 'Peningkatan visibilitas di kalangan agen'
+          benefit: 'Peningkatan visibilitas di kalangan agen dan investor'
         },
         pushNotifications: {
           title: 'Notifikasi push ke semua agen',
@@ -5351,8 +5357,8 @@ _________________               _________________
           benefit: 'Respon lebih cepat dan konversi lebih tinggi'
         },
         contentFactory: {
-          title: 'Pabrik konten berbasis AI',
-          description: 'Otomatiskan pembuatan posting, carousel, dan video pendek untuk media sosial Anda berdasarkan listing dan promosi Anda.',
+          title: 'Pembuatan konten dengan bantuan AI',
+          description: 'Otomatiskan pembuatan posting untuk media sosial Anda.',
           benefit: 'Konten konsisten tanpa usaha ekstra'
         }
       },

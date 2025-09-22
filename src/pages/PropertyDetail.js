@@ -1288,6 +1288,7 @@ function PropertyDetail() {
     { value: "Коммерческая недвижимость", label: t.propertyDetail.typeOptions.commercial },
     { value: "Апарт-вилла", label: t.propertyDetail.typeOptions.apartVilla },
     { value: "Таунхаус", label: t.propertyDetail.typeOptions.townhouse },
+    { value: "Пентхаус", label: t.propertyDetail.typeOptions.penthouse },
     { value: "Земельный участок", label: t.propertyDetail.typeOptions.land }
   ];
 
@@ -2273,12 +2274,14 @@ function PropertyDetail() {
                   onRemove={() => handleImageDelete(idx)}
                   moveImage={(dragIndex, hoverIndex) => {
                     if (dragIndex === hoverIndex) return;
-                    setProperty(prev => {
-                      const newImages = [...(prev?.images || [])];
-                      const [moved] = newImages.splice(dragIndex, 1);
-                      newImages.splice(hoverIndex, 0, moved);
-                      return { ...prev, images: newImages };
-                    });
+                    const newImages = (() => {
+                      const arr = [...(property?.images || [])];
+                      const [moved] = arr.splice(dragIndex, 1);
+                      arr.splice(hoverIndex, 0, moved);
+                      return arr;
+                    })();
+                    setProperty(prev => ({ ...prev, images: newImages }));
+                    setEditedValues(prev => ({ ...prev, images: newImages }));
                     setHasChanges(true);
                   }}
                 />
@@ -2627,13 +2630,6 @@ function PropertyDetail() {
         )
       )}
 
-      {/* Поле "Описание" */}
-      {property.description && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.description}</h3>
-          <p className="text-gray-600 whitespace-pre-line">{property.description}</p>
-        </div>
-      )}
 
       {/* Добавляем кнопки "Расчет ROI" после характеристик объекта (скрыто для модератора) */}
               {['admin', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
@@ -3423,6 +3419,23 @@ function PropertyDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Поле "Описание" - САМОЕ ПОСЛЕДНЕЕ на странице */}
+      {(property.description || (isEditing && (role === 'admin' || role === 'moderator'))) && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.description}</h3>
+          {isEditing && (role === 'admin' || role === 'moderator') ? (
+            <textarea
+              value={editedValues.hasOwnProperty('description') ? editedValues.description : (property.description || '')}
+              onChange={(e) => handleValueChange('description', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-600 whitespace-pre-line min-h-[120px] resize-y"
+              placeholder="Введите описание объекта..."
+            />
+          ) : (
+            <p className="text-gray-600 whitespace-pre-line">{property.description}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

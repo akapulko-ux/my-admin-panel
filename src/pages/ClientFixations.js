@@ -212,7 +212,8 @@ const ClientFixations = () => {
       'Апартаменты': t.chessboards.propertyTypes.apartments,
       'Вилла': t.chessboards.propertyTypes.villa,
       'Апарт-вилла': t.chessboards.propertyTypes.apartVilla,
-      'Таунхаус': t.chessboards.propertyTypes.townhouse
+      'Таунхаус': t.chessboards.propertyTypes.townhouse,
+      'Пентхаус': t.chessboards.propertyTypes.penthouse
     };
     
     return propertyTypeMap[propertyType] || propertyType;

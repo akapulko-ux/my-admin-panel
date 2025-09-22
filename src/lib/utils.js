@@ -64,6 +64,11 @@ export const translatePropertyType = (propertyType, language) => {
       ru: 'Таунхаус',
       id: 'Townhouse'
     },
+    'Пентхаус': {
+      en: 'Penthouse',
+      ru: 'Пентхаус',
+      id: 'Penthouse'
+    },
     'Земельный участок': {
       en: 'Land Plot',
       ru: 'Земельный участок',

@@ -555,6 +555,7 @@ function EditProperty() {
                       <SelectItem value="Коммерческая недвижимость">Коммерческая недвижимость</SelectItem>
                       <SelectItem value="Апарт-вилла">Апарт-вилла</SelectItem>
                       <SelectItem value="Таунхаус">Таунхаус</SelectItem>
+                      <SelectItem value="Пентхаус">Пентхаус</SelectItem>
                       <SelectItem value="Земельный участок">Земельный участок</SelectItem>
                     </SelectContent>
                   </Select>

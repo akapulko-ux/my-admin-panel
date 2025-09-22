@@ -573,8 +573,13 @@ function PropertiesGallery() {
                   return (
                     <div className="flex items-center gap-2" aria-label={`${t.propertyDetail.reliabilityRating}: ${rating}`}>
                       <span className="text-xs text-gray-600">{t.propertyDetail.reliabilityRating}</span>
-                      {Array.from({ length: rating }).map((_, idx) => (
-                        <span key={idx} className="text-yellow-400 text-2xl leading-none">★</span>
+                      {Array.from({ length: 5 }).map((_, idx) => (
+                        <span
+                          key={idx}
+                          className={`${idx < rating ? 'text-yellow-400' : 'text-gray-300'} text-2xl leading-none`}
+                        >
+                          {idx < rating ? '★' : '☆'}
+                        </span>
                       ))}
                     </div>
                   );

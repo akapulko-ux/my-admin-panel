@@ -346,6 +346,7 @@ function PublicAdminLikePropertyDetail() {
     { value: "Коммерческая недвижимость", label: t.propertyDetail.typeOptions.commercial },
     { value: "Апарт-вилла", label: t.propertyDetail.typeOptions.apartVilla },
     { value: "Таунхаус", label: t.propertyDetail.typeOptions.townhouse },
+    { value: "Пентхаус", label: t.propertyDetail.typeOptions.penthouse },
     { value: "Земельный участок", label: t.propertyDetail.typeOptions.land }
   ];
 
