@@ -126,16 +126,93 @@ export const translations = {
         title: 'Unlock full access',
         colOneTitle: 'Unlock this property',
         colOneDesc: 'One-time payment to view full details of this property, its complex, and documents.',
-        colOnePrice: '$49',
+        colOnePrice: '$29',
         colOneButton: 'One-time purchase',
         colTwoTitle: 'Get full access to all listings',
         colTwoDesc: 'Subscription unlocks full information for all current and future properties for the duration of your plan.',
-        colTwoPrice: '$199 / month',
+        colTwoPrice: '$99 / month',
         colTwoButton: 'Subscribe',
         close: 'Close'
       }
     },
     publicRoiNotAvailable: 'Public ROI page is not available',
+    
+    // Pricing modal
+    pricing: {
+      title: 'Choose Your Plan',
+      subtitle: 'Select the plan that best fits your needs',
+      oneTime: {
+        badge: 'Popular',
+        title: 'One-Time Access',
+        description: 'Get complete information about a specific property with a one-time payment.',
+        price: '$25',
+        priceNote: 'One-time payment, lifetime access',
+        featuresTitle: 'What\'s included:',
+        features: {
+          fullAccess: 'Full access to property details and documentation',
+          documents: 'All legal documents and technical specifications',
+          roiCalculator: 'ROI calculator and investment analysis',
+          support: 'Email support for 30 days',
+          lifetime: 'Lifetime access to purchased property'
+        },
+        note: 'Perfect for investors who want detailed information about a specific property.'
+      },
+      subscription: {
+        badge: 'Best Value',
+        title: 'Full Platform Access',
+        description: 'Unlock all properties and premium features with our monthly subscription.',
+        price: '$83',
+        priceNote: 'Per month, cancel anytime',
+        featuresTitle: 'What\'s included:',
+        features: {
+            allProperties: 'Full access to all properties in the listing',
+            newListings: 'Early access to new properties before public release',
+            prioritySupport: 'Professional customer support and assistance in chat',
+            marketUpdates: 'Providing a unique listing link - your own website for receiving inquiries'
+        },
+        note: 'Ideal for real estate professionals and active investors.'
+      },
+      additionalInfo: {
+        title: 'Additional Information',
+        payment: {
+          title: 'Payment Methods',
+          description: 'We accept all major credit cards and bank transfers. All payments are processed securely.'
+        },
+        support: {
+          title: 'Customer Support',
+          description: 'Our support team is available 24/7 to help you with any questions or issues.'
+        }
+        },
+        closeButton: 'Close',
+        termsLink: 'Payment and Refund Terms',
+        termsTitle: 'Payment and Refund Terms',
+        terms: {
+          payment: {
+            title: 'Payment Terms',
+            point1: 'All payments are processed securely through our payment partner.',
+            point2: 'Payment is required before access to premium features is granted.',
+            point3: 'Subscription payments are automatically renewed unless cancelled.',
+            point4: 'We accept major credit cards and bank transfers.'
+          },
+          refund: {
+            title: 'Refund Policy',
+            point1: 'Refunds for one-time purchases are available within 14 days of purchase.',
+            point2: 'Subscription cancellations take effect at the end of the current billing period.',
+            point3: 'No refunds are provided for partial usage of subscription services.',
+            point4: 'Refund requests must be submitted through our support system.'
+          },
+          access: {
+            title: 'Access Terms',
+            point1: 'Access to purchased content is granted immediately upon successful payment.',
+            point2: 'Account access may be suspended for violations of our terms of service.'
+          },
+          liability: {
+            title: 'Liability',
+            point1: 'We are not responsible for any financial decisions made based on our content.',
+            point2: 'Users are responsible for ensuring compliance with local laws and regulations.'
+          }
+        }
+      },
     
     // Common words
     close: 'Close',
@@ -1973,16 +2050,93 @@ _________________               _________________
         title: 'Откройте полный доступ',
         colOneTitle: 'Открыть доступ к этому объекту',
         colOneDesc: 'Единоразовый платеж — и вы получите полную информацию об объекте, комплексе и его документах.',
-        colOnePrice: '$49',
+        colOnePrice: '$29',
         colOneButton: 'Единоразовая покупка',
         colTwoTitle: 'Полный доступ ко всем объектам',
         colTwoDesc: 'Подписка дает полный доступ ко всей информации по всем текущим и будущим объектам на срок действия подписки.',
-        colTwoPrice: '$199 / мес.',
+        colTwoPrice: '$99 / мес.',
         colTwoButton: 'Подписаться',
         close: 'Закрыть'
       }
     },
     publicRoiNotAvailable: 'Публичная страница ROI недоступна',
+    
+    // Pricing modal
+    pricing: {
+      title: 'Выберите свой план',
+      subtitle: 'Выберите план, который лучше всего подходит вашим потребностям',
+      oneTime: {
+        badge: 'Популярный',
+        title: 'Единоразовый доступ',
+        description: 'Получите полную информацию об объекте недвижимости за единоразовый платеж.',
+        price: '₽2,400',
+        priceNote: 'Единоразовый платеж, доступ навсегда',
+        featuresTitle: 'Что включено:',
+        features: {
+          fullAccess: 'Полный доступ к деталям объекта и документации',
+          documents: 'Все юридические документы и технические характеристики',
+          roiCalculator: 'Калькулятор ROI и анализ инвестиций',
+          support: 'Поддержка по email в течение 30 дней',
+          lifetime: 'Пожизненный доступ к купленному объекту'
+        },
+        note: 'Идеально для инвесторов, которые хотят детальную информацию об определенном объекте.'
+      },
+      subscription: {
+        badge: 'Лучшее предложение',
+        title: 'Полный доступ к платформе',
+        description: 'Откройте доступ ко всем объектам и премиум-функциям с нашей ежемесячной подпиской.',
+        price: '₽8,000',
+        priceNote: 'В месяц, можно отменить в любое время',
+        featuresTitle: 'Что включено:',
+        features: {
+            allProperties: 'Полный доступ ко всем объектам недвижимости в листинге',
+            newListings: 'Ранний доступ к новым объектам до публичного релиза',
+            prioritySupport: 'Профессиональная поддержка и сопровождение клиентов в чате',
+            marketUpdates: 'Предоставление уникальной ссылки на листинг - собственный сайт для получения заявок'
+        },
+        note: 'Идеально для профессионалов недвижимости и активных инвесторов.'
+      },
+      additionalInfo: {
+        title: 'Дополнительная информация',
+        payment: {
+          title: 'Способы оплаты',
+          description: 'Мы принимаем все основные кредитные карты и банковские переводы. Все платежи обрабатываются безопасно.'
+        },
+        support: {
+          title: 'Поддержка клиентов',
+          description: 'Наша команда поддержки доступна 24/7, чтобы помочь вам с любыми вопросами или проблемами.'
+        }
+        },
+        closeButton: 'Закрыть',
+        termsLink: 'Условия оплаты и возврата денежных средств',
+        termsTitle: 'Условия оплаты и возврата денежных средств',
+        terms: {
+          payment: {
+            title: 'Условия оплаты',
+            point1: 'Все платежи обрабатываются безопасно через нашего партнера по платежам.',
+            point2: 'Оплата требуется до предоставления доступа к премиум-функциям.',
+            point3: 'Платежи по подписке автоматически продлеваются, если не отменены.',
+            point4: 'Мы принимаем основные кредитные карты и банковские переводы.'
+          },
+          refund: {
+            title: 'Политика возврата',
+            point1: 'Возврат средств за единоразовые покупки доступен в течение 14 дней с момента покупки.',
+            point2: 'Отмена подписки вступает в силу в конце текущего расчетного периода.',
+            point3: 'Возврат средств не предоставляется за частичное использование услуг подписки.',
+            point4: 'Запросы на возврат средств должны подаваться через нашу систему поддержки.'
+          },
+          access: {
+            title: 'Условия доступа',
+            point1: 'Доступ к купленному контенту предоставляется немедленно после успешной оплаты.',
+            point2: 'Доступ к аккаунту может быть приостановлен за нарушение наших условий использования.'
+          },
+          liability: {
+            title: 'Ответственность',
+            point1: 'Мы не несем ответственности за финансовые решения, принятые на основе нашего контента.',
+            point2: 'Пользователи несут ответственность за соблюдение местных законов и правил.'
+          }
+        }
+      },
     
     // Common words
     close: 'Закрыть',
@@ -3844,16 +3998,93 @@ _________________               _________________
         title: 'Buka akses penuh',
         colOneTitle: 'Buka akses ke properti ini',
         colOneDesc: 'Pembayaran satu kali untuk melihat detail lengkap properti ini, kompleksnya, dan dokumen.',
-        colOnePrice: '$49',
+        colOnePrice: '$29',
         colOneButton: 'Pembelian sekali',
         colTwoTitle: 'Akses penuh ke semua listing',
         colTwoDesc: 'Langganan membuka informasi lengkap untuk semua properti saat ini dan yang akan datang selama masa berlangganan.',
-        colTwoPrice: '$199 / bln',
+        colTwoPrice: '$99 / bln',
         colTwoButton: 'Berlangganan',
         close: 'Tutup'
       }
     },
     publicRoiNotAvailable: 'Halaman ROI publik tidak tersedia',
+    
+    // Pricing modal
+    pricing: {
+      title: 'Pilih Paket Anda',
+      subtitle: 'Pilih paket yang paling sesuai dengan kebutuhan Anda',
+      oneTime: {
+        badge: 'Populer',
+        title: 'Akses Sekali Bayar',
+        description: 'Dapatkan informasi lengkap tentang properti tertentu dengan pembayaran sekali.',
+        price: '$25',
+        priceNote: 'Pembayaran sekali, akses seumur hidup',
+        featuresTitle: 'Yang termasuk:',
+        features: {
+          fullAccess: 'Akses penuh ke detail properti dan dokumentasi',
+          documents: 'Semua dokumen hukum dan spesifikasi teknis',
+          roiCalculator: 'Kalkulator ROI dan analisis investasi',
+          support: 'Dukungan email selama 30 hari',
+          lifetime: 'Akses seumur hidup ke properti yang dibeli'
+        },
+        note: 'Sempurna untuk investor yang menginginkan informasi detail tentang properti tertentu.'
+      },
+      subscription: {
+        badge: 'Nilai Terbaik',
+        title: 'Akses Penuh Platform',
+        description: 'Buka akses ke semua properti dan fitur premium dengan langganan bulanan kami.',
+        price: '$83',
+        priceNote: 'Per bulan, dapat dibatalkan kapan saja',
+        featuresTitle: 'Yang termasuk:',
+        features: {
+            allProperties: 'Akses penuh ke semua properti dalam listing',
+            newListings: 'Akses awal ke properti baru sebelum rilis publik',
+            prioritySupport: 'Dukungan profesional dan pendampingan pelanggan dalam chat',
+            marketUpdates: 'Penyediaan link unik untuk listing - website sendiri untuk menerima permintaan'
+        },
+        note: 'Ideal untuk profesional real estate dan investor aktif.'
+      },
+      additionalInfo: {
+        title: 'Informasi Tambahan',
+        payment: {
+          title: 'Metode Pembayaran',
+          description: 'Kami menerima semua kartu kredit utama dan transfer bank. Semua pembayaran diproses dengan aman.'
+        },
+        support: {
+          title: 'Dukungan Pelanggan',
+          description: 'Tim dukungan kami tersedia 24/7 untuk membantu Anda dengan pertanyaan atau masalah apa pun.'
+        }
+        },
+        closeButton: 'Tutup',
+        termsLink: 'Syarat Pembayaran dan Pengembalian Dana',
+        termsTitle: 'Syarat Pembayaran dan Pengembalian Dana',
+        terms: {
+          payment: {
+            title: 'Syarat Pembayaran',
+            point1: 'Semua pembayaran diproses dengan aman melalui mitra pembayaran kami.',
+            point2: 'Pembayaran diperlukan sebelum akses ke fitur premium diberikan.',
+            point3: 'Pembayaran langganan diperpanjang otomatis kecuali dibatalkan.',
+            point4: 'Kami menerima kartu kredit utama dan transfer bank.'
+          },
+          refund: {
+            title: 'Kebijakan Pengembalian',
+            point1: 'Pengembalian untuk pembelian sekali tersedia dalam 14 hari dari pembelian.',
+            point2: 'Pembatalan langganan berlaku pada akhir periode penagihan saat ini.',
+            point3: 'Tidak ada pengembalian untuk penggunaan sebagian layanan langganan.',
+            point4: 'Permintaan pengembalian harus disampaikan melalui sistem dukungan kami.'
+          },
+          access: {
+            title: 'Syarat Akses',
+            point1: 'Akses ke konten yang dibeli diberikan segera setelah pembayaran berhasil.',
+            point2: 'Akses akun dapat ditangguhkan karena pelanggaran terhadap syarat layanan kami.'
+          },
+          liability: {
+            title: 'Tanggung Jawab',
+            point1: 'Kami tidak bertanggung jawab atas keputusan keuangan yang dibuat berdasarkan konten kami.',
+            point2: 'Pengguna bertanggung jawab untuk memastikan kepatuhan terhadap hukum dan peraturan setempat.'
+          }
+        }
+      },
     
     // Common words
     close: 'Tutup',

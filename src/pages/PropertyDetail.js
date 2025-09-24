@@ -2632,7 +2632,7 @@ function PropertyDetail() {
 
 
       {/* Добавляем кнопки "Расчет ROI" после характеристик объекта (скрыто для модератора) */}
-              {['admin', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+              {['admin', 'premium agent', 'agent', 'премиум застройщик'].includes(role) && (
         <div className="mt-8">
           <div className="mt-6 flex gap-4">
             <button
@@ -2647,7 +2647,7 @@ function PropertyDetail() {
       )}
 
       {/* Модальное окно с калькулятором ROI (скрыто для модератора) */}
-              {showRoiCalculator && ['admin', 'premium agent', 'agent', 'застройщик', 'премиум застройщик'].includes(role) && (
+              {showRoiCalculator && ['admin', 'premium agent', 'agent', 'премиум застройщик'].includes(role) && (
         <PropertyRoiCalculator
           propertyId={id}
           propertyData={property}

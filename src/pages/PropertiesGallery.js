@@ -700,7 +700,7 @@ function PropertiesGallery() {
                   if (isEmpty(p.area)) characteristics.push(t.propertyDetail.area);
                   {
                     const typeStr = String(p.type || '').trim().toLowerCase();
-                    const noLandAreaTypes = ['апартаменты', 'апарт-вилла', 'дюплекс', 'таунхаус'];
+                    const noLandAreaTypes = ['апартаменты', 'апарт-вилла', 'дюплекс', 'таунхаус', 'пентхаус'];
                     if (isEmpty(p.landArea) && !noLandAreaTypes.includes(typeStr)) {
                       characteristics.push(t.propertyDetail.landArea);
                     }
