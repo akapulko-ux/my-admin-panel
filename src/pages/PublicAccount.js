@@ -3,14 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { Timestamp, getDocs, collection } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "../AuthContext";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { translatePropertyType } from "../lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { countryDialCodes } from "../lib/countryDialCodes";
 import { Building2 } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 function PublicAccount() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, role } = useAuth();
   const { language } = useLanguage();
   const t = translations[language];
   const navigate = useNavigate();
@@ -18,12 +23,60 @@ function PublicAccount() {
   const [loading, setLoading] = useState(true);
   const [myProperties, setMyProperties] = useState([]);
   const [myLeads, setMyLeads] = useState([]);
+  const [shareLink, setShareLink] = useState("");
+  const [copyMsg, setCopyMsg] = useState("");
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [profile, setProfile] = useState({ name: '', email: '', telegram: '', phone: '', phoneCode: '+62' });
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
 
   useEffect(() => {
     if (!currentUser) {
       navigate('/');
     }
   }, [currentUser, navigate]);
+
+  useEffect(() => {
+    async function ensurePremiumLink() {
+      try {
+        if (!currentUser) return;
+        const normalizedRole = String(role || '').toLowerCase();
+        const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент';
+        if (!isPremiumAgent) {
+          setShareLink("");
+          return;
+        }
+        const userRef = doc(db, 'users', currentUser.uid);
+        const snap = await getDoc(userRef);
+        const existing = snap.exists() ? (snap.data()?.premiumPublicLinkToken || "") : "";
+        let token = existing;
+        if (!token) {
+          token = `${currentUser.uid}-${Math.random().toString(36).slice(2, 10)}`;
+          try {
+            await updateDoc(userRef, { premiumPublicLinkToken: token });
+          } catch (e) {
+            console.error('Failed to save premiumPublicLinkToken', e);
+          }
+        }
+        const base = window.location.origin;
+        setShareLink(`${base}/public/shared/${encodeURIComponent(token)}`);
+      } catch (e) {
+        console.error('ensurePremiumLink error', e);
+      }
+    }
+    ensurePremiumLink();
+  }, [currentUser, role]);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      if (!shareLink) return;
+      await navigator.clipboard.writeText(shareLink);
+      setCopyMsg(t.accountPage.copiedMessage);
+      setTimeout(() => setCopyMsg(""), 1500);
+    } catch (e) {
+      console.error('copy error', e);
+    }
+  }, [shareLink, t.accountPage.copiedMessage]);
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "";
@@ -36,6 +89,21 @@ function PublicAccount() {
     async function loadData() {
       try {
         if (!currentUser) return;
+        // Профиль пользователя
+        try {
+          const userRef = doc(db, 'users', currentUser.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const d = userSnap.data();
+            setProfile({
+              name: d.displayName || '',
+              email: d.email || '',
+              telegram: d.telegram || '',
+              phone: d.phone || '',
+              phoneCode: d.phoneCode || '+62'
+            });
+          }
+        } catch (e) { console.error('load profile error', e); }
         // Мои объекты
         const propsSnap = await getDocs(collection(db, 'properties'));
         const props = propsSnap.docs
@@ -43,12 +111,12 @@ function PublicAccount() {
           .filter(p => p.createdBy === currentUser.uid);
         setMyProperties(props);
 
-        // Мои заявки (таблица clientLeads, где propertyId в моих объектах)
+        // Мои заявки (таблица clientLeads, где propertyId в моих объектах) и заявки, привязанные к моему agentId из общей ссылки
         const leadsSnap = await getDocs(collection(db, 'clientLeads'));
         const myPropIds = new Set(props.map(p => p.id));
         const leads = leadsSnap.docs
           .map(d => ({ id: d.id, ...d.data() }))
-          .filter(l => l.propertyId && myPropIds.has(l.propertyId));
+          .filter(l => (l.propertyId && myPropIds.has(l.propertyId)) || l.agentId === currentUser.uid);
         setMyLeads(leads);
       } finally {
         setLoading(false);
@@ -93,8 +161,142 @@ function PublicAccount() {
           <Button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white">{t.accountPage.logout}</Button>
         </div>
 
-        <section>
-          <h2 className="text-xl font-semibold mb-3">{t.accountPage.myProperties}</h2>
+        {/* Персональная ссылка — секция видна всем; управление доступностью внутри */}
+        <details className="border rounded-md bg-white">
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="text-xl font-semibold">{t.accountPage.premiumLinkTitle}</span>
+            <span className="text-gray-500">▼</span>
+          </summary>
+          <div className="px-4 pb-4">
+            <p className="text-sm text-gray-600 mb-3">{t.accountPage.premiumLinkDescription}</p>
+            {(() => {
+            const normalizedRole = String(role || '').toLowerCase();
+            const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент';
+            if (isPremiumAgent) {
+              return (
+                <>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-700 whitespace-nowrap">{t.accountPage.premiumLinkLabel}:</label>
+                    <input value={shareLink} readOnly className="flex-1 border rounded px-2 py-1 text-gray-900 bg-gray-50" />
+                    <Button onClick={handleCopy}>{t.accountPage.copyButton}</Button>
+                  </div>
+                  {copyMsg && <div className="text-green-600 text-sm mt-2">{copyMsg}</div>}
+                </>
+              );
+            }
+            return (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-gray-700">{t.accountPage.premiumOnlyMessage}</div>
+                <Button onClick={() => setIsSubscriptionOpen(true)}>{t.accountPage.subscribeButton}</Button>
+              </div>
+            );
+            })()}
+          </div>
+        </details>
+
+        {/* Профиль */}
+        <details className="border rounded-md bg-white">
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="text-xl font-semibold">{t.accountPage.profileTitle}</span>
+            <span className="text-gray-500">▼</span>
+          </summary>
+          <div className="px-4 pb-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm text-gray-600">{t.accountPage.profile.name}</label>
+              <input className="border rounded px-2 py-1 w-full" value={profile.name} onChange={(e) => setProfile(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm text-gray-600">{t.accountPage.profile.email}</label>
+              <input className="border rounded px-2 py-1 bg-gray-50 text-gray-700 w-full" value={profile.email} readOnly />
+            </div>
+            {/* Язык не отображаем по требованию */}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm text-gray-600">{t.accountPage.profile.telegram}</label>
+              <input className="border rounded px-2 py-1 w-full" value={profile.telegram} onChange={(e) => setProfile(p => ({ ...p, telegram: e.target.value }))} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm text-gray-600">Телефон / Whatsapp</label>
+              <div className="flex gap-2">
+                <Select value={profile.phoneCode || '+62'} onValueChange={(v) => setProfile(p => ({ ...p, phoneCode: v }))}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64 overflow-auto">
+                    {countryDialCodes.map(({ code, label }) => (
+                      <SelectItem key={code} value={code}>{code} {label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input
+                  className="border rounded px-2 py-1 flex-1 w-full"
+                  value={profile.phone || ''}
+                  onChange={(e) => setProfile(p => ({ ...p, phone: e.target.value.replace(/[^\d\s-]/g, '') }))}
+                  placeholder={language === 'ru' ? 'номер телефона' : language === 'id' ? 'nomor telepon' : 'phone number'}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="px-4 pb-4 mt-1 flex items-center gap-3 sm:col-span-2">
+            <Button disabled={saving} onClick={async () => {
+              if (!currentUser) return;
+              try {
+                setSaving(true);
+                const userRef = doc(db, 'users', currentUser.uid);
+                // Простая валидация телефона: должны быть цифры, длина >= 5
+                const digits = String(profile.phone || '').replace(/\D/g, '');
+                if (digits.length < 5) {
+                  setSaveMsg(t.accountPage.profile.saveError);
+                  setSaving(false);
+                  return;
+                }
+                await updateDoc(userRef, {
+                  displayName: profile.name,
+                  name: profile.name,
+                  email: profile.email,
+                  telegram: profile.telegram,
+                  phone: profile.phone,
+                  phoneCode: profile.phoneCode || '+62'
+                });
+                setSaveMsg(t.accountPage.profile.saved);
+                setTimeout(() => setSaveMsg(''), 1500);
+              } catch (e) {
+                console.error('save profile error', e);
+                setSaveMsg(t.accountPage.profile.saveError);
+                setTimeout(() => setSaveMsg(''), 2000);
+              } finally {
+                setSaving(false);
+              }
+            }}>{t.accountPage.profile.save}</Button>
+            {saveMsg && <div className="text-sm text-gray-600">{saveMsg}</div>}
+          </div>
+        </details>
+
+        {/* Модальное окно подписки как в публичной галерее */}
+        <Dialog open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
+              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                {(t.subscriptionModal?.features || []).map((f, i) => (
+                  <li key={i}>{f}</li>
+                ))}
+              </ul>
+              <div className="text-base font-semibold text-gray-900">{t.subscriptionModal?.price}</div>
+              <Button className="w-full" onClick={async () => { try { const fn = httpsCallable(getFunctions(), 'notifySubscriptionInterest'); await fn({ uid: currentUser?.uid }); } catch (e) { console.error('notifySubscriptionInterest error', e); } finally { setIsSubscriptionOpen(false); } }}>
+                {t.subscriptionModal?.subscribeButton}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <details className="border rounded-md bg-white">
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="text-xl font-semibold">{t.accountPage.myProperties}</span>
+            <span className="text-gray-500">▼</span>
+          </summary>
           {myProperties.length === 0 ? (
             <div className="text-gray-500">{t.accountPage.noProperties}</div>
           ) : (
@@ -118,10 +320,13 @@ function PublicAccount() {
               ))}
             </div>
           )}
-        </section>
+        </details>
 
-        <section>
-          <h2 className="text-xl font-semibold mb-3">{t.accountPage.myLeads}</h2>
+        <details className="border rounded-md bg-white">
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="text-xl font-semibold">{t.accountPage.myLeads}</span>
+            <span className="text-gray-500">▼</span>
+          </summary>
           {myLeads.length === 0 ? (
             <div className="text-gray-500">{t.accountPage.noLeads}</div>
           ) : (
@@ -137,7 +342,7 @@ function PublicAccount() {
               ))}
             </div>
           )}
-        </section>
+        </details>
       </div>
     </div>
   );

@@ -113,6 +113,7 @@ import KnowledgeBase from "./pages/KnowledgeBase";
 import PublicPageAgent from "./pages/PublicPageAgent";
 import PublicAgentAuth from "./pages/PublicAgentAuth";
 import PublicPropertiesGallery from "./pages/PublicPropertiesGallery";
+import PublicAgentSharedGallery from "./pages/PublicAgentSharedGallery";
 import PublicFavorites from "./pages/PublicFavorites";
 import PublicAccount from "./pages/PublicAccount";
 import PublicComplexDetail from "./pages/PublicComplexDetail";
@@ -261,6 +262,8 @@ function App() {
               <Route path="/public/property/:id" element={<PublicPropertyDetail />} />
               <Route path="/public/favorites" element={<PublicFavorites />} />
               <Route path="/public/account" element={<PublicAccount />} />
+              <Route path="/public/shared/:token" element={<PublicAgentSharedGallery />} />
+              <Route path="/public/shared/:token/property/:id" element={<PublicPropertyDetail />} />
               <Route path="/public-agent-page/:developerId" element={<ProtectedRoute><PublicPageAgent /></ProtectedRoute>} />
               <Route path="/public-agent-auth" element={<PublicAgentAuth />} />
               <Route path="/public/complex-property/:id" element={<PublicAdminLikePropertyDetail />} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc, onSnapshot } from "firebase/firestore";
 import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Waves, Bed, Ruler, MapPin, Hammer, Layers, Bath, FileText, Calendar, DollarSign, Settings } from "lucide-react";
@@ -29,8 +29,9 @@ import { trackPropertyVisit } from "../utils/pageAnalytics";
 import FullScreenImageView from "../components/FullScreenImageView";
 
 function PublicPropertyDetail() {
-  const { id } = useParams();
+  const { id, token } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
@@ -39,6 +40,11 @@ function PublicPropertyDetail() {
   const { language } = useLanguage();
   const t = translations[language];
   const { currentUser, role } = useAuth();
+  const isSharedView = location.pathname.startsWith('/public/shared/');
+  const effectiveCurrentUser = isSharedView ? null : currentUser;
+  const effectiveRole = isSharedView ? null : role;
+  const [sharedAllowed, setSharedAllowed] = useState(!isSharedView);
+  const [sharedCheckLoading, setSharedCheckLoading] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -50,6 +56,9 @@ function PublicPropertyDetail() {
   const [leadPhone, setLeadPhone] = useState('');
   const [leadMessenger, setLeadMessenger] = useState('whatsapp');
   const [leadSending, setLeadSending] = useState(false);
+  const [sharedOwnerUid, setSharedOwnerUid] = useState("");
+  const [sharedOwnerPhoneCode, setSharedOwnerPhoneCode] = useState("");
+  const [sharedOwnerPhone, setSharedOwnerPhone] = useState("");
   const [translatedDescription, setTranslatedDescription] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -180,8 +189,8 @@ function PublicPropertyDetail() {
 
   // Подписка на доступ к документам (entitlement) конкретного объекта
   useEffect(() => {
-    if (!currentUser || !id) return;
-    const entId = `${currentUser.uid}_${id}`;
+    if (isSharedView || !effectiveCurrentUser || !id) return;
+    const entId = `${effectiveCurrentUser.uid}_${id}`;
     const ref = doc(db, 'entitlements', entId);
     const unsub = onSnapshot(ref, (snap) => {
       const data = snap.data();
@@ -193,7 +202,7 @@ function PublicPropertyDetail() {
       }
     });
     return () => unsub();
-  }, [currentUser, id]);
+  }, [effectiveCurrentUser, id, isSharedView]);
 
   // Курс RUB→USD для отображения суммы в $ (оплата в RUB)
   useEffect(() => {
@@ -215,15 +224,46 @@ function PublicPropertyDetail() {
 
   // useEffect для автоматического перевода описания
   useEffect(() => {
-    if (property) {
-      // Обрабатываем перевод описания с кэшированием в БД
-      handleDescriptionTranslation(property, language);
+    if (!property) return;
+    if (isSharedView) {
+      setTranslatedDescription(property.description || '');
+      return;
     }
-  }, [property, language, handleDescriptionTranslation]);
+    // Обрабатываем перевод описания с кэшированием в БД (только не в shared view)
+    handleDescriptionTranslation(property, language);
+  }, [property, language, handleDescriptionTranslation, isSharedView]);
 
   useEffect(() => {
     async function fetchData() {
       try {
+        // Если открыто через общую ссылку — находим владельца токена (премиум-агента) и проверяем роль
+        if (isSharedView && token) {
+          setSharedCheckLoading(true);
+          try {
+            const usersRef = collection(db, 'users');
+            const qUsers = query(usersRef, where('premiumPublicLinkToken', '==', token));
+            const snap = await getDocs(qUsers);
+            if (!snap.empty) {
+              const docSnap = snap.docs[0];
+              const userData = docSnap.data();
+              const roleStr = String(userData?.role || '').toLowerCase();
+              const isPremiumAgent = roleStr === 'premium agent' || roleStr === 'премиум агент';
+              setSharedAllowed(isPremiumAgent);
+              if (isPremiumAgent) {
+                setSharedOwnerUid(docSnap.id);
+                setSharedOwnerPhoneCode(userData?.phoneCode || '');
+                setSharedOwnerPhone(userData?.phone || '');
+              }
+            } else {
+              setSharedAllowed(false);
+            }
+          } catch (e) {
+            console.error('Resolve shared owner by token failed', e);
+            setSharedAllowed(false);
+          } finally {
+            setSharedCheckLoading(false);
+          }
+        }
         const ref = doc(db, "properties", id);
         const snap = await getDoc(ref);
         if (snap.exists()) {
@@ -292,7 +332,7 @@ function PublicPropertyDetail() {
       }
     }
     fetchData();
-  }, [id]);
+  }, [id, isSharedView, token]);
 
   const getLatLng = () => {
     if (!property) return null;
@@ -322,6 +362,28 @@ function PublicPropertyDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin h-10 w-10 rounded-full border-2 border-gray-400 border-b-transparent" />
+      </div>
+    );
+  }
+
+  // Ограничение доступа для общей ссылки, если владелец токена не премиум-агент
+  if (isSharedView && (sharedCheckLoading || !sharedAllowed)) {
+    if (sharedCheckLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <div className="animate-spin h-10 w-10 rounded-full border-2 border-gray-400 border-b-transparent" />
+        </div>
+      );
+    }
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-3">
+          <h1 className="text-2xl font-bold text-gray-900">{t.sharedGalleryPage?.premiumRequiredTitle}</h1>
+          <p className="text-gray-600">{t.sharedGalleryPage?.premiumRequiredMessage}</p>
+          <Link to="/public" className="inline-block px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+            {t.sharedGalleryPage?.goToMain}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -366,7 +428,8 @@ function PublicPropertyDetail() {
   );
 
   const isPrivileged = (() => {
-    const normalizedRole = String(role || '').toLowerCase();
+    if (isSharedView) return false;
+    const normalizedRole = String(effectiveRole || '').toLowerCase();
     return ['admin', 'moderator', 'premium agent', 'премиум агент'].includes(normalizedRole);
   })();
 
@@ -375,7 +438,13 @@ function PublicPropertyDetail() {
       {/* Кнопка "Назад" */}
       <div className="mb-4">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => {
+            if (isSharedView && token) {
+              navigate(`/public/shared/${encodeURIComponent(token)}`);
+            } else {
+              navigate('/');
+            }
+          }}
           className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -503,6 +572,9 @@ function PublicPropertyDetail() {
                         messenger: leadMessenger,
                         propertyId: id || null,
                         createdAt: serverTimestamp(),
+                        agentId: isSharedView && sharedOwnerUid ? sharedOwnerUid : null,
+                        sharedLinkToken: isSharedView ? token || null : null,
+                        source: isSharedView ? 'shared-link' : 'public-property',
                       });
                       showSuccess(t.leadForm.sentSuccess);
                       setIsLeadOpen(false);
@@ -897,7 +969,7 @@ function PublicPropertyDetail() {
 
       {/* CTA: Кнопка управления объектом для создателя или "Написать агенту" для остальных */}
       <div className="mt-8">
-        {currentUser && property?.createdBy === currentUser.uid ? (
+        {!isSharedView && effectiveCurrentUser && property?.createdBy === effectiveCurrentUser.uid ? (
           <button
             onClick={handleManageProperty}
             className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
@@ -914,11 +986,16 @@ function PublicPropertyDetail() {
               {t.leadForm.writeToAgent}
             </button>
             <a
-              href={`https://wa.me/6282147824968?text=${encodeURIComponent(
-                `Здравствуйте! Хочу узнать подробности по объекту ${
+              href={`${(() => {
+                const phoneDigits = String(sharedOwnerPhone || '').replace(/\D/g, '');
+                const codeDigits = String(sharedOwnerPhoneCode || '').replace(/\D/g, '');
+                const intl = codeDigits ? `${codeDigits}${phoneDigits}` : phoneDigits;
+                const target = intl || '6282147824968';
+                const text = `Здравствуйте! Хочу узнать подробности по объекту ${
                   property?.propertyName || property?.name || property?.title || property?.complexName || ''
-                }${property?.id ? ` (ID: ${property.id})` : ''}. Источник: PublicPropertyDetail ${window.location.href}`
-              )}`}
+                }${property?.id ? ` (ID: ${property.id})` : ''}. Источник: PublicPropertyDetail ${window.location.href}`;
+                return `https://wa.me/${target}?text=${encodeURIComponent(text)}`;
+              })()}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-center"
@@ -931,6 +1008,7 @@ function PublicPropertyDetail() {
 
       {/* Секция: Просмотр детальной информации и документов */}
       <div className="mt-6">
+        {isSharedView ? null : (
         <details 
           ref={docsDetailsRef}
           className="group border rounded-lg"
@@ -1123,6 +1201,7 @@ function PublicPropertyDetail() {
             })()}
           </div>
         </details>
+        )}
       </div>
       {/* Модалка авторизации/регистрации как в публичной галерее */}
       <PropertyPlacementModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />

@@ -330,9 +330,9 @@ export const translations = {
         'Full information for all properties',
         'Documents and legal details',
         'Priority updates and new listings',
-        'Professional tools and analytics'
+        'Personal link for collecting client leads'
       ],
-      price: '$199 / month',
+      price: '$99 / month',
       subscribeButton: 'Subscribe'
     },
     accountPage: {
@@ -342,7 +342,25 @@ export const translations = {
       myLeads: 'My Leads',
       noProperties: 'You have not added any properties yet',
       noLeads: 'You have no leads yet',
-      goToProperty: 'Go to property'
+      goToProperty: 'Go to property',
+      premiumLinkTitle: 'Your personal public gallery link',
+      premiumLinkDescription: 'Share this link with your clients. They will see the entire catalog of properties and can contact you directly from any property they like.',
+      premiumLinkLabel: 'Personal link',
+      copyButton: 'Copy',
+      copiedMessage: 'Link copied',
+      premiumOnlyMessage: 'The link is available only for premium subscribers',
+      subscribeButton: 'Subscribe',
+      profileTitle: 'Profile',
+      profile: {
+        name: 'Name',
+        email: 'Email',
+        language: 'Language',
+        telegram: 'Telegram',
+        phone: 'Phone',
+        save: 'Save changes',
+        saved: 'Profile saved',
+        saveError: 'Failed to save profile'
+      }
     },
 
     // Public Page
@@ -353,6 +371,13 @@ export const translations = {
       complexesListTitle: 'Complexes list',
       rentingLabel: 'Renting',
       propertiesListTitle: 'Properties list'
+    },
+
+    // Shared Gallery Page for Premium Agent
+    sharedGalleryPage: {
+      premiumRequiredTitle: 'Premium required',
+      premiumRequiredMessage: 'To use this page, please upgrade to a Premium subscription.',
+      goToMain: 'Go to public page'
     },
 
     // Agent info panel
@@ -2276,9 +2301,9 @@ _________________               _________________
         'Полная информация по всем объектам',
         'Документы и юридические детали',
         'Приоритетные обновления и новые листинги',
-        'Профессиональные инструменты и аналитика'
+        'Индивидуальная ссылка для получения заявок от клиентов'
       ],
-      price: '$199 / мес.',
+      price: '$99 / мес.',
       subscribeButton: 'Подписаться'
     },
     accountPage: {
@@ -2288,7 +2313,25 @@ _________________               _________________
       myLeads: 'Мои заявки',
       noProperties: 'Вы ещё не добавили ни одного объекта',
       noLeads: 'У вас пока нет заявок',
-      goToProperty: 'Перейти к объекту'
+      goToProperty: 'Перейти к объекту',
+      premiumLinkTitle: 'Ваша персональная именная ссылка',
+      premiumLinkDescription: 'Поделитесь этой ссылкой с клиентами. Они увидят весь каталог объектов и смогут сразу написать вам напрямую из любой понравившейся карточки.',
+      premiumLinkLabel: 'Персональная ссылка',
+      copyButton: 'Скопировать',
+      copiedMessage: 'Ссылка скопирована',
+      premiumOnlyMessage: 'Ссылка доступна только для премиум подписчиков',
+      subscribeButton: 'Подписаться',
+      profileTitle: 'Профиль',
+      profile: {
+        name: 'Имя',
+        email: 'Email',
+        language: 'Язык',
+        telegram: 'Telegram',
+        phone: 'Телефон',
+        save: 'Сохранить изменения',
+        saved: 'Профиль сохранён',
+        saveError: 'Не удалось сохранить профиль'
+      }
     },
 
     // Public Page
@@ -2299,6 +2342,13 @@ _________________               _________________
       complexesListTitle: 'Список комплексов',
       rentingLabel: 'Сдается',
       propertiesListTitle: 'Список объектов'
+    },
+
+    // Shared Gallery Page for Premium Agent
+    sharedGalleryPage: {
+      premiumRequiredTitle: 'Требуется премиум‑подписка',
+      premiumRequiredMessage: 'Для использования этой страницы необходимо оформить премиум‑подписку.',
+      goToMain: 'Перейти на публичную страницу'
     },
 
     // Agent info panel

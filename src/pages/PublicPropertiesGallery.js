@@ -3,7 +3,7 @@ import { db } from "../firebaseConfig";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { doc, getDoc, Timestamp, getDocs, where, query, collection, setDoc, deleteDoc } from "firebase/firestore";
 import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench, Scale, HardHat, ClipboardCheck, Ruler, Compass } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useCache } from "../CacheContext";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
@@ -29,18 +29,23 @@ import LanguageSwitcher from "../components/LanguageSwitcher";
 import PropertyPlacementModal from "../components/PropertyPlacementModal";
 import { showInfo } from "../utils/notifications";
 
-function PublicPropertiesGallery() {
+function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
   const { forceRefreshPropertiesList } = useCache();
   const { language } = useLanguage();
   const { currentUser, role } = useAuth();
-  const isPrivileged = (() => {
+  const isPrivilegedBase = (() => {
     const normalized = String(role || '').toLowerCase();
     return ['admin', 'moderator', 'premium agent', 'премиум агент'].includes(normalized);
   })();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const t = translations[language];
   const lt = landingTranslations[language];
+  const isSharedView = location.pathname.startsWith('/public/shared/');
+  const effectiveCurrentUser = isSharedView ? null : currentUser;
+  const effectiveRole = isSharedView ? null : role;
+  const isPrivileged = isSharedView ? false : isPrivilegedBase;
   
   const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
@@ -87,8 +92,8 @@ function PublicPropertiesGallery() {
   useEffect(() => {
     async function loadFavorites() {
       try {
-        if (currentUser) {
-          const favCol = collection(db, 'users', currentUser.uid, 'favorites');
+        if (effectiveCurrentUser) {
+          const favCol = collection(db, 'users', effectiveCurrentUser.uid, 'favorites');
           const snap = await getDocs(favCol);
           const ids = new Set();
           snap.forEach(d => {
@@ -106,15 +111,15 @@ function PublicPropertiesGallery() {
       }
     }
     loadFavorites();
-  }, [currentUser]);
+  }, [effectiveCurrentUser]);
 
   const isFavorite = useCallback((propertyId) => favoriteIds.has(propertyId), [favoriteIds]);
 
   const toggleFavorite = useCallback(async (propertyId) => {
     try {
       if (!propertyId) return;
-      if (currentUser) {
-        const favRef = doc(db, 'users', currentUser.uid, 'favorites', propertyId);
+      if (effectiveCurrentUser) {
+        const favRef = doc(db, 'users', effectiveCurrentUser.uid, 'favorites', propertyId);
         if (favoriteIds.has(propertyId)) {
           await deleteDoc(favRef);
           setFavoriteIds(prev => {
@@ -143,7 +148,7 @@ function PublicPropertiesGallery() {
     } catch (e) {
       console.error('Ошибка переключения избранного:', e);
     }
-  }, [currentUser, favoriteIds]);
+  }, [effectiveCurrentUser, favoriteIds]);
 
   // Инициализация отслеживания страницы для аналитики
   useEffect(() => {
@@ -164,7 +169,7 @@ function PublicPropertiesGallery() {
   };
 
   const handlePlaceProperty = () => {
-    if (currentUser && ['admin', 'moderator', 'agent', 'premium agent'].includes(role)) {
+    if (!isSharedView && effectiveCurrentUser && ['admin', 'moderator', 'agent', 'premium agent'].includes(effectiveRole)) {
       // Авторизованный пользователь с нужной ролью - переходим на страницу создания
       navigate('/agent-property/create');
     } else {
@@ -269,7 +274,7 @@ function PublicPropertiesGallery() {
       
       // Объекты на модерации показываем только их создателям в начале списка
       const creatorModerationProperties = moderationProperties.filter((p) => 
-        currentUser && p?.createdBy === currentUser.uid
+        effectiveCurrentUser && p?.createdBy === effectiveCurrentUser.uid
       );
       
       // Объединяем: сначала объекты на модерации от создателя, потом обычные
@@ -278,8 +283,8 @@ function PublicPropertiesGallery() {
       setProperties(visibleProperties);
       
       // Проверяем, есть ли у текущего пользователя объекты
-      if (currentUser) {
-        const userHasProperties = visibleProperties.some(p => p.createdBy === currentUser.uid);
+      if (effectiveCurrentUser) {
+        const userHasProperties = visibleProperties.some(p => p.createdBy === effectiveCurrentUser.uid);
         setHasUserProperties(userHasProperties);
       } else {
         setHasUserProperties(false);
@@ -289,7 +294,7 @@ function PublicPropertiesGallery() {
     } finally {
       setLoading(false);
     }
-  }, [forceRefreshPropertiesList, t.propertiesGallery.dataLoadError, currentUser]);
+  }, [forceRefreshPropertiesList, t.propertiesGallery.dataLoadError, effectiveCurrentUser]);
 
   useEffect(() => {
     fetchProperties();
@@ -388,11 +393,11 @@ function PublicPropertiesGallery() {
       const matchesDistrict = filters.district === "all" || property.district === filters.district;
       const matchesType = filters.type === "all" || property.type === filters.type;
       const matchesStatus = filters.status === "all" || property.status === filters.status;
-      const matchesAddedByMe = !filters.addedByMe || (currentUser && property.createdBy === currentUser.uid);
+      const matchesAddedByMe = !filters.addedByMe || (effectiveCurrentUser && property.createdBy === effectiveCurrentUser.uid);
 
       return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType && matchesStatus && matchesAddedByMe;
     });
-  }, [properties, searchQuery, filters, currentUser, isSelectionMode, selectedPropertyIds]);
+  }, [properties, searchQuery, filters, effectiveCurrentUser, isSelectionMode, selectedPropertyIds]);
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -424,6 +429,7 @@ function PublicPropertiesGallery() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {/* Гамбургер меню слева */}
+            {!isSharedView && (
             <div className="relative">
               <button
                 className="p-2 rounded-md border border-gray-200 hover:bg-gray-50"
@@ -484,8 +490,11 @@ function PublicPropertiesGallery() {
               </button>
               </div>
             </div>
+            )}
             <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
-              {isSelectionMode ? t.propertiesGallery.selectionTitle : (t.navigation?.publicInvestorTitle || 'IT AGENT BALI')}
+              {isSelectionMode
+                ? t.propertiesGallery.selectionTitle
+                : (isSharedView && sharedOwnerName) ? sharedOwnerName : (t.navigation?.publicInvestorTitle || 'IT AGENT BALI')}
             </h1>
             {isSelectionMode && (
               <p className="text-sm text-gray-600 mt-1">
@@ -709,7 +718,7 @@ function PublicPropertiesGallery() {
         ) : (
                     filteredProperties.map((p) => {
             const isOnModeration = p.moderation === true;
-            const isCreator = currentUser && p.createdBy === currentUser.uid;
+            const isCreator = effectiveCurrentUser && p.createdBy === effectiveCurrentUser.uid;
             
             // Если объект на модерации и пользователь не его создатель - не показываем
             if (isOnModeration && !isCreator) {
@@ -865,7 +874,7 @@ function PublicPropertiesGallery() {
             // Оборачиваем в Link только если объект активен
             if (isActive) {
               return (
-                <Link key={p.id} to={`/public/property/${p.id}`}>
+                <Link key={p.id} to={isSharedView && sharedToken ? `/public/shared/${encodeURIComponent(sharedToken)}/property/${p.id}` : `/public/property/${p.id}`}>
                   {cardContent}
                 </Link>
               );
