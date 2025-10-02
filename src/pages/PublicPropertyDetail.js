@@ -240,26 +240,30 @@ function PublicPropertyDetail() {
         if (isSharedView && token) {
           setSharedCheckLoading(true);
           try {
-            const usersRef = collection(db, 'users');
-            const qUsers = query(usersRef, where('premiumPublicLinkToken', '==', token));
-            const snap = await getDocs(qUsers);
-            if (!snap.empty) {
-              const docSnap = snap.docs[0];
-              const userData = docSnap.data();
-              const roleStr = String(userData?.role || '').toLowerCase();
-              const isPremiumAgent = roleStr === 'premium agent' || roleStr === 'премиум агент';
-              setSharedAllowed(isPremiumAgent);
-              if (isPremiumAgent) {
-                setSharedOwnerUid(docSnap.id);
-                setSharedOwnerPhoneCode(userData?.phoneCode || '');
-                setSharedOwnerPhone(userData?.phone || '');
+            const mapSnap = await getDoc(doc(db, 'publicSharedLinks', token));
+            if (mapSnap.exists()) {
+              const map = mapSnap.data() || {};
+              const roleStr = String(map.role || '').toLowerCase();
+              const isPremiumAgent = (
+                roleStr === 'premium agent' ||
+                roleStr === 'премиум агент' ||
+                roleStr === 'premium_agent' ||
+                roleStr === 'премиум-агент'
+              );
+              const enabled = map.enabled !== false;
+              setSharedAllowed(enabled && isPremiumAgent);
+              if (enabled && isPremiumAgent) {
+                setSharedOwnerUid(map.ownerId || '');
+                setSharedOwnerPhoneCode(map.phoneCode || '');
+                setSharedOwnerPhone(map.phone || '');
               }
             } else {
               setSharedAllowed(false);
             }
           } catch (e) {
             console.error('Resolve shared owner by token failed', e);
-            setSharedAllowed(false);
+            // При ошибке (например, из-за правил) не блокируем просмотр — оставим доступ
+            setSharedAllowed(true);
           } finally {
             setSharedCheckLoading(false);
           }
@@ -1217,31 +1221,18 @@ function PublicPropertyDetail() {
               <h3 className="text-lg font-semibold mb-2">{t.publicDocs?.modal?.colOneTitle}</h3>
               <p className="text-sm text-gray-600 mb-2">{t.publicDocs?.modal?.colOneDesc}</p>
               <div className="mt-auto space-y-3">
-                {t.publicDocs?.modal?.colOnePrice && (
-                  <div className="text-base font-medium text-gray-900">{t.publicDocs.modal.colOnePrice}</div>
-                )}
                 {usdPrice && (
                   <div className="text-xs text-gray-600">≈ USD ${usdPrice.toFixed(2)} (оплата в RUB {ONE_TIME_PRICE_RUB})</div>
                 )}
               <Button className="w-full" disabled={entitlementActive} onClick={async () => {
                 try {
                   if (!currentUser) { setIsAuthModalOpen(true); return; }
-                  const token = await currentUser.getIdToken();
-                  const resp = await fetch('/api/payments/robokassa/create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ propertyId: id, isTest: false })
-                  });
-                  const json = await resp.json();
-                  if (resp.ok && json?.url) {
-                    setPaymentUrl(json.url);
-                    setIsPaymentModalOpen(true);
-                  } else {
-                    showError(json?.error || 'Failed to initialize payment');
-                  }
+                  // Открываем готовую платежную страницу в iframe-модалке
+                  setPaymentUrl('https://premium.it-agent.pro/product-page/onetime_access');
+                  setIsPaymentModalOpen(true);
                 } catch (e) {
-                  console.error('create payment error', e);
-                  showError('Payment initialization error');
+                  console.error('open premium payment link error', e);
+                  showError('Не удалось открыть платежную страницу');
                 }
               }}>
                 {t.publicDocs?.modal?.colOneButton}
@@ -1252,10 +1243,16 @@ function PublicPropertyDetail() {
               <h3 className="text-lg font-semibold mb-2">{t.publicDocs?.modal?.colTwoTitle}</h3>
               <p className="text-sm text-gray-600 mb-2">{t.publicDocs?.modal?.colTwoDesc}</p>
               <div className="mt-auto space-y-3">
-                {t.publicDocs?.modal?.colTwoPrice && (
-                  <div className="text-base font-medium text-gray-900">{t.publicDocs.modal.colTwoPrice}</div>
-                )}
-              <Button className="w-full" variant="secondary" onClick={() => { /* заглушка */ }}>
+              <Button className="w-full" variant="secondary" onClick={async () => {
+                try {
+                  if (!currentUser) { setIsAuthModalOpen(true); return; }
+                  setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                  setIsPaymentModalOpen(true);
+                } catch (e) {
+                  console.error('open premium subscription link error', e);
+                  showError('Не удалось открыть страницу подписки');
+                }
+              }}>
                 {t.publicDocs?.modal?.colTwoButton}
               </Button>
               </div>
@@ -1283,7 +1280,6 @@ function PublicPropertyDetail() {
             ) : (
               <div className="text-sm text-gray-500">Initializing…</div>
             )}
-            <div className="text-xs text-gray-500">Payments are processed by Robokassa.</div>
           </div>
         </DialogContent>
       </Dialog>

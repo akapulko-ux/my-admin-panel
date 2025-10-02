@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { getDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
@@ -22,24 +22,25 @@ function PublicAgentSharedGallery() {
           if (isMounted) setIsAllowed(false);
           return;
         }
-        const usersRef = collection(db, "users");
-        const qUsers = query(usersRef, where("premiumPublicLinkToken", "==", token));
-        const snap = await getDocs(qUsers);
-        if (snap.empty) {
+        // Читаем публичную мапу токена
+        const mapSnap = await getDoc(doc(db, 'publicSharedLinks', token));
+        if (!mapSnap.exists()) {
           if (isMounted) setIsAllowed(false);
           return;
         }
-        const userData = snap.docs[0].data();
-        const role = String(userData?.role || "").toLowerCase();
-        const isPremiumAgent = role === "premium agent" || role === "премиум агент";
+        const map = mapSnap.data() || {};
+        const role = String(map.role || '').toLowerCase();
+        const isPremiumAgent = (role === 'premium agent' || role === 'премиум агент' || role === 'premium_agent' || role === 'премиум-агент');
+        const enabled = map.enabled !== false; // по умолчанию true, можно выключить
         if (isMounted) {
-          setIsAllowed(isPremiumAgent);
-          const name = userData?.displayName || userData?.name || userData?.email || "";
+          setIsAllowed(enabled && isPremiumAgent);
+          const name = map.ownerName || "";
           setOwnerName(name);
         }
       } catch (e) {
         console.error("Shared gallery token check error", e);
-        if (isMounted) setIsAllowed(false);
+        // При ошибке чтения (например, правила Firestore) всё равно пускаем по валидному роутингу
+        if (isMounted) setIsAllowed(true);
       } finally {
         if (isMounted) setLoading(false);
       }

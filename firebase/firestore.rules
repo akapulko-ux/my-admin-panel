@@ -234,6 +234,14 @@ service cloud.firestore {
       allow create, update, delete: if canManageProperties();
     }
 
+    // === Public Shared Links (публичные ссылки на общую галерею) ===
+    match /publicSharedLinks/{token} {
+      // Публичное чтение для всех (доступ по ссылке для анонимных)
+      allow read: if true;
+      // Изменение/удаление только админом (создание производится бэкендом)
+      allow create, update, delete: if isAdmin();
+    }
+
     // === Landmarks (Достопримечательности) ===  
     match /landmarks/{landmarkId} {
       // Админ имеет полные права

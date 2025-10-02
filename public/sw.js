@@ -68,47 +68,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Обработка fetch запросов
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Возвращаем кешированную версию если есть
-        if (response) {
-          return response;
-        }
-
-        return fetch(event.request).then(response => {
-          // Проверяем что ответ валидный
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          // Клонируем ответ
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              // Кешируем только GET запросы
-              if (event.request.method === 'GET') {
-                cache.put(event.request, responseToCache);
-              }
-            })
-            .catch(error => {
-              console.log('Cache put failed:', error);
-            });
-
-          return response;
-        });
-      })
-      .catch(() => {
-        // Если офлайн и запрос не в кеше, показываем офлайн страницу
-        if (event.request.mode === 'navigate') {
-          return caches.match('/offline.html');
-        }
-      })
-  );
-});
+// Не перехватываем fetch — пусть браузер работает по HTTP кешу и заголовкам
 
 // Обработка push уведомлений (для будущего использования)
 self.addEventListener('push', event => {

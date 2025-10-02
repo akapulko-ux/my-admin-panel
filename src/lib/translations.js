@@ -337,6 +337,8 @@ export const translations = {
     },
     accountPage: {
       title: 'My Account',
+      premiumBadge: 'Premium',
+      premiumDeveloperBadge: 'Premium Developer',
       logout: 'Logout',
       myProperties: 'My Properties',
       myLeads: 'My Leads',
@@ -708,8 +710,6 @@ for providing information and technical services
 
 CONTRACTOR:                     CLIENT:
      IT Agent                                         Developer
-
-
 _________________               _________________
   (signature)                            (signature)`,
         executor: 'CONTRACTOR',
@@ -929,7 +929,7 @@ _________________               _________________
       studio: 'Studio',
       unitsCount: 'Units Count',
       reliabilityRating: 'Reliability Rating',
-      reliabilityRatingTooltip: 'Reliability rating of the property.\nCompiled based on the provided documents, the developer’s experience, and delivered projects.',
+      reliabilityRatingTooltip: 'Reliability rating of the property.\nCompiled based on the provided documents, the developer\'s experience, and delivered projects.',
       area: 'Living Area',
       areaTooltip: 'Only living area of the property (kitchen, living room, bedrooms, bathrooms)',
       totalArea: 'Total Area',
@@ -1487,7 +1487,6 @@ _________________               _________________
         }
       }
     },
-
     // Building Progress
     buildingProgress: {
       title: 'Building Progress',
@@ -2308,6 +2307,8 @@ _________________               _________________
     },
     accountPage: {
       title: 'Личный кабинет',
+      premiumBadge: 'Премиум',
+      premiumDeveloperBadge: 'Премиум застройщик',
       logout: 'Выйти',
       myProperties: 'Мои объекты',
       myLeads: 'Мои заявки',
@@ -2674,8 +2675,6 @@ _________________               _________________
 
 ИСПОЛНИТЕЛЬ:                    КЛИЕНТ:
      IT Agent                                         Developer
-
-
 _________________               _________________
   (подпись)                            (подпись)`,
         executor: 'ИСПОЛНИТЕЛЬ',
@@ -3455,7 +3454,6 @@ _________________               _________________
         }
       }
     },
-
     // Building Progress
     buildingProgress: {
       title: 'Прогресс строительства',
@@ -4281,6 +4279,8 @@ _________________               _________________
     },
     accountPage: {
       title: 'Akun Saya',
+      premiumBadge: 'Premium',
+      premiumDeveloperBadge: 'Pengembang Premium',
       logout: 'Keluar',
       myProperties: 'Properti Saya',
       myLeads: 'Lead Saya',
@@ -4622,8 +4622,6 @@ untuk menyediakan layanan informasi dan teknis
 
 KONTRAKTOR:                     KLIEN:
      IT Agent                                         Pengembang
-
-
 _________________               _________________
   (tanda tangan)                       (tanda tangan)`,
         executor: 'KONTRAKTOR',
@@ -5400,7 +5398,6 @@ _________________               _________________
         }
       }
     },
-
     // Building Progress
     buildingProgress: {
       title: 'Kemajuan Pembangunan',

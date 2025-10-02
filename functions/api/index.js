@@ -33,7 +33,27 @@ app.use('/v1/webhooks', require('./routes/webhooks'));
 app.use('/v1/analytics', require('./routes/analytics'));
 app.use('/v1/bots', require('./routes/bots'));
 app.use('/v1/knowledge', require('./routes/knowledge'));
+// Robokassa endpoints
 app.use('/payments/robokassa', require('./routes/robokassa'));
+// Support same routes with '/api' prefix when proxied via Hosting rewrite
+app.use('/api/payments/robokassa', require('./routes/robokassa'));
+
+// Geo proxy to avoid CORS in the client
+app.get('/v1/geo', async (req, res) => {
+  try {
+    const r = await fetch('https://ipapi.co/json/', { method: 'GET' });
+    if (!r.ok) return res.status(204).end();
+    const data = await r.json();
+    return res.json({
+      country: data?.country_name || null,
+      city: data?.city || null,
+      region: data?.region || null,
+      ip: data?.ip || null
+    });
+  } catch (e) {
+    return res.status(204).end();
+  }
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {

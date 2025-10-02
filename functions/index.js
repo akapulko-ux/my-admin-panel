@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
@@ -248,6 +249,30 @@ exports.updateUserRoleClaims = onDocumentUpdated("users/{userId}", async (event)
       await event.data.after.ref.update({
         lastRoleUpdate: admin.firestore.FieldValue.serverTimestamp()
       });
+
+      // СИНХРОНИЗАЦИЯ ПУБЛИЧНОЙ МАПЫ ССЫЛКИ: publicSharedLinks/{token}
+      try {
+        const token = newData.premiumPublicLinkToken || null;
+        if (token) {
+          const mapRef = admin.firestore().collection('publicSharedLinks').doc(String(token));
+          const normalized = normalizeRole(newData.role); // 'premium_agent', 'agent', ...
+          const isPremiumAgent = normalized === 'premium_agent';
+          const ownerName = newData.displayName || newData.name || newData.email || '';
+          const payload = {
+            ownerId: userId,
+            ownerName,
+            role: isPremiumAgent ? 'premium agent' : (newData.role || ''),
+            phone: newData.phone || null,
+            phoneCode: newData.phoneCode || null,
+            enabled: isPremiumAgent, // выключаем ссылку если роль уже не премиум агент
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+          await mapRef.set(payload, { merge: true });
+          console.log('[publicSharedLinks] updated for token:', token, 'enabled:', payload.enabled, 'role:', payload.role);
+        }
+      } catch (e) {
+        console.error('[publicSharedLinks] sync error:', e);
+      }
       
       return { success: true, message: `Роль обновлена на ${newData.role}` };
     } catch (error) {
@@ -630,9 +655,18 @@ const sendTelegramMessage = async (chatId, text, replyMarkup = null) => {
   }
 };
 
-// API Function
+// API Function (Gen2) with required Robokassa secrets
 const apiApp = require('./api');
-exports.api = functions.https.onRequest(apiApp);
+exports.api = onRequest({
+  secrets: [
+    'ROBO_MERCHANT_LOGIN',
+    'ROBO_PASSWORD1',
+    'ROBO_PASSWORD2',
+    'ROBO_TEST_PASSWORD1',
+    'ROBO_TEST_PASSWORD2',
+    'ONE_TIME_PRICE_RUB'
+  ]
+}, apiApp);
 
 // Multi-tenant Telegram webhook
 exports.aiTenantTelegramWebhook = aiTenantTelegramWebhook;

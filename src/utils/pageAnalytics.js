@@ -49,13 +49,14 @@ const getReferrer = () => {
 // Функция для получения геолокации (если доступна)
 const getGeolocation = async () => {
   try {
-    // Используем IP-геолокацию через внешний сервис
-    const response = await fetch('https://ipapi.co/json/');
+    // Через наш бэкенд-прокси, чтобы не ловить CORS и не трогать SW
+    const response = await fetch('/api/v1/geo');
+    if (!response.ok) return null;
     const data = await response.json();
     return {
-      country: data.country_name,
-      city: data.city,
-      region: data.region
+      country: data.country || null,
+      city: data.city || null,
+      region: data.region || null
     };
   } catch (error) {
     console.log('Не удалось получить геолокацию:', error);

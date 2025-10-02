@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Timestamp, getDocs, collection } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "../AuthContext";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { translatePropertyType } from "../lib/utils";
@@ -12,7 +12,6 @@ import { countryDialCodes } from "../lib/countryDialCodes";
 import { Building2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { getFunctions, httpsCallable } from "firebase/functions";
 
 function PublicAccount() {
   const { currentUser, logout, role } = useAuth();
@@ -26,6 +25,8 @@ function PublicAccount() {
   const [shareLink, setShareLink] = useState("");
   const [copyMsg, setCopyMsg] = useState("");
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
   const [profile, setProfile] = useState({ name: '', email: '', telegram: '', phone: '', phoneCode: '+62' });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
@@ -54,8 +55,36 @@ function PublicAccount() {
           token = `${currentUser.uid}-${Math.random().toString(36).slice(2, 10)}`;
           try {
             await updateDoc(userRef, { premiumPublicLinkToken: token });
+            // Публичная мапа токена → метаданные (для анонимного доступа)
+            const u = snap.exists() ? (snap.data() || {}) : {};
+            await setDoc(doc(db, 'publicSharedLinks', token), {
+              ownerId: currentUser.uid,
+              ownerName: u.displayName || u.name || u.email || '',
+              role: normalizedRole,
+              phone: u.phone || null,
+              phoneCode: u.phoneCode || null,
+              enabled: true,
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now()
+            }, { merge: true });
           } catch (e) {
             console.error('Failed to save premiumPublicLinkToken', e);
+          }
+        } else {
+          // Обеспечим наличие/актуальность публичной мапы для уже существующего токена
+          try {
+            const u = snap.exists() ? (snap.data() || {}) : {};
+            await setDoc(doc(db, 'publicSharedLinks', token), {
+              ownerId: currentUser.uid,
+              ownerName: u.displayName || u.name || u.email || '',
+              role: normalizedRole,
+              phone: u.phone || null,
+              phoneCode: u.phoneCode || null,
+              enabled: true,
+              updatedAt: Timestamp.now()
+            }, { merge: true });
+          } catch (e) {
+            console.error('Ensure publicSharedLinks mapping failed', e);
           }
         }
         const base = window.location.origin;
@@ -157,7 +186,20 @@ function PublicAccount() {
           </button>
         </div>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">{t.accountPage.title}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">{t.accountPage.title}</h1>
+            {(() => {
+              const normalizedRole = String(role || '').toLowerCase();
+              const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент';
+              const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer';
+              if (!isPremiumAgent && !isPremiumDeveloper) return null;
+              return (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                  {isPremiumDeveloper ? t.accountPage.premiumDeveloperBadge : t.accountPage.premiumBadge}
+                </span>
+              );
+            })()}
+          </div>
           <Button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white">{t.accountPage.logout}</Button>
         </div>
 
@@ -284,10 +326,35 @@ function PublicAccount() {
                   <li key={i}>{f}</li>
                 ))}
               </ul>
-              <div className="text-base font-semibold text-gray-900">{t.subscriptionModal?.price}</div>
-              <Button className="w-full" onClick={async () => { try { const fn = httpsCallable(getFunctions(), 'notifySubscriptionInterest'); await fn({ uid: currentUser?.uid }); } catch (e) { console.error('notifySubscriptionInterest error', e); } finally { setIsSubscriptionOpen(false); } }}>
+              <Button className="w-full" onClick={async () => {
+                try {
+                  if (!currentUser) { return; }
+                  setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                  setIsPaymentModalOpen(true);
+                } catch (e) {
+                  console.error('open premium subscription link error', e);
+                } finally {
+                  setIsSubscriptionOpen(false);
+                }
+              }}>
                 {t.subscriptionModal?.subscribeButton}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Модальное окно оплаты (iframe) */}
+        <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              {paymentUrl ? (
+                <iframe title="Premium Payment" src={paymentUrl} className="w-full h-[540px] border rounded" allow="payment *;" />
+              ) : (
+                <div className="text-sm text-gray-500">Initializing…</div>
+              )}
             </div>
           </DialogContent>
         </Dialog>

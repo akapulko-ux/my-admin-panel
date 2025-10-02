@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { doc, getDoc, Timestamp, getDocs, where, query, collection, setDoc, deleteDoc } from "firebase/firestore";
 import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench, Scale, HardHat, ClipboardCheck, Ruler, Compass } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
@@ -50,6 +49,8 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
   const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
 
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -939,10 +940,34 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
                 <li key={i}>{f}</li>
               ))}
             </ul>
-            <div className="text-base font-semibold text-gray-900">{t.subscriptionModal?.price}</div>
-            <Button className="w-full" onClick={async () => { try { const fn = httpsCallable(getFunctions(), 'notifySubscriptionInterest'); await fn({ uid: currentUser?.uid }); } catch (e) { console.error('notifySubscriptionInterest error', e); } finally { setIsSubscriptionOpen(false); } }}>
+            <Button className="w-full" onClick={async () => {
+              try {
+                if (!currentUser) { setIsPlacementModalOpen(true); return; }
+                setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                setIsPaymentModalOpen(true);
+              } catch (e) {
+                console.error('open premium subscription link error', e);
+              } finally {
+                setIsSubscriptionOpen(false);
+              }
+            }}>
               {t.subscriptionModal?.subscribeButton}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Модальное окно оплаты (iframe) */}
+      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {paymentUrl ? (
+              <iframe title="Premium Payment" src={paymentUrl} className="w-full h-[540px] border rounded" allow="payment *;" />
+            ) : (
+              <div className="text-sm text-gray-500">Initializing…</div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
