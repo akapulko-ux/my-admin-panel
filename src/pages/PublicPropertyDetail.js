@@ -250,9 +250,15 @@ function PublicPropertyDetail() {
                 roleStr === 'premium_agent' ||
                 roleStr === 'премиум-агент'
               );
+              const isPremiumDeveloper = (
+                roleStr === 'premium developer' ||
+                roleStr === 'премиум застройщик' ||
+                roleStr === 'premium_developer' ||
+                roleStr === 'премиум-застройщик'
+              );
               const enabled = map.enabled !== false;
-              setSharedAllowed(enabled && isPremiumAgent);
-              if (enabled && isPremiumAgent) {
+              setSharedAllowed(enabled && (isPremiumAgent || isPremiumDeveloper));
+              if (enabled && (isPremiumAgent || isPremiumDeveloper)) {
                 setSharedOwnerUid(map.ownerId || '');
                 setSharedOwnerPhoneCode(map.phoneCode || '');
                 setSharedOwnerPhone(map.phone || '');

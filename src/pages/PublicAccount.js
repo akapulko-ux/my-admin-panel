@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Timestamp, getDocs, collection } from "firebase/firestore";
+import { Timestamp, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "../AuthContext";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
@@ -42,8 +42,9 @@ function PublicAccount() {
       try {
         if (!currentUser) return;
         const normalizedRole = String(role || '').toLowerCase();
-        const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент';
-        if (!isPremiumAgent) {
+        const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент' || normalizedRole === 'premium_agent' || normalizedRole === 'премиум-агент';
+        const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer' || normalizedRole === 'премиум-застройщик';
+        if (!isPremiumAgent && !isPremiumDeveloper) {
           setShareLink("");
           return;
         }
@@ -60,7 +61,7 @@ function PublicAccount() {
             await setDoc(doc(db, 'publicSharedLinks', token), {
               ownerId: currentUser.uid,
               ownerName: u.displayName || u.name || u.email || '',
-              role: normalizedRole,
+              role: isPremiumAgent ? 'premium agent' : 'premium developer',
               phone: u.phone || null,
               phoneCode: u.phoneCode || null,
               enabled: true,
@@ -77,7 +78,7 @@ function PublicAccount() {
             await setDoc(doc(db, 'publicSharedLinks', token), {
               ownerId: currentUser.uid,
               ownerName: u.displayName || u.name || u.email || '',
-              role: normalizedRole,
+              role: isPremiumAgent ? 'premium agent' : 'premium developer',
               phone: u.phone || null,
               phoneCode: u.phoneCode || null,
               enabled: true,
@@ -134,15 +135,50 @@ function PublicAccount() {
           }
         } catch (e) { console.error('load profile error', e); }
         // Мои объекты
-        const propsSnap = await getDocs(collection(db, 'properties'));
-        const props = propsSnap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .filter(p => p.createdBy === currentUser.uid);
-        setMyProperties(props);
+        let myProps = [];
+        try {
+          const normalizedRole = String(role || '').toLowerCase();
+          const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer' || normalizedRole === 'премиум-застройщик';
+
+          if (isPremiumDeveloper) {
+            // Определяем имя застройщика по developerId пользователя
+            let developerName = null;
+            try {
+              const userDocRef = doc(db, 'users', currentUser.uid);
+              const userDocSnap = await getDoc(userDocRef);
+              const devId = userDocSnap.exists() ? (userDocSnap.data()?.developerId || null) : null;
+              if (devId) {
+                const devSnap = await getDoc(doc(db, 'developers', String(devId)));
+                if (devSnap.exists()) {
+                  developerName = devSnap.data()?.name || null;
+                }
+              }
+            } catch (e) {
+              console.error('resolve developerName error', e);
+            }
+
+            if (developerName) {
+              const qProps = query(collection(db, 'properties'), where('developer', '==', developerName));
+              const snap = await getDocs(qProps);
+              myProps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            } else {
+              myProps = [];
+            }
+          } else {
+            const propsSnap = await getDocs(collection(db, 'properties'));
+            myProps = propsSnap.docs
+              .map(d => ({ id: d.id, ...d.data() }))
+              .filter(p => p.createdBy === currentUser.uid);
+          }
+        } catch (e) {
+          console.error('load my properties error', e);
+          myProps = [];
+        }
+        setMyProperties(myProps);
 
         // Мои заявки (таблица clientLeads, где propertyId в моих объектах) и заявки, привязанные к моему agentId из общей ссылки
         const leadsSnap = await getDocs(collection(db, 'clientLeads'));
-        const myPropIds = new Set(props.map(p => p.id));
+        const myPropIds = new Set(myProps.map(p => p.id));
         const leads = leadsSnap.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .filter(l => (l.propertyId && myPropIds.has(l.propertyId)) || l.agentId === currentUser.uid);
@@ -152,7 +188,7 @@ function PublicAccount() {
       }
     }
     loadData();
-  }, [currentUser]);
+  }, [currentUser, role]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -213,8 +249,9 @@ function PublicAccount() {
             <p className="text-sm text-gray-600 mb-3">{t.accountPage.premiumLinkDescription}</p>
             {(() => {
             const normalizedRole = String(role || '').toLowerCase();
-            const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент';
-            if (isPremiumAgent) {
+            const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент' || normalizedRole === 'premium_agent' || normalizedRole === 'премиум-агент';
+            const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer' || normalizedRole === 'премиум-застройщик';
+            if (isPremiumAgent || isPremiumDeveloper) {
               return (
                 <>
                   <div className="flex items-center gap-2">

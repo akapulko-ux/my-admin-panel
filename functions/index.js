@@ -255,20 +255,48 @@ exports.updateUserRoleClaims = onDocumentUpdated("users/{userId}", async (event)
         const token = newData.premiumPublicLinkToken || null;
         if (token) {
           const mapRef = admin.firestore().collection('publicSharedLinks').doc(String(token));
-          const normalized = normalizeRole(newData.role); // 'premium_agent', 'agent', ...
-          const isPremiumAgent = normalized === 'premium_agent';
           const ownerName = newData.displayName || newData.name || newData.email || '';
+          const roleText = String(newData.role || '').toLowerCase();
+          const isPremiumAgent = ['premium agent','премиум агент','premium_agent','премиум-агент','premium'].includes(roleText);
+          const isPremiumDeveloper = ['premium developer','премиум застройщик','premium_developer','премиум-застройщик'].includes(roleText);
+          const enabled = isPremiumAgent || isPremiumDeveloper;
+          const stableRole = isPremiumAgent ? 'premium agent' : (isPremiumDeveloper ? 'premium developer' : (newData.role || ''));
+
+          // Определяем имя застройщика для премиум застройщика
+          let developerId = null;
+          let developerName = null;
+          if (isPremiumDeveloper) {
+            try {
+              developerId = newData.developerId || null;
+              if (developerId) {
+                const devSnap = await admin.firestore().collection('developers').doc(String(developerId)).get();
+                if (devSnap.exists) {
+                  developerName = devSnap.data()?.name || null;
+                  console.log('[publicSharedLinks] developer resolved', { userId, developerId, developerName });
+                } else {
+                  console.log('[publicSharedLinks] developer not found for', developerId);
+                }
+              } else {
+                console.log('[publicSharedLinks] no developerId on user', { userId });
+              }
+            } catch (e) {
+              console.error('[publicSharedLinks] developer lookup error:', e);
+            }
+          }
+
           const payload = {
             ownerId: userId,
             ownerName,
-            role: isPremiumAgent ? 'premium agent' : (newData.role || ''),
+            role: stableRole,
             phone: newData.phone || null,
             phoneCode: newData.phoneCode || null,
-            enabled: isPremiumAgent, // выключаем ссылку если роль уже не премиум агент
+            enabled,
+            developerId: developerId || null,
+            developerName: developerName || null,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
           };
           await mapRef.set(payload, { merge: true });
-          console.log('[publicSharedLinks] updated for token:', token, 'enabled:', payload.enabled, 'role:', payload.role);
+          console.log('[publicSharedLinks] updated for token:', token, 'enabled:', enabled, 'role:', stableRole, 'developerName:', developerName);
         }
       } catch (e) {
         console.error('[publicSharedLinks] sync error:', e);

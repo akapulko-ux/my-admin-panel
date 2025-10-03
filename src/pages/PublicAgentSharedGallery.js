@@ -13,6 +13,8 @@ function PublicAgentSharedGallery() {
   const [loading, setLoading] = useState(true);
   const [isAllowed, setIsAllowed] = useState(false);
   const [ownerName, setOwnerName] = useState("");
+  const [developerName, setDeveloperName] = useState("");
+  const [sharedRole, setSharedRole] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -31,11 +33,14 @@ function PublicAgentSharedGallery() {
         const map = mapSnap.data() || {};
         const role = String(map.role || '').toLowerCase();
         const isPremiumAgent = (role === 'premium agent' || role === 'премиум агент' || role === 'premium_agent' || role === 'премиум-агент');
+        const isPremiumDeveloper = (role === 'premium developer' || role === 'премиум застройщик' || role === 'premium_developer' || role === 'премиум-застройщик');
         const enabled = map.enabled !== false; // по умолчанию true, можно выключить
         if (isMounted) {
-          setIsAllowed(enabled && isPremiumAgent);
+          setIsAllowed(enabled && (isPremiumAgent || isPremiumDeveloper));
           const name = map.ownerName || "";
           setOwnerName(name);
+          setDeveloperName(map.developerName || "");
+          setSharedRole(map.role || "");
         }
       } catch (e) {
         console.error("Shared gallery token check error", e);
@@ -73,7 +78,7 @@ function PublicAgentSharedGallery() {
     );
   }
 
-  return <PublicPropertiesGallery sharedOwnerName={ownerName} sharedToken={token} />;
+  return <PublicPropertiesGallery sharedOwnerName={ownerName} sharedToken={token} sharedDeveloperName={developerName} sharedRole={sharedRole} />;
 }
 
 export default PublicAgentSharedGallery;

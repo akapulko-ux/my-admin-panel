@@ -28,7 +28,7 @@ import LanguageSwitcher from "../components/LanguageSwitcher";
 import PropertyPlacementModal from "../components/PropertyPlacementModal";
 import { showInfo } from "../utils/notifications";
 
-function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
+function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloperName, sharedRole }) {
   const { forceRefreshPropertiesList } = useCache();
   const { language } = useLanguage();
   const { currentUser, role } = useAuth();
@@ -45,6 +45,7 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
   const effectiveCurrentUser = isSharedView ? null : currentUser;
   const effectiveRole = isSharedView ? null : role;
   const isPrivileged = isSharedView ? false : isPrivilegedBase;
+  const isSharedDeveloperContext = isSharedView && sharedRole && String(sharedRole).toLowerCase().includes('developer');
   
   const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
@@ -337,6 +338,12 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
     
     // Обычная фильтрация
     return properties.filter((property) => {
+      // Фильтр для shared developer: оставляем только объекты этого застройщика по совпадению имени
+      if (isSharedView && sharedDeveloperName && sharedRole && String(sharedRole).toLowerCase().includes('developer')) {
+        const devField = (property.developer || '').toString().trim().toLowerCase();
+        const targetDev = sharedDeveloperName.toString().trim().toLowerCase();
+        if (!targetDev || devField !== targetDev) return false;
+      }
       const searchText = searchQuery.toLowerCase();
       const langs = ['ru', 'en', 'id'];
       const statusTranslatedAll = property.status
@@ -398,7 +405,7 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
 
       return matchesSearch && matchesPrice && matchesArea && matchesBedrooms && matchesDistrict && matchesType && matchesStatus && matchesAddedByMe;
     });
-  }, [properties, searchQuery, filters, effectiveCurrentUser, isSelectionMode, selectedPropertyIds]);
+  }, [properties, searchQuery, filters, effectiveCurrentUser, isSelectionMode, selectedPropertyIds, isSharedView, sharedDeveloperName, sharedRole]);
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -682,13 +689,15 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
             >
               {t.propertiesGallery.statusReady || 'Готовый'}
             </Button>
-            <Button
-              variant={filters.status === "От собственника" ? "default" : "outline"}
-              onClick={() => setFilters(prev => ({ ...prev, status: "От собственника", addedByMe: false }))}
-              className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-            >
-              {t.propertiesGallery.statusFromOwner || 'От собственника'}
-            </Button>
+            {!isSharedDeveloperContext && (
+              <Button
+                variant={filters.status === "От собственника" ? "default" : "outline"}
+                onClick={() => setFilters(prev => ({ ...prev, status: "От собственника", addedByMe: false }))}
+                className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+              >
+                {t.propertiesGallery.statusFromOwner || 'От собственника'}
+              </Button>
+            )}
             
             {/* Кнопка "Добавлено мной" для авторизованных пользователей с объектами */}
             {hasUserProperties && (
@@ -764,24 +773,32 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken }) {
                       <Building2 className="w-8 h-8" />
                     </div>
                   )}
-                  {/* Favorite button */}
-                  <button
-                    className={`absolute top-2 left-2 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition ${
-                      isFavorite(p.id) ? 'bg-white/90' : 'bg-white/80 hover:bg-white'
-                    }`}
-                    aria-label="favorite"
-                    onClick={(e) => { e.preventDefault(); toggleFavorite(p.id); }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={isFavorite(p.id) ? '#ef4444' : 'none'} stroke="#ef4444" strokeWidth="2" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                    </svg>
-                  </button>
+                  {/* Favorite button (hide for shared premium developer context) */}
+                  {!isSharedDeveloperContext && (
+                    <button
+                      className={`absolute top-2 left-2 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition ${
+                        isFavorite(p.id) ? 'bg-white/90' : 'bg-white/80 hover:bg-white'
+                      }`}
+                      aria-label="favorite"
+                      onClick={(e) => { e.preventDefault(); toggleFavorite(p.id); }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={isFavorite(p.id) ? '#ef4444' : 'none'} stroke="#ef4444" strokeWidth="2" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex flex-col text-gray-900 space-y-1">
-                  {isPrivileged && (p.complexResolvedName || p.complex) && (
+                  {(isPrivileged || isSharedDeveloperContext) && (p.complexResolvedName || p.complex) && (
                     <span className={`font-semibold leading-none text-black ${isMobile ? 'text-base' : 'text-lg'}`}>
                       {safeDisplay(p.complexResolvedName || p.complex)}
+                    </span>
+                  )}
+                  {(isPrivileged || isSharedDeveloperContext) && p.developer && (
+                    <span className="text-sm">
+                      <span className="text-gray-600">{t.propertyDetail.developer}:</span>
+                      <span className="ml-2">{safeDisplay(p.developer)}</span>
                     </span>
                   )}
 
