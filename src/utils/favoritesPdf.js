@@ -145,6 +145,41 @@ function formatPriceUSD(price) {
   try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(price); } catch { return String(price); }
 }
 
+function normalizeToDate(input) {
+  try {
+    if (!input) return null;
+    // Firestore Timestamp object
+    if (typeof input === 'object') {
+      if (typeof input.toDate === 'function') return input.toDate();
+      if (typeof input.seconds === 'number') return new Date(input.seconds * 1000);
+      if (typeof input._seconds === 'number') return new Date(input._seconds * 1000);
+    }
+    if (typeof input === 'number') {
+      const ms = input > 1e12 ? input : input * 1000; // seconds or ms
+      return new Date(ms);
+    }
+    if (typeof input === 'string') {
+      // Try Timestamp(seconds=..., ...)
+      const m = input.match(/seconds\s*=\s*(\d{6,})/i);
+      if (m) return new Date(parseInt(m[1], 10) * 1000);
+      const t = Date.parse(input);
+      if (!Number.isNaN(t)) return new Date(t);
+    }
+  } catch {}
+  return null;
+}
+
+function formatMonthYearValue(input, language) {
+  const d = normalizeToDate(input);
+  if (!d) return '—';
+  const locale = language === 'ru' ? 'ru-RU' : language === 'id' ? 'id-ID' : 'en-US';
+  try {
+    return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(d);
+  } catch {
+    return d.toISOString().slice(0, 10);
+  }
+}
+
 function getFields(property, language, t, omitTitle) {
   const fields = [];
   fields.push({ large: true, text: formatPriceUSD(property.price) });
@@ -160,7 +195,7 @@ function getFields(property, language, t, omitTitle) {
   if (property.ownershipForm) fields.push({ text: `${t.propertyDetail.ownership}:\n${translateOwnership(property.ownershipForm, language)}` });
   if (property.buildingType) fields.push({ text: `${t.propertyDetail.buildingType}:\n${translateBuildingType(String(property.buildingType), language)}` });
   if (property.status) fields.push({ text: `${t.propertiesGallery.statusLabel}:\n${translateConstructionStatus(String(property.status), language)}` });
-  if (property.completionDate) fields.push({ text: `${t.propertyDetail.completionDate}:\n${property.completionDate}` });
+  if (property.completionDate) fields.push({ text: `${t.propertyDetail.completionDate}:\n${formatMonthYearValue(property.completionDate, language)}` });
   if (property.pool) fields.push({ text: `${t.propertyDetail.pool}:\n${translatePoolStatus(property.pool, language)}` });
   if (property.landStatus) fields.push({ text: `${t.propertyDetail.landStatus}:\n${translateLandStatus(property.landStatus, language)}` });
   if (property.managementCompany) fields.push({ text: `${t.propertyDetail.managementCompany}:\n${property.managementCompany}` });

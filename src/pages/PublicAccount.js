@@ -289,6 +289,35 @@ function PublicAccount() {
           </div>
         </details>
 
+        {/* Премиум подписка */}
+        <details className="border rounded-md bg-white">
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="text-xl font-semibold">{t.subscriptionModal?.title}</span>
+            <span className="text-gray-500">▼</span>
+          </summary>
+          <div className="px-4 pb-4 space-y-3">
+            <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
+            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+              {(t.subscriptionModal?.features || []).map((f, i) => (
+                <li key={i}>{f}</li>
+              ))}
+            </ul>
+            <Button className="w-full" onClick={async () => {
+              try {
+                if (!currentUser) { return; }
+                setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                setIsPaymentModalOpen(true);
+              } catch (e) {
+                console.error('open premium subscription link error', e);
+              } finally {
+                setIsSubscriptionOpen(false);
+              }
+            }}>
+              {t.subscriptionModal?.subscribeButton}
+            </Button>
+          </div>
+        </details>
+
         {/* Профиль */}
         <details className="border rounded-md bg-white">
           <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
