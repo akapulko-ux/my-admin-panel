@@ -49,32 +49,95 @@ const styles = StyleSheet.create({
   col: { width: '50%' }
 });
 
-async function fetchImageAsDataUrl(url, maxDimension = 1200) {
+const log = (...args) => console.log('[PDF]', ...args);
+
+async function fetchImageAsDataUrl(url, maxDimension = 1200, quality = 0.72) {
+  const t0 = performance.now();
   try {
+    log('download:start', url);
     const res = await fetch(url, { mode: 'cors', cache: 'force-cache' });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      log('download:fail', url, res.status, res.statusText);
+      return null;
+    }
     const blob = await res.blob();
+    log('download:done', url, 'bytes=', blob.size, 'ms=', Math.round(performance.now() - t0));
     const objectUrl = URL.createObjectURL(blob);
-    const img = await new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = reject;
-      image.crossOrigin = 'anonymous';
-      image.src = objectUrl;
-    });
-    const { width, height } = img;
-    const scale = Math.min(maxDimension / width, maxDimension / height, 1);
-    const targetW = Math.max(1, Math.round(width * scale));
-    const targetH = Math.max(1, Math.round(height * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = targetW;
-    canvas.height = targetH;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, targetW, targetH);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    let imgWidth = 0, imgHeight = 0;
+    let decodeStart = performance.now();
+    // Декодирование изображений: пробуем createImageBitmap, если недоступно — Image()
+    let imageBitmap = null;
+    try {
+      if ('createImageBitmap' in window) {
+        imageBitmap = await createImageBitmap(blob);
+        imgWidth = imageBitmap.width; imgHeight = imageBitmap.height;
+      }
+    } catch (e) {
+      log('decode:bitmap-failed', url, e?.message || e);
+    }
+    let dataUrl = null;
+    if (imageBitmap) {
+      const scale = Math.min(maxDimension / imageBitmap.width, maxDimension / imageBitmap.height, 1);
+      const targetW = Math.max(1, Math.round(imageBitmap.width * scale));
+      const targetH = Math.max(1, Math.round(imageBitmap.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW; canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imageBitmap, 0, 0, targetW, targetH);
+      dataUrl = canvas.toDataURL('image/jpeg', quality);
+    } else {
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.crossOrigin = 'anonymous';
+        image.src = objectUrl;
+      });
+      imgWidth = img.width; imgHeight = img.height;
+      const scale = Math.min(maxDimension / img.width, maxDimension / img.height, 1);
+      const targetW = Math.max(1, Math.round(img.width * scale));
+      const targetH = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW; canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+      dataUrl = canvas.toDataURL('image/jpeg', quality);
+    }
     URL.revokeObjectURL(objectUrl);
+    log('decode+encode:done', url, 'srcSize=', imgWidth + 'x' + imgHeight, 'ms=', Math.round(performance.now() - decodeStart), 'totalMs=', Math.round(performance.now() - t0), 'dataUrlLen=', dataUrl?.length || 0);
     return dataUrl;
-  } catch (_) { return null; }
+  } catch (e) {
+    log('compress:error', url, e?.message || e);
+    return null;
+  }
+}
+
+async function compressMany(urls, maxDimension, quality) {
+  const results = new Array(urls.length).fill(null);
+  const concurrency = 3;
+  let index = 0;
+  async function worker() {
+    while (index < urls.length) {
+      const i = index++;
+      const u = urls[i];
+      if (!u) { results[i] = null; continue; }
+      // retry до 3 раз с экспоненциальной задержкой
+      let attempt = 0; let out = null;
+      while (attempt < 3 && !out) {
+        attempt++;
+        out = await fetchImageAsDataUrl(u, maxDimension, quality);
+        if (!out) {
+          const delay = 300 * attempt;
+          log('retry', attempt, 'in', delay, 'ms for', u);
+          await new Promise(r => setTimeout(r, delay));
+        }
+      }
+      results[i] = out;
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, urls.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
 }
 
 function formatPriceUSD(price) {
@@ -105,11 +168,12 @@ function getFields(property, language, t, omitTitle) {
   return fields;
 }
 
-function TwoPageProperty({ property, lang, t, coverDataUrl, collageDataUrls, rawCoverUrl, rawRestUrls }) {
+function TwoPageProperty({ property, lang, t, coverDataUrl, collageDataUrls }) {
   const omitTitle = property.__omitTitle === true;
   const title = omitTitle ? '' : (property.complexResolvedName || property.complex || property.name || property.title || '');
   const fields = getFields(property, lang, t, omitTitle);
-  const gridItems = collageDataUrls.slice(0, 9);
+  const gridDataUrls = Array.isArray(collageDataUrls) ? collageDataUrls : [];
+  const gridCount = Math.min(9, gridDataUrls.length);
   // Геометрия A4 и вычисление коллажа 3x3 так, чтобы всё поместилось на первой странице
   const PAGE_W = 595; // pt
   const PAGE_H = 842; // pt
@@ -130,25 +194,21 @@ function TwoPageProperty({ property, lang, t, coverDataUrl, collageDataUrls, raw
     <>
       <Page size="A4" style={styles.page}>
         <View style={styles.content}>
-          {(() => {
-            const src = coverDataUrl || rawCoverUrl || null;
-            if (src) {
-              return <Image src={src} style={{ width: CONTENT_W, height: coverH, alignSelf: 'center', objectFit: 'cover', backgroundColor: '#222' }} />;
-            }
-            return <View style={{ width: CONTENT_W, height: coverH, alignSelf: 'center', backgroundColor: '#222' }} />;
-          })()}
-          {!!gridItems.length && (
+          {coverDataUrl
+            ? <Image src={coverDataUrl} style={{ width: CONTENT_W, height: coverH, alignSelf: 'center', objectFit: 'cover', backgroundColor: '#222', imageRendering: 'optimizeQuality' }} />
+            : <View style={{ width: CONTENT_W, height: coverH, alignSelf: 'center', backgroundColor: '#222' }} />}
+          {gridCount > 0 && (
             <View style={[styles.grid, { marginTop: belowCoverGap, width: CONTENT_W, alignSelf: 'center' }]}>
-              {gridItems.map((srcDataUrl, idx) => {
+              {Array.from({ length: gridCount }).map((_, idx) => {
+                const srcDataUrl = gridDataUrls[idx];
                 const col = idx % 3;
                 const row = Math.floor(idx / 3);
                 const mr = col < 2 ? GAP : 0;
                 const mb = row < 2 ? GAP : 0;
-                const rawUrl = Array.isArray(rawRestUrls) ? rawRestUrls[idx] : null;
                 return (
                   <View key={idx} style={{ width: CELL, height: CELL, marginRight: mr, marginBottom: mb }}>
-                    {(srcDataUrl || rawUrl) ? (
-                      <Image src={srcDataUrl || rawUrl} style={[styles.square, { width: CELL, height: CELL }]} />
+                    {srcDataUrl ? (
+                      <Image src={srcDataUrl} style={[styles.square, { width: CELL, height: CELL, imageRendering: 'optimizeQuality' }]} />
                     ) : (
                       <View style={{ width: CELL, height: CELL, backgroundColor: '#222' }} />
                     )}
@@ -186,12 +246,23 @@ export async function generateFavoritesPdf(properties, lang = 'ru') {
   const t = translations[lang] || translations.ru;
   // Гарантируем регистрацию шрифтов один раз
   await ensurePdfFont();
-  // Предзагрузка изображений для всех объектов
+  // 1) СЖАТИЕ ВСЕХ ИЗОБРАЖЕНИЙ ДО НАЧАЛА РЕНДЕРА
+  // ЖДЁМ ПОЛНОГО СЖАТИЯ ДЛЯ КАЖДОГО ОБЪЕКТА (без фолбэков на «сырые» URL), с подробным логом
   const preloads = await Promise.all(valid.map(async (p) => {
     const images = Array.isArray(p.images) ? p.images : [];
-    const cover = images[0] ? await fetchImageAsDataUrl(images[0]) : null;
+    const coverUrl = images[0] || null;
     const restUrls = images.slice(1, 10);
-    const rest = await Promise.all(restUrls.map((u) => fetchImageAsDataUrl(u)));
+    log('object:start', p.id, { coverUrl, restCount: restUrls.length });
+    // Поднимаем качество обложки ещё на шаг
+    const cover = coverUrl ? await fetchImageAsDataUrl(coverUrl, 1600, 0.80) : null;
+    const rest = await compressMany(restUrls, 600, 0.70);
+    log('object:compressed', p.id, { coverOk: !!cover, restOk: rest.every(Boolean) });
+    if (!cover) {
+      throw new Error('cover_compress_failed');
+    }
+    if (restUrls.length && rest.some(v => !v)) {
+      throw new Error('grid_compress_failed');
+    }
     return { cover, rest };
   }));
 
