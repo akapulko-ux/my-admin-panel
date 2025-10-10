@@ -117,10 +117,6 @@ const ProtectedRoute = ({ children, isPublic = false }) => {
 
   // Для защищенных маршрутов
   if (!currentUser) {
-    // Специальный случай: агентская публичная страница должна вести на страницу авторизации агентов
-    if (currentPath.startsWith('/public-agent-page')) {
-      return <Navigate to={`/public-agent-auth?redirect=${encodeURIComponent(currentPath)}`} />;
-    }
     return <Navigate to="/dev" />;
   }
 

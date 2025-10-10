@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, getDocs, where, query, collection, setDoc, deleteDoc } from "firebase/firestore";
-import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench, Scale, HardHat, ClipboardCheck, Ruler, Compass } from "lucide-react";
+import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench, Scale, HardHat, ClipboardCheck, Ruler, Compass, Heart, Star } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useCache } from "../CacheContext";
 import { useLanguage } from "../lib/LanguageContext";
@@ -480,9 +480,7 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
                 </button>
                 {/* Favorites */}
                 <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2" onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); navigate('/public/favorites'); }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={favoriteIds.size > 0 ? '#ef4444' : 'none'} stroke="#ef4444" strokeWidth="2" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                  </svg>
+                  <Heart className={`w-4 h-4 ${favoriteIds.size > 0 ? 'text-red-500' : 'text-gray-700'}`} fill={favoriteIds.size > 0 ? 'currentColor' : 'none'} />
                   <span>{t.publicMenu.favorites}</span>
                 </button>
                 {/* Services */}
@@ -493,7 +491,7 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
 
               {/* Subscription - last item */}
               <button className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2" onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); if (currentUser) { setIsSubscriptionOpen(true); } else { setIsPlacementModalOpen(true); } }}>
-                <svg viewBox="0 0 24 24" className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M5 5h14a2 2 0 0 1 2 2v6a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7V7a2 2 0 0 1 2-2z"/></svg>
+                <Star className="w-4 h-4 text-gray-700" />
                 <span>{t.publicMenu.subscription}</span>
               </button>
               </div>
@@ -501,10 +499,10 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
             )}
             <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
               {isSelectionMode
-                ? t.propertiesGallery.selectionTitle
+                ? (isSharedView && sharedOwnerName ? sharedOwnerName : t.propertiesGallery.selectionTitle)
                 : (isSharedView && sharedOwnerName) ? sharedOwnerName : (t.navigation?.publicInvestorTitle || 'IT AGENT BALI')}
             </h1>
-            {isSelectionMode && (
+            {isSelectionMode && !isSharedView && (
               <p className="text-sm text-gray-600 mt-1">
                 {t.propertiesGallery.selectionSubtitle}
               </p>
@@ -712,12 +710,14 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
           </div>
         )}
         
-        <div className="text-sm text-gray-500 mb-4">
-          {isSelectionMode 
-            ? t.propertiesGallery.selectionResultsText.replace("{count}", filteredProperties.length)
-            : t.propertiesGallery.searchResultsText.replace("{count}", filteredProperties.length)
-          }
-        </div>
+        {!(isSelectionMode && isSharedView) && (
+          <div className="text-sm text-gray-500 mb-4">
+            {isSelectionMode 
+              ? t.propertiesGallery.selectionResultsText.replace("{count}", filteredProperties.length)
+              : t.propertiesGallery.searchResultsText.replace("{count}", filteredProperties.length)
+            }
+          </div>
+        )}
       </div>
 
       <div className={`divide-y ${isMobile ? "max-w-full" : "max-w-4xl mx-auto"}`}>
@@ -773,8 +773,8 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
                       <Building2 className="w-8 h-8" />
                     </div>
                   )}
-                  {/* Favorite button (hide for shared premium developer context) */}
-                  {!isSharedDeveloperContext && (
+                  {/* Favorite button (hide for shared premium developer context and for shared selection view) */}
+                  {!(isSharedDeveloperContext || (isSharedView && isSelectionMode)) && (
                     <button
                       className={`absolute top-2 left-2 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition ${
                         isFavorite(p.id) ? 'bg-white/90' : 'bg-white/80 hover:bg-white'
@@ -892,7 +892,13 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
             // Оборачиваем в Link только если объект активен
             if (isActive) {
               return (
-                <Link key={p.id} to={isSharedView && sharedToken ? `/public/shared/${encodeURIComponent(sharedToken)}/property/${p.id}` : `/public/property/${p.id}`}>
+                <Link
+                  key={p.id}
+                  to={isSharedView && sharedToken
+                    ? `/public/shared/${encodeURIComponent(sharedToken)}/property/${p.id}${location.search || ''}`
+                    : `/public/property/${p.id}`}
+                  state={{ from: `${location.pathname}${location.search}` }}
+                >
                   {cardContent}
                 </Link>
               );

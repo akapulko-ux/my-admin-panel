@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useLocation, Navigate } from 'react-router-dom';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import { Building2 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebaseConfig';
-import { collection, doc, getDoc, getDocs, Timestamp, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, Timestamp, query, where, onSnapshot, limit } from 'firebase/firestore';
 import { useCache } from '../CacheContext';
 import { translateDistrict } from '../lib/utils';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -15,7 +15,7 @@ function PublicPageAgent() {
   const t = translations[language];
   const { currentUser } = useAuth();
   const { developerId: routeDeveloperId } = useParams();
-  const location = useLocation();
+  // useLocation не используется на публичной версии
   const { forceRefreshPropertiesList } = useCache();
 
   const [loading, setLoading] = useState(true);
@@ -124,19 +124,60 @@ function PublicPageAgent() {
       setHasPremiumDeveloper(null);
       return;
     }
-    const q = query(
-      collection(db, 'users'),
-      where('developerId', '==', effectiveDeveloperId),
-      where('role', '==', 'премиум застройщик')
-    );
-    const unsubscribe = onSnapshot(q, (snap) => {
-      setHasPremiumDeveloper(!snap.empty);
-    }, (err) => {
-      console.error('PublicPageAgent: premium developer check error', err);
-      setHasPremiumDeveloper(false);
-    });
-    return () => unsubscribe();
-  }, [effectiveDeveloperId]);
+    // 1) Пытаемся подписаться на users (для авторизованных это ок). Для анонимных это может быть запрещено правилами.
+    let unsubscribe = () => {};
+    try {
+      const qUsers = query(
+        collection(db, 'users'),
+        where('developerId', '==', effectiveDeveloperId),
+        where('role', '==', 'премиум застройщик')
+      );
+      unsubscribe = onSnapshot(qUsers, (snap) => {
+        setHasPremiumDeveloper(!snap.empty);
+      }, (err) => {
+        console.warn('PublicPageAgent: users onSnapshot blocked, fallback to publicSharedLinks', err);
+        // Не меняем на false — попробуем публичный fallback ниже
+      });
+    } catch (e) {
+      console.warn('PublicPageAgent: users subscription failed, fallback to publicSharedLinks', e);
+    }
+
+    // 2) Публичный fallback: ищем активную запись премиум-разработчика в publicSharedLinks по developerId или имени
+    (async () => {
+      try {
+        // Ищем по developerId (строкой и числом)
+        const premiumRoles = ['premium developer'];
+        let found = false;
+        try {
+          const snap1 = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerId', '==', String(effectiveDeveloperId)), where('role', 'in', premiumRoles), where('enabled', '==', true), limit(1)));
+          found = !snap1.empty;
+        } catch {}
+        if (!found) {
+          const asNum = Number(effectiveDeveloperId);
+          if (Number.isFinite(asNum)) {
+            try {
+              const snap2 = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerId', '==', asNum), where('role', 'in', premiumRoles), where('enabled', '==', true), limit(1)));
+              found = !snap2.empty;
+            } catch {}
+          }
+        }
+        if (!found && developer?.name) {
+          try {
+            const snap3 = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerName', '==', developer.name), where('role', 'in', premiumRoles), where('enabled', '==', true), limit(1)));
+            found = !snap3.empty;
+          } catch {}
+        }
+        // Устанавливаем значение только если ранее не было получено true из users
+        setHasPremiumDeveloper(prev => (prev === true ? true : (found ? true : prev)));
+      } catch (e) {
+        console.warn('PublicPageAgent: public fallback premium check failed', e);
+      }
+    })();
+
+    return () => {
+      try { unsubscribe(); } catch {}
+    };
+  }, [effectiveDeveloperId, developer?.name]);
 
   if (loading) {
     return (
@@ -146,14 +187,12 @@ function PublicPageAgent() {
     );
   }
 
-  // Закрываем доступ ко всей странице, если у застройщика нет ни одного пользователя с ролью "премиум застройщик"
+  // Закрываем доступ только если точно знаем, что премиума нет (false). При ошибках/недостатке прав оставляем страницу доступной.
   if (effectiveDeveloperId && hasPremiumDeveloper === false) {
     return <Navigate to="/access-closed" />;
   }
 
-  if (!currentUser) {
-    return <Navigate to={`/public-agent-auth?redirect=${encodeURIComponent(location.pathname)}`} />;
-  }
+  // Страница доступна без авторизации
 
   return (
     <div className="bg-white min-h-screen">

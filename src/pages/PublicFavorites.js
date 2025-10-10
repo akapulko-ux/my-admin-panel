@@ -6,10 +6,12 @@ import { useAuth } from "../AuthContext";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { translatePropertyType } from "../lib/utils";
-import { Building2 } from "lucide-react";
+import { Building2, Heart } from "lucide-react";
+import { showSuccess, showError } from "../utils/notifications";
+import { downloadFavoritesPdf } from "../utils/favoritesPdf";
 
 function PublicFavorites() {
-  const { currentUser } = useAuth();
+  const { currentUser, role } = useAuth();
   const { language } = useLanguage();
   const t = translations[language];
   const navigate = useNavigate();
@@ -17,6 +19,9 @@ function PublicFavorites() {
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set());
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showPdfLangDialog, setShowPdfLangDialog] = useState(false);
+  const [pdfWithTitle, setPdfWithTitle] = useState(true);
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "";
@@ -106,6 +111,81 @@ function PublicFavorites() {
     }
   }, [currentUser, favoriteIds]);
 
+  const generateFavoritesShareLink = useCallback(async () => {
+    try {
+      if (!currentUser) {
+        showError('Необходимо войти в систему');
+        return;
+      }
+      const normalizedRole = String(role || '').toLowerCase();
+      const isPremiumAgent = (
+        normalizedRole === 'premium agent' ||
+        normalizedRole === 'премиум агент' ||
+        normalizedRole === 'premium_agent' ||
+        normalizedRole === 'премиум-агент' ||
+        normalizedRole === 'premium'
+      );
+      if (!isPremiumAgent) {
+        showError('Функция доступна только премиум агентам');
+        return;
+      }
+      const ids = Array.from(favoriteIds);
+      if (!ids.length) {
+        showError('Список избранного пуст');
+        return;
+      }
+
+      // Получим данные пользователя для карты токена
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      const u = userSnap.exists() ? (userSnap.data() || {}) : {};
+
+      const token = `${currentUser.uid}-fav-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      await setDoc(doc(db, 'publicSharedLinks', token), {
+        ownerId: currentUser.uid,
+        ownerName: u.displayName || u.name || u.email || '',
+        role: 'premium agent',
+        enabled: true,
+        type: 'favorites',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      }, { merge: true });
+
+      const base = window.location.origin;
+      const link = `${base}/public/shared/${encodeURIComponent(token)}?selection=${encodeURIComponent(ids.join(','))}`;
+      await navigator.clipboard.writeText(link);
+
+      const successMsg = (translations[language]?.technicalSupervision?.publicLinkCopied)
+        || (translations[language]?.navigation?.publicLinkCopied)
+        || 'Публичная ссылка скопирована!';
+      showSuccess(successMsg);
+    } catch (e) {
+      console.error('generateFavoritesShareLink error', e);
+      showError('Не удалось сформировать ссылку');
+    }
+  }, [currentUser, role, favoriteIds, language]);
+
+  const exportFavoritesPdf = useCallback(async (lang) => {
+    try {
+      if (!properties.length) {
+        showError('Список избранного пуст');
+        return;
+      }
+      setIsGeneratingPdf(true);
+      await downloadFavoritesPdf(properties.map(p => ({
+        ...p,
+        __omitTitle: !pdfWithTitle
+      })), lang || language);
+      showSuccess(t?.favorites?.pdfCreated || 'PDF создан');
+    } catch (e) {
+      console.error('exportFavoritesPdf error', e);
+      showError('Ошибка генерации PDF');
+    } finally {
+      setIsGeneratingPdf(false);
+      setShowPdfLangDialog(false);
+    }
+  }, [properties, language, pdfWithTitle, t]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -117,16 +197,66 @@ function PublicFavorites() {
   return (
     <div className="bg-white min-h-screen">
       <div className={`mx-auto space-y-4 p-4 max-w-4xl`}>
-        <div className="flex items-center justify-between">
-          <h1 className="font-bold text-2xl text-gray-900">{t.publicMenu?.favorites || 'Избранное'}</h1>
+        <div className="mb-2">
           <button
-            className="text-blue-600 hover:underline"
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
             onClick={() => navigate('/')}
           >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
             {t.propertyDetail?.backButton || 'Назад'}
           </button>
         </div>
-
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="font-bold text-2xl text-gray-900">{t.publicMenu?.favorites || 'Избранное'}</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            {currentUser && (() => {
+              const normalizedRole = String(role || '').toLowerCase();
+              const isPremiumAgent = (
+                normalizedRole === 'premium agent' ||
+                normalizedRole === 'премиум агент' ||
+                normalizedRole === 'premium_agent' ||
+                normalizedRole === 'премиум-агент' ||
+                normalizedRole === 'premium'
+              );
+              return isPremiumAgent && favoriteIds.size > 0;
+            })() && (
+              <>
+                <button
+                  className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  onClick={generateFavoritesShareLink}
+                >
+                  {t.publicFavorites?.generateLink || 'Генерация публичной ссылки'}
+                </button>
+                <button
+                  className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  onClick={() => setShowPdfLangDialog(prev => !prev)}
+                  disabled={isGeneratingPdf}
+                >
+                  {t?.favorites?.createPDF || 'Создать PDF'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+        {showPdfLangDialog && (
+          <div className="flex items-center gap-4 text-sm text-gray-700">
+            <span>{t?.favorites?.selectLanguagePDF || 'Выберите язык для PDF'}:</span>
+            <button className="px-2 py-1 border rounded" onClick={() => exportFavoritesPdf('ru')} disabled={isGeneratingPdf}>RU</button>
+            <button className="px-2 py-1 border rounded" onClick={() => exportFavoritesPdf('en')} disabled={isGeneratingPdf}>EN</button>
+            <button className="px-2 py-1 border rounded" onClick={() => exportFavoritesPdf('id')} disabled={isGeneratingPdf}>ID</button>
+            <label className="inline-flex items-center gap-2">
+              <input type="checkbox" checked={pdfWithTitle} onChange={(e) => setPdfWithTitle(e.target.checked)} />
+              <span>{t?.favorites?.withTitle || 'с названием'}</span>
+            </label>
+          </div>
+        )}
+        {isGeneratingPdf && (
+          <div className="text-sm text-gray-500">{t?.favorites?.generatingPDF || 'Создание PDF...'}</div>
+        )}
         {properties.length === 0 ? (
           <div className="p-4 text-center text-gray-500">—</div>
         ) : (
@@ -142,13 +272,11 @@ function PublicFavorites() {
                     </div>
                   )}
                   <button
-                    className={`absolute top-2 right-2 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition ${isFavorite(p.id) ? 'bg-white/90' : 'bg-white/80 hover:bg-white'}`}
+                    className={`absolute top-2 left-2 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition ${isFavorite(p.id) ? 'bg-white/90' : 'bg-white/80 hover:bg-white'}`}
                     aria-label="favorite"
                     onClick={(e) => { e.preventDefault(); toggleFavorite(p.id); }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={isFavorite(p.id) ? '#ef4444' : 'none'} stroke="#ef4444" strokeWidth="2" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                    </svg>
+                    <Heart className="w-5 h-5 text-red-500" fill={isFavorite(p.id) ? 'currentColor' : 'none'} />
                   </button>
                 </div>
                 <div className="flex flex-col text-gray-900 space-y-1">

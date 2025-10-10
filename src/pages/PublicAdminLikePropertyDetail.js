@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query } from "firebase/firestore";
+import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query, limit } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { useCache } from "../CacheContext";
 import {
@@ -74,6 +74,8 @@ function PublicAdminLikePropertyDetail() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [roiPercent, setRoiPercent] = useState(null);
+  const [premiumDevPhone, setPremiumDevPhone] = useState('');
+  const [premiumDevPhoneCode, setPremiumDevPhoneCode] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -320,7 +322,7 @@ function PublicAdminLikePropertyDetail() {
 
   // удалены обработчики загрузки/обновления файлов на этой странице
 
-  const nonEditableFields = ['district', 'landStatus', 'developer', 'complex', 'pricePerSqm', 'roi'];
+  const nonEditableFields = ['district', 'landStatus', 'developer', 'complex', 'pricePerSqm', 'roi', 'layoutFileURL'];
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -403,21 +405,7 @@ function PublicAdminLikePropertyDetail() {
     if (!val) return '';
     return parseFloat(String(val).replace(/[%\s,]/g, '').replace(',', '.'));
   };
-  const getAgentCommissionDisplay = () => {
-    const commissionRaw = isEditing
-      ? (editedValues.agentCommission !== undefined ? editedValues.agentCommission : property.agentCommission)
-      : property.agentCommission;
-    const price = isEditing
-      ? (editedValues.price !== undefined ? editedValues.price : property.price)
-      : property.price;
-    const commission = parseCommission(commissionRaw);
-    const commissionDisplay = commissionRaw ? String(commissionRaw).replace(/[%\s]/g, '') : '';
-    if (!commission || isNaN(Number(commission)) || !price || isNaN(Number(price))) {
-      return commissionDisplay ? commissionDisplay + '%' : '';
-    }
-    const sum = Math.round(Number(price) * Number(commission) / 100);
-    return `${commissionDisplay}% (${sum.toLocaleString()})`;
-  };
+  // getAgentCommissionDisplay был удален как неиспользуемый на публичной странице
 
   const renderEditableValue = (field, value, type, options) => {
     if (isEditing && !nonEditableFields.includes(field)) {
@@ -706,6 +694,58 @@ function PublicAdminLikePropertyDetail() {
     fetchData();
   }, [id, currentUser, role, getPropertyDetails, propertiesCache, t.propertyDetail.developerLoadError, t.propertyDetail.complexLoadError]);
 
+  // Разрешаем публичный WhatsApp контакт премиум‑застройщика через publicSharedLinks
+  useEffect(() => {
+    (async () => {
+      try {
+        const devId = property?.developerId || null;
+        const devName = property?.developerName || property?.developer || null;
+        if (!devId && !devName) {
+          setPremiumDevPhone('');
+          setPremiumDevPhoneCode('');
+          return;
+        }
+        const premiumRoles = ['premium developer'];
+        let linkDoc = null;
+        // По строковому developerId
+        if (devId) {
+          try {
+            const snap = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerId', '==', String(devId)), where('role', 'in', premiumRoles), where('enabled', '==', true), limit(1)));
+            if (!snap.empty) linkDoc = snap.docs[0];
+          } catch {}
+          // По числовому developerId
+          if (!linkDoc) {
+            const asNum = Number(devId);
+            if (Number.isFinite(asNum)) {
+              try {
+                const snap2 = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerId', '==', asNum), where('role', 'in', premiumRoles), where('enabled', '==', true), limit(1)));
+                if (!snap2.empty) linkDoc = snap2.docs[0];
+              } catch {}
+            }
+          }
+        }
+        // По имени застройщика
+        if (!linkDoc && devName) {
+          try {
+            const snap3 = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerName', '==', devName), where('role', 'in', premiumRoles), where('enabled', '==', true), limit(1)));
+            if (!snap3.empty) linkDoc = snap3.docs[0];
+          } catch {}
+        }
+        if (linkDoc) {
+          const ld = linkDoc.data() || {};
+          setPremiumDevPhone(ld.phone || '');
+          setPremiumDevPhoneCode(ld.phoneCode || '');
+        } else {
+          setPremiumDevPhone('');
+          setPremiumDevPhoneCode('');
+        }
+      } catch {
+        setPremiumDevPhone('');
+        setPremiumDevPhoneCode('');
+      }
+    })();
+  }, [property?.developerId, property?.developerName, property?.developer]);
+
   const getLatLng = () => {
     if (!property) return null;
     let lat = null;
@@ -884,13 +924,18 @@ function PublicAdminLikePropertyDetail() {
       icon: Building2,
       type: "text"
     }] : []),
-    {
-      label: t.propertyDetail.agentCommission,
-      value: getAgentCommissionDisplay(),
-      field: "agentCommission",
-      icon: Star,
-      type: "text"
-    },
+    // Планировка — последнее поле в сетке
+    ...(property.layoutFileURL ? [{
+      label: t.propertyDetail.layout,
+      value: (
+        <button onClick={() => window.open(property.layoutFileURL, '_blank')} className="text-blue-600 hover:underline">
+          {t.propertyDetail.viewButton}
+        </button>
+      ),
+      field: 'layoutFileURL',
+      icon: FileText,
+      type: 'text'
+    }] : []),
   ];
 
   return (
@@ -1037,6 +1082,9 @@ function PublicAdminLikePropertyDetail() {
           </div>
         ))}
       </div>
+
+      {/* Планировка объекта – перенесено из секции Документы в характеристики */}
+      
 
       {isEditing ? (
         <div className="mt-6">
@@ -1257,140 +1305,29 @@ function PublicAdminLikePropertyDetail() {
 
       {roiPercent !== null && (
         <div className="mt-8">
-          <div className="mt-6 flex gap-4">
+          <div className="mt-6 flex gap-4 items-center">
             <button
               onClick={() => navigate(`/public-roi/property/${id}`)}
-              className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ${isMobile ? 'w-full h-12 justify-center' : ''}`}
+              className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ${isMobile ? 'h-12' : ''}`}
             >
               <Calculator className="w-5 h-5" />
               {t.propertyDetail.roiCalculatorButton}
             </button>
+            {(premiumDevPhone || premiumDevPhoneCode) && (
+              <a
+                href={`https://wa.me/${String((premiumDevPhoneCode || '') + (premiumDevPhone || '')).replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`ml-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-center ${isMobile ? 'h-12' : ''}`}
+              >
+                {t.leadForm?.writeInWhatsapp || 'Написать в WhatsApp'}
+              </a>
+            )}
           </div>
         </div>
       )}
 
-      <div className="mt-8">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">{t.propertyDetail.documentsSection}</h3>
-        <div className="space-y-3">
-          {property.legalCompanyName !== undefined && property.legalCompanyName !== null && property.legalCompanyName !== '' && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.legalCompanyName}</span>
-              <div className="flex-1 ml-4 text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {safeDisplay(property.legalCompanyName)}
-              </div>
-            </div>
-          )}
-          {property.npwp !== undefined && property.npwp !== null && property.npwp !== '' && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.taxNumber}</span>
-              <div className="flex-1 ml-4 text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {safeDisplay(property.npwp)}
-              </div>
-            </div>
-          )}
-          {property.pkkpr !== undefined && property.pkkpr !== null && property.pkkpr !== '' && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.landUsePermit}</span>
-              <div className="flex-1 ml-4 text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {safeDisplay(property.pkkpr)}
-              </div>
-            </div>
-          )}
-          {property.shgb !== undefined && property.shgb !== null && property.shgb !== '' && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.landRightsCertificate}</span>
-              <div className="flex-1 ml-4 text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {safeDisplay(property.shgb)}
-              </div>
-            </div>
-          )}
-          {property.landLeaseEndDate !== undefined && property.landLeaseEndDate !== null && property.landLeaseEndDate !== '' && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.landLeaseEndDate}</span>
-              <div className="flex-1 ml-4 text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {safeDisplay(property.landLeaseEndDate)}
-              </div>
-            </div>
-          )}
-          {property.pbg !== undefined && property.pbg !== null && property.pbg !== '' && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.buildingPermit}</span>
-              <div className="flex-1 ml-4 text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {safeDisplay(property.pbg)}
-              </div>
-            </div>
-          )}
-          {property.imb !== undefined && property.imb !== null && property.imb !== '' && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.buildingPermitIMB}</span>
-              <div className="flex-1 ml-4 text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {safeDisplay(property.imb)}
-              </div>
-            </div>
-          )}
-          {property.slf !== undefined && property.slf !== null && property.slf !== '' && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.buildingReadinessCertificate}</span>
-              <div className="flex-1 ml-4 text-sm font-medium text-gray-900 leading-none whitespace-pre-line">
-                {safeDisplay(property.slf)}
-              </div>
-            </div>
-          )}
-
-          {property.layoutFileURL && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.layout}</span>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => window.open(property.layoutFileURL, '_blank')}
-                  className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
-                >
-                  {t.propertyDetail.viewButton}
-                </button>
-              </div>
-            </div>
-          )}
-          {property.dueDiligenceFileURL && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.dueDiligence}</span>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => window.open(property.dueDiligenceFileURL, '_blank')}
-                  className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
-                >
-                  {t.propertyDetail.viewButton}
-                </button>
-              </div>
-            </div>
-          )}
-          {property.unbrandedPresentationFileURL && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.unbrandedPresentation}</span>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => window.open(property.unbrandedPresentationFileURL, '_blank')}
-                  className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
-                >
-                  {t.propertyDetail.viewButton}
-                </button>
-              </div>
-            </div>
-          )}
-          {property.pkkprFileURL && (
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">{t.propertyDetail.pkkprFile}</span>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => window.open(property.pkkprFileURL, '_blank')}
-                  className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
-                >
-                  {t.propertyDetail.viewButton}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Документы скрыты на этой публичной странице */}
 
       {canEdit() && isEditing && (
         <div className={`mt-8 ${isMobile ? 'flex flex-col gap-4' : 'flex justify-end gap-4'}`}>
@@ -1461,6 +1398,8 @@ function PublicAdminLikePropertyDetail() {
           </div>
         </div>
       )}
+
+      
     </div>
   );
 }

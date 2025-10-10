@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc, onSnapshot, limit } from "firebase/firestore";
 import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Waves, Bed, Ruler, MapPin, Hammer, Layers, Bath, FileText, Calendar, DollarSign, Settings } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
@@ -59,6 +59,8 @@ function PublicPropertyDetail() {
   const [sharedOwnerUid, setSharedOwnerUid] = useState("");
   const [sharedOwnerPhoneCode, setSharedOwnerPhoneCode] = useState("");
   const [sharedOwnerPhone, setSharedOwnerPhone] = useState("");
+  const [premiumDevPhoneCode, setPremiumDevPhoneCode] = useState("");
+  const [premiumDevPhone, setPremiumDevPhone] = useState("");
   const [translatedDescription, setTranslatedDescription] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -316,6 +318,99 @@ function PublicPropertyDetail() {
               data.isDeveloperApproved = false;
             }
           } catch {}
+
+          // Определяем телефон премиум-застройщика для кнопки WhatsApp (только для обычной ссылки без токена)
+          try {
+            if (isSharedView) {
+              setPremiumDevPhone('');
+              setPremiumDevPhoneCode('');
+            } else {
+              let developerId = data.developerId || null;
+              if (!developerId && data.developer) {
+                const byName = await getDocs(query(collection(db, 'developers'), where('name', '==', data.developer)));
+                if (!byName.empty) {
+                  developerId = byName.docs[0].id;
+                }
+              }
+              if (developerId) {
+                // Ищем пользователей с этим developerId и проверяем роль на премиум-застройщика
+                const candidates = new Map();
+                try {
+                  const usersByStr = await getDocs(query(collection(db, 'users'), where('developerId', '==', String(developerId)), limit(10)));
+                  usersByStr.docs.forEach(d => candidates.set(d.id, d));
+                } catch {}
+                try {
+                  const devNum = Number(developerId);
+                  if (Number.isFinite(devNum)) {
+                    const usersByNum = await getDocs(query(collection(db, 'users'), where('developerId', '==', devNum), limit(10)));
+                    usersByNum.docs.forEach(d => candidates.set(d.id, d));
+                  }
+                } catch {}
+                const premiumVariants = new Set(['premium developer','премиум застройщик','premium_developer','премиум-застройщик']);
+                let found = null;
+                Array.from(candidates.values()).forEach(u => {
+                  if (found) return;
+                  const ud = u.data() || {};
+                  const r = String(ud.role || '').toLowerCase().trim();
+                  const phone = String(ud.phone || '').trim();
+                  const phoneCode = String(ud.phoneCode || '').trim();
+                  if (premiumVariants.has(r) && phone) {
+                    found = { phone, phoneCode };
+                  }
+                });
+                if (found) {
+                  setPremiumDevPhone(found.phone || '');
+                  setPremiumDevPhoneCode(found.phoneCode || '');
+                } else {
+                  // Fallback: ищем открыто опубликованные телефоны в publicSharedLinks по developerId
+                  try {
+                    const premiumOnly = new Set(['premium developer']);
+                    let linkDoc = null;
+                    // По строковому developerId
+                    try {
+                      const snap = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerId', '==', String(developerId)), where('role', 'in', Array.from(premiumOnly)), limit(1)));
+                      if (!snap.empty) linkDoc = snap.docs[0];
+                    } catch {}
+                    // По числовому developerId
+                    if (!linkDoc) {
+                      const devNum = Number(developerId);
+                      if (Number.isFinite(devNum)) {
+                        try {
+                          const snap2 = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerId', '==', devNum), where('role', 'in', Array.from(premiumOnly)), limit(1)));
+                          if (!snap2.empty) linkDoc = snap2.docs[0];
+                        } catch {}
+                      }
+                    }
+                    if (!linkDoc && data.developer) {
+                      // По имени застройщика
+                      try {
+                        const snap3 = await getDocs(query(collection(db, 'publicSharedLinks'), where('developerName', '==', data.developer), where('role', 'in', Array.from(premiumOnly)), limit(1)));
+                        if (!snap3.empty) linkDoc = snap3.docs[0];
+                      } catch {}
+                    }
+                    if (linkDoc) {
+                      const ld = linkDoc.data() || {};
+                      setPremiumDevPhone(ld.phone || '');
+                      setPremiumDevPhoneCode(ld.phoneCode || '');
+                    } else {
+                      setPremiumDevPhone('');
+                      setPremiumDevPhoneCode('');
+                    }
+                  } catch {
+                    setPremiumDevPhone('');
+                    setPremiumDevPhoneCode('');
+                  }
+                }
+              } else {
+                setPremiumDevPhone('');
+                setPremiumDevPhoneCode('');
+              }
+            }
+          } catch (e) {
+            console.error('resolve premium developer phone failed', e);
+            setPremiumDevPhone('');
+            setPremiumDevPhoneCode('');
+          }
           
           // Добавляем ID объекта в данные для использования в функциях
           data.id = id;
@@ -449,8 +544,15 @@ function PublicPropertyDetail() {
       <div className="mb-4">
         <button
           onClick={() => {
+            const from = location.state && location.state.from;
+            if (from) {
+              navigate(from);
+              return;
+            }
             if (isSharedView && token) {
-              navigate(`/public/shared/${encodeURIComponent(token)}`);
+              // Сохраняем исходный query, если он был в URL
+              const qs = location.search || '';
+              navigate(`/public/shared/${encodeURIComponent(token)}${qs}`);
             } else {
               navigate('/');
             }
@@ -997,10 +1099,21 @@ function PublicPropertyDetail() {
             </button>
             <a
               href={`${(() => {
-                const phoneDigits = String(sharedOwnerPhone || '').replace(/\D/g, '');
-                const codeDigits = String(sharedOwnerPhoneCode || '').replace(/\D/g, '');
-                const intl = codeDigits ? `${codeDigits}${phoneDigits}` : phoneDigits;
-                const target = intl || '6282147824968';
+                // Приоритет: общая премиум-ссылка владельца → премиум-застройщик объекта → дефолтный номер админа
+                let code = '';
+                let phone = '';
+                if (isSharedView && (sharedOwnerPhone || sharedOwnerPhoneCode)) {
+                  code = String(sharedOwnerPhoneCode || '');
+                  phone = String(sharedOwnerPhone || '');
+                } else if (premiumDevPhone || premiumDevPhoneCode) {
+                  code = String(premiumDevPhoneCode || '');
+                  phone = String(premiumDevPhone || '');
+                }
+                const phoneDigits = phone.replace(/\D/g, '');
+                const codeDigits = code.replace(/\D/g, '');
+                const hasValidPhone = phoneDigits.length >= 5;
+                const intl = hasValidPhone ? (codeDigits ? `${codeDigits}${phoneDigits}` : phoneDigits) : '';
+                const target = hasValidPhone ? intl : '6282147824968';
                 const text = `Здравствуйте! Хочу узнать подробности по объекту ${
                   property?.propertyName || property?.name || property?.title || property?.complexName || ''
                 }${property?.id ? ` (ID: ${property.id})` : ''}. Источник: PublicPropertyDetail ${window.location.href}`;

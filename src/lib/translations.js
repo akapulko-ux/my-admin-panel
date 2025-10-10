@@ -323,6 +323,16 @@ export const translations = {
         architecturalDesign: 'Architectural design'
       }
     },
+    favorites: {
+      createPDF: 'Create PDF',
+      selectLanguagePDF: 'Select language for PDF',
+      generatingPDF: 'Generating PDF...',
+      withTitle: 'with title',
+      pdfCreated: 'PDF created'
+    },
+    publicFavorites: {
+      generateLink: 'Generate public link'
+    },
     subscriptionModal: {
       title: 'Premium subscription',
       description: 'Get full access to all current and future listings with verified documents and professional tools.',
@@ -372,7 +382,8 @@ export const translations = {
       collapse: 'Collapse',
       complexesListTitle: 'Complexes list',
       rentingLabel: 'Renting',
-      propertiesListTitle: 'Properties list'
+      propertiesListTitle: 'Properties list',
+      agentLink: 'Public link'
     },
 
     // Shared Gallery Page for Premium Agent
@@ -2293,6 +2304,16 @@ _________________               _________________
         architecturalDesign: 'Разработка архитектурного проекта'
       }
     },
+    favorites: {
+      createPDF: 'Создать PDF',
+      selectLanguagePDF: 'Выберите язык для PDF',
+      generatingPDF: 'Создание PDF...',
+      withTitle: 'с названием',
+      pdfCreated: 'PDF создан'
+    },
+    publicFavorites: {
+      generateLink: 'Генерация публичной ссылки'
+    },
     subscriptionModal: {
       title: 'Премиум‑подписка',
       description: 'Получите полный доступ ко всем текущим и будущим объектам с проверенными документами и профессиональными инструментами.',
@@ -2342,7 +2363,8 @@ _________________               _________________
       collapse: 'Свернуть',
       complexesListTitle: 'Список комплексов',
       rentingLabel: 'Сдается',
-      propertiesListTitle: 'Список объектов'
+      propertiesListTitle: 'Список объектов',
+      agentLink: 'Публичная ссылка'
     },
 
     // Shared Gallery Page for Premium Agent
@@ -4265,6 +4287,16 @@ _________________               _________________
         architecturalDesign: 'Desain arsitektur'
       }
     },
+    favorites: {
+      createPDF: 'Buat PDF',
+      selectLanguagePDF: 'Pilih bahasa untuk PDF',
+      generatingPDF: 'Membuat PDF...',
+      withTitle: 'dengan judul',
+      pdfCreated: 'PDF berhasil dibuat'
+    },
+    publicFavorites: {
+      generateLink: 'Generate tautan publik'
+    },
     subscriptionModal: {
       title: 'Langganan Premium',
       description: 'Dapatkan akses penuh ke semua listing saat ini dan mendatang dengan dokumen terverifikasi dan alat profesional.',
@@ -4296,7 +4328,8 @@ _________________               _________________
       collapse: 'Tutup',
       complexesListTitle: 'Daftar kompleks',
       rentingLabel: 'Disewakan',
-      propertiesListTitle: 'Daftar properti'
+      propertiesListTitle: 'Daftar properti',
+      agentLink: 'Tautan publik'
     },
 
     // Agent info panel

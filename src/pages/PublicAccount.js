@@ -141,12 +141,14 @@ function PublicAccount() {
           const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer' || normalizedRole === 'премиум-застройщик';
 
           if (isPremiumDeveloper) {
-            // Определяем имя застройщика по developerId пользователя
+            // Определяем застройщика по developerId пользователя (приоритет),
+            // а также используем имя застройщика как резервный вариант
             let developerName = null;
+            let devId = null;
             try {
               const userDocRef = doc(db, 'users', currentUser.uid);
               const userDocSnap = await getDoc(userDocRef);
-              const devId = userDocSnap.exists() ? (userDocSnap.data()?.developerId || null) : null;
+              devId = userDocSnap.exists() ? (userDocSnap.data()?.developerId || null) : null;
               if (devId) {
                 const devSnap = await getDoc(doc(db, 'developers', String(devId)));
                 if (devSnap.exists()) {
@@ -157,13 +159,27 @@ function PublicAccount() {
               console.error('resolve developerName error', e);
             }
 
-            if (developerName) {
-              const qProps = query(collection(db, 'properties'), where('developer', '==', developerName));
-              const snap = await getDocs(qProps);
-              myProps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            } else {
-              myProps = [];
+            const byIdAndName = new Map();
+            try {
+              if (devId) {
+                const qById = query(collection(db, 'properties'), where('developerId', '==', String(devId)));
+                const snapById = await getDocs(qById);
+                snapById.docs.forEach(d => byIdAndName.set(d.id, { id: d.id, ...d.data() }));
+              }
+            } catch (e) {
+              console.error('load properties by developerId error', e);
             }
+            try {
+              if (developerName) {
+                const qByName = query(collection(db, 'properties'), where('developer', '==', developerName));
+                const snapByName = await getDocs(qByName);
+                snapByName.docs.forEach(d => byIdAndName.set(d.id, { id: d.id, ...d.data() }));
+              }
+            } catch (e) {
+              console.error('load properties by developer name error', e);
+            }
+
+            myProps = Array.from(byIdAndName.values());
           } else {
             const propsSnap = await getDocs(collection(db, 'properties'));
             myProps = propsSnap.docs

@@ -19,7 +19,7 @@
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
-    "@react-pdf/renderer": "^4.3.0",
+    "@react-pdf/renderer": "3.3.7",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
@@ -64,7 +64,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "deploy": "npm run build && firebase deploy --only hosting",
-    "deploy:fresh": "npm run build && firebase hosting:channel:delete main && firebase deploy --only hosting"
+    "deploy:fresh": "npm run build && firebase hosting:channel:delete main && firebase deploy --only hosting",
+    "postinstall": "node scripts/patch-react-pdf-sourcemap.js"
   },
   "eslintConfig": {
     "extends": [

@@ -264,7 +264,7 @@ function App() {
               <Route path="/public/account" element={<PublicAccount />} />
               <Route path="/public/shared/:token" element={<PublicAgentSharedGallery />} />
               <Route path="/public/shared/:token/property/:id" element={<PublicPropertyDetail />} />
-              <Route path="/public-agent-page/:developerId" element={<ProtectedRoute><PublicPageAgent /></ProtectedRoute>} />
+              <Route path="/public-agent-page/:developerId" element={<PublicPageAgent />} />
               <Route path="/public-agent-auth" element={<PublicAgentAuth />} />
               <Route path="/public/complex-property/:id" element={<PublicAdminLikePropertyDetail />} />
               <Route path="/agent-property/create" element={<AgentPropertyCreate />} />
