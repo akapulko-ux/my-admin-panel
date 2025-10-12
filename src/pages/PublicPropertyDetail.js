@@ -46,7 +46,7 @@ function PublicPropertyDetail() {
   const [sharedAllowed, setSharedAllowed] = useState(!isSharedView);
   const [sharedCheckLoading, setSharedCheckLoading] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
   const [entitlementActive, setEntitlementActive] = useState(false);
@@ -199,7 +199,7 @@ function PublicPropertyDetail() {
       const active = !!data && data.status === 'active';
       setEntitlementActive(active);
       if (active) {
-        setIsAccessModalOpen(false);
+        setIsSubscriptionOpen(false);
         setIsPaymentModalOpen(false);
       }
     });
@@ -1313,7 +1313,7 @@ function PublicPropertyDetail() {
                       if (!currentUser) {
                         setIsAuthModalOpen(true);
                       } else {
-                        setIsAccessModalOpen(true);
+                        setIsSubscriptionOpen(true);
                       }
                     }}
                   >
@@ -1329,57 +1329,32 @@ function PublicPropertyDetail() {
       {/* Модалка авторизации/регистрации как в публичной галерее */}
       <PropertyPlacementModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
-      {/* Модалка с выбором доступа для авторизованных */}
-      <Dialog open={isAccessModalOpen} onOpenChange={setIsAccessModalOpen}>
+      {/* Модалка "Премиум-подписка" как в публичной галерее */}
+      <Dialog open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t.publicDocs?.modal?.title}</DialogTitle>
+            <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-            <Card className="p-4 h-full flex flex-col">
-              <h3 className="text-lg font-semibold mb-2">{t.publicDocs?.modal?.colOneTitle}</h3>
-              <p className="text-sm text-gray-600 mb-2">{t.publicDocs?.modal?.colOneDesc}</p>
-              <div className="mt-auto space-y-3">
-                {usdPrice && (
-                  <div className="text-xs text-gray-600">≈ USD ${usdPrice.toFixed(2)} (оплата в RUB {ONE_TIME_PRICE_RUB})</div>
-                )}
-              <Button className="w-full" disabled={entitlementActive} onClick={async () => {
-                try {
-                  if (!currentUser) { setIsAuthModalOpen(true); return; }
-                  // Открываем готовую платежную страницу в iframe-модалке
-                  setPaymentUrl('https://premium.it-agent.pro/product-page/onetime_access');
-                  setIsPaymentModalOpen(true);
-                } catch (e) {
-                  console.error('open premium payment link error', e);
-                  showError('Не удалось открыть платежную страницу');
-                }
-              }}>
-                {t.publicDocs?.modal?.colOneButton}
-              </Button>
-              </div>
-            </Card>
-            <Card className="p-4 h-full flex flex-col">
-              <h3 className="text-lg font-semibold mb-2">{t.publicDocs?.modal?.colTwoTitle}</h3>
-              <p className="text-sm text-gray-600 mb-2">{t.publicDocs?.modal?.colTwoDesc}</p>
-              <div className="mt-auto space-y-3">
-              <Button className="w-full" variant="secondary" onClick={async () => {
-                try {
-                  if (!currentUser) { setIsAuthModalOpen(true); return; }
-                  setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
-                  setIsPaymentModalOpen(true);
-                } catch (e) {
-                  console.error('open premium subscription link error', e);
-                  showError('Не удалось открыть страницу подписки');
-                }
-              }}>
-                {t.publicDocs?.modal?.colTwoButton}
-              </Button>
-              </div>
-            </Card>
-          </div>
-          <div className="pt-2">
-            <Button variant="ghost" className="w-full" onClick={() => setIsAccessModalOpen(false)}>
-              {t.publicDocs?.modal?.close}
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
+            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+              {(t.subscriptionModal?.features || []).map((f, i) => (
+                <li key={i}>{f}</li>
+              ))}
+            </ul>
+            <Button className="w-full" onClick={async () => {
+              try {
+                if (!currentUser) { setIsAuthModalOpen(true); return; }
+                setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                setIsPaymentModalOpen(true);
+              } catch (e) {
+                console.error('open premium subscription link error', e);
+                showError('Не удалось открыть страницу подписки');
+              } finally {
+                setIsSubscriptionOpen(false);
+              }
+            }}>
+              {t.subscriptionModal?.subscribeButton}
             </Button>
           </div>
         </DialogContent>

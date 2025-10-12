@@ -8,6 +8,7 @@ import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { translatePropertyType } from "../lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import PropertyPlacementModal from "../components/PropertyPlacementModal";
 import { countryDialCodes } from "../lib/countryDialCodes";
 import { Building2 } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -30,12 +31,10 @@ function PublicAccount() {
   const [profile, setProfile] = useState({ name: '', email: '', telegram: '', phone: '', phoneCode: '+62' });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
+  // Переиспользуем модалку авторизации из публичной галереи
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
-  useEffect(() => {
-    if (!currentUser) {
-      navigate('/');
-    }
-  }, [currentUser, navigate]);
+  // Ранее здесь был редирект неавторизованных на главную. Убрано по требованию.
 
   useEffect(() => {
     async function ensurePremiumLink() {
@@ -96,6 +95,10 @@ function PublicAccount() {
     }
     ensurePremiumLink();
   }, [currentUser, role]);
+
+  useEffect(() => {
+    if (!currentUser) setIsAuthOpen(true);
+  }, [currentUser]);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -219,6 +222,15 @@ function PublicAccount() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin h-10 w-10 rounded-full border-2 border-gray-400 border-b-transparent" />
+      </div>
+    );
+  }
+
+  // Если пользователь не авторизован — показываем ту же модалку, что и в публичной галерее
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-white">
+        <PropertyPlacementModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       </div>
     );
   }

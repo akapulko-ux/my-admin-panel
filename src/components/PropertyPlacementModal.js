@@ -235,24 +235,16 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">{t.placePropertyTitle}</h2>
-          <div className="flex items-center gap-2">
-            {tab === 'register' && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setTab('login')}
-                className="text-sm"
-              >
-                {t.backButton}
+        {tab === 'login' && (
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-lg font-semibold">{t.loginTitle || 'Вход'}</h2>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                <X className="h-4 w-4" />
               </Button>
-            )}
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="p-4">
           {tab === 'login' ? (
@@ -297,7 +289,22 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
             </div>
           ) : (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{t.registrationTitleNew}</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">{t.registrationTitleNew}</h3>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setTab('login')}
+                    className="text-sm"
+                  >
+                    {t.backButton}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={onClose}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
               
               <form onSubmit={handleRegister} className="space-y-3">
                 <div className="space-y-1">
