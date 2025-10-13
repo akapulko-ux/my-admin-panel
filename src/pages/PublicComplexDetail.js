@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { doc, getDoc, Timestamp, collection, getDocs, query, where } from 'firebase/firestore';
@@ -38,22 +38,136 @@ function PublicComplexDetail() {
   const [isMobile, setIsMobile] = useState(false);
   const [currentImg, setCurrentImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+  const preloadedImagesRef = useRef(new Set());
+  // Двойной буфер
+  const [displayedImgUrl, setDisplayedImgUrl] = useState(null);
+  const [overlayImgUrl, setOverlayImgUrl] = useState(null);
+  const [isFading, setIsFading] = useState(false);
+  const fadeTimerRef = useRef(null);
 
-  // Агрессивный прелоад соседних изображений (prev/next)
+  // Lookahead-прелоад соседних изображений (prev/next)
   useEffect(() => {
-    if (!complex?.images?.length) return;
-    const urls = complex.images;
+    const urls = complex?.images || [];
+    if (!urls.length) return;
     const preload = (idx) => {
-      if (idx >= 0 && idx < urls.length) {
-        const img = new Image();
-        img.decoding = 'async';
-        img.loading = 'eager';
-        img.src = urls[idx];
-      }
+      if (idx < 0 || idx >= urls.length) return;
+      const url = urls[idx];
+      if (!url || preloadedImagesRef.current.has(url)) return;
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => { preloadedImagesRef.current.add(url); };
+      img.onerror = () => {};
+      img.src = url;
     };
     preload(currentImg + 1);
     preload(currentImg - 1);
   }, [complex, currentImg]);
+
+  // Последовательная предзагрузка всех изображений после полной загрузки страницы
+  useEffect(() => {
+    if (!complex?.images?.length) return;
+    let cancelled = false;
+    const urls = complex.images.slice();
+    const preloadSequentially = async () => {
+      for (const url of urls) {
+        if (cancelled) break;
+        if (!url || preloadedImagesRef.current.has(url)) continue;
+        try {
+          await new Promise((resolve) => {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => {
+              if (typeof img.decode === 'function') {
+                img.decode().then(resolve).catch(resolve);
+              } else {
+                resolve();
+              }
+            };
+            img.onerror = () => resolve();
+            img.src = url;
+          });
+          preloadedImagesRef.current.add(url);
+        } catch {}
+      }
+    };
+    const start = () => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        window.requestIdleCallback(() => { preloadSequentially(); }, { timeout: 2000 });
+      } else {
+        setTimeout(preloadSequentially, 0);
+      }
+    };
+    if (document.readyState === 'complete') {
+      start();
+    } else {
+      const onLoad = () => start();
+      window.addEventListener('load', onLoad, { once: true });
+      return () => {
+        cancelled = true;
+        window.removeEventListener('load', onLoad);
+      };
+    }
+    return () => { cancelled = true; };
+  }, [complex]);
+
+  // Инициализация отображаемого кадра
+  useEffect(() => {
+    if (complex?.images?.length) {
+      if (!displayedImgUrl) {
+        setDisplayedImgUrl(complex.images[currentImg] || complex.images[0]);
+      }
+    }
+  }, [complex, currentImg, displayedImgUrl]);
+
+  // Плавная смена кадров без фриза
+  useEffect(() => {
+    const urls = complex?.images || [];
+    if (!urls.length) return;
+    const targetUrl = urls[currentImg];
+    if (!targetUrl || targetUrl === displayedImgUrl) return;
+
+    let cancelled = false;
+    if (fadeTimerRef.current) {
+      clearTimeout(fadeTimerRef.current);
+      fadeTimerRef.current = null;
+    }
+
+    const prefetchAndFade = async () => {
+      try {
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = () => {
+            if (typeof img.decode === 'function') {
+              img.decode().then(resolve).catch(resolve);
+            } else {
+              resolve();
+            }
+          };
+          img.onerror = () => resolve();
+          img.src = targetUrl;
+        });
+        if (cancelled) return;
+        setOverlayImgUrl(targetUrl);
+        setIsFading(true);
+        fadeTimerRef.current = setTimeout(() => {
+          if (cancelled) return;
+          setDisplayedImgUrl(targetUrl);
+          setOverlayImgUrl(null);
+          setIsFading(false);
+        }, 220);
+      } catch {}
+    };
+
+    prefetchAndFade();
+    return () => {
+      cancelled = true;
+      if (fadeTimerRef.current) {
+        clearTimeout(fadeTimerRef.current);
+        fadeTimerRef.current = null;
+      }
+    };
+  }, [currentImg, complex, displayedImgUrl]);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -153,13 +267,27 @@ function PublicComplexDetail() {
         {/* Галерея изображений с переключением */}
         <div className="relative w-full rounded-xl overflow-hidden bg-gray-200 h-[320px]">
           {complex.images?.length ? (
-            <img
-              src={complex.images[currentImg]}
-              alt={complex.name || 'Complex'}
-              className="w-full h-full object-cover cursor-pointer"
-              onClick={() => setLightbox(true)}
-              loading="eager"
-            />
+            <>
+              <img
+                src={displayedImgUrl || complex.images[currentImg]}
+                alt={complex.name || 'Complex'}
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={() => setLightbox(true)}
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+              />
+              {overlayImgUrl && (
+                <img
+                  src={overlayImgUrl}
+                  alt=""
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${isFading ? 'opacity-100' : 'opacity-0'}`}
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                />
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400">
               <Building2 className="w-10 h-10" />

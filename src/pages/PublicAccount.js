@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Timestamp, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "../firebaseConfig";
@@ -8,11 +8,13 @@ import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { translatePropertyType } from "../lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import PropertyPlacementModal from "../components/PropertyPlacementModal";
 import { countryDialCodes } from "../lib/countryDialCodes";
 import { Building2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { signInWithCustomToken, setPersistence, browserLocalPersistence } from "firebase/auth";
+import LanguageSwitcher from "../components/LanguageSwitcher";
+import { auth } from "../firebaseConfig";
 
 function PublicAccount() {
   const { currentUser, logout, role } = useAuth();
@@ -32,7 +34,8 @@ function PublicAccount() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
   // Переиспользуем модалку авторизации из публичной галереи
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false); // больше не используется для показа модалки
+  const silentTriedRef = useRef(false);
 
   // Ранее здесь был редирект неавторизованных на главную. Убрано по требованию.
 
@@ -96,8 +99,38 @@ function PublicAccount() {
     ensurePremiumLink();
   }, [currentUser, role]);
 
+  // Убираем принудительное открытие модалки авторизации. Страница ждёт токен.
+
+  // Fallback: если WebView не успел вызвать window.itAgentSilentLogin,
+  // пробуем тихий вход прямо на странице при наличии window.__FIREBASE_CUSTOM_TOKEN
   useEffect(() => {
-    if (!currentUser) setIsAuthOpen(true);
+    let timer = null;
+    let attempts = 0;
+    const maxAttempts = 80; // ~20 секунд
+    async function trySilentLogin() {
+      try {
+        if (currentUser) { if (timer) clearInterval(timer); return; }
+        const token = typeof window !== 'undefined' ? window.__FIREBASE_CUSTOM_TOKEN : null;
+        if (token && typeof token === 'string') {
+          if (silentTriedRef.current) { if (timer) clearInterval(timer); return; }
+          silentTriedRef.current = true;
+          try { await setPersistence(auth, browserLocalPersistence); } catch (_) {}
+          await signInWithCustomToken(auth, token);
+          if (timer) clearInterval(timer);
+        } else {
+          attempts++;
+          if (attempts >= maxAttempts && timer) clearInterval(timer);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log('[PublicAccount] silent signInWithCustomToken error', e);
+        if (timer) clearInterval(timer);
+      }
+    }
+    timer = setInterval(trySilentLogin, 250);
+    // также одноразовый вызов сразу
+    trySilentLogin();
+    return () => { if (timer) clearInterval(timer); };
   }, [currentUser]);
 
   const handleCopy = useCallback(async () => {
@@ -218,7 +251,7 @@ function PublicAccount() {
     }
   }, [logout, navigate]);
 
-  if (loading) {
+  if (loading || !currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin h-10 w-10 rounded-full border-2 border-gray-400 border-b-transparent" />
@@ -226,14 +259,7 @@ function PublicAccount() {
     );
   }
 
-  // Если пользователь не авторизован — показываем ту же модалку, что и в публичной галерее
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-white">
-        <PropertyPlacementModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
-      </div>
-    );
-  }
+  // Если пользователь не авторизован — больше не открываем модалку; но до этого условия мы уже вернули спиннер
 
   return (
     <div className="bg-white min-h-screen">
@@ -264,7 +290,10 @@ function PublicAccount() {
               );
             })()}
           </div>
-          <Button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white">{t.accountPage.logout}</Button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white">{t.accountPage.logout}</Button>
+          </div>
         </div>
 
         {/* Персональная ссылка — секция видна всем; управление доступностью внутри */}

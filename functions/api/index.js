@@ -33,10 +33,14 @@ app.use('/v1/webhooks', require('./routes/webhooks'));
 app.use('/v1/analytics', require('./routes/analytics'));
 app.use('/v1/bots', require('./routes/bots'));
 app.use('/v1/knowledge', require('./routes/knowledge'));
+// Auth bridge for WebView silent login
+app.use('/v1/auth', require('./routes/auth'));
 // Robokassa endpoints
 app.use('/payments/robokassa', require('./routes/robokassa'));
 // Support same routes with '/api' prefix when proxied via Hosting rewrite
 app.use('/api/payments/robokassa', require('./routes/robokassa'));
+// Alias for auth under '/api' prefix (Hosting rewrite adds '/api' in front)
+app.use('/api/v1/auth', require('./routes/auth'));
 
 // Geo proxy to avoid CORS in the client
 app.get('/v1/geo', async (req, res) => {

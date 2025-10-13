@@ -769,24 +769,26 @@ const MainLandingPage = () => {
 
       
 
-      {/* Footer */}
-      <footer className="py-12 px-4 bg-black text-gray-300">
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-1 text-sm">
-              <p>© 2025 IT Agent. Все права защищены.</p>
-              <p>ИП Манова Вероника Алексеевна</p>
-              <p>ИНН 780631330106</p>
-            </div>
-            <div className="flex gap-8 text-sm">
-              <button type="button" className="hover:text-white" onClick={() => setIsPricingModalOpen(true)}>Тарифы</button>
-              <button type="button" className="hover:text-white" onClick={() => setFooterModal('terms')}>Условия использования</button>
-              <button type="button" className="hover:text-white" onClick={() => setFooterModal('privacy')}>Политика конфиденциальности</button>
-              <button type="button" className="hover:text-white" onClick={() => setFooterModal('support')}>Поддержка</button>
+      {/* Footer hidden on /public */}
+      {false && (
+        <footer className="py-12 px-4 bg-black text-gray-300">
+          <div className="container mx-auto">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-1 text-sm">
+                <p>© 2025 IT Agent. Все права защищены.</p>
+                <p>ИП Манова Вероника Алексеевна</p>
+                <p>ИНН 780631330106</p>
+              </div>
+              <div className="flex gap-8 text-sm">
+                <button type="button" className="hover:text-white" onClick={() => setIsPricingModalOpen(true)}>Тарифы</button>
+                <button type="button" className="hover:text-white" onClick={() => setFooterModal('terms')}>Условия использования</button>
+                <button type="button" className="hover:text-white" onClick={() => setFooterModal('privacy')}>Политика конфиденциальности</button>
+                <button type="button" className="hover:text-white" onClick={() => setFooterModal('support')}>Поддержка</button>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
 
       {/* Модальное окно авторизации */}
       {isAuthModalOpen && (

@@ -39,7 +39,7 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
     { value: 'agent', ru: 'Агент', en: 'Agent', id: 'Agen' },
     { value: 'agency', ru: 'Агентство', en: 'Agency', id: 'Agensi' },
     { value: 'developer', ru: 'Застройщик', en: 'Developer', id: 'Pengembang' },
-    { value: 'owner', ru: 'Собственник', en: 'Owner', id: 'Pemilik' },
+    { value: 'investor', ru: 'Инвестор', en: 'Investor', id: 'Investor' },
   ];
 
   const statusLabel = (code) => {

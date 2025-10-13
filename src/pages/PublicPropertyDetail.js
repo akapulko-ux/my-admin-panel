@@ -1,14 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc, onSnapshot, limit } from "firebase/firestore";
+import { doc, getDoc, Timestamp, addDoc, collection, serverTimestamp, getDocs, where, query, updateDoc, limit } from "firebase/firestore";
 import { Building2, Map as MapIcon, Home, Droplet, Star, Square, Flame, Sofa, Waves, Bed, Ruler, MapPin, Hammer, Layers, Bath, FileText, Calendar, DollarSign, Settings } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { useAuth } from "../AuthContext";
 import PropertyPlacementModal from "../components/PropertyPlacementModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { AdaptiveTooltip } from "../components/ui/tooltip";
 import {
@@ -49,7 +48,7 @@ function PublicPropertyDetail() {
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
-  const [entitlementActive, setEntitlementActive] = useState(false);
+  // const [entitlementActive, setEntitlementActive] = useState(false);
   const [usdRate, setUsdRate] = useState(null);
   const [isLeadOpen, setIsLeadOpen] = useState(false);
   const [leadName, setLeadName] = useState('');
@@ -66,6 +65,13 @@ function PublicPropertyDetail() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerImages, setViewerImages] = useState([]);
   const [viewerIndex, setViewerIndex] = useState(0);
+  // Кэш предзагруженных изображений для галереи
+  const preloadedImagesRef = useRef(new Set());
+  // Двойной буфер для плавной смены изображений
+  const [displayedImgUrl, setDisplayedImgUrl] = useState(null);
+  const [overlayImgUrl, setOverlayImgUrl] = useState(null);
+  const [isFading, setIsFading] = useState(false);
+  const fadeTimerRef = useRef(null);
   // Автоскролл при раскрытии секции документов
   const docsDetailsRef = useRef(null);
   const docsContentRef = useRef(null);
@@ -189,22 +195,151 @@ function PublicPropertyDetail() {
     }
   };
 
-  // Подписка на доступ к документам (entitlement) конкретного объекта
+  // Lookahead-прелоад соседних изображений (next/prev)
   useEffect(() => {
-    if (isSharedView || !effectiveCurrentUser || !id) return;
-    const entId = `${effectiveCurrentUser.uid}_${id}`;
-    const ref = doc(db, 'entitlements', entId);
-    const unsub = onSnapshot(ref, (snap) => {
-      const data = snap.data();
-      const active = !!data && data.status === 'active';
-      setEntitlementActive(active);
-      if (active) {
-        setIsSubscriptionOpen(false);
-        setIsPaymentModalOpen(false);
+    const urls = property?.images || [];
+    if (!urls.length) return;
+    const preload = (idx) => {
+      if (idx < 0 || idx >= urls.length) return;
+      const url = urls[idx];
+      if (!url || preloadedImagesRef.current.has(url)) return;
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => { preloadedImagesRef.current.add(url); };
+      img.onerror = () => {};
+      img.src = url;
+    };
+    preload(currentImg + 1);
+    preload(currentImg - 1);
+  }, [property, currentImg]);
+
+  // Последовательная предзагрузка всех изображений в фоне после полной загрузки страницы
+  useEffect(() => {
+    if (!property?.images?.length) return;
+    let cancelled = false;
+    const urls = property.images.slice();
+
+    const preloadSequentially = async () => {
+      for (const url of urls) {
+        if (cancelled) break;
+        if (!url || preloadedImagesRef.current.has(url)) continue;
+        try {
+          await new Promise((resolve) => {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => {
+              // decode() подтверждает, что изображение декодировано и готово к отрисовке
+              if (typeof img.decode === 'function') {
+                img.decode().then(resolve).catch(resolve);
+              } else {
+                resolve();
+              }
+            };
+            img.onerror = () => resolve();
+            img.src = url;
+          });
+          preloadedImagesRef.current.add(url);
+        } catch {}
       }
-    });
-    return () => unsub();
-  }, [effectiveCurrentUser, id, isSharedView]);
+    };
+
+    const start = () => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        window.requestIdleCallback(() => { preloadSequentially(); }, { timeout: 2000 });
+      } else {
+        setTimeout(preloadSequentially, 0);
+      }
+    };
+
+    if (document.readyState === 'complete') {
+      start();
+    } else {
+      const onLoad = () => start();
+      window.addEventListener('load', onLoad, { once: true });
+      return () => {
+        cancelled = true;
+        window.removeEventListener('load', onLoad);
+      };
+    }
+
+    return () => { cancelled = true; };
+  }, [property]);
+
+  // Инициализируем видимое изображение при загрузке объекта
+  useEffect(() => {
+    if (property?.images?.length) {
+      if (!displayedImgUrl) {
+        setDisplayedImgUrl(property.images[currentImg] || property.images[0]);
+      }
+    }
+  }, [property, currentImg, displayedImgUrl]);
+
+  // Плавная смена изображений: ждать загрузки/декодирования следующего кадра, затем фейд
+  useEffect(() => {
+    const urls = property?.images || [];
+    if (!urls.length) return;
+    const targetUrl = urls[currentImg];
+    if (!targetUrl || targetUrl === displayedImgUrl) return;
+
+    let cancelled = false;
+    if (fadeTimerRef.current) {
+      clearTimeout(fadeTimerRef.current);
+      fadeTimerRef.current = null;
+    }
+
+    const prefetchAndFade = async () => {
+      try {
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = () => {
+            if (typeof img.decode === 'function') {
+              img.decode().then(resolve).catch(resolve);
+            } else {
+              resolve();
+            }
+          };
+          img.onerror = () => resolve();
+          img.src = targetUrl;
+        });
+        if (cancelled) return;
+        setOverlayImgUrl(targetUrl);
+        setIsFading(true);
+        fadeTimerRef.current = setTimeout(() => {
+          if (cancelled) return;
+          setDisplayedImgUrl(targetUrl);
+          setOverlayImgUrl(null);
+          setIsFading(false);
+        }, 220);
+      } catch {}
+    };
+
+    prefetchAndFade();
+    return () => {
+      cancelled = true;
+      if (fadeTimerRef.current) {
+        clearTimeout(fadeTimerRef.current);
+        fadeTimerRef.current = null;
+      }
+    };
+  }, [currentImg, property, displayedImgUrl]);
+
+  // Подписка на доступ к документам (entitlement) конкретного объекта
+  // useEffect(() => {
+  //   if (isSharedView || !effectiveCurrentUser || !id) return;
+  //   const entId = `${effectiveCurrentUser.uid}_${id}`;
+  //   const ref = doc(db, 'entitlements', entId);
+  //   const unsub = onSnapshot(ref, (snap) => {
+  //     const data = snap.data();
+  //     const active = !!data && data.status === 'active';
+  //     setEntitlementActive(active);
+  //     if (active) {
+  //       setIsSubscriptionOpen(false);
+  //       setIsPaymentModalOpen(false);
+  //     }
+  //   });
+  //   return () => unsub();
+  // }, [effectiveCurrentUser, id, isSharedView]);
 
   // Курс RUB→USD для отображения суммы в $ (оплата в RUB)
   useEffect(() => {
@@ -570,17 +705,32 @@ function PublicPropertyDetail() {
       {property.images?.length ? (
         <div className="relative mb-4">
           <div 
-            className="w-full h-72 rounded-xl overflow-hidden bg-gray-200"
+            className="w-full h-72 rounded-xl overflow-hidden bg-gray-200 relative"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
+            onClick={() => setLightbox(true)}
           >
+            {/* Базовый слой */}
             <img
-              src={property.images[currentImg]}
+              src={displayedImgUrl || property.images[currentImg]}
               alt={`Фото ${currentImg + 1}`}
-              className="w-full h-full object-cover cursor-pointer"
-              onClick={() => setLightbox(true)}
+              className="w-full h-full object-cover"
+              decoding="async"
+              loading="eager"
+              fetchpriority="high"
             />
+            {/* Оверлей для плавного перехода */}
+            {overlayImgUrl && (
+              <img
+                src={overlayImgUrl}
+                alt=""
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${isFading ? 'opacity-100' : 'opacity-0'}`}
+                decoding="async"
+                loading="eager"
+                fetchpriority="high"
+              />
+            )}
           </div>
           {/* Prev */}
           {currentImg > 0 && (

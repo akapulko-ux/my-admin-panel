@@ -227,7 +227,11 @@ export function AuthProvider({ children }) {
       setRole('agent');
       return userCred;
     } }}>
-      {!loading ? children : <div>Загрузка...</div>}
+      {!loading ? children : (
+        <div className="fixed top-2 left-2 z-50">
+          <div className="animate-spin h-4 w-4 rounded-full border-2 border-gray-300 border-t-transparent" />
+        </div>
+      )}
     </AuthContext.Provider>
   );
 }

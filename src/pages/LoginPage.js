@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useAuth } from "../AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import ResetPasswordModal from "../components/ResetPasswordModal";
-import RegistrationRequestModal from "../components/RegistrationRequestModal";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -30,7 +29,6 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const { language, changeLanguage } = useLanguage();
   const t = landingTranslations[language];
 
@@ -54,7 +52,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/public" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/dev" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
             {t.backToHome}
           </Link>
@@ -120,18 +118,7 @@ const LoginPage = () => {
                 {isLoading ? t.sending : t.login}
               </Button>
 
-              <div className="text-center mt-6">
-                <p className="text-sm text-muted-foreground mb-2">
-                  {t.developerQuestion}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsRegistrationModalOpen(true)}
-                >
-                  {t.registrationRequest}
-                </Button>
-              </div>
+              {/* Registration request button and label removed as per requirements */}
             </form>
           </CardContent>
         </Card>
@@ -143,11 +130,6 @@ const LoginPage = () => {
         language={language}
       />
 
-      <RegistrationRequestModal
-        open={isRegistrationModalOpen}
-        onClose={() => setIsRegistrationModalOpen(false)}
-        language={language}
-      />
     </div>
   );
 };

@@ -40,7 +40,7 @@ export const landingTranslations = {
     // CTA Section
     ctaTitle: "Ready to improve your project management?",
     ctaDescription: "Join leading developers who are already using our platform",
-    useFree: "Use for Free",
+    useFree: "Try for Free",
     // Footer
     footerText: "© 2025 IT Agent Admin Panel. All rights reserved.",
     // Login Page
@@ -163,7 +163,7 @@ export const landingTranslations = {
     // CTA Section
     ctaTitle: "Готовы улучшить управление вашими проектами?",
     ctaDescription: "Присоединяйтесь к ведущим застройщикам, которые уже используют нашу платформу",
-    useFree: "Используйте бесплатно",
+    useFree: "Попробуйте бесплатно",
     // Footer
     footerText: "© 2025 IT Agent Admin Panel. Все права защищены.",
     // Login Page
@@ -286,7 +286,7 @@ export const landingTranslations = {
     // CTA Section
     ctaTitle: "Siap meningkatkan manajemen proyek Anda?",
     ctaDescription: "Bergabunglah dengan pengembang terkemuka yang sudah menggunakan platform kami",
-    useFree: "Gunakan Gratis",
+    useFree: "Coba Gratis",
     // Footer
     footerText: "© 2025 IT Agent Admin Panel. Semua hak dilindungi.",
     // Login Page

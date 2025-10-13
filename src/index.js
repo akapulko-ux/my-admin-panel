@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { AuthProvider } from "./AuthContext";
 import "./index.css";
+import { signInWithCustomToken } from "firebase/auth";
+import { auth } from "./firebaseConfig";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -114,4 +116,48 @@ window.reloadSW = () => {
     });
   }
 };
+
+// Глобальный обработчик для тихой авторизации внутри WebView (iOS мост вызывает эту функцию)
+// Безопасность: НЕ передавайте токен через URL. Вызывайте напрямую из нативного кода после загрузки вашего домена.
+if (!window.itAgentSilentLogin) {
+  window.itAgentSilentLogin = async function itAgentSilentLogin(customToken) {
+    try {
+      if (!customToken || typeof customToken !== 'string') {
+        console.warn('[SilentLogin] Нет валидного customToken');
+        return { ok: false, reason: 'invalid_token' };
+      }
+      if (auth.currentUser) {
+        console.log('[SilentLogin] Пользователь уже авторизован, пропускаем');
+        return { ok: true, skipped: true };
+      }
+      const cred = await signInWithCustomToken(auth, customToken);
+      console.log('[SilentLogin] Успешный вход через custom token:', !!cred?.user);
+      return { ok: true };
+    } catch (e) {
+      console.error('[SilentLogin] Ошибка входа через custom token:', e?.message || e);
+      return { ok: false, reason: e?.code || 'unknown_error' };
+    }
+  };
+}
+
+// Авто‑поллинг: если токен уже инжектирован до загрузки приложения,
+// но itAgentSilentLogin не был вызван — пробуем автоматически.
+if (!window.__itAgentSilentLoginPollerStarted) {
+  window.__itAgentSilentLoginPollerStarted = true;
+  (function startSilentLoginPoller(){
+    let attempts = 0; const maxAttempts = 120; // ~30 секунд
+    const timer = setInterval(async () => {
+      try {
+        if (auth.currentUser) { clearInterval(timer); return; }
+        const t = window.__FIREBASE_CUSTOM_TOKEN;
+        if (t && typeof t === 'string' && window.itAgentSilentLogin) {
+          await window.itAgentSilentLogin(t);
+          clearInterval(timer);
+        }
+      } catch (_) {}
+      attempts++;
+      if (attempts >= maxAttempts) clearInterval(timer);
+    }, 250);
+  })();
+}
 

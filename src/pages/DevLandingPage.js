@@ -14,7 +14,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { landingTranslations } from '../lib/landingTranslations';
 import { useLanguage } from '../lib/LanguageContext';
-import RegistrationRequestModal from '../components/RegistrationRequestModal';
+import PropertyPlacementModal from '../components/PropertyPlacementModal';
 
 const FeatureCard = ({ icon: Icon, title, description }) => (
   <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300">
@@ -217,11 +217,10 @@ const DevLandingPage = () => {
         </div>
       </footer>
 
-      {/* Registration Request Modal */}
-      <RegistrationRequestModal
-        open={isModalOpen}
+      {/* Auth/Register Modal */}
+      <PropertyPlacementModal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        language={language}
       />
     </div>
   );

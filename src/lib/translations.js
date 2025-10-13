@@ -4315,10 +4315,28 @@ _________________               _________________
       premiumDeveloperBadge: 'Pengembang Premium',
       logout: 'Keluar',
       myProperties: 'Properti Saya',
-      myLeads: 'Lead Saya',
+      myLeads: 'Prospek Saya',
       noProperties: 'Anda belum menambahkan properti apa pun',
-      noLeads: 'Anda belum memiliki lead',
-      goToProperty: 'Buka properti'
+      noLeads: 'Anda belum memiliki prospek',
+      goToProperty: 'Buka properti',
+      premiumLinkTitle: 'Tautan pribadi Anda',
+      premiumLinkDescription: 'Bagikan tautan ini dengan klien. Mereka akan melihat seluruh katalog properti dan dapat menghubungi Anda langsung dari kartu mana pun.',
+      premiumLinkLabel: 'Tautan pribadi',
+      copyButton: 'Salin',
+      copiedMessage: 'Tautan disalin',
+      premiumOnlyMessage: 'Tautan hanya tersedia untuk pelanggan premium',
+      subscribeButton: 'Berlangganan',
+      profileTitle: 'Profil',
+      profile: {
+        name: 'Nama',
+        email: 'Email',
+        language: 'Bahasa',
+        telegram: 'Telegram',
+        phone: 'Telepon',
+        save: 'Simpan perubahan',
+        saved: 'Profil disimpan',
+        saveError: 'Gagal menyimpan profil'
+      }
     },
 
     // Public Page

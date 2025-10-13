@@ -219,6 +219,52 @@ exports.createUserRoleClaims = onDocumentCreated("users/{userId}", async (event)
       lastRoleUpdate: admin.firestore.FieldValue.serverTimestamp()
     });
     
+    // Отправляем уведомление всем подключенным администраторам о новой регистрации
+    try {
+      const adminsSnap = await admin.firestore()
+        .collection('users')
+        .where('role', '==', 'admin')
+        .where('telegramConnected', '==', true)
+        .get();
+
+      if (adminsSnap.empty) {
+        console.warn('[notifyUserRegistration] Нет админов, подключенных к Telegram');
+      } else {
+        const lines = [];
+        lines.push('🆕 Новая регистрация пользователя');
+        lines.push('');
+        lines.push(`👤 Имя: ${newData.name || newData.displayName || newData.fullName || '-'}`);
+        lines.push(`🆔 UID: ${userId}`);
+        lines.push(`📧 Email: ${newData.email || '-'}`);
+        lines.push(`📞 Телефон: ${newData.phone || newData.phoneNumber || '-'}`);
+        lines.push(`🧩 Роль: ${newData.role || 'agent'}`);
+        if (newData.developerId) lines.push(`🏗️ Developer ID: ${newData.developerId}`);
+        if (newData.developerName) lines.push(`🏗️ Застройщик: ${newData.developerName}`);
+        if (newData.telegramChatId) lines.push(`💬 Telegram: ${newData.telegramChatId}`);
+        if (newData.language || newData.lang) lines.push(`🌐 Язык: ${newData.language || newData.lang}`);
+        if (newData.registrationSource) lines.push(`🗺 Источник регистрации: ${newData.registrationSource}`);
+        if (newData.createdAt) {
+          const createdAtMs = newData.createdAt._seconds ? newData.createdAt._seconds * 1000 : Date.now();
+          lines.push(`🕒 Создан: ${new Date(createdAtMs).toLocaleString('ru-RU')}`);
+        }
+        const message = lines.join('\n');
+
+        const sendTasks = [];
+        adminsSnap.forEach((doc) => {
+          const chatId = doc.data()?.telegramChatId;
+          if (!chatId) return;
+          sendTasks.push(sendTelegramMessage(chatId, message));
+        });
+
+        const results = await Promise.allSettled(sendTasks);
+        const ok = results.filter(r => r.status === 'fulfilled').length;
+        const fail = results.length - ok;
+        console.log(`[notifyUserRegistration] Отправлено: ${ok}, ошибок: ${fail}`);
+      }
+    } catch (e) {
+      console.error('[notifyUserRegistration] error:', e);
+    }
+
     return { success: true, message: `Custom claims установлены для роли ${role}` };
   } catch (error) {
     console.error('Ошибка при установке custom claims для нового пользователя:', error);
@@ -686,6 +732,7 @@ const sendTelegramMessage = async (chatId, text, replyMarkup = null) => {
 // API Function (Gen2) with required Robokassa secrets
 const apiApp = require('./api');
 exports.api = onRequest({
+  serviceAccount: 'bali-estate-1130f@appspot.gserviceaccount.com',
   secrets: [
     'ROBO_MERCHANT_LOGIN',
     'ROBO_PASSWORD1',
