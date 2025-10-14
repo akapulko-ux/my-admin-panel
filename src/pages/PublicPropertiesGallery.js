@@ -991,6 +991,19 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
             ) : (
               <div className="text-sm text-gray-500">Initializing…</div>
             )}
+            <div className="pt-2 border-t mt-2">
+              <p className="text-xs text-gray-600">
+                {t.paymentModal?.supportText}
+              </p>
+              <a
+                href={`https://wa.me/6282147824968?text=${encodeURIComponent('Здравствуйте! Нужна помощь с оплатой/подключением премиум подписки.')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center mt-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+              >
+                {t.paymentModal?.supportButton}
+              </a>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

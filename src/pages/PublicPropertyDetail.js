@@ -72,6 +72,13 @@ function PublicPropertyDetail() {
   const [overlayImgUrl, setOverlayImgUrl] = useState(null);
   const [isFading, setIsFading] = useState(false);
   const fadeTimerRef = useRef(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  // Двойной буфер для полноэкранного режима
+  const [lbDisplayedUrl, setLbDisplayedUrl] = useState(null);
+  const [lbOverlayUrl, setLbOverlayUrl] = useState(null);
+  const [isLbFading, setIsLbFading] = useState(false);
+  const lbFadeTimerRef = useRef(null);
+  const [isLightboxTransitioning, setIsLightboxTransitioning] = useState(false);
   // Автоскролл при раскрытии секции документов
   const docsDetailsRef = useRef(null);
   const docsContentRef = useRef(null);
@@ -79,6 +86,43 @@ function PublicPropertyDetail() {
   // Состояние для свайпов
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+
+  // Утилита: попытаться вернуть оптимизированный по ширине URL для популярных CDN.
+  const getOptimizedImageUrl = useCallback((url, targetWidth) => {
+    try {
+      if (!url || !targetWidth) return url;
+      const w = Math.max(1, Math.floor(targetWidth));
+      // Cloudinary
+      if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+        return url.replace('/upload/', `/upload/f_auto,q_auto,w_${w}/`);
+      }
+      // Unsplash
+      if (url.includes('images.unsplash.com')) {
+        const joiner = url.includes('?') ? '&' : '?';
+        return `${url}${joiner}auto=format&w=${w}`;
+      }
+      // Shopify CDN
+      if (url.includes('cdn.shopify.com')) {
+        const joiner = url.includes('?') ? '&' : '?';
+        return `${url}${joiner}width=${w}`;
+      }
+      // imgix-style
+      if (url.includes('imgix.net')) {
+        const joiner = url.includes('?') ? '&' : '?';
+        return `${url}${joiner}auto=format&fit=max&w=${w}`;
+      }
+      // Если провайдер не поддерживается — возвращаем исходный URL
+      return url;
+    } catch {
+      return url;
+    }
+  }, []);
+
+  const buildSrcSet = useCallback((url) => {
+    if (!url) return undefined;
+    const widths = [480, 768, 1024, 1366, 1920, 2560];
+    return widths.map((w) => `${getOptimizedImageUrl(url, w)} ${w}w`).join(', ');
+  }, [getOptimizedImageUrl]);
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "—";
@@ -182,6 +226,7 @@ function PublicPropertyDetail() {
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
+    if (isTransitioning) return;
     
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
@@ -289,6 +334,7 @@ function PublicPropertyDetail() {
 
     const prefetchAndFade = async () => {
       try {
+        setIsTransitioning(true);
         await new Promise((resolve) => {
           const img = new Image();
           img.decoding = 'async';
@@ -310,6 +356,7 @@ function PublicPropertyDetail() {
           setDisplayedImgUrl(targetUrl);
           setOverlayImgUrl(null);
           setIsFading(false);
+          setIsTransitioning(false);
         }, 220);
       } catch {}
     };
@@ -321,8 +368,73 @@ function PublicPropertyDetail() {
         clearTimeout(fadeTimerRef.current);
         fadeTimerRef.current = null;
       }
+      setIsTransitioning(false);
     };
   }, [currentImg, property, displayedImgUrl]);
+
+  // Инициализация изображения лайтбокса
+  useEffect(() => {
+    if (!lightbox) return;
+    if (property?.images?.length) {
+      if (!lbDisplayedUrl) {
+        setLbDisplayedUrl(property.images[currentImg] || property.images[0]);
+      }
+    }
+  }, [lightbox, property, currentImg, lbDisplayedUrl]);
+
+  // Плавная смена для лайтбокса с блокировкой навигации
+  useEffect(() => {
+    if (!lightbox) return;
+    const urls = property?.images || [];
+    if (!urls.length) return;
+    const targetUrl = urls[currentImg];
+    if (!targetUrl || targetUrl === lbDisplayedUrl) return;
+
+    let cancelled = false;
+    if (lbFadeTimerRef.current) {
+      clearTimeout(lbFadeTimerRef.current);
+      lbFadeTimerRef.current = null;
+    }
+
+    const prefetchAndFade = async () => {
+      try {
+        setIsLightboxTransitioning(true);
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = () => {
+            if (typeof img.decode === 'function') {
+              img.decode().then(resolve).catch(resolve);
+            } else {
+              resolve();
+            }
+          };
+          img.onerror = () => resolve();
+          img.src = targetUrl;
+        });
+        if (cancelled) return;
+        setLbOverlayUrl(targetUrl);
+        setIsLbFading(true);
+        lbFadeTimerRef.current = setTimeout(() => {
+          if (cancelled) return;
+          setLbDisplayedUrl(targetUrl);
+          setLbOverlayUrl(null);
+          setIsLbFading(false);
+          setIsLightboxTransitioning(false);
+        }, 220);
+      } catch {}
+    };
+
+    prefetchAndFade();
+    return () => {
+      cancelled = true;
+      if (lbFadeTimerRef.current) {
+        clearTimeout(lbFadeTimerRef.current);
+        lbFadeTimerRef.current = null;
+      }
+      setIsLightboxTransitioning(false);
+    };
+  }, [lightbox, currentImg, property, lbDisplayedUrl]);
 
   // Подписка на доступ к документам (entitlement) конкретного объекта
   // useEffect(() => {
@@ -713,7 +825,9 @@ function PublicPropertyDetail() {
           >
             {/* Базовый слой */}
             <img
-              src={displayedImgUrl || property.images[currentImg]}
+              src={getOptimizedImageUrl(displayedImgUrl || property.images[currentImg], 1366)}
+              srcSet={buildSrcSet(displayedImgUrl || property.images[currentImg])}
+              sizes="(max-width: 768px) 100vw, 1366px"
               alt={`Фото ${currentImg + 1}`}
               className="w-full h-full object-cover"
               decoding="async"
@@ -723,7 +837,9 @@ function PublicPropertyDetail() {
             {/* Оверлей для плавного перехода */}
             {overlayImgUrl && (
               <img
-                src={overlayImgUrl}
+                src={getOptimizedImageUrl(overlayImgUrl, 1366)}
+                srcSet={buildSrcSet(overlayImgUrl)}
+                sizes="(max-width: 768px) 100vw, 1366px"
                 alt=""
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${isFading ? 'opacity-100' : 'opacity-0'}`}
                 decoding="async"
@@ -735,8 +851,9 @@ function PublicPropertyDetail() {
           {/* Prev */}
           {currentImg > 0 && (
             <button
-              onClick={() => setCurrentImg((i) => i - 1)}
+              onClick={() => { if (isTransitioning) return; setCurrentImg((i) => i - 1); }}
               className="hidden md:flex items-center justify-center absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 text-white"
+              disabled={isTransitioning}
             >
               ◀
             </button>
@@ -744,8 +861,9 @@ function PublicPropertyDetail() {
           {/* Next */}
           {currentImg < property.images.length - 1 && (
             <button
-              onClick={() => setCurrentImg((i) => i + 1)}
+              onClick={() => { if (isTransitioning) return; setCurrentImg((i) => i + 1); }}
               className="hidden md:flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 text-white"
+              disabled={isTransitioning}
             >
               ▶
             </button>
@@ -1191,14 +1309,33 @@ function PublicPropertyDetail() {
             className="relative w-full h-full"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
+            onTouchEnd={(e) => { if (isLightboxTransitioning) return; onTouchEnd(e); }}
           >
+            {/* Базовый слой */}
             <img
-              src={property.images[currentImg]}
+              src={getOptimizedImageUrl(lbDisplayedUrl || property.images[currentImg], 1920)}
+              srcSet={buildSrcSet(lbDisplayedUrl || property.images[currentImg])}
+              sizes="100vw"
               alt={`${t.propertyDetail.photo} ${currentImg + 1}`}
               className="absolute inset-0 m-auto max-w-full max-h-full object-contain"
               onClick={() => setLightbox(false)}
+              decoding="async"
+              loading="eager"
+              fetchpriority="high"
             />
+            {/* Оверлей */}
+            {lbOverlayUrl && (
+              <img
+                src={getOptimizedImageUrl(lbOverlayUrl, 1920)}
+                srcSet={buildSrcSet(lbOverlayUrl)}
+                sizes="100vw"
+                alt=""
+                className={`absolute inset-0 m-auto max-w-full max-h-full object-contain transition-opacity duration-200 ${isLbFading ? 'opacity-100' : 'opacity-0'}`}
+                decoding="async"
+                loading="eager"
+                fetchpriority="high"
+              />
+            )}
             {/* Кнопка закрытия */}
             <button className="absolute top-4 right-4 text-white text-4xl" onClick={() => setLightbox(false)}>
               ×
@@ -1206,8 +1343,9 @@ function PublicPropertyDetail() {
             {/* Стрелка влево */}
             {currentImg > 0 && (
               <button
-                onClick={() => setCurrentImg((prev) => prev - 1)}
+                onClick={() => { if (isLightboxTransitioning) return; setCurrentImg((prev) => prev - 1); }}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-all"
+                disabled={isLightboxTransitioning}
               >
                 ←
               </button>
@@ -1215,8 +1353,9 @@ function PublicPropertyDetail() {
             {/* Стрелка вправо */}
             {currentImg < property.images.length - 1 && (
               <button
-                onClick={() => setCurrentImg((prev) => prev + 1)}
+                onClick={() => { if (isLightboxTransitioning) return; setCurrentImg((prev) => prev + 1); }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-all"
+                disabled={isLightboxTransitioning}
               >
                 →
               </button>
@@ -1524,6 +1663,19 @@ function PublicPropertyDetail() {
             ) : (
               <div className="text-sm text-gray-500">Initializing…</div>
             )}
+            <div className="pt-2 border-t mt-2">
+              <p className="text-xs text-gray-600">
+                {t.paymentModal?.supportText}
+              </p>
+              <a
+                href={`https://wa.me/6282147824968?text=${encodeURIComponent('Здравствуйте! Нужна помощь с оплатой/подключением премиум подписки.')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center mt-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+              >
+                {t.paymentModal?.supportButton}
+              </a>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

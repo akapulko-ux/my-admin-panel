@@ -782,24 +782,7 @@ const Settings = () => {
     }, 60000);
   };
 
-  // Копируем ссылку Telegram в буфер обмена
-  const copyTelegramLink = async () => {
-    const telegramLink = `https://t.me/${BOT_USERNAME}?start=${verificationCode}`;
-    try {
-      await navigator.clipboard.writeText(telegramLink);
-      toast.success(t.linkCopied);
-    } catch (error) {
-      console.error('Ошибка при копировании:', error);
-      // Fallback для старых браузеров
-      const textArea = document.createElement('textarea');
-      textArea.value = telegramLink;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      toast.success(t.linkCopied);
-    }
-  };
+  // copyTelegramLink удален: ссылка больше не копируется из модалки
 
   // Отключаем телеграм аккаунт
   const disconnectTelegram = async () => {
@@ -1616,23 +1599,6 @@ const Settings = () => {
               )}
             </Button>
             
-            {/* Кнопка для копирования ссылки (особенно полезна для мобильных устройств) */}
-            <Button 
-              variant="outline" 
-              onClick={copyTelegramLink}
-              className="w-full"
-            >
-              <div className="flex items-center">
-                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                {t.copyLink}
-              </div>
-            </Button>
-            
-            <Button variant="outline" onClick={() => setShowConnectDialog(false)} className="w-full">
-              {common.cancel}
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

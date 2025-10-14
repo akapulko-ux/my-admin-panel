@@ -729,6 +729,104 @@ const sendTelegramMessage = async (chatId, text, replyMarkup = null) => {
   }
 };
 
+// Уведомление о новой заявке клиента (clientLeads)
+exports.notifyNewClientLead = onDocumentCreated("clientLeads/{leadId}", async (event) => {
+  try {
+    const leadId = event.params.leadId;
+    const lead = event.data.data() || {};
+    console.log(`[notifyNewClientLead] leadId=${leadId}`, lead);
+
+    const db = admin.firestore();
+    const recipients = new Map(); // userId -> { chatId, language }
+
+    // Если указан агент напрямую
+    if (lead.agentId) {
+      try {
+        const agentSnap = await db.collection('users').doc(String(lead.agentId)).get();
+        if (agentSnap.exists) {
+          const agent = agentSnap.data() || {};
+          if (agent.telegramConnected && agent.telegramChatId) {
+            recipients.set(agentSnap.id, { chatId: agent.telegramChatId, language: getUserLanguage(agent) });
+          }
+        }
+      } catch (e) {
+        console.error('[notifyNewClientLead] load agent failed', e);
+      }
+    }
+
+    // Если указан объект — уведомляем его создателя
+    let propertyData = null;
+    if (lead.propertyId) {
+      try {
+        const propSnap = await db.collection('properties').doc(String(lead.propertyId)).get();
+        if (propSnap.exists) {
+          propertyData = propSnap.data() || {};
+          const ownerId = propertyData.createdBy;
+          if (ownerId) {
+            const ownerSnap = await db.collection('users').doc(String(ownerId)).get();
+            if (ownerSnap.exists) {
+              const owner = ownerSnap.data() || {};
+              if (owner.telegramConnected && owner.telegramChatId) {
+                recipients.set(ownerSnap.id, { chatId: owner.telegramChatId, language: getUserLanguage(owner) });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[notifyNewClientLead] load property failed', e);
+      }
+    }
+
+    if (recipients.size === 0) {
+      console.log('[notifyNewClientLead] no recipients with connected Telegram');
+      return { success: true, recipients: 0 };
+    }
+
+    // Формируем сообщение
+    const propertyName = propertyData?.propertyName || propertyData?.name || propertyData?.title || propertyData?.complexName || '';
+    const lines = [];
+    lines.push('🧾 Новая заявка клиента');
+    if (lead.name) lines.push(`👤 Клиент: ${lead.name}`);
+    if (lead.phone) lines.push(`📞 Телефон: ${lead.phone}`);
+    if (lead.messenger) lines.push(`💬 Мессенджер: ${lead.messenger}`);
+    if (propertyName || lead.propertyId) {
+      const pLine = propertyName ? `🏠 Объект: ${propertyName}` : '🏠 Объект: —';
+      lines.push(pLine + (lead.propertyId ? ` (ID: ${lead.propertyId})` : ''));
+    }
+    if (lead.createdAt) {
+      try {
+        const tsMs = lead.createdAt._seconds ? lead.createdAt._seconds * 1000 : Date.now();
+        lines.push(`⏰ Время: ${new Date(tsMs).toLocaleString('ru-RU')}`);
+      } catch {}
+    }
+    lines.push('');
+    lines.push('📱 Перейдите в админ‑панель для обработки заявки:');
+    const message = lines.join('\n');
+
+    const replyMarkup = {
+      inline_keyboard: [[{ text: 'Открыть админ‑панель', url: 'https://it-agent.pro/' }]]
+    };
+
+    // Отправляем всем получателям
+    const results = [];
+    for (const [userId, info] of recipients.entries()) {
+      try {
+        await sendTelegramMessage(info.chatId, message, replyMarkup);
+        results.push({ userId, sent: true });
+      } catch (e) {
+        console.error(`[notifyNewClientLead] send failed to ${userId}`, e);
+        results.push({ userId, sent: false, error: e?.message || String(e) });
+      }
+    }
+
+    console.log('[notifyNewClientLead] results:', results);
+    return { success: true, recipients: recipients.size };
+  } catch (error) {
+    console.error('[notifyNewClientLead] error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // API Function (Gen2) with required Robokassa secrets
 const apiApp = require('./api');
 exports.api = onRequest({

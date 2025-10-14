@@ -9,9 +9,11 @@ import { translations } from "../lib/translations";
 import { translatePropertyType } from "../lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { countryDialCodes } from "../lib/countryDialCodes";
-import { Building2 } from "lucide-react";
+import { Building2, Bot, Check, X, ExternalLink } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
+import { Badge } from "../components/ui/badge";
+import toast from 'react-hot-toast';
 import { signInWithCustomToken, setPersistence, browserLocalPersistence } from "firebase/auth";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { auth } from "../firebaseConfig";
@@ -20,6 +22,7 @@ function PublicAccount() {
   const { currentUser, logout, role } = useAuth();
   const { language } = useLanguage();
   const t = translations[language];
+  const ts = translations[language].settings;
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -33,9 +36,113 @@ function PublicAccount() {
   const [profile, setProfile] = useState({ name: '', email: '', telegram: '', phone: '', phoneCode: '+62' });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
-  // Переиспользуем модалку авторизации из публичной галереи
-  const [isAuthOpen, setIsAuthOpen] = useState(false); // больше не используется для показа модалки
+  // Переиспользуем модалку авторизации из публичной галереи (не используется)
   const silentTriedRef = useRef(false);
+
+  // Telegram integration state (same as Settings)
+  const [telegramChatId, setTelegramChatId] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const BOT_USERNAME = 'it_agent_admin_bot';
+
+  const generateVerificationCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
+
+  const openConnectDialog = () => {
+    const code = generateVerificationCode();
+    setVerificationCode(code);
+    setShowConnectDialog(true);
+  };
+
+  const checkConnectionStatus = () => {
+    const checkInterval = setInterval(async () => {
+      try {
+        if (!currentUser) { clearInterval(checkInterval); return; }
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userRef);
+        const userData = userDoc.data();
+        if (userData && userData.telegramConnected && userData.telegramChatId) {
+          setTelegramChatId(userData.telegramChatId);
+          setIsConnected(true);
+          setShowConnectDialog(false);
+          clearInterval(checkInterval);
+          toast.success('Телеграм успешно подключен!');
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log('check telegram connection error', error);
+      }
+    }, 1000);
+    // Автоостановка через 60 секунд
+    setTimeout(() => { try { clearInterval(checkInterval); } catch {} }, 60000);
+  };
+
+  const connectTelegramAutomatically = async () => {
+    setIsLoading(true);
+    try {
+      if (!currentUser) return;
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        telegramVerificationCode: verificationCode,
+        telegramConnectingAt: new Date(),
+        telegramConnected: false
+      });
+
+      const telegramLink = `https://t.me/${BOT_USERNAME}?start=${verificationCode}`;
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        try {
+          window.location.href = telegramLink;
+          setTimeout(() => {
+            if (document.visibilityState === 'visible') {
+              const tempLink = document.createElement('a');
+              tempLink.href = telegramLink;
+              tempLink.target = '_blank';
+              tempLink.rel = 'noopener noreferrer';
+              document.body.appendChild(tempLink);
+              tempLink.click();
+              document.body.removeChild(tempLink);
+            }
+          }, 1000);
+        } catch (error) {
+          console.error('Ошибка при переходе в Telegram:', error);
+          toast.error('Не удалось открыть Telegram. Скопируйте ссылку вручную.');
+        }
+      } else {
+        window.open(telegramLink, '_blank');
+      }
+
+      checkConnectionStatus();
+      toast.success('Перейдите в телеграм и нажмите "Start" для завершения подключения');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // copyTelegramLink был удалён, так как кнопка копирования не используется
+
+  const disconnectTelegram = async () => {
+    setIsLoading(true);
+    try {
+      if (!currentUser) return;
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        telegramChatId: null,
+        telegramConnected: null,
+        telegramConnectedAt: null,
+        telegramConnectingAt: null,
+        telegramVerificationCode: null
+      });
+      setTelegramChatId('');
+      setIsConnected(false);
+      toast.success('Телеграм отключен');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Ранее здесь был редирект неавторизованных на главную. Убрано по требованию.
 
@@ -168,6 +275,13 @@ function PublicAccount() {
               phone: d.phone || '',
               phoneCode: d.phoneCode || '+62'
             });
+            if (d.telegramChatId) {
+              setTelegramChatId(d.telegramChatId);
+              setIsConnected(true);
+            } else {
+              setTelegramChatId('');
+              setIsConnected(false);
+            }
           }
         } catch (e) { console.error('load profile error', e); }
         // Мои объекты
@@ -466,6 +580,86 @@ function PublicAccount() {
           </DialogContent>
         </Dialog>
 
+        {/* Интеграция с Telegram (как в настройках) */}
+        <details className="border rounded-md bg-white">
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="text-xl font-semibold">{ts.telegram.title}</span>
+            <span className="text-gray-500">▼</span>
+          </summary>
+          <div className="px-4 pb-4">
+            <p className="text-sm text-gray-600 mb-3">{ts.telegram.description}</p>
+
+            {isConnected ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    <Check className="h-3 w-3 mr-1" />
+                    {ts.telegram.connected}
+                  </Badge>
+                  <span className="text-sm text-gray-600">
+                    {ts.telegram.chatId}: {telegramChatId}
+                  </span>
+                </div>
+                <Button variant="outline" onClick={disconnectTelegram} disabled={isLoading}>
+                  <X className="h-4 w-4 mr-2" />
+                  {ts.telegram.disconnect}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                    <X className="h-3 w-3 mr-1" />
+                    {ts.telegram.notConnected}
+                  </Badge>
+                </div>
+                <Button onClick={openConnectDialog}>
+                  <Bot className="h-4 w-4 mr-2" />
+                  {ts.telegram.connect}
+                </Button>
+              </div>
+            )}
+          </div>
+        </details>
+
+        {/* Диалог подключения телеграм */}
+        <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{ts.telegram.dialogTitle}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-md mb-2">
+                  <Bot className="h-4 w-4 text-blue-600" />
+                  <h3 className="font-semibold text-lg">@{BOT_USERNAME}</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">{ts.telegram.autoConnectInstructions}</p>
+                <div className="p-3 bg-yellow-50 rounded-lg mb-4">
+                  <p className="text-sm font-medium text-yellow-800">
+                    🔑 {ts.telegram.codeLabel} <code className="bg-yellow-200 px-2 py-1 rounded">{verificationCode}</code>
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">{ts.telegram.codeInstructions}</p>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex flex-col gap-2">
+              <Button onClick={connectTelegramAutomatically} disabled={isLoading} className="w-full">
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    {ts.telegram.waitingConnection}
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    {ts.telegram.connectViaTelegram}
+                  </div>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {/* Модальное окно оплаты (iframe) */}
         <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
           <DialogContent className="max-w-2xl">
@@ -478,6 +672,19 @@ function PublicAccount() {
               ) : (
                 <div className="text-sm text-gray-500">Initializing…</div>
               )}
+            <div className="pt-2 border-t mt-2">
+              <p className="text-xs text-gray-600">
+                {t.paymentModal?.supportText}
+              </p>
+              <a
+                href={`https://wa.me/6282147824968?text=${encodeURIComponent('Здравствуйте! Нужна помощь с оплатой/подключением премиум подписки.')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center mt-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+              >
+                {t.paymentModal?.supportButton}
+              </a>
+            </div>
             </div>
           </DialogContent>
         </Dialog>

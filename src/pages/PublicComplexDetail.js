@@ -44,6 +44,45 @@ function PublicComplexDetail() {
   const [overlayImgUrl, setOverlayImgUrl] = useState(null);
   const [isFading, setIsFading] = useState(false);
   const fadeTimerRef = useRef(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  // Для полноэкранного просмотра
+  const [lbDisplayedUrl, setLbDisplayedUrl] = useState(null);
+  const [lbOverlayUrl, setLbOverlayUrl] = useState(null);
+  const [isLbFading, setIsLbFading] = useState(false);
+  const lbFadeTimerRef = useRef(null);
+  const [isLightboxTransitioning, setIsLightboxTransitioning] = useState(false);
+
+  // Оптимизация URL и srcset
+  const getOptimizedImageUrl = useCallback((url, targetWidth) => {
+    try {
+      if (!url || !targetWidth) return url;
+      const w = Math.max(1, Math.floor(targetWidth));
+      if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+        return url.replace('/upload/', `/upload/f_auto,q_auto,w_${w}/`);
+      }
+      if (url.includes('images.unsplash.com')) {
+        const joiner = url.includes('?') ? '&' : '?';
+        return `${url}${joiner}auto=format&w=${w}`;
+      }
+      if (url.includes('cdn.shopify.com')) {
+        const joiner = url.includes('?') ? '&' : '?';
+        return `${url}${joiner}width=${w}`;
+      }
+      if (url.includes('imgix.net')) {
+        const joiner = url.includes('?') ? '&' : '?';
+        return `${url}${joiner}auto=format&fit=max&w=${w}`;
+      }
+      return url;
+    } catch {
+      return url;
+    }
+  }, []);
+
+  const buildSrcSet = useCallback((url) => {
+    if (!url) return undefined;
+    const widths = [480, 768, 1024, 1366, 1920, 2560];
+    return widths.map((w) => `${getOptimizedImageUrl(url, w)} ${w}w`).join(', ');
+  }, [getOptimizedImageUrl]);
 
   // Lookahead-прелоад соседних изображений (prev/next)
   useEffect(() => {
@@ -134,6 +173,7 @@ function PublicComplexDetail() {
 
     const prefetchAndFade = async () => {
       try {
+        setIsTransitioning(true);
         await new Promise((resolve) => {
           const img = new Image();
           img.decoding = 'async';
@@ -155,6 +195,7 @@ function PublicComplexDetail() {
           setDisplayedImgUrl(targetUrl);
           setOverlayImgUrl(null);
           setIsFading(false);
+          setIsTransitioning(false);
         }, 220);
       } catch {}
     };
@@ -166,8 +207,73 @@ function PublicComplexDetail() {
         clearTimeout(fadeTimerRef.current);
         fadeTimerRef.current = null;
       }
+      setIsTransitioning(false);
     };
   }, [currentImg, complex, displayedImgUrl]);
+
+  // Инициализация лайтбокса
+  useEffect(() => {
+    if (!lightbox) return;
+    if (complex?.images?.length) {
+      if (!lbDisplayedUrl) {
+        setLbDisplayedUrl(complex.images[currentImg] || complex.images[0]);
+      }
+    }
+  }, [lightbox, complex, currentImg, lbDisplayedUrl]);
+
+  // Плавная смена кадров в лайтбоксе
+  useEffect(() => {
+    if (!lightbox) return;
+    const urls = complex?.images || [];
+    if (!urls.length) return;
+    const targetUrl = urls[currentImg];
+    if (!targetUrl || targetUrl === lbDisplayedUrl) return;
+
+    let cancelled = false;
+    if (lbFadeTimerRef.current) {
+      clearTimeout(lbFadeTimerRef.current);
+      lbFadeTimerRef.current = null;
+    }
+
+    const prefetchAndFade = async () => {
+      try {
+        setIsLightboxTransitioning(true);
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = () => {
+            if (typeof img.decode === 'function') {
+              img.decode().then(resolve).catch(resolve);
+            } else {
+              resolve();
+            }
+          };
+          img.onerror = () => resolve();
+          img.src = targetUrl;
+        });
+        if (cancelled) return;
+        setLbOverlayUrl(targetUrl);
+        setIsLbFading(true);
+        lbFadeTimerRef.current = setTimeout(() => {
+          if (cancelled) return;
+          setLbDisplayedUrl(targetUrl);
+          setLbOverlayUrl(null);
+          setIsLbFading(false);
+          setIsLightboxTransitioning(false);
+        }, 220);
+      } catch {}
+    };
+
+    prefetchAndFade();
+    return () => {
+      cancelled = true;
+      if (lbFadeTimerRef.current) {
+        clearTimeout(lbFadeTimerRef.current);
+        lbFadeTimerRef.current = null;
+      }
+      setIsLightboxTransitioning(false);
+    };
+  }, [lightbox, currentImg, complex, lbDisplayedUrl]);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -269,7 +375,9 @@ function PublicComplexDetail() {
           {complex.images?.length ? (
             <>
               <img
-                src={displayedImgUrl || complex.images[currentImg]}
+                src={getOptimizedImageUrl(displayedImgUrl || complex.images[currentImg], 1366)}
+                srcSet={buildSrcSet(displayedImgUrl || complex.images[currentImg])}
+                sizes="(max-width: 768px) 100vw, 1366px"
                 alt={complex.name || 'Complex'}
                 className="w-full h-full object-cover cursor-pointer"
                 onClick={() => setLightbox(true)}
@@ -279,7 +387,9 @@ function PublicComplexDetail() {
               />
               {overlayImgUrl && (
                 <img
-                  src={overlayImgUrl}
+                  src={getOptimizedImageUrl(overlayImgUrl, 1366)}
+                  srcSet={buildSrcSet(overlayImgUrl)}
+                  sizes="(max-width: 768px) 100vw, 1366px"
                   alt=""
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${isFading ? 'opacity-100' : 'opacity-0'}`}
                   loading="eager"
@@ -296,19 +406,21 @@ function PublicComplexDetail() {
           {complex.images?.length > 1 && (
             <>
               {currentImg > 0 && (
-                <button
-                  onClick={() => setCurrentImg((i) => i - 1)}
+              <button
+                onClick={() => { if (isTransitioning) return; setCurrentImg((i) => i - 1); }}
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/50"
                   aria-label="Prev"
+                disabled={isTransitioning}
                 >
                   ◀
                 </button>
               )}
               {currentImg < complex.images.length - 1 && (
-                <button
-                  onClick={() => setCurrentImg((i) => i + 1)}
+              <button
+                onClick={() => { if (isTransitioning) return; setCurrentImg((i) => i + 1); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/50"
                   aria-label="Next"
+                disabled={isTransitioning}
                 >
                   ▶
                 </button>
@@ -321,18 +433,38 @@ function PublicComplexDetail() {
         {lightbox && complex.images?.length > 0 && (
           <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={() => setLightbox(false)}>
             <div className="relative w-full h-full">
+              {/* Base */}
               <img
-                src={complex.images[currentImg]}
+                src={getOptimizedImageUrl(lbDisplayedUrl || complex.images[currentImg], 1920)}
+                srcSet={buildSrcSet(lbDisplayedUrl || complex.images[currentImg])}
+                sizes="100vw"
                 alt={complex.name || 'Complex'}
                 className="absolute inset-0 m-auto max-w-full max-h-full object-contain"
+                decoding="async"
+                loading="eager"
+                fetchpriority="high"
               />
+              {/* Overlay */}
+              {lbOverlayUrl && (
+                <img
+                  src={getOptimizedImageUrl(lbOverlayUrl, 1920)}
+                  srcSet={buildSrcSet(lbOverlayUrl)}
+                  sizes="100vw"
+                  alt=""
+                  className={`absolute inset-0 m-auto max-w-full max-h-full object-contain transition-opacity duration-200 ${isLbFading ? 'opacity-100' : 'opacity-0'}`}
+                  decoding="async"
+                  loading="eager"
+                  fetchpriority="high"
+                />
+              )}
               {/* Close */}
               <button className="absolute top-4 right-4 text-white text-4xl" onClick={() => setLightbox(false)}>×</button>
               {/* Prev */}
               {currentImg > 0 && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); setCurrentImg((i) => i - 1); }}
+                  onClick={(e) => { e.stopPropagation(); if (isLightboxTransitioning) return; setCurrentImg((i) => i - 1); }}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl bg-black/50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-black/70"
+                  disabled={isLightboxTransitioning}
                 >
                   ←
                 </button>
@@ -340,8 +472,9 @@ function PublicComplexDetail() {
               {/* Next */}
               {currentImg < complex.images.length - 1 && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); setCurrentImg((i) => i + 1); }}
+                  onClick={(e) => { e.stopPropagation(); if (isLightboxTransitioning) return; setCurrentImg((i) => i + 1); }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl bg-black/50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-black/70"
+                  disabled={isLightboxTransitioning}
                 >
                   →
                 </button>

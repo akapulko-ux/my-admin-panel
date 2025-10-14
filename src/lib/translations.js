@@ -345,6 +345,10 @@ export const translations = {
       price: '$99 / month',
       subscribeButton: 'Subscribe'
     },
+    paymentModal: {
+      supportText: 'If you have difficulties with payment or activating the Premium subscription, message our support and we will provide full assistance',
+      supportButton: 'Message support'
+    },
     accountPage: {
       title: 'My Account',
       premiumBadge: 'Premium',
@@ -2325,6 +2329,10 @@ _________________               _________________
       ],
       price: '$99 / мес.',
       subscribeButton: 'Подписаться'
+    },
+    paymentModal: {
+      supportText: 'Если у вас возникли сложности с оплатой или подключением премиум подписки, напишите в нашу поддержку и мы окажем вам полное сопровождение',
+      supportButton: 'Написать в техподдержку'
     },
     accountPage: {
       title: 'Личный кабинет',
@@ -4308,6 +4316,10 @@ _________________               _________________
       ],
       price: '$199 / bln',
       subscribeButton: 'Berlangganan'
+    },
+    paymentModal: {
+      supportText: 'Jika Anda mengalami kesulitan dalam pembayaran atau mengaktifkan langganan Premium, hubungi dukungan kami dan kami akan memberikan pendampingan penuh',
+      supportButton: 'Hubungi dukungan'
     },
     accountPage: {
       title: 'Akun Saya',
