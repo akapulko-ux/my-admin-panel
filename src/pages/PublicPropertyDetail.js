@@ -1286,7 +1286,7 @@ function PublicPropertyDetail() {
       )}
 
       {/* Поле "Описание" */}
-      {property.description && (
+      {property.description && (['admin', 'moderator', 'premium agent', 'премиум агент'].includes(String(effectiveRole || '').toLowerCase())) && (
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">
             {t.propertyDetail.description}

@@ -313,6 +313,7 @@ export const translations = {
       favorites: 'Favorites',
       services: 'Services',
       loginRegister: 'Login / Register',
+      downloadIOS: 'Download iOS app',
       account: 'My Account',
       subscription: 'Subscription',
       servicesList: {
@@ -2298,6 +2299,7 @@ _________________               _________________
       favorites: 'Избранное',
       services: 'Услуги',
       loginRegister: 'Вход / Регистрация',
+      downloadIOS: 'Скачать iOS app',
       account: 'Личный кабинет',
       subscription: 'Подписка',
       servicesList: {
@@ -4285,6 +4287,7 @@ _________________               _________________
       favorites: 'Favorit',
       services: 'Layanan',
       loginRegister: 'Masuk / Daftar',
+      downloadIOS: 'Unduh aplikasi iOS',
       account: 'Akun Saya',
       subscription: 'Langganan',
       servicesList: {

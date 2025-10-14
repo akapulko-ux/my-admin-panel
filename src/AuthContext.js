@@ -209,20 +209,28 @@ export function AuthProvider({ children }) {
   const logout = () => signOut(auth);
 
   return (
-    <AuthContext.Provider value={{ currentUser, role, login, logout, loading, register: async (email, password, name) => {
+    <AuthContext.Provider value={{ currentUser, role, login, logout, loading, register: async (email, password, name, phoneCode, phone, status) => {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       if (name) {
         try { await updateProfile(userCred.user, { displayName: name }); } catch {}
       }
       const userDocRef = doc(db, "users", userCred.user.uid);
+      const safeName = name || userCred.user.displayName || '';
+      const selectedLanguage = localStorage.getItem('selectedLanguage') || 'ru';
+      const phoneCodeSafe = typeof phoneCode === 'string' ? phoneCode.trim() : '';
+      const phoneRaw = typeof phone === 'string' ? phone.replace(/\D/g, '') : '';
+      const statusValue = typeof status === 'string' ? status : '';
       await setDoc(userDocRef, {
         uid: userCred.user.uid,
         email: userCred.user.email,
         role: "agent",
         createdAt: new Date(),
-        displayName: name || userCred.user.displayName || '',
-        name: name || userCred.user.displayName || '',
-        language: localStorage.getItem('selectedLanguage') || 'ru'
+        displayName: safeName,
+        name: safeName,
+        language: selectedLanguage,
+        phoneCode: phoneCodeSafe,
+        phone: phoneRaw,
+        status: statusValue
       }, { merge: true });
       setRole('agent');
       return userCred;

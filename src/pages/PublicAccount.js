@@ -708,10 +708,36 @@ function PublicAccount() {
                         <Building2 className="w-8 h-8" />
                       </div>
                     )}
+                    {/* Бейдж "На модерации" поверх фото */}
+                    {p.moderation === true && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                          {t.moderation?.onModeration || 'На модерации'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col text-gray-900 space-y-1">
                     <span className="text-lg font-semibold">{safeDisplay(p.propertyName || p.complex || p.type)}</span>
                     <span className="text-sm"><span className="text-gray-600">Тип:</span><span className="ml-2">{translatePropertyType(safeDisplay(p.type), language)}</span></span>
+                    {(() => {
+                      const ratingRaw = p.reliabilityRating;
+                      const rating = Number.isFinite(Number(ratingRaw)) ? Math.max(0, Math.min(5, parseInt(ratingRaw))) : null;
+                      if (!rating) return null;
+                      return (
+                        <div className="flex items-center gap-2" aria-label={`${t.propertyDetail.reliabilityRating}: ${rating}`}>
+                          <span className="text-xs text-gray-600">{t.propertyDetail.reliabilityRating}</span>
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <span
+                              key={idx}
+                              className={`${idx < rating ? 'text-yellow-400' : 'text-gray-300'} text-2xl leading-none`}
+                            >
+                              {idx < rating ? '★' : '☆'}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </Link>
               ))}

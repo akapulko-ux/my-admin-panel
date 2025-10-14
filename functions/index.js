@@ -236,8 +236,13 @@ exports.createUserRoleClaims = onDocumentCreated("users/{userId}", async (event)
         lines.push(`👤 Имя: ${newData.name || newData.displayName || newData.fullName || '-'}`);
         lines.push(`🆔 UID: ${userId}`);
         lines.push(`📧 Email: ${newData.email || '-'}`);
-        lines.push(`📞 Телефон: ${newData.phone || newData.phoneNumber || '-'}`);
+        const phoneDisplay = (newData.phoneCode && (newData.phone || newData.phoneNumber))
+          ? `${newData.phoneCode} ${String(newData.phone || newData.phoneNumber).replace(/[^\d]/g, '')}`
+          : (newData.phone || newData.phoneNumber || '-')
+        ;
+        lines.push(`📞 Телефон: ${phoneDisplay}`);
         lines.push(`🧩 Роль: ${newData.role || 'agent'}`);
+        if (newData.status) lines.push(`🏷️ Статус: ${newData.status}`);
         if (newData.developerId) lines.push(`🏗️ Developer ID: ${newData.developerId}`);
         if (newData.developerName) lines.push(`🏗️ Застройщик: ${newData.developerName}`);
         if (newData.telegramChatId) lines.push(`💬 Telegram: ${newData.telegramChatId}`);
@@ -269,6 +274,106 @@ exports.createUserRoleClaims = onDocumentCreated("users/{userId}", async (event)
   } catch (error) {
     console.error('Ошибка при установке custom claims для нового пользователя:', error);
     throw new Error('Ошибка при установке custom claims для нового пользователя');
+  }
+});
+
+// Уведомление администраторов о создании нового объекта агентом/застройщиком
+exports.notifyPropertyCreated = onDocumentCreated("properties/{propertyId}", async (event) => {
+  try {
+    const propertyId = event.params.propertyId;
+    const p = event.data.data() || {};
+
+    // Загружаем автора
+    let author = null;
+    if (p.createdBy) {
+      try {
+        const uSnap = await admin.firestore().collection('users').doc(String(p.createdBy)).get();
+        author = uSnap.exists ? (uSnap.data() || null) : null;
+      } catch (e) {
+        console.error('[notifyPropertyCreated] load author failed', e);
+      }
+    }
+
+    // Форматирование цены
+    const formatUSD = (v) => {
+      try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Number(v)); } catch { return String(v || '—'); }
+    };
+
+    // Телефон автора с кодом
+    const formatAuthorPhone = (u) => {
+      if (!u) return '-';
+      const raw = (u.phone || u.phoneNumber || '').toString().replace(/[^\d]/g, '');
+      if (u.phoneCode && raw) return `${u.phoneCode} ${raw}`;
+      return raw || '-';
+    };
+
+    // Собираем сообщение
+    const lines = [];
+    lines.push('🏠 Добавлен новый объект');
+    lines.push('');
+    lines.push(`🆔 ID: ${propertyId}`);
+    if (p.name || p.title) lines.push(`📌 Название: ${p.name || p.title}`);
+    if (p.type) lines.push(`🏷️ Тип: ${p.type}`);
+    if (p.price !== undefined && p.price !== null && p.price !== '') lines.push(`💵 Цена: ${formatUSD(p.price)}`);
+    if (p.area) lines.push(`📐 Площадь: ${p.area}`);
+    if (p.unitsCount) lines.push(`🏘️ Юнитов: ${p.unitsCount}`);
+    else {
+      if (p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== '') lines.push(`🛏 Спальни: ${p.bedrooms}`);
+      if (p.bathrooms !== undefined && p.bathrooms !== null && p.bathrooms !== '') lines.push(`🛁 Ванные: ${p.bathrooms}`);
+    }
+    if (p.district) lines.push(`📍 Район: ${p.district}`);
+    if (p.buildingType) lines.push(`🏗️ Тип здания: ${p.buildingType}`);
+    if (p.status) lines.push(`📊 Статус: ${p.status}`);
+    if (p.pool) lines.push(`🏊 Бассейн: ${p.pool}`);
+    if (p.ownershipForm) lines.push(`📜 Право собственности: ${p.ownershipForm}${p.leaseYears ? ` (${p.leaseYears})` : ''}`);
+    if (p.completionDate) lines.push(`📅 Сдача: ${p.completionDate}`);
+    if (p.coordinates) lines.push(`🗺️ Координаты: ${p.coordinates}`);
+    if (Array.isArray(p.images)) lines.push(`🖼 Фото: ${p.images.length}`);
+    lines.push('');
+    lines.push('👤 Автор');
+    lines.push(`— Имя: ${author?.name || author?.displayName || '-'}`);
+    lines.push(`— Email: ${author?.email || '-'}`);
+    lines.push(`— Телефон: ${formatAuthorPhone(author)}`);
+    if (author?.status) lines.push(`— Статус: ${author.status}`);
+    if (author?.role) lines.push(`— Роль: ${author.role}`);
+
+    const message = lines.join('\n');
+
+    // Получаем админов с подключенным телеграмом
+    const adminsSnap = await admin.firestore()
+      .collection('users')
+      .where('role', '==', 'admin')
+      .where('telegramConnected', '==', true)
+      .get();
+
+    if (adminsSnap.empty) {
+      console.warn('[notifyPropertyCreated] Нет админов, подключенных к Telegram');
+      return { success: true, recipients: 0 };
+    }
+
+    // Кнопка для открытия админ‑панели
+    const replyMarkup = {
+      inline_keyboard: [[{ text: 'Открыть админ‑панель', url: 'https://it-agent.pro/' }]]
+    };
+
+    const results = [];
+    for (const doc of adminsSnap.docs) {
+      const chatId = doc.data()?.telegramChatId;
+      if (!chatId) continue;
+      try {
+        await sendTelegramMessage(chatId, message, replyMarkup);
+        results.push({ chatId, sent: true });
+      } catch (e) {
+        console.error('[notifyPropertyCreated] send failed', chatId, e);
+        results.push({ chatId, sent: false, error: e?.message || String(e) });
+      }
+    }
+
+    console.log('[notifyPropertyCreated] sent:', results.filter(r => r.sent).length, 'of', results.length);
+    return { success: true, recipients: results.length };
+  } catch (e) {
+    console.error('[notifyPropertyCreated] error:', e);
+    return { success: false, error: e?.message || String(e) };
   }
 });
 

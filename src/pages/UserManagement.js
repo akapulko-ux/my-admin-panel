@@ -85,6 +85,7 @@ const UserManagement = () => {
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [activeFilter, setActiveFilter] = useState(null); // null = все пользователи, roleKey = фильтр по роли
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' = сначала новые, 'asc' = сначала старые
 
   // Детектор мобильного устройства
   useEffect(() => {
@@ -244,16 +245,36 @@ const UserManagement = () => {
     return counts;
   };
 
-  // Функция для фильтрации пользователей
+  // Фильтрация и сортировка пользователей по дате регистрации
   const getFilteredUsers = () => {
-    if (!activeFilter) {
-      return users; // Показываем всех пользователей
-    }
-    
-    return users.filter(user => {
-      const userRole = user.role || 'user';
-      return userRole === activeFilter;
+    const list = !activeFilter
+      ? [...users]
+      : users.filter(user => {
+          const userRole = user.role || 'user';
+          return userRole === activeFilter;
+        });
+
+    list.sort((a, b) => {
+      const getTimeMs = (u) => {
+        const v = u.createdAt || u.registrationDate;
+        if (!v) return 0;
+        try {
+          if (typeof v?.toMillis === 'function') return v.toMillis();
+          if (v?._seconds) return v._seconds * 1000;
+          if (typeof v?.toDate === 'function') return v.toDate().getTime();
+          const t = new Date(v).getTime();
+          return Number.isNaN(t) ? 0 : t;
+        } catch {
+          return 0;
+        }
+      };
+
+      const aMs = getTimeMs(a);
+      const bMs = getTimeMs(b);
+      return sortOrder === 'asc' ? aMs - bMs : bMs - aMs;
     });
+
+    return list;
   };
 
   // Обработчик клика на карточку роли
@@ -393,6 +414,20 @@ const UserManagement = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Сортировка по дате регистрации */}
+      <div className={`${isMobile ? 'space-y-2' : 'flex items-center justify-end'} mb-2`}>
+        <div className="text-sm text-gray-600 mr-2">Сортировка:</div>
+        <Select value={sortOrder} onValueChange={setSortOrder}>
+          <SelectTrigger className={`${isMobile ? 'w-full h-12' : 'w-[220px]'}`}>
+            <SelectValue placeholder="Порядок сортировки" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="desc">Сначала новые</SelectItem>
+            <SelectItem value="asc">Сначала старые</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {getFilteredUsers().length === 0 ? (
         <Card>

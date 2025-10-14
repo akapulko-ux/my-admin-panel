@@ -87,8 +87,8 @@ export default function PropertyPlacementModal({ isOpen, onClose }) {
         return;
       }
 
-      // Регистрируем пользователя сразу как агента
-      await register(regEmail, regPassword, regName);
+      // Регистрируем пользователя: phone — только цифры без кода
+      await register(regEmail, regPassword, regName, regPhoneCode, digitsOnly, regStatus);
       onClose();
       toast.success(language === 'ru' ? 'Вы успешно зарегистрированы' : language === 'id' ? 'Anda berhasil terdaftar' : 'You have successfully registered');
     } catch (err) {

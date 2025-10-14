@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, getDocs, where, query, collection, setDoc, deleteDoc } from "firebase/firestore";
-import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench, Scale, HardHat, ClipboardCheck, Ruler, Compass, Heart, Star } from "lucide-react";
+import { Building2, Search, Filter, ChevronDown, X as XIcon, Plus, Menu, LogIn, Wrench, Scale, HardHat, ClipboardCheck, Ruler, Compass, Heart, Star, Apple } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useCache } from "../CacheContext";
 import { useLanguage } from "../lib/LanguageContext";
@@ -494,6 +494,17 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
                 <Star className="w-4 h-4 text-gray-700" />
                 <span>{t.publicMenu.subscription}</span>
               </button>
+              {/* iOS app download - last */}
+              <a
+                className="w-full block text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
+                href="https://apps.apple.com/id/app/it-agent-bali/id6746729723"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => { const panel = document.getElementById('public-menu-dropdown'); if (panel) panel.classList.add('hidden'); }}
+              >
+                <Apple className="w-4 h-4 text-gray-700" />
+                <span>{t.publicMenu.downloadIOS}</span>
+              </a>
               </div>
             </div>
             )}
