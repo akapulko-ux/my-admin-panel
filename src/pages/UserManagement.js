@@ -447,8 +447,17 @@ const UserManagement = () => {
             <Card key={user.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className={`${isMobile ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-5 gap-4 items-center'}`}>
-                  {/* Имя пользователя */}
+                  {/* Имя пользователя + аватар */}
                   <div className="space-y-1">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border mb-2">
+                      {user.logoUrl ? (
+                        <img src={user.logoUrl} alt="avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm font-medium text-gray-500">Имя пользователя</p>
                     <p className="font-semibold text-gray-900">
                       {user.displayName || 'Не указано'}

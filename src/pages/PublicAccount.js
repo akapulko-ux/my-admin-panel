@@ -17,6 +17,10 @@ import toast from 'react-hot-toast';
 import { signInWithCustomToken, setPersistence, browserLocalPersistence } from "firebase/auth";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { auth } from "../firebaseConfig";
+import { deleteFileFromFirebaseStorage } from "../utils/firebaseStorage";
+import imageCompression from "browser-image-compression";
+import { getApp } from "firebase/app";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 function PublicAccount() {
   const { currentUser, logout, role } = useAuth();
@@ -33,11 +37,13 @@ function PublicAccount() {
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
-  const [profile, setProfile] = useState({ name: '', email: '', telegram: '', phone: '', phoneCode: '+62' });
+  const [profile, setProfile] = useState({ name: '', email: '', telegram: '', phone: '', phoneCode: '+62', logoUrl: '' });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
   // Переиспользуем модалку авторизации из публичной галереи (не используется)
   const silentTriedRef = useRef(false);
+  const avatarInputRef = useRef(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Telegram integration state (same as Settings)
   const [telegramChatId, setTelegramChatId] = useState('');
@@ -273,7 +279,8 @@ function PublicAccount() {
               email: d.email || '',
               telegram: d.telegram || '',
               phone: d.phone || '',
-              phoneCode: d.phoneCode || '+62'
+              phoneCode: d.phoneCode || '+62',
+              logoUrl: d.logoUrl || ''
             });
             if (d.telegramChatId) {
               setTelegramChatId(d.telegramChatId);
@@ -480,6 +487,137 @@ function PublicAccount() {
             <span className="text-gray-500">▼</span>
           </summary>
           <div className="px-4 pb-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <label className="text-sm text-gray-600">{t.accountPage.profile?.photo || 'Фото профиля'}</label>
+              <div className="flex items-center gap-3">
+                <div className="relative inline-block">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border">
+                    {profile.logoUrl ? (
+                      <img src={profile.logoUrl} alt="avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">—</div>
+                    )}
+                  </div>
+                  {profile.logoUrl && (
+                    <button
+                      type="button"
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border shadow flex items-center justify-center text-gray-600 hover:text-red-600"
+                      title={t.common?.delete || 'Удалить'}
+                      disabled={uploadingAvatar}
+                      onClick={async () => {
+                        if (!profile.logoUrl) return;
+                        setUploadingAvatar(true);
+                        try {
+                          await deleteFileFromFirebaseStorage(profile.logoUrl);
+                          setProfile(p => ({ ...p, logoUrl: '' }));
+                          if (currentUser) {
+                            const userRef = doc(db, 'users', currentUser.uid);
+                            await updateDoc(userRef, { logoUrl: null });
+                          }
+                        } catch (err) {
+                          console.error('delete avatar error', err);
+                          toast.error(t.common?.photoDeleteError || 'Ошибка удаления фото');
+                        } finally {
+                          setUploadingAvatar(false);
+                        }
+                      }}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (!file) return;
+                      setUploadingAvatar(true);
+                      try {
+                        // Сжатие и конвертация в JPEG
+                        const compressionOptions = {
+                          maxSizeMB: 2,
+                          maxWidthOrHeight: 1280,
+                          useWebWorker: false,
+                          fileType: 'image/jpeg',
+                          initialQuality: 0.8
+                        };
+                        let jpegBlob = null;
+                        try {
+                          const compressionPromise = imageCompression(file, compressionOptions);
+                          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('compression_timeout')), 5000));
+                          jpegBlob = await Promise.race([compressionPromise, timeoutPromise]);
+                        } catch (err) {
+                          console.warn('imageCompression timed out/failed, fallback to canvas JPEG', err);
+                          try {
+                            jpegBlob = await new Promise((resolve, reject) => {
+                              const img = new Image();
+                              const url = URL.createObjectURL(file);
+                              img.onload = () => {
+                                const maxSide = 1280;
+                                let { width, height } = img;
+                                const scale = Math.min(1, maxSide / Math.max(width, height));
+                                width = Math.max(1, Math.round(width * scale));
+                                height = Math.max(1, Math.round(height * scale));
+                                const canvas = document.createElement('canvas');
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+                                canvas.toBlob((blob) => {
+                                  URL.revokeObjectURL(url);
+                                  if (blob) resolve(blob); else reject(new Error('toBlob returned null'));
+                                }, 'image/jpeg', 0.8);
+                              };
+                              img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load error')); };
+                              img.src = url;
+                            });
+                          } catch (e2) {
+                            console.warn('canvas conversion failed, using original file', e2);
+                            jpegBlob = file;
+                          }
+                        }
+                        const finalFile = new File([jpegBlob], `${currentUser.uid}.jpg`, { type: 'image/jpeg' });
+
+                        // Загрузка в Storage по фиксированному пути /profile_images/{uid}.jpg
+                        const appInst = getApp();
+                        const storage = getStorage(appInst, "gs://bali-estate-1130f.firebasestorage.app");
+                        const fileRef = ref(storage, `profile_images/${currentUser.uid}.jpg`);
+                        const snapshot = await uploadBytes(fileRef, finalFile, { contentType: 'image/jpeg' });
+                        const url = await getDownloadURL(snapshot.ref);
+
+                        setProfile(p => ({ ...p, logoUrl: url }));
+                        if (currentUser) {
+                          try {
+                            const userRef = doc(db, 'users', currentUser.uid);
+                            await updateDoc(userRef, { logoUrl: url });
+                          } catch (err) {
+                            console.error('save logoUrl to Firestore error', err);
+                          }
+                        }
+                      } catch (error) {
+                        console.error('avatar upload error', error);
+                        toast.error(t.common?.fileUploadError || 'Ошибка загрузки файла');
+                      } finally {
+                        setUploadingAvatar(false);
+                        if (avatarInputRef.current) avatarInputRef.current.value = '';
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => avatarInputRef.current && avatarInputRef.current.click()}
+                    disabled={uploadingAvatar}
+                  >
+                    {uploadingAvatar ? (t.common?.uploading || 'Загрузка...') : (t.accountPage.profile?.uploadPhoto || 'Загрузить фото')}
+                  </Button>
+                  {/* Кнопка очистки заменена на крестик на миниатюре */}
+                </div>
+              </div>
+            </div>
             <div className="flex flex-col gap-1">
               <label className="text-sm text-gray-600">{t.accountPage.profile.name}</label>
               <input className="border rounded px-2 py-1 w-full" value={profile.name} onChange={(e) => setProfile(p => ({ ...p, name: e.target.value }))} />
@@ -491,7 +629,37 @@ function PublicAccount() {
             {/* Язык не отображаем по требованию */}
             <div className="flex flex-col gap-1">
               <label className="text-sm text-gray-600">{t.accountPage.profile.telegram}</label>
-              <input className="border rounded px-2 py-1 w-full" value={profile.telegram} onChange={(e) => setProfile(p => ({ ...p, telegram: e.target.value }))} />
+              <input
+                className="border rounded px-2 py-1 w-full"
+                value={profile.telegram}
+                placeholder="@user_telegram"
+                pattern="^@[a-z0-9_]+$"
+                onChange={(e) => {
+                  const raw = e.target.value || '';
+                  const trimmed = raw.trim();
+                  if (trimmed === '') {
+                    setProfile(p => ({ ...p, telegram: '' }));
+                    return;
+                  }
+                  const startsWithAt = trimmed.startsWith('@');
+                  const text = startsWithAt ? trimmed.slice(1) : trimmed;
+                  const sanitized = text.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                  if (startsWithAt) {
+                    // Разрешаем промежуточное состояние с одиночным '@'
+                    if (trimmed === '@' || sanitized === '') {
+                      setProfile(p => ({ ...p, telegram: '@' }));
+                    } else {
+                      setProfile(p => ({ ...p, telegram: '@' + sanitized }));
+                    }
+                  } else {
+                    if (sanitized === '') {
+                      setProfile(p => ({ ...p, telegram: '' }));
+                    } else {
+                      setProfile(p => ({ ...p, telegram: '@' + sanitized }));
+                    }
+                  }
+                }}
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-sm text-gray-600">Телефон / Whatsapp</label>
@@ -534,7 +702,8 @@ function PublicAccount() {
                   email: profile.email,
                   telegram: profile.telegram,
                   phone: profile.phone,
-                  phoneCode: profile.phoneCode || '+62'
+                  phoneCode: profile.phoneCode || '+62',
+                  logoUrl: profile.logoUrl || null
                 });
                 setSaveMsg(t.accountPage.profile.saved);
                 setTimeout(() => setSaveMsg(''), 1500);
