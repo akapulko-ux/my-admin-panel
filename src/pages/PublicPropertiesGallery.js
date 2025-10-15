@@ -812,6 +812,12 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
                       <span className="ml-2">{safeDisplay(p.developer)}</span>
                     </span>
                   )}
+                  {isPrivileged && p.propertyName && (
+                    <span className="text-sm">
+                      <span className="text-gray-600">{t.propertyDetail.propertyName}:</span>
+                      <span className="ml-2">{safeDisplay(p.propertyName)}</span>
+                    </span>
+                  )}
 
                   {p.isDeveloperApproved === true && (
                     <div className="mb-1">

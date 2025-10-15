@@ -6,7 +6,7 @@ import { useAuth } from "../AuthContext";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
-import { translatePropertyType } from "../lib/utils";
+import { translateDistrict, translatePropertyType, translateConstructionStatus } from "../lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { countryDialCodes } from "../lib/countryDialCodes";
 import { Building2, Bot, Check, X, ExternalLink } from "lucide-react";
@@ -44,6 +44,14 @@ function PublicAccount() {
   const silentTriedRef = useRef(false);
   const avatarInputRef = useRef(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Telegram integration state (same as Settings)
   const [telegramChatId, setTelegramChatId] = useState('');
@@ -262,6 +270,16 @@ function PublicAccount() {
     if (value instanceof Timestamp) return value.toDate().toLocaleDateString("ru-RU");
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return "";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
   useEffect(() => {
@@ -868,8 +886,18 @@ function PublicAccount() {
           ) : (
             <div className="divide-y">
               {myProperties.map((p) => (
-                <Link key={p.id} to={`/public/property/${p.id}`} className="flex items-stretch gap-4 p-4 hover:bg-gray-50">
-                  <div className="relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 w-48 h-32 min-w-48">
+                <Link
+                  key={p.id}
+                  to={`/public/property/${p.id}`}
+                  className={`flex items-stretch transition-colors ${
+                    isMobile ? 'flex-col gap-3 p-3' : 'gap-4 p-4'
+                  } hover:bg-gray-50`}
+                >
+                  <div
+                    className={`relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 ${
+                      isMobile ? 'w-full h-40' : 'w-48 h-32 min-w-48'
+                    }`}
+                  >
                     {p.images?.length ? (
                       <img src={p.images[0]} alt={safeDisplay(p.type)} className="w-full h-full object-cover" />
                     ) : (
@@ -886,9 +914,19 @@ function PublicAccount() {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col text-gray-900 space-y-1">
-                    <span className="text-lg font-semibold">{safeDisplay(p.propertyName || p.complex || p.type)}</span>
-                    <span className="text-sm"><span className="text-gray-600">Тип:</span><span className="ml-2">{translatePropertyType(safeDisplay(p.type), language)}</span></span>
+                  <div className="flex flex-col text-gray-900 space-y-0.5 flex-1">
+                    {p.isHidden && (
+                      <span className="inline-block px-2 py-0.5 text-xs rounded bg-red-600 text-white w-fit">
+                        {t.propertyDetail.removedFromListing || 'Убран из листинга'}
+                      </span>
+                    )}
+
+                    {(p.complexName || p.complex || p.propertyName) && (
+                      <span className={`font-semibold leading-none text-black ${isMobile ? 'text-base' : 'text-lg'}`}>
+                        {safeDisplay(p.complexName || p.complex || p.propertyName)}
+                      </span>
+                    )}
+
                     {(() => {
                       const ratingRaw = p.reliabilityRating;
                       const rating = Number.isFinite(Number(ratingRaw)) ? Math.max(0, Math.min(5, parseInt(ratingRaw))) : null;
@@ -904,6 +942,148 @@ function PublicAccount() {
                               {idx < rating ? '★' : '☆'}
                             </span>
                           ))}
+                        </div>
+                      );
+                    })()}
+
+                    <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
+                      <span className="text-sm text-gray-600">{t.propertiesGallery.priceLabel}:</span>
+                      <span className={`font-semibold leading-none ${isMobile ? 'text-base' : 'text-lg'}`}>
+                        {formatPrice(p.price)}
+                      </span>
+                    </div>
+
+                    {p.type && (
+                      <span className="text-sm">
+                        <span className="text-gray-600">{t.propertiesGallery.typeLabel}:</span>
+                        <span className="ml-2">{translatePropertyType(safeDisplay(p.type), language)}</span>
+                      </span>
+                    )}
+                    {p.area && (
+                      <span className="text-sm">
+                        <span className="text-gray-600">{t.propertiesGallery.areaLabel}:</span>
+                        <span className="ml-2">{safeDisplay(p.area)} {t.propertiesGallery.areaText}</span>
+                      </span>
+                    )}
+                    {p.bedrooms !== undefined && p.bedrooms !== null && p.bedrooms !== "" && (
+                      <span className="text-sm">
+                        <span className="text-gray-600">{t.propertiesGallery.bedroomsLabel}:</span>
+                        <span className="ml-2">{p.bedrooms === 0 ? t.propertiesGallery.studio : safeDisplay(p.bedrooms)}</span>
+                      </span>
+                    )}
+                    {p.unitsCount !== undefined && p.unitsCount !== null && p.unitsCount !== "" && (
+                      <span className="text-sm">
+                        <span className="text-gray-600">{t.propertiesGallery.unitsCountText}:</span>
+                        <span className="ml-2">{safeDisplay(p.unitsCount)}</span>
+                      </span>
+                    )}
+                    {p.status && (
+                      <span className="text-sm">
+                        <span className="text-gray-600">{t.propertiesGallery.statusLabel}:</span>
+                        <span className="ml-2">{translateConstructionStatus(safeDisplay(p.status), language)}</span>
+                      </span>
+                    )}
+                    {p.district && (
+                      <span className="text-sm">
+                        <span className="text-gray-600">{t.propertiesGallery.districtLabel}:</span>
+                        <span className="ml-2">{translateDistrict(safeDisplay(p.district), language)}</span>
+                      </span>
+                    )}
+                    {role !== 'застройщик' && p.developer && (
+                      <span className="text-sm text-gray-600">
+                        {t.propertiesGallery.developerText} {safeDisplay(p.developer)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div
+                    className={`flex-shrink-0 ${isMobile ? 'mt-2' : 'ml-auto'} text-sm text-red-600`}
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    {(() => {
+                      const isEmpty = (val) => val === undefined || val === null || val === '' || (typeof val === 'number' && isNaN(val));
+
+                      const characteristics = [];
+                      const documents = [];
+
+                      // Основные поля (Характеристики)
+                      if (isEmpty(p.bedrooms)) characteristics.push(t.propertyDetail.bedrooms);
+                      if (isEmpty(p.area)) characteristics.push(t.propertyDetail.area);
+                      {
+                        const typeStr = String(p.type || '').trim().toLowerCase();
+                        const noLandAreaTypes = ['апартаменты', 'апарт-вилла', 'дюплекс', 'таунхаус', 'пентхаус'];
+                        if (isEmpty(p.landArea) && !noLandAreaTypes.includes(typeStr)) {
+                          characteristics.push(t.propertyDetail.landArea);
+                        }
+                      }
+                      if (isEmpty(p.bathrooms)) characteristics.push(t.propertyDetail.bathrooms);
+                      if (isEmpty(p.floors)) characteristics.push(t.propertyDetail.floors);
+                      if (isEmpty(p.status)) characteristics.push(t.propertyDetail.constructionStatus);
+                      if (isEmpty(p.pool) || p.pool === 'none') characteristics.push(t.propertyDetail.pool);
+                      if (isEmpty(p.expectedCost) && (p.status === 'Проект' || p.status === 'Строится')) characteristics.push(t.propertyDetail.expectedCost);
+
+                      // Собственность + годы для лизхолда
+                      if (isEmpty(p.ownershipForm)) {
+                        characteristics.push(t.propertyDetail.ownership);
+                      } else {
+                        const leaseholdVariants = ['Leashold', 'Leasehold'];
+                        if (leaseholdVariants.includes(String(p.ownershipForm))) {
+                          if (isEmpty(p.leaseYears)) {
+                            characteristics.push(`${t.propertyDetail.ownership} (${t.propertyDetail.years})`);
+                          }
+                        }
+                      }
+
+                      if (isEmpty(p.completionDate)) characteristics.push(t.propertyDetail.completionDate);
+                      if (isEmpty(p.managementCompany)) characteristics.push(t.propertyDetail.managementCompany);
+
+                      // Документы
+                      if (isEmpty(p.legalCompanyName)) documents.push(t.propertyDetail.legalCompanyName);
+                      const npwpVal = p.npwp ?? p.taxNumber;
+                      if (isEmpty(npwpVal)) documents.push(t.propertyDetail.taxNumber);
+                      const pkkprVal = p.pkkprFile ?? p.pkkpr;
+                      if (isEmpty(pkkprVal)) documents.push(t.propertyDetail.landUsePermit);
+                      if (isEmpty(p.dueDiligenceFileURL)) documents.push(t.propertyDetail.dueDiligence);
+                      if (isEmpty(p.pkkprFileURL)) documents.push(t.propertyDetail.pkkprFile);
+                      if (isEmpty(p.shgb)) documents.push(t.propertyDetail.landRightsCertificate);
+                      const hasPbg = !isEmpty(p.pbg);
+                      const hasSlf = !isEmpty(p.slf);
+                      const hasImb = !isEmpty(p.imb);
+                      if (!hasPbg && !hasSlf && !hasImb) {
+                        documents.push(`${t.propertyDetail.buildingPermit} / ${t.propertyDetail.buildingReadinessCertificate} / ${t.propertyDetail.buildingPermitIMB}`);
+                      }
+
+                      // Планировка
+                      const hasLayout = !isEmpty(p.layoutFileURL) || !isEmpty(p.layout);
+                      if (!hasLayout) documents.push(t.propertyDetail.layout);
+
+                      // Ожидаемый ROI: добавляем, если не заполнен manualRoi
+                      if (isEmpty(p.manualRoi)) characteristics.push(t.propertyDetail.expectedRoi);
+
+                      if (characteristics.length === 0 && documents.length === 0) return null;
+                      return (
+                        <div className={`border ${isMobile ? 'mt-2' : 'ml-4'} border-red-200 bg-red-50 rounded-md p-2 max-w-xs`}>
+                          <div className="font-semibold text-red-700 mb-1">{t.propertiesGallery.missingFieldsTitle}:</div>
+                          {characteristics.length > 0 && (
+                            <div className="mb-1">
+                              <div className="text-red-700 font-medium">{t.propertyDetail.characteristicsSection}</div>
+                              <ul className="list-disc list-inside space-y-0.5">
+                                {characteristics.map((label) => (
+                                  <li key={`c-${label}`} className="text-red-700">{label}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {documents.length > 0 && (
+                            <div>
+                              <div className="text-red-700 font-medium">{t.propertyDetail.documentsSection}</div>
+                              <ul className="list-disc list-inside space-y-0.5">
+                                {documents.map((label) => (
+                                  <li key={`d-${label}`} className="text-red-700">{label}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}

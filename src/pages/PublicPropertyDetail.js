@@ -1042,6 +1042,13 @@ function PublicPropertyDetail() {
             Hammer
           )
         )}
+        {isPrivileged && property.propertyName && (
+          renderAttribute(
+            t.propertyDetail.propertyName,
+            safeDisplay(property.propertyName),
+            FileText
+          )
+        )}
         {renderAttribute(
           shouldShowUnitsCount ? t.propertyDetail.unitsCount : ((property.bedrooms === 0 || property.bedrooms === "Студия") ? t.propertyDetail.studio : t.propertyDetail.bedrooms),
           shouldShowUnitsCount ? safeDisplay(property.unitsCount) : ((property.bedrooms === 0 || property.bedrooms === "Студия") ? t.propertyDetail.studio : safeDisplay(property.bedrooms)),

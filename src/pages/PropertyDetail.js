@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import DraggablePreviewItem from "../components/DraggablePreviewItem";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc, collection, where, getDocs, query, orderBy, addDoc, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
@@ -58,6 +58,7 @@ function PropertyDetail() {
   console.log('PropertyDetail: Component mounted');
   const { id } = useParams();
   console.log('PropertyDetail: Got id from params:', id);
+  const navigate = useNavigate();
   
   // Определяем, находимся ли мы на standalone странице
   const isStandalone = window.location.pathname.includes('/standalone');
@@ -2104,6 +2105,19 @@ function PropertyDetail() {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
+      {isStandalone && (
+        <div className="mb-4">
+          <button
+            onClick={() => navigate(`/public/property/${id}`)}
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {t.propertyDetail?.backButton || 'Назад'}
+          </button>
+        </div>
+      )}
       {/* Кнопка добавления фотографий */}
       {canEdit() && (
         <div className={`mb-4 ${isMobile ? 'flex flex-col gap-2' : 'flex items-center justify-between gap-2'}`}>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { db } from "../firebaseConfig";
 import { doc, Timestamp, setDoc, collection } from "firebase/firestore";
@@ -48,11 +49,15 @@ function PropertyCreate() {
   const { currentUser, role } = useAuth();
   const { language } = useLanguage();
   const t = translations[language];
+  const navigate = useNavigate();
+  const location = useLocation();
   
 
   
   // Состояния для создания объекта
   const [property, setProperty] = useState({
+    propertyName: '',
+    developer: '',
     type: 'Вилла',
     price: '',
     area: '',
@@ -176,6 +181,12 @@ function PropertyCreate() {
       }
       
       processedValue = value;
+    }
+    // Валидация для полей propertyName и developer: только A-Z, 0-9, пробел и дефис; приводим к ВЕРХНЕМУ РЕГИСТРУ
+    else if (field === 'propertyName' || field === 'developer') {
+      const upper = String(value || '').toUpperCase();
+      // Разрешены латинские прописные, цифры, пробел и дефис
+      processedValue = upper.replace(/[^A-Z0-9 -]/g, '');
     }
     // Специальная обработка для поля площади
     else if (field === 'area') {
@@ -1102,6 +1113,20 @@ function PropertyCreate() {
   
   const attributesBase = [
     {
+      label: t.propertyDetail.propertyName,
+      value: safeDisplay(property.propertyName),
+      field: "propertyName",
+      icon: FileText,
+      type: "text"
+    },
+    {
+      label: t.propertyDetail.developer,
+      value: safeDisplay(property.developer),
+      field: "developer",
+      icon: Building2,
+      type: "text"
+    },
+    {
       label: t.propertyDetail.area,
       value: property.area ? translateAreaUnit(formatArea(property.area), language) : "—",
       field: "area",
@@ -1254,13 +1279,41 @@ function PropertyCreate() {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
+      {/* Кнопка "Назад" */}
+      <div className="mb-4">
+        <button
+          onClick={() => {
+            const from = location.state && location.state.from;
+            if (from && typeof from === 'string' && from.startsWith('/public/property/')) {
+              navigate(from);
+              return;
+            }
+            const qs = location.search || '';
+            const match = qs.match(/(?:[?&])propertyId=([^&]+)/);
+            if (match && match[1]) {
+              try {
+                const pid = decodeURIComponent(match[1]);
+                navigate(`/public/property/${pid}`);
+                return;
+              } catch (_) {}
+            }
+            navigate('/');
+          }}
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          {t.propertyDetail?.backButton || 'Назад'}
+        </button>
+      </div>
       {/* Кнопка добавления фотографий */}
       {canCreate() && (
-        <div className={`mb-4 ${isMobile ? 'flex flex-col gap-2' : 'flex items-center justify-between gap-2'}`}>
-          <div className="flex flex-col gap-2">
+        <div className={`mb-4 ${isMobile ? 'flex flex-col-reverse gap-2' : 'flex items-center justify-between gap-2'}`}>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2">
             <button
               onClick={handleImageUpload}
-              className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 ${isMobile ? 'w-full h-12 justify-center' : ''}`}
+              className={`flex items-center gap-2 px-4 py-2 md:py-0 md:h-12 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 ${isMobile ? 'w-full h-12 justify-center' : ''}`}
               disabled={uploadingImages || (property.images?.length || 0) >= 10}
             >
               {uploadingImages ? (
@@ -1272,7 +1325,7 @@ function PropertyCreate() {
                 </>
               )}
             </button>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 md:ml-2 md:whitespace-nowrap md:leading-none">
               {t.propertyDetail.photoCounter
                 .replace('{current}', (property.images?.length || 0))
                 .replace('{total}', '10')}
@@ -1282,7 +1335,7 @@ function PropertyCreate() {
               <button
               onClick={handleCreate}
               disabled={isSubmitting || !areRequiredFieldsFilled()}
-              className={`px-4 py-2 rounded-lg transition-colors ${isMobile ? 'w-full h-12' : ''} ${
+              className={`px-4 py-2 md:py-0 md:h-12 rounded-lg transition-colors ${isMobile ? 'w-full h-12' : ''} ${
                 isSubmitting || !areRequiredFieldsFilled()
                   ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
