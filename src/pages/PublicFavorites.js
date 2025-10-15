@@ -22,6 +22,7 @@ function PublicFavorites() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [showPdfLangDialog, setShowPdfLangDialog] = useState(false);
   const [pdfWithTitle, setPdfWithTitle] = useState(true);
+  const [profile, setProfile] = useState(null);
 
   const safeDisplay = (value) => {
     if (value === null || value === undefined) return "";
@@ -62,6 +63,31 @@ function PublicFavorites() {
   }, [currentUser]);
 
   // Load property docs
+  // Load current user profile for PDF footer
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        if (!currentUser) { setProfile(null); return; }
+        const snap = await getDoc(doc(db, 'users', currentUser.uid));
+        if (snap.exists()) {
+          const d = snap.data() || {};
+          setProfile({
+            name: d.displayName || d.name || '',
+            email: d.email || currentUser.email || '',
+            phone: d.phone || '',
+            phoneCode: d.phoneCode || '',
+            telegram: d.telegram || '',
+            avatarUrl: d.logoUrl || ''
+          });
+        } else {
+          setProfile(null);
+        }
+      } catch (_) {
+        setProfile(null);
+      }
+    }
+    loadProfile();
+  }, [currentUser]);
   useEffect(() => {
     async function loadProps() {
       try {
@@ -175,7 +201,7 @@ function PublicFavorites() {
       await downloadFavoritesPdf(properties.map(p => ({
         ...p,
         __omitTitle: !pdfWithTitle
-      })), lang || language);
+      })), lang || language, profile);
       showSuccess(t?.favorites?.pdfCreated || 'PDF создан');
     } catch (e) {
       console.error('exportFavoritesPdf error', e);
@@ -184,7 +210,7 @@ function PublicFavorites() {
       setIsGeneratingPdf(false);
       setShowPdfLangDialog(false);
     }
-  }, [properties, language, pdfWithTitle, t]);
+  }, [properties, language, pdfWithTitle, t, profile]);
 
   if (loading) {
     return (

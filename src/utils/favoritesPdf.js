@@ -180,6 +180,27 @@ function formatMonthYearValue(input, language) {
   }
 }
 
+function getAdditionalBadges(property, t) {
+  const badges = [];
+  try {
+    if (property.smartHome) badges.push(t.propertyDetail.smartHome);
+    if (property.jacuzzi) badges.push(t.propertyDetail.jacuzzi);
+    if (property.terrace) badges.push(t.propertyDetail.terrace);
+    if (property.rooftop) badges.push(t.propertyDetail.rooftop);
+    if (property.balcony) badges.push(t.propertyDetail.balcony);
+    if (property.bbq) badges.push(t.propertyDetail.bbq);
+    if (property.furniture) badges.push(t.propertyDetail.furniture);
+    if (property.washingMachine) badges.push(t.propertyDetail.washingMachine);
+    if (property.distanceToBeach) {
+      badges.push(`${t.propertyDetail.distanceToBeach} ${String(property.distanceToBeach)} ${t.propertyDetail.kmUnit}`);
+    }
+    if (property.distanceToCenter) {
+      badges.push(`${t.propertyDetail.distanceToCenter} ${String(property.distanceToCenter)} ${t.propertyDetail.kmUnit}`);
+    }
+  } catch (_) {}
+  return badges;
+}
+
 function getFields(property, language, t, omitTitle) {
   const fields = [];
   fields.push({ large: true, text: formatPriceUSD(property.price) });
@@ -203,7 +224,7 @@ function getFields(property, language, t, omitTitle) {
   return fields;
 }
 
-function TwoPageProperty({ property, lang, t, coverDataUrl, collageDataUrls }) {
+function TwoPageProperty({ property, lang, t, coverDataUrl, collageDataUrls, profileInfo }) {
   const omitTitle = property.__omitTitle === true;
   const title = omitTitle ? '' : (property.complexResolvedName || property.complex || property.name || property.title || '');
   const fields = getFields(property, lang, t, omitTitle);
@@ -268,13 +289,53 @@ function TwoPageProperty({ property, lang, t, coverDataUrl, collageDataUrls }) {
               );
             })}
           </View>
+          {(() => {
+            const badges = getAdditionalBadges(property, t);
+            if (!badges.length) return null;
+            return (
+              <View style={{ marginTop: 12, width: CONTENT_W, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap' }}>
+                {badges.map((label, idx) => (
+                  <View key={idx} style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    backgroundColor: '#222',
+                    borderRadius: 6,
+                    marginRight: 6,
+                    marginBottom: 6
+                  }}>
+                    <Text style={{ color: '#ddd', fontSize: 10, fontFamily: 'NotoSans' }}>{label}</Text>
+                  </View>
+                ))}
+              </View>
+            );
+          })()}
         </View>
+        {profileInfo && (
+          <View style={{ position: 'absolute', bottom: PAD, left: PAD, flexDirection: 'row', alignItems: 'center' }}>
+            {profileInfo.avatarDataUrl ? (
+              <Image src={profileInfo.avatarDataUrl} style={{ width: 48, height: 48, borderRadius: 24 }} />
+            ) : (
+              <View style={{ width: 48, height: 48, borderRadius: 24 }} />
+            )}
+            <View style={{ marginLeft: 16 }}>
+              {!!profileInfo.name && (<Text style={{ color: '#fff', fontSize: 15, fontFamily: 'NotoSans' }}>{profileInfo.name}</Text>)}
+              {!!profileInfo.email && (<Text style={{ color: '#bbb', fontSize: 13, fontFamily: 'NotoSans' }}>{profileInfo.email}</Text>)}
+            </View>
+            <View style={{ marginLeft: 24 }}>
+              {(() => {
+                const phoneText = [profileInfo.phoneCode, profileInfo.phone].filter(Boolean).join(' ');
+                return phoneText ? (<Text style={{ color: '#fff', fontSize: 15, fontFamily: 'NotoSans' }}>{phoneText}</Text>) : null;
+              })()}
+              {!!profileInfo.telegram && (<Text style={{ color: '#bbb', fontSize: 13, fontFamily: 'NotoSans' }}>{profileInfo.telegram}</Text>)}
+            </View>
+          </View>
+        )}
       </Page>
     </>
   );
 }
 
-export async function generateFavoritesPdf(properties, lang = 'ru') {
+export async function generateFavoritesPdf(properties, lang = 'ru', profile) {
   const valid = Array.isArray(properties) ? properties : [];
   if (!valid.length) throw new Error('No properties');
 
@@ -301,6 +362,29 @@ export async function generateFavoritesPdf(properties, lang = 'ru') {
     return { cover, rest };
   }));
 
+  // Предзагрузка аватара профиля один раз
+  let profileInfo = null;
+  try {
+    const avatarDataUrl = profile?.avatarUrl ? (await fetchImageAsDataUrl(profile.avatarUrl, 160, 0.8)) : null;
+    profileInfo = {
+      name: profile?.name || '',
+      email: profile?.email || '',
+      phone: profile?.phone || '',
+      phoneCode: profile?.phoneCode || '',
+      telegram: profile?.telegram || '',
+      avatarDataUrl: avatarDataUrl || null
+    };
+  } catch (_) {
+    profileInfo = {
+      name: profile?.name || '',
+      email: profile?.email || '',
+      phone: profile?.phone || '',
+      phoneCode: profile?.phoneCode || '',
+      telegram: profile?.telegram || '',
+      avatarDataUrl: null
+    };
+  }
+
   const doc = (
     <Document title="Favorites">
       {valid.map((p, idx) => (
@@ -311,6 +395,7 @@ export async function generateFavoritesPdf(properties, lang = 'ru') {
           t={t}
           coverDataUrl={preloads[idx].cover}
           collageDataUrls={preloads[idx].rest}
+          profileInfo={profileInfo}
           rawCoverUrl={(Array.isArray(p.images) && p.images[0]) || null}
           rawRestUrls={(Array.isArray(p.images) && p.images.slice(1, 10)) || []}
         />
@@ -325,8 +410,8 @@ export async function generateFavoritesPdf(properties, lang = 'ru') {
   return blob;
 }
 
-export async function downloadFavoritesPdf(properties, lang = 'ru') {
-  const blob = await generateFavoritesPdf(properties, lang);
+export async function downloadFavoritesPdf(properties, lang = 'ru', profile) {
+  const blob = await generateFavoritesPdf(properties, lang, profile);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const date = new Date().toISOString().slice(0, 10);
