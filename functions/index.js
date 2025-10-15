@@ -307,7 +307,7 @@ exports.notifyPropertyCreated = onDocumentCreated("properties/{propertyId}", asy
       return raw || '-';
     };
 
-    // Собираем сообщение
+    // Собираем сообщение для админов
     const lines = [];
     lines.push('🏠 Добавлен новый объект');
     lines.push('');
@@ -370,6 +370,37 @@ exports.notifyPropertyCreated = onDocumentCreated("properties/{propertyId}", asy
     }
 
     console.log('[notifyPropertyCreated] sent:', results.filter(r => r.sent).length, 'of', results.length);
+    // Если объект сразу на модерации — уведомляем владельца на его языке
+    try {
+      if (p.moderation === true && p.createdBy) {
+        const ownerSnap = await admin.firestore().collection('users').doc(String(p.createdBy)).get();
+        if (ownerSnap.exists) {
+          const owner = ownerSnap.data() || {};
+          if (owner.telegramConnected && owner.telegramChatId) {
+            const userLanguage = getUserLanguage(owner);
+            const t = getTelegramTranslations(userLanguage);
+            const formatUSD = (v) => { try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Number(v)); } catch { return String(v || '—'); } };
+
+            const msg = [];
+            msg.push(t.moderationChangeTitle);
+            msg.push('');
+            msg.push(`${t.propertyIdLabelSimple} ${propertyId}`);
+            if (p.name || p.title) msg.push(`${t.propertyNameLabelSimple} ${p.name || p.title}`);
+            if (p.type) msg.push(`${t.propertyTypeLabelSimple} ${p.type}`);
+            if (p.price !== undefined && p.price !== null && p.price !== '') msg.push(`${t.priceLabelSimple} ${formatUSD(p.price)}`);
+            if (p.district) msg.push(`${t.districtLabelSimple} ${p.district}`);
+            if (p.status) msg.push(`${t.constructionStatusLabelSimple} ${p.status}`);
+            msg.push('');
+            msg.push(`⚙️ ${t.moderationSent}`);
+
+            await sendTelegramMessage(owner.telegramChatId, msg.join('\n'));
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[notifyPropertyCreated] owner moderation notify failed', e);
+    }
+
     return { success: true, recipients: results.length };
   } catch (e) {
     console.error('[notifyPropertyCreated] error:', e);
@@ -1254,22 +1285,8 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
               telegramVerificationCode: admin.firestore.FieldValue.delete() // Удаляем код после использования
             });
             
-            const responseMessage = `${t.connectionSuccess}\n\n` +
-              `${t.connectionSuccessMessage.replace('{role}', userData.role || 'agent')}`;
-
-            // Создаем inline клавиатуру с Web App кнопкой
-            const inlineKeyboard = {
-              inline_keyboard: [[
-                {
-                  text: t.adminPanelButton,
-                  web_app: {
-                    url: 'https://it-agent.pro/'
-                  }
-                }
-              ]]
-            };
-            
-            await sendTelegramMessage(chatId, responseMessage, inlineKeyboard);
+            const responseMessage = `${t.connectionSuccess}\n\n${t.connectionSuccessMessage}`;
+            await sendTelegramMessage(chatId, responseMessage);
             
           } else {
             // Используем русский язык по умолчанию для неизвестных пользователей
@@ -1289,19 +1306,94 @@ exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
             `${t.manualConnectionInstruction}\n\n` +
             `${t.finalMessage}`;
 
-          // Создаем inline клавиатуру с Web App кнопкой
-          const inlineKeyboard = {
-            inline_keyboard: [[
-              {
-                text: t.adminPanelButton,
-                web_app: {
-                  url: 'https://it-agent.pro/'
-                }
+          await sendTelegramMessage(chatId, helpMessage);
+        }
+      }
+    }
+
+    // Обработка нажатий на inline-кнопки
+    if (update.callback_query) {
+      const cq = update.callback_query;
+      const chatId = cq.message?.chat?.id;
+      const fromId = cq.from?.id;
+      const data = cq.data || '';
+
+      // boost_rating:<propertyId>
+      if (data.startsWith('boost_rating:')) {
+        const propertyId = data.split(':')[1];
+        try {
+          // Определяем пользователя по chatId
+          const usersSnapshot = await admin.firestore()
+            .collection('users')
+            .where('telegramChatId', '==', String(chatId))
+            .limit(1)
+            .get();
+          let userId = null; let userData = null;
+          if (!usersSnapshot.empty) {
+            const doc = usersSnapshot.docs[0];
+            userId = doc.id; userData = doc.data() || {};
+          }
+
+          // Загружаем объект
+          let propertyData = null;
+          if (propertyId) {
+            const propSnap = await admin.firestore().collection('properties').doc(String(propertyId)).get();
+            if (propSnap.exists) propertyData = propSnap.data() || null;
+          }
+
+          // Ответ пользователю (можно локализовать кратко)
+          await sendTelegramMessage(chatId, '✅ Запрос на повышение рейтинга отправлен администратору.');
+
+          // Отправляем администраторам
+          const adminsSnap = await admin.firestore()
+            .collection('users')
+            .where('role', '==', 'admin')
+            .where('telegramConnected', '==', true)
+            .get();
+          if (!adminsSnap.empty) {
+            const lines = [];
+            lines.push('📈 Запрос на повышение рейтинга объекта');
+            lines.push('');
+            // Пользователь
+            lines.push('👤 Пользователь:');
+            if (userId) lines.push(`— UID: ${userId}`);
+            if (userData) {
+              lines.push(`— Имя: ${userData.name || userData.displayName || '-'}`);
+              lines.push(`— Email: ${userData.email || '-'}`);
+              const phoneRaw = (userData.phone || userData.phoneNumber || '').toString().replace(/[^\d]/g, '');
+              const phoneDisp = userData.phoneCode && phoneRaw ? `${userData.phoneCode} ${phoneRaw}` : (phoneRaw || '-')
+              lines.push(`— Телефон: ${phoneDisp}`);
+              const tgValue = userData.telegram || userData.telegramChatId || '-';
+              lines.push(`— Telegram: ${tgValue}`);
+              if (userData.status) lines.push(`— Статус: ${userData.status}`);
+              if (userData.role) lines.push(`— Роль: ${userData.role}`);
+            }
+            lines.push('');
+            // Объект
+            lines.push('🏠 Объект:');
+            lines.push(`— ID: ${propertyId || '-'}`);
+            if (propertyData) {
+              if (propertyData.name || propertyData.title) lines.push(`— Название: ${propertyData.name || propertyData.title}`);
+              if (propertyData.type) lines.push(`— Тип: ${propertyData.type}`);
+              if (propertyData.price) {
+                try { lines.push(`— Цена: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Number(propertyData.price))}`); } catch {}
               }
-            ]]
-          };
-          
-          await sendTelegramMessage(chatId, helpMessage, inlineKeyboard);
+              if (propertyData.district) lines.push(`— Район: ${propertyData.district}`);
+              if (propertyData.status) lines.push(`— Статус строительства: ${propertyData.status}`);
+              if (propertyData.reliabilityRating !== undefined) lines.push(`— Рейтинг надежности: ${propertyData.reliabilityRating}`);
+            }
+
+            const adminMessage = lines.join('\n');
+            const tasks = [];
+            adminsSnap.forEach(doc => {
+              const adminChatId = doc.data()?.telegramChatId;
+              if (!adminChatId) return;
+              tasks.push(sendTelegramMessage(adminChatId, adminMessage));
+            });
+            await Promise.allSettled(tasks);
+          }
+        } catch (e) {
+          console.error('[telegramWebhook] boost_rating handling failed', e);
         }
       }
     }
@@ -2193,4 +2285,88 @@ exports.translateTextHttp = functions.https.onRequest((req, res) => {
       return res.status(500).json({ error: 'Ошибка при переводе текста' });
     }
   });
+});
+
+// Уведомление владельца объекта при смене статуса модерации
+exports.notifyPropertyModerationChange = onDocumentUpdated("properties/{propertyId}", async (event) => {
+  try {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+    const propertyId = event.params.propertyId;
+
+    // Реагируем только если изменилось поле moderation
+    const beforeMod = before?.moderation;
+    const afterMod = after?.moderation;
+    if (beforeMod === afterMod) {
+      return { success: true, skipped: true };
+    }
+
+    // Определяем владельца
+    const ownerId = after?.createdBy || before?.createdBy || null;
+    if (!ownerId) {
+      console.warn('[notifyPropertyModerationChange] no owner for property', propertyId);
+      return { success: true, skipped: true };
+    }
+
+    // Загружаем пользователя и проверяем связь с Telegram
+    const userSnap = await admin.firestore().collection('users').doc(String(ownerId)).get();
+    if (!userSnap.exists) {
+      console.warn('[notifyPropertyModerationChange] owner not found', ownerId);
+      return { success: true, skipped: true };
+    }
+    const u = userSnap.data() || {};
+    if (!u.telegramConnected || !u.telegramChatId) {
+      console.log('[notifyPropertyModerationChange] owner has no telegram connected', ownerId);
+      return { success: true, skipped: true };
+    }
+
+    // Строим сообщение только для владельца с учетом языка пользователя
+    const userLanguage = getUserLanguage(u);
+    const t = getTelegramTranslations(userLanguage);
+    const formatUSD = (v) => {
+      try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Number(v)); } catch { return String(v || '—'); }
+    };
+    const statusText = afterMod ? t.moderationSent : t.moderationApproved;
+    const lines = [];
+    lines.push(t.moderationChangeTitle);
+    lines.push('');
+    lines.push(`${t.propertyIdLabelSimple} ${propertyId}`);
+    if (after?.name || after?.title) lines.push(`${t.propertyNameLabelSimple} ${after.name || after.title}`);
+    if (after?.type) lines.push(`${t.propertyTypeLabelSimple} ${after.type}`);
+    if (after?.price !== undefined && after?.price !== null && after?.price !== '') lines.push(`${t.priceLabelSimple} ${formatUSD(after.price)}`);
+    if (after?.district) lines.push(`${t.districtLabelSimple} ${after.district}`);
+    if (after?.status) lines.push(`${t.constructionStatusLabelSimple} ${after.status}`);
+    lines.push('');
+    lines.push(`⚙️ ${statusText}`);
+
+    // При одобрении добавляем рейтинг и CTA
+    let replyMarkup = null;
+    if (afterMod === false) {
+      // Рейтинг звёздами: ожидаем число 0..5 (или другое) в after.reliabilityRating
+      const rawRating = Number(after?.reliabilityRating || 0);
+      const bounded = Math.max(0, Math.min(5, Math.round(rawRating)));
+      const stars = bounded ? ('★'.repeat(bounded) + '☆'.repeat(5 - bounded)) : '—';
+      lines.push(`${t.reliabilityRatingLabel} ${stars}`);
+      lines.push('');
+      lines.push(t.ratingCtaText);
+
+      // Добавляем кнопку c callback_data
+      replyMarkup = {
+        inline_keyboard: [[
+          { text: t.ratingCtaButton, callback_data: `boost_rating:${propertyId}` }
+        ]]
+      };
+    }
+
+    const message = lines.join('\n');
+
+    // Отправляем владельцу
+    await sendTelegramMessage(u.telegramChatId, message, replyMarkup);
+
+    console.log('[notifyPropertyModerationChange] sent to owner', ownerId, 'property', propertyId, 'moderation:', afterMod);
+    return { success: true };
+  } catch (e) {
+    console.error('[notifyPropertyModerationChange] error:', e);
+    return { success: false, error: e?.message || String(e) };
+  }
 });

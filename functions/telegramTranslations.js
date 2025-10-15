@@ -17,7 +17,7 @@ const telegramTranslations = {
     
     // Сообщения подключения
     connectionSuccess: '✅ Подключение успешно завершено!',
-    connectionSuccessMessage: 'Теперь вы будете получать уведомления о новых фиксациях клиентов в соответствии с вашей ролью: <b>{role}</b>\n\nВы можете закрыть это окно и вернуться в админ-панель.',
+    connectionSuccessMessage: 'Теперь вы будете получать системные уведомления о ваших объектах и о заявках клиентов в соответствии с вашей ролью:',
     
     // Сообщения об ошибках
     verificationCodeNotFound: '❌ Код верификации не найден или уже использован.\n\nПолучите новый код в админ-панели в разделе "Настройки".',
@@ -29,6 +29,22 @@ const telegramTranslations = {
     manualConnection: '📱 <b>Ручное подключение:</b>',
     manualConnectionInstruction: 'Отправьте команду: <code>/start ВАШ_КОД_ВЕРИФИКАЦИИ</code>',
     finalMessage: 'После подключения вы будете получать уведомления о новых фиксациях клиентов в соответствии с вашей ролью.'
+  ,
+    // Модерация объектов (локализация)
+    moderationChangeTitle: '🛡️ Статус модерации вашего объекта изменен',
+    moderationSent: 'Объект отправлен на модерацию',
+    moderationApproved: 'Объект одобрен модерацией и опубликован.',
+    propertyIdLabelSimple: '🆔 ID:',
+    propertyNameLabelSimple: '📌 Название:',
+    propertyTypeLabelSimple: '🏷️ Тип:',
+    priceLabelSimple: '💵 Цена:',
+    districtLabelSimple: '📍 Район:',
+    constructionStatusLabelSimple: '📊 Статус строительства:'
+  ,
+    // Рейтинг и CTA
+    reliabilityRatingLabel: '⭐ Рейтинг надежности:',
+    ratingCtaText: 'Узнайте как повысить рейтинг вашего объекта',
+    ratingCtaButton: 'Повысить рейтинг'
   },
   
   en: {
@@ -49,7 +65,7 @@ const telegramTranslations = {
     
     // Connection messages
     connectionSuccess: '✅ Connection successfully completed!',
-    connectionSuccessMessage: 'Now you will receive notifications about new client fixations according to your role: <b>{role}</b>\n\nYou can close this window and return to the admin panel.',
+    connectionSuccessMessage: 'You will now receive system notifications about your properties and client requests according to your role:',
     
     // Error messages
     verificationCodeNotFound: '❌ Verification code not found or already used.\n\nGet a new code in the admin panel in the "Settings" section.',
@@ -61,6 +77,22 @@ const telegramTranslations = {
     manualConnection: '📱 <b>Manual connection:</b>',
     manualConnectionInstruction: 'Send command: <code>/start YOUR_VERIFICATION_CODE</code>',
     finalMessage: 'After connection you will receive notifications about new client fixations according to your role.'
+  ,
+    // Property moderation (localization)
+    moderationChangeTitle: '🛡️ Moderation status of your property has changed',
+    moderationSent: 'The property has been sent for moderation',
+    moderationApproved: 'The property has been approved by moderation and published.',
+    propertyIdLabelSimple: '🆔 ID:',
+    propertyNameLabelSimple: '📌 Name:',
+    propertyTypeLabelSimple: '🏷️ Type:',
+    priceLabelSimple: '💵 Price:',
+    districtLabelSimple: '📍 District:',
+    constructionStatusLabelSimple: '📊 Construction status:'
+  ,
+    // Rating and CTA
+    reliabilityRatingLabel: '⭐ Reliability rating:',
+    ratingCtaText: 'Learn how to improve your property rating',
+    ratingCtaButton: 'Boost rating'
   },
   
   id: {
@@ -81,7 +113,7 @@ const telegramTranslations = {
     
     // Pesan koneksi
     connectionSuccess: '✅ Koneksi berhasil diselesaikan!',
-    connectionSuccessMessage: 'Sekarang Anda akan menerima notifikasi tentang fiksasi klien baru sesuai dengan peran Anda: <b>{role}</b>\n\nAnda dapat menutup jendela ini dan kembali ke panel admin.',
+    connectionSuccessMessage: 'Sekarang Anda akan menerima notifikasi sistem tentang properti Anda dan permintaan klien sesuai dengan peran Anda:',
     
     // Pesan kesalahan
     verificationCodeNotFound: '❌ Kode verifikasi tidak ditemukan atau sudah digunakan.\n\nDapatkan kode baru di panel admin di bagian "Pengaturan".',
@@ -93,6 +125,22 @@ const telegramTranslations = {
     manualConnection: '📱 <b>Koneksi manual:</b>',
     manualConnectionInstruction: 'Kirim perintah: <code>/start KODE_VERIFIKASI_ANDA</code>',
     finalMessage: 'Setelah koneksi Anda akan menerima notifikasi tentang fiksasi klien baru sesuai dengan peran Anda.'
+  ,
+    // Moderasi properti (lokalisasi)
+    moderationChangeTitle: '🛡️ Status moderasi properti Anda telah berubah',
+    moderationSent: 'Properti telah dikirim untuk moderasi',
+    moderationApproved: 'Properti disetujui moderasi dan dipublikasikan.',
+    propertyIdLabelSimple: '🆔 ID:',
+    propertyNameLabelSimple: '📌 Nama:',
+    propertyTypeLabelSimple: '🏷️ Tipe:',
+    priceLabelSimple: '💵 Harga:',
+    districtLabelSimple: '📍 Distrik:',
+    constructionStatusLabelSimple: '📊 Status konstruksi:'
+  ,
+    // Peringkat dan CTA
+    reliabilityRatingLabel: '⭐ Peringkat keandalan:',
+    ratingCtaText: 'Pelajari cara meningkatkan peringkat properti Anda',
+    ratingCtaButton: 'Tingkatkan peringkat'
   }
 };
 
