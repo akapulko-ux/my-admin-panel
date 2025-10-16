@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { db } from "../firebaseConfig";
@@ -52,6 +52,19 @@ function PropertyCreate() {
   const navigate = useNavigate();
   const location = useLocation();
   
+  const documentsSectionRef = useRef(null);
+  const handleDocumentsToggle = useCallback((e) => {
+    const el = e.currentTarget;
+    if (el && el.open) {
+      setTimeout(() => {
+        try {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (_) {
+          el.scrollIntoView();
+        }
+      }, 0);
+    }
+  }, []);
 
   
   // Состояния для создания объекта
@@ -1692,17 +1705,330 @@ function PropertyCreate() {
         </div>
                 </div>
 
-        {/* Описание объекта */}
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.description || 'Описание объекта'}</h3>
-          <textarea
-            value={property.description || ''}
-            onChange={(e) => handleValueChange('description', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-600 resize-none"
-            rows="4"
-                          placeholder={t.propertyDetail.descriptionPlaceholder}
-          />
+      {/* Описание объекта */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.propertyDetail.description || 'Описание объекта'}</h3>
+        <textarea
+          value={property.description || ''}
+          onChange={(e) => handleValueChange('description', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-600 resize-none"
+          rows="4"
+          placeholder={t.propertyDetail.descriptionPlaceholder}
+        />
+      </div>
+
+      {/* Секция Документы (сворачиваемая) */}
+      <details className="mt-8 mb-12" ref={documentsSectionRef} onToggle={handleDocumentsToggle}>
+        <summary className="list-none cursor-pointer select-none flex items-center justify-between p-0">
+          <h3 className="text-lg font-semibold text-gray-800">{t.propertyDetail.documentsSection}</h3>
+          <span className="text-gray-500">▼</span>
+        </summary>
+        <div className="space-y-3 mt-3">
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.legalCompanyName}</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('legalCompanyName', safeDisplay(property.legalCompanyName), 'text')}
+            </div>
           </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.taxNumber}</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('npwp', safeDisplay(property.npwp), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.landUsePermit}</span>
+            <div className="flex-1 ml-4 flex flex-wrap items-center gap-2">
+              <div className="min-w-0 overflow-hidden truncate whitespace-nowrap">
+                {renderEditableValue('pkkpr', safeDisplay(property.pkkpr), 'text')}
+              </div>
+              <div className="flex items-center gap-2">
+                {property.pkkprFileURL ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.pkkprFileURL, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canCreate() && (
+                      <button 
+                        onClick={() => handleFileUpdate('pkkprFileURL')}
+                        disabled={uploading.pkkprFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.pkkprFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.pkkprFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  canCreate() && (
+                    <button 
+                      onClick={() => handleFileUpload('pkkprFileURL')}
+                      disabled={uploading.pkkprFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.pkkprFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.pkkprFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.landRightsCertificate}</span>
+            <div className="flex-1 ml-4 flex flex-wrap items-center gap-2">
+              <div className="min-w-0 overflow-hidden truncate whitespace-nowrap">
+                {renderEditableValue('shgb', safeDisplay(property.shgb), 'text')}
+              </div>
+              <div className="flex items-center gap-2">
+                {property.shgbFileURL ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.shgbFileURL, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canCreate() && (
+                      <button 
+                        onClick={() => handleFileUpdate('shgbFileURL')}
+                        disabled={uploading.shgbFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.shgbFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.shgbFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  canCreate() && (
+                    <button 
+                      onClick={() => handleFileUpload('shgbFileURL')}
+                      disabled={uploading.shgbFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.shgbFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.shgbFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.landLeaseEndDate}</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('landLeaseEndDate', safeDisplay(property.landLeaseEndDate), 'date')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.buildingPermit}</span>
+            <div className="flex-1 ml-4 flex flex-wrap items-center gap-2">
+              <div className="min-w-0 overflow-hidden truncate whitespace-nowrap">
+                {renderEditableValue('pbg', safeDisplay(property.pbg), 'text')}
+              </div>
+              <div className="flex items-center gap-2">
+                {property.pbgFileURL ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.pbgFileURL, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canCreate() && (
+                      <button 
+                        onClick={() => handleFileUpdate('pbgFileURL')}
+                        disabled={uploading.pbgFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.pbgFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.pbgFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  canCreate() && (
+                    <button 
+                      onClick={() => handleFileUpload('pbgFileURL')}
+                      disabled={uploading.pbgFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.pbgFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.pbgFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.buildingPermitIMB}</span>
+            <div className="flex-1 ml-4">
+              {renderEditableValue('imb', safeDisplay(property.imb), 'text')}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.buildingReadinessCertificate}</span>
+            <div className="flex-1 ml-4 flex flex-wrap items-center gap-2">
+              <div className="min-w-0 overflow-hidden truncate whitespace-nowrap">
+                {renderEditableValue('slf', safeDisplay(property.slf), 'text')}
+              </div>
+              <div className="flex items-center gap-2">
+                {property.slfFileURL ? (
+                  <>
+                    <button 
+                      onClick={() => window.open(property.slfFileURL, '_blank')}
+                      className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {t.propertyDetail.viewButton}
+                    </button>
+                    {canCreate() && (
+                      <button 
+                        onClick={() => handleFileUpdate('slfFileURL')}
+                        disabled={uploading.slfFileURL}
+                        className={`px-3 py-1 text-xs rounded ${
+                          uploading.slfFileURL 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                      >
+                        {uploading.slfFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  canCreate() && (
+                    <button 
+                      onClick={() => handleFileUpload('slfFileURL')}
+                      disabled={uploading.slfFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.slfFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.slfFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.dueDiligence}</span>
+            <div className="flex gap-2">
+              {property.dueDiligenceFileURL ? (
+                <>
+                  <button 
+                    onClick={() => window.open(property.dueDiligenceFileURL, '_blank')}
+                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                  >
+                    {t.propertyDetail.viewButton}
+                  </button>
+                  {canCreate() && (
+                    <button 
+                      onClick={() => handleFileUpdate('dueDiligenceFileURL')}
+                      disabled={uploading.dueDiligenceFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.dueDiligenceFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.dueDiligenceFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
+                  {canCreate() && (
+                    <button 
+                      onClick={() => handleFileUpload('dueDiligenceFileURL')}
+                      disabled={uploading.dueDiligenceFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.dueDiligenceFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.dueDiligenceFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">{t.propertyDetail.unbrandedPresentation}</span>
+            <div className="flex gap-2">
+              {property.unbrandedPresentationFileURL ? (
+                <>
+                  <button 
+                    onClick={() => window.open(property.unbrandedPresentationFileURL, '_blank')}
+                    className={`px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ${isMobile ? 'min-h-[40px]' : ''}`}
+                  >
+                    {t.propertyDetail.viewButton}
+                  </button>
+                  {canCreate() && (
+                    <button 
+                      onClick={() => handleFileUpdate('unbrandedPresentationFileURL')}
+                      disabled={uploading.unbrandedPresentationFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.unbrandedPresentationFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.unbrandedPresentationFileURL ? t.propertyDetail.uploading : t.propertyDetail.updateButton}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">{t.propertyDetail.fileNotUploaded}</span>
+                  {canCreate() && (
+                    <button 
+                      onClick={() => handleFileUpload('unbrandedPresentationFileURL')}
+                      disabled={uploading.unbrandedPresentationFileURL}
+                      className={`px-3 py-1 text-xs rounded ${
+                        uploading.unbrandedPresentationFileURL 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white ${isMobile ? 'min-h-[40px]' : ''}`}
+                    >
+                      {uploading.unbrandedPresentationFileURL ? t.propertyDetail.uploading : t.propertyDetail.uploadButton}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          
+        </div>
+      </details>
           
     </div>
   );

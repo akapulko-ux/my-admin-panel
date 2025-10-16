@@ -435,69 +435,6 @@ function PublicAccount() {
           </div>
         </div>
 
-        {/* Персональная ссылка — секция видна всем; управление доступностью внутри */}
-        <details className="border rounded-md bg-white">
-          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
-            <span className="text-xl font-semibold">{t.accountPage.premiumLinkTitle}</span>
-            <span className="text-gray-500">▼</span>
-          </summary>
-          <div className="px-4 pb-4">
-            <p className="text-sm text-gray-600 mb-3">{t.accountPage.premiumLinkDescription}</p>
-            {(() => {
-            const normalizedRole = String(role || '').toLowerCase();
-            const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент' || normalizedRole === 'premium_agent' || normalizedRole === 'премиум-агент';
-            const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer' || normalizedRole === 'премиум-застройщик';
-            if (isPremiumAgent || isPremiumDeveloper) {
-              return (
-                <>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-700 whitespace-nowrap">{t.accountPage.premiumLinkLabel}:</label>
-                    <input value={shareLink} readOnly className="flex-1 border rounded px-2 py-1 text-gray-900 bg-gray-50" />
-                    <Button onClick={handleCopy}>{t.accountPage.copyButton}</Button>
-                  </div>
-                  {copyMsg && <div className="text-green-600 text-sm mt-2">{copyMsg}</div>}
-                </>
-              );
-            }
-            return (
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm text-gray-700">{t.accountPage.premiumOnlyMessage}</div>
-                <Button onClick={() => setIsSubscriptionOpen(true)}>{t.accountPage.subscribeButton}</Button>
-              </div>
-            );
-            })()}
-          </div>
-        </details>
-
-        {/* Премиум подписка */}
-        <details className="border rounded-md bg-white">
-          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
-            <span className="text-xl font-semibold">{t.subscriptionModal?.title}</span>
-            <span className="text-gray-500">▼</span>
-          </summary>
-          <div className="px-4 pb-4 space-y-3">
-            <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
-            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-              {(t.subscriptionModal?.features || []).map((f, i) => (
-                <li key={i}>{f}</li>
-              ))}
-            </ul>
-            <Button className="w-full" onClick={async () => {
-              try {
-                if (!currentUser) { return; }
-                setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
-                setIsPaymentModalOpen(true);
-              } catch (e) {
-                console.error('open premium subscription link error', e);
-              } finally {
-                setIsSubscriptionOpen(false);
-              }
-            }}>
-              {t.subscriptionModal?.subscribeButton}
-            </Button>
-          </div>
-        </details>
-
         {/* Профиль */}
         <details className="border rounded-md bg-white">
           <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
@@ -737,33 +674,42 @@ function PublicAccount() {
           </div>
         </details>
 
-        {/* Модальное окно подписки как в публичной галерее */}
-        <Dialog open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
-          <DialogContent>
+        {/* Диалог подключения телеграм */}
+        <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+              <DialogTitle>{ts.telegram.dialogTitle}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
-              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                {(t.subscriptionModal?.features || []).map((f, i) => (
-                  <li key={i}>{f}</li>
-                ))}
-              </ul>
-              <Button className="w-full" onClick={async () => {
-                try {
-                  if (!currentUser) { return; }
-                  setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
-                  setIsPaymentModalOpen(true);
-                } catch (e) {
-                  console.error('open premium subscription link error', e);
-                } finally {
-                  setIsSubscriptionOpen(false);
-                }
-              }}>
-                {t.subscriptionModal?.subscribeButton}
-              </Button>
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-md mb-2">
+                  <Bot className="h-4 w-4 text-blue-600" />
+                  <h3 className="font-semibold text-lg">@{BOT_USERNAME}</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">{ts.telegram.autoConnectInstructions}</p>
+                <div className="p-3 bg-yellow-50 rounded-lg mb-4">
+                  <p className="text-sm font-medium text-yellow-800">
+                    🔑 {ts.telegram.codeLabel} <code className="bg-yellow-200 px-2 py-1 rounded">{verificationCode}</code>
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">{ts.telegram.codeInstructions}</p>
+                </div>
+              </div>
             </div>
+            <DialogFooter className="flex flex-col gap-2">
+              <Button onClick={connectTelegramAutomatically} disabled={isLoading} className="w-full">
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    {ts.telegram.waitingConnection}
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    {ts.telegram.connectViaTelegram}
+                  </div>
+                )}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -809,44 +755,103 @@ function PublicAccount() {
           </div>
         </details>
 
-        {/* Диалог подключения телеграм */}
-        <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{ts.telegram.dialogTitle}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-md mb-2">
-                  <Bot className="h-4 w-4 text-blue-600" />
-                  <h3 className="font-semibold text-lg">@{BOT_USERNAME}</h3>
-                </div>
-                <p className="text-sm text-gray-600 mb-4">{ts.telegram.autoConnectInstructions}</p>
-                <div className="p-3 bg-yellow-50 rounded-lg mb-4">
-                  <p className="text-sm font-medium text-yellow-800">
-                    🔑 {ts.telegram.codeLabel} <code className="bg-yellow-200 px-2 py-1 rounded">{verificationCode}</code>
-                  </p>
-                  <p className="text-xs text-yellow-700 mt-1">{ts.telegram.codeInstructions}</p>
-                </div>
+        {/* Персональная ссылка — секция видна всем; управление доступностью внутри */}
+        <details className="border rounded-md bg-white">
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="text-xl font-semibold">{t.accountPage.premiumLinkTitle}</span>
+            <span className="text-gray-500">▼</span>
+          </summary>
+          <div className="px-4 pb-4">
+            <p className="text-sm text-gray-600 mb-3">{t.accountPage.premiumLinkDescription}</p>
+            {(() => {
+            const normalizedRole = String(role || '').toLowerCase();
+            const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент' || normalizedRole === 'premium_agent' || normalizedRole === 'премиум-агент';
+            const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer' || normalizedRole === 'премиум-застройщик';
+            if (isPremiumAgent || isPremiumDeveloper) {
+              return (
+                <>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-700 whitespace-nowrap">{t.accountPage.premiumLinkLabel}:</label>
+                    <input value={shareLink} readOnly className="flex-1 border rounded px-2 py-1 text-gray-900 bg-gray-50" />
+                    <Button onClick={handleCopy}>{t.accountPage.copyButton}</Button>
+                  </div>
+                  {copyMsg && <div className="text-green-600 text-sm mt-2">{copyMsg}</div>}
+                </>
+              );
+            }
+            return (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-gray-700">{t.accountPage.premiumOnlyMessage}</div>
+                <Button onClick={() => setIsSubscriptionOpen(true)}>{t.accountPage.subscribeButton}</Button>
               </div>
-            </div>
-            <DialogFooter className="flex flex-col gap-2">
-              <Button onClick={connectTelegramAutomatically} disabled={isLoading} className="w-full">
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    {ts.telegram.waitingConnection}
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    {ts.telegram.connectViaTelegram}
-                  </div>
-                )}
+            );
+            })()}
+          </div>
+        </details>
+
+        {/* Премиум подписка */}
+        <details className="border rounded-md bg-white">
+          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
+            <span className="text-xl font-semibold">{t.subscriptionModal?.title}</span>
+            <span className="text-gray-500">▼</span>
+          </summary>
+          <div className="px-4 pb-4 space-y-3">
+            <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
+            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+              {(t.subscriptionModal?.features || []).map((f, i) => (
+                <li key={i}>{f}</li>
+              ))}
+            </ul>
+            <Button className="w-full" onClick={async () => {
+              try {
+                if (!currentUser) { return; }
+                setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                setIsPaymentModalOpen(true);
+              } catch (e) {
+                console.error('open premium subscription link error', e);
+              } finally {
+                setIsSubscriptionOpen(false);
+              }
+            }}>
+              {t.subscriptionModal?.subscribeButton}
+            </Button>
+          </div>
+        </details>
+
+
+        {/* Модальное окно подписки как в публичной галерее */}
+        <Dialog open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
+              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                {(t.subscriptionModal?.features || []).map((f, i) => (
+                  <li key={i}>{f}</li>
+                ))}
+              </ul>
+              <Button className="w-full" onClick={async () => {
+                try {
+                  if (!currentUser) { return; }
+                  setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                  setIsPaymentModalOpen(true);
+                } catch (e) {
+                  console.error('open premium subscription link error', e);
+                } finally {
+                  setIsSubscriptionOpen(false);
+                }
+              }}>
+                {t.subscriptionModal?.subscribeButton}
               </Button>
-            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
+
+        
+
+        
         {/* Модальное окно оплаты (iframe) */}
         <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
           <DialogContent className="max-w-2xl">

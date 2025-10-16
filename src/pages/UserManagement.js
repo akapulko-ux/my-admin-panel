@@ -22,7 +22,8 @@ import {
   AlertCircle,
   Loader2,
   BarChart3,
-  Lock
+  Lock,
+  Bot
 } from 'lucide-react';
 
 // Определение ролей и их отображения
@@ -459,8 +460,14 @@ const UserManagement = () => {
                       )}
                     </div>
                     <p className="text-sm font-medium text-gray-500">Имя пользователя</p>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-gray-900 flex items-center gap-2 flex-wrap">
                       {user.displayName || 'Не указано'}
+                      {user.telegramConnected && user.telegramChatId ? (
+                        <Badge className="bg-green-100 text-green-800 border border-green-200 flex items-center gap-1">
+                          <Bot className="w-3 h-3" />
+                          Подключен к боту
+                        </Badge>
+                      ) : null}
                     </p>
                     <p className="text-xs text-gray-500">
                       Роль изменена: {formatDate(user.lastRoleUpdate)}

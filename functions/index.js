@@ -936,11 +936,11 @@ exports.notifyNewClientLead = onDocumentCreated("clientLeads/{leadId}", async (e
       } catch {}
     }
     lines.push('');
-    lines.push('📱 Перейдите в админ‑панель для обработки заявки:');
+    lines.push('📱 Перейдите в личный кабинет для обработки заявки:');
     const message = lines.join('\n');
 
     const replyMarkup = {
-      inline_keyboard: [[{ text: 'Открыть админ‑панель', url: 'https://it-agent.pro/' }]]
+      inline_keyboard: [[{ text: 'Открыть IT Agent', url: 'https://it-agent.pro/' }]]
     };
 
     // Отправляем всем получателям
