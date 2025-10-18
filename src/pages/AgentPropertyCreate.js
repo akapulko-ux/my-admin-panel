@@ -367,6 +367,30 @@ function PropertyCreate() {
         processedValues.agentCommission = val ? val + '%' : '';
       }
 
+      // Конвертируем coordinates -> latitude и longitude
+      if (processedValues.coordinates) {
+        const parts = String(processedValues.coordinates)
+          .split(/[; ,]+/)
+          .filter(Boolean);
+        if (parts.length >= 2) {
+          const lat = parseFloat(parts[0]);
+          const lon = parseFloat(parts[1]);
+          if (!isNaN(lat) && !isNaN(lon)) {
+            processedValues.latitude = lat;
+            processedValues.longitude = lon;
+            delete processedValues.coordinates;
+          } else {
+            showError('Неверный формат координат');
+            setIsSubmitting(false);
+            return;
+          }
+        } else {
+          showError('Неверный формат координат');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // Добавляем метаданные
       processedValues.createdAt = Timestamp.now();
       processedValues.updatedAt = Timestamp.now();

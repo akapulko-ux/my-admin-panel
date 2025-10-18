@@ -370,10 +370,27 @@ function PublicAccount() {
         // Мои заявки (таблица clientLeads, где propertyId в моих объектах) и заявки, привязанные к моему agentId из общей ссылки
         const leadsSnap = await getDocs(collection(db, 'clientLeads'));
         const myPropIds = new Set(myProps.map(p => p.id));
-        const leads = leadsSnap.docs
+        const leadsData = leadsSnap.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .filter(l => (l.propertyId && myPropIds.has(l.propertyId)) || l.agentId === currentUser.uid);
-        setMyLeads(leads);
+        
+        // Загружаем данные объектов для заявок
+        const leadsWithProperties = await Promise.all(
+          leadsData.map(async (lead) => {
+            if (!lead.propertyId) return { ...lead, property: null };
+            try {
+              const propDoc = await getDoc(doc(db, 'properties', lead.propertyId));
+              return {
+                ...lead,
+                property: propDoc.exists() ? { id: propDoc.id, ...propDoc.data() } : null
+              };
+            } catch (e) {
+              console.error('Error loading property for lead:', e);
+              return { ...lead, property: null };
+            }
+          })
+        );
+        setMyLeads(leadsWithProperties);
       } finally {
         setLoading(false);
       }
@@ -417,17 +434,6 @@ function PublicAccount() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-gray-900">{t.accountPage.title}</h1>
-            {(() => {
-              const normalizedRole = String(role || '').toLowerCase();
-              const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент';
-              const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer';
-              if (!isPremiumAgent && !isPremiumDeveloper) return null;
-              return (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-                  {isPremiumDeveloper ? t.accountPage.premiumDeveloperBadge : t.accountPage.premiumBadge}
-                </span>
-              );
-            })()}
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
@@ -436,14 +442,27 @@ function PublicAccount() {
         </div>
 
         {/* Профиль */}
-        <details className="border rounded-md bg-white">
+        <details className="border rounded-md bg-white" open>
           <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
             <span className="text-xl font-semibold">{t.accountPage.profileTitle}</span>
-            <span className="text-gray-500">▼</span>
+            <span className="flex items-center gap-2">
+              {(() => {
+                const normalizedRole = String(role || '').toLowerCase();
+                const isPremiumAgent = normalizedRole === 'premium agent' || normalizedRole === 'премиум агент';
+                const isPremiumDeveloper = normalizedRole === 'премиум застройщик' || normalizedRole === 'premium developer' || normalizedRole === 'premium_developer';
+                if (!isPremiumAgent && !isPremiumDeveloper) return null;
+                return (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                    {isPremiumDeveloper ? t.accountPage.premiumDeveloperBadge : t.accountPage.premiumBadge}
+                  </span>
+                );
+              })()}
+              <span className="text-gray-500">▼</span>
+            </span>
           </summary>
           <div className="px-4 pb-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div className="flex flex-col gap-2 sm:col-span-2">
-              <label className="text-sm text-gray-600">{t.accountPage.profile?.photo || 'Фото профиля'}</label>
+              <label className="text-sm text-gray-600">{t.accountPage.profile?.photo}</label>
               <div className="flex items-center gap-3">
                 <div className="relative inline-block">
                   <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border">
@@ -567,7 +586,7 @@ function PublicAccount() {
                     onClick={() => avatarInputRef.current && avatarInputRef.current.click()}
                     disabled={uploadingAvatar}
                   >
-                    {uploadingAvatar ? (t.common?.uploading || 'Загрузка...') : (t.accountPage.profile?.uploadPhoto || 'Загрузить фото')}
+                    {uploadingAvatar ? (t.common?.uploading || 'Загрузка...') : (t.accountPage.profile?.uploadPhoto)}
                   </Button>
                   {/* Кнопка очистки заменена на крестик на миниатюре */}
                 </div>
@@ -617,7 +636,7 @@ function PublicAccount() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-600">Телефон / Whatsapp</label>
+              <label className="text-sm text-gray-600">{t.accountPage.profile.phone} / Whatsapp</label>
               <div className="flex gap-2">
                 <Select value={profile.phoneCode || '+62'} onValueChange={(v) => setProfile(p => ({ ...p, phoneCode: v }))}>
                   <SelectTrigger className="w-32">
@@ -672,6 +691,46 @@ function PublicAccount() {
             }}>{t.accountPage.profile.save}</Button>
             {saveMsg && <div className="text-sm text-gray-600">{saveMsg}</div>}
           </div>
+          {/* Интеграция с Telegram размещена внутри Профиля */}
+          <div className="px-4 pb-4 pt-0 sm:col-span-2">
+            <div className="border-t pt-4 mt-1">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-lg font-semibold">{ts.telegram.title}</span>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">{ts.telegram.description}</p>
+
+              {isConnected ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      <Check className="h-3 w-3 mr-1" />
+                      {ts.telegram.connected}
+                    </Badge>
+                    <span className="text-sm text-gray-600">
+                      {ts.telegram.chatId}: {telegramChatId}
+                    </span>
+                  </div>
+                  <Button variant="outline" onClick={disconnectTelegram} disabled={isLoading}>
+                    <X className="h-4 w-4 mr-2" />
+                    {ts.telegram.disconnect}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                      <X className="h-3 w-3 mr-1" />
+                      {ts.telegram.notConnected}
+                    </Badge>
+                  </div>
+                  <Button onClick={openConnectDialog}>
+                    <Bot className="h-4 w-4 mr-2" />
+                    {ts.telegram.connect}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </details>
 
         {/* Диалог подключения телеграм */}
@@ -713,47 +772,7 @@ function PublicAccount() {
           </DialogContent>
         </Dialog>
 
-        {/* Интеграция с Telegram (как в настройках) */}
-        <details className="border rounded-md bg-white">
-          <summary className="list-none cursor-pointer select-none flex items-center justify-between p-4">
-            <span className="text-xl font-semibold">{ts.telegram.title}</span>
-            <span className="text-gray-500">▼</span>
-          </summary>
-          <div className="px-4 pb-4">
-            <p className="text-sm text-gray-600 mb-3">{ts.telegram.description}</p>
-
-            {isConnected ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    <Check className="h-3 w-3 mr-1" />
-                    {ts.telegram.connected}
-                  </Badge>
-                  <span className="text-sm text-gray-600">
-                    {ts.telegram.chatId}: {telegramChatId}
-                  </span>
-                </div>
-                <Button variant="outline" onClick={disconnectTelegram} disabled={isLoading}>
-                  <X className="h-4 w-4 mr-2" />
-                  {ts.telegram.disconnect}
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                    <X className="h-3 w-3 mr-1" />
-                    {ts.telegram.notConnected}
-                  </Badge>
-                </div>
-                <Button onClick={openConnectDialog}>
-                  <Bot className="h-4 w-4 mr-2" />
-                  {ts.telegram.connect}
-                </Button>
-              </div>
-            )}
-          </div>
-        </details>
+        {/* Секция Интеграции с Telegram удалена, так как перенесена в Профиль */}
 
         {/* Персональная ссылка — секция видна всем; управление доступностью внутри */}
         <details className="border rounded-md bg-white">
@@ -770,10 +789,14 @@ function PublicAccount() {
             if (isPremiumAgent || isPremiumDeveloper) {
               return (
                 <>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-700 whitespace-nowrap">{t.accountPage.premiumLinkLabel}:</label>
-                    <input value={shareLink} readOnly className="flex-1 border rounded px-2 py-1 text-gray-900 bg-gray-50" />
-                    <Button onClick={handleCopy}>{t.accountPage.copyButton}</Button>
+                  <div className={`${isMobile ? 'flex items-center' : 'flex items-center gap-2'}`}>
+                    {!isMobile && (
+                      <>
+                        <label className="text-sm text-gray-700 whitespace-nowrap">{t.accountPage.premiumLinkLabel}:</label>
+                        <input value={shareLink} readOnly className="flex-1 border rounded px-2 py-1 text-gray-900 bg-gray-50" />
+                      </>
+                    )}
+                    <Button onClick={handleCopy} className={`${isMobile ? 'w-full' : ''}`}>{t.accountPage.copyButton}</Button>
                   </div>
                   {copyMsg && <div className="text-green-600 text-sm mt-2">{copyMsg}</div>}
                 </>
@@ -854,13 +877,13 @@ function PublicAccount() {
         
         {/* Модальное окно оплаты (iframe) */}
         <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className={`${isMobile ? 'max-w-[95vw] w-[95vw]' : 'max-w-2xl'}`}>
             <DialogHeader>
               <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               {paymentUrl ? (
-                <iframe title="Premium Payment" src={paymentUrl} className="w-full h-[540px] border rounded" allow="payment *;" />
+                <iframe title="Premium Payment" src={paymentUrl} className={`w-full ${isMobile ? 'h-[400px]' : 'h-[540px]'} border rounded`} allow="payment *;" />
               ) : (
                 <div className="text-sm text-gray-500">Initializing…</div>
               )}
@@ -1089,6 +1112,7 @@ function PublicAccount() {
                               </ul>
                             </div>
                           )}
+                          <div className="text-xs text-red-700 mt-2">{t.propertiesGallery.missingFieldsHint}</div>
                         </div>
                       );
                     })()}
@@ -1109,11 +1133,58 @@ function PublicAccount() {
           ) : (
             <div className="divide-y">
               {myLeads.map((l) => (
-                <div key={l.id} className="p-4">
-                  <div className="text-sm text-gray-600">{l.createdAt instanceof Timestamp ? l.createdAt.toDate().toLocaleString() : ''}</div>
-                  <div className="font-medium text-gray-900">{safeDisplay(l.name)} — {safeDisplay(l.phone)} ({safeDisplay(l.messenger)})</div>
-                  {l.propertyId && (
-                    <Link to={`/public/property/${l.propertyId}`} className="text-blue-600 hover:underline text-sm">{t.accountPage.goToProperty}</Link>
+                <div key={l.id} className={`p-4 ${isMobile ? 'space-y-2' : 'flex gap-4'}`}>
+                  <div className={`${isMobile ? 'space-y-2' : 'w-1/2 space-y-2'}`}>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-500">{t.propertyDetail.requestDate}</span>
+                      <span className="text-sm text-gray-900">{l.createdAt instanceof Timestamp ? l.createdAt.toDate().toLocaleString() : '—'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-500">{t.propertyDetail.clientName}</span>
+                      <span className="text-sm font-medium text-gray-900">{safeDisplay(l.name)}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-500">{t.propertyDetail.clientPhone}</span>
+                      <span className="text-sm text-gray-900">
+                        {l.phoneCode ? `${l.phoneCode} ${safeDisplay(l.phone)}` : safeDisplay(l.phone)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-500">{t.propertyDetail.clientMessenger}</span>
+                      <span className="text-sm text-gray-900">{safeDisplay(l.messenger)}</span>
+                    </div>
+                  </div>
+                  {l.property && (
+                    <Link to={`/public/property/${l.propertyId}`} className={`block ${isMobile ? 'mt-3' : 'w-1/2'}`}>
+                      <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow h-full">
+                        <div className="flex gap-3">
+                          <div className="relative w-24 h-24 flex-shrink-0 bg-gray-200">
+                            {l.property.images?.length ? (
+                              <img src={l.property.images[0]} alt={safeDisplay(l.property.type)} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                                <Building2 className="w-8 h-8" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 py-2 pr-2">
+                            {(l.property.complexName || l.property.complex || l.property.propertyName) && (
+                              <div className="font-semibold text-sm text-gray-900 line-clamp-1">
+                                {safeDisplay(l.property.complexName || l.property.complex || l.property.propertyName)}
+                              </div>
+                            )}
+                            <div className="text-sm text-gray-900 mt-1">
+                              {formatPrice(l.property.price)}
+                            </div>
+                            {l.property.area && (
+                              <div className="text-xs text-gray-600 mt-1">
+                                {safeDisplay(l.property.area)} {t.propertiesGallery.areaText}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
                   )}
                 </div>
               ))}

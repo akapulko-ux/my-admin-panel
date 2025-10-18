@@ -32,7 +32,8 @@ service cloud.firestore {
     }
 
     function isDeveloper() {
-      return hasRoleInToken('застройщик') || hasRoleInFirestore('застройщик');
+      return hasRoleInToken('застройщик') || hasRoleInToken('премиум застройщик') ||
+             hasRoleInFirestore('застройщик') || hasRoleInFirestore('премиум застройщик');
     }
 
     function isModerator() {
@@ -330,6 +331,16 @@ service cloud.firestore {
       // Админ имеет полные права
       allow read, write, delete: if isAdmin();
       allow read, create, update, delete: if isSignedIn();
+    }
+
+    // === App Versions ===
+    match /appVersions/{versionId} {
+      // Админ имеет полные права
+      allow read, write, delete: if isAdmin();
+      // Публичное чтение информации о версиях приложения
+      allow read: if true;
+      // Создание/изменение/удаление — только admin
+      allow create, update, delete: if isAdmin();
     }
 
     // === Logs and Audit Trail ===
