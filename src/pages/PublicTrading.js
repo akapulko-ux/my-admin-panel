@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { Calculator } from 'lucide-react';
+import { Calculator, X } from 'lucide-react';
 
 const PublicTrading = () => {
   const { language } = useLanguage();
@@ -22,7 +21,6 @@ const PublicTrading = () => {
     const percentNum = parseFloat(percent);
 
     if (isNaN(stopAmountNum) || isNaN(percentNum) || percentNum === 0) {
-      alert(t.trading?.invalidInput || 'Пожалуйста, введите корректные значения');
       return;
     }
 
@@ -49,6 +47,15 @@ const PublicTrading = () => {
     setPercent('');
     setResult(null);
   };
+
+  // Автоматический расчет при изменении процента
+  useEffect(() => {
+    if (stopAmount && percent) {
+      calculateVolume();
+    } else {
+      setResult(null);
+    }
+  }, [stopAmount, percent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 md:py-12 md:px-4">
@@ -91,7 +98,7 @@ const PublicTrading = () => {
                 <Label htmlFor="percent" className="md:text-lg text-base font-semibold">
                   {t.trading?.percent || 'Процент'}
                 </Label>
-                <div className="md:p-6 p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                <div className="relative md:p-6 p-4 bg-green-50 rounded-lg border-2 border-green-200">
                   <Input
                     id="percent"
                     type="number"
@@ -100,32 +107,22 @@ const PublicTrading = () => {
                     value={percent}
                     onChange={(e) => setPercent(e.target.value)}
                     onWheel={(e) => e.target.blur()}
-                    className="w-full md:text-3xl text-2xl font-bold text-center border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full md:text-3xl text-2xl font-bold text-center border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pr-12"
                   />
+                  {percent && (
+                    <button
+                      onClick={clearResult}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-green-200 transition-colors"
+                      type="button"
+                    >
+                      <X className="md:h-5 md:w-5 h-4 w-4 text-gray-500" />
+                    </button>
+                  )}
                 </div>
                 <p className="md:block hidden text-sm text-gray-500 text-center">
                   {t.trading?.percentHelp || 'Процент для расчета объема сделки'}
                 </p>
               </div>
-            </div>
-
-            {/* Кнопки */}
-            <div className="flex gap-3">
-              <Button 
-                onClick={calculateVolume}
-                className="flex-1"
-                disabled={!stopAmount || !percent}
-              >
-                <Calculator className="h-4 w-4 mr-2" />
-                {t.trading?.calculate || 'Посчитать'}
-              </Button>
-              <Button 
-                onClick={clearResult}
-                variant="outline"
-                className="flex-1"
-              >
-                {t.trading?.clear || 'Очистить'}
-              </Button>
             </div>
 
             {/* Результат */}
