@@ -128,6 +128,10 @@ import CrmDeals from "./pages/CrmDeals";
 import CrmTasks from "./pages/CrmTasks";
 import CrmLists from "./pages/CrmLists";
 
+// Трейдинг
+import Trading from "./pages/Trading";
+import PublicTrading from "./pages/PublicTrading";
+
 const AdminLayout = ({ children }) => {
   const { currentUser, logout, role } = useAuth();
   const { language } = useLanguage();
@@ -271,6 +275,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/roi-calculator" element={<RoiCalculator />} />
               <Route path="/access-closed" element={<AccessClosed />} />
+              <Route path="/public-trading" element={<PublicTrading />} />
 
               {/* Главная страница - теперь публичная галерея */}
               <Route path="/" element={<PublicPropertiesGallery />} />
@@ -534,6 +539,13 @@ function App() {
                     <Route path="/crm/lists" element={
                       <ProtectedRoute>
                         <CrmLists />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Трейдинг */}
+                    <Route path="/trading" element={
+                      <ProtectedRoute>
+                        <Trading />
                       </ProtectedRoute>
                     } />
 

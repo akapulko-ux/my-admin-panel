@@ -33,7 +33,8 @@ import {
   CheckSquare,
   List,
   Activity,
-  HardHat
+  HardHat,
+  TrendingUp
 } from 'lucide-react';
 
 // Определяем доступ к маршрутам для разных ролей
@@ -387,6 +388,17 @@ const Navigation = () => {
                 <CrmMenuItem onClick={() => setIsMobileMenuOpen(false)} />
               )}
 
+              {/* Трейдинг - только для админа */}
+              {['admin'].includes(role) && (
+                <NavItem 
+                  to="/trading" 
+                  icon={TrendingUp}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {nav.trading}
+                </NavItem>
+              )}
+
               {['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role) && (
                 <NavItem 
                   to="/client-fixations" 
@@ -655,6 +667,13 @@ const Navigation = () => {
         {/* CRM System */}
         {['admin'].includes(role) && (
           <CrmMenuItem />
+        )}
+
+        {/* Трейдинг - только для админа */}
+        {['admin'].includes(role) && (
+          <NavItem to="/trading" icon={TrendingUp}>
+            {nav.trading}
+          </NavItem>
         )}
 
         {(['admin', 'moderator'].includes(role) || isAnyDeveloper(role)) && (

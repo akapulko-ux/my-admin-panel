@@ -302,7 +302,8 @@ export const translations = {
       technicalSupervision: 'Technical Supervision',
       // Dashboard
       dashboard: 'Dashboard',
-      appStatistics: 'App Statistics'
+      appStatistics: 'App Statistics',
+      trading: 'Trading'
     },
     
 
@@ -1876,6 +1877,30 @@ _________________               _________________
       loadError: 'Error loading data!'
     },
 
+    // Trading
+    trading: {
+      title: 'Trading',
+      subtitle: 'Tools for calculating trade parameters',
+      volumeCalculator: 'Trade Volume',
+      stopAmount: 'Stop Amount',
+      enterAmount: 'Enter stop amount',
+      stopAmountHelp: 'Fixed stop value for calculations',
+      percent: 'Percent',
+      enterPercent: 'Enter percent',
+      percentHelp: 'Percent for calculating trade volume',
+      calculate: 'Calculate',
+      clear: 'Clear',
+      result: 'Trade Volume',
+      resultFormula: 'Formula: Stop Amount / 0.0n%',
+      formulaInfo: 'Calculation Information',
+      formulaDescription: 'The calculator computes the trade volume using the formula: Stop Amount / 0.0n% (where n is the entered percent). For example, if percent = 2, then division occurs by 0.02. The Stop Amount is saved for the current session and can be used for multiple calculations with different percentages.',
+      invalidInput: 'Please enter valid values',
+      copyPublicLink: 'Copy Link',
+      copied: 'Copied',
+      linkCopied: 'Link copied to clipboard',
+      linkCopyError: 'Failed to copy link'
+    },
+
     // Technical Supervision
     technicalSupervision: {
       title: 'Technical Supervision',
@@ -2297,7 +2322,8 @@ _________________               _________________
       technicalSupervision: 'Технадзор',
       // Dashboard
       dashboard: 'Дашборд',
-      appStatistics: 'Статистика приложения'
+      appStatistics: 'Статистика приложения',
+      trading: 'Трейдинг'
     },
     // Public menu
     publicMenu: {
@@ -3690,6 +3716,30 @@ _________________               _________________
       loadError: 'Ошибка загрузки данных!'
     },
 
+    // Trading
+    trading: {
+      title: 'Трейдинг',
+      subtitle: 'Инструменты для расчета параметров сделок',
+      volumeCalculator: 'Объем сделки',
+      stopAmount: 'Сумма стопа',
+      enterAmount: 'Введите сумму стопа',
+      stopAmountHelp: 'Фиксированное значение стопа для расчетов',
+      percent: 'Процент',
+      enterPercent: 'Введите процент',
+      percentHelp: 'Процент для расчета объема сделки',
+      calculate: 'Посчитать',
+      clear: 'Очистить',
+      result: 'Объем сделки',
+      resultFormula: 'Формула: Сумма стопа / 0.0n%',
+      formulaInfo: 'Информация о расчете',
+      formulaDescription: 'Калькулятор рассчитывает объем сделки по формуле: Сумма стопа / 0.0n% (где n - введенный процент). Например, если процент = 2, то деление происходит на 0.02. Сумма стопа сохраняется для текущей сессии и может использоваться для множественных расчетов с разными процентами.',
+      invalidInput: 'Пожалуйста, введите корректные значения',
+      copyPublicLink: 'Копировать ссылку',
+      copied: 'Скопировано',
+      linkCopied: 'Ссылка скопирована',
+      linkCopyError: 'Ошибка копирования ссылки'
+    },
+
     // Premium Features
     premiumFeatures: {
       title: 'Премиум подписка для застройщиков',
@@ -4290,7 +4340,8 @@ _________________               _________________
       technicalSupervision: 'Pengawasan Teknis',
       // Dashboard
       dashboard: 'Dasbor',
-      appStatistics: 'Statistik Aplikasi'
+      appStatistics: 'Statistik Aplikasi',
+      trading: 'Trading'
     },
     // Public menu
     publicMenu: {
@@ -5671,6 +5722,30 @@ _________________               _________________
       saveSuccess: 'Disimpan!',
       saveError: 'Kesalahan menyimpan!',
       loadError: 'Kesalahan memuat data!'
+    },
+
+    // Trading
+    trading: {
+      title: 'Trading',
+      subtitle: 'Alat untuk menghitung parameter perdagangan',
+      volumeCalculator: 'Volume Perdagangan',
+      stopAmount: 'Jumlah Stop',
+      enterAmount: 'Masukkan jumlah stop',
+      stopAmountHelp: 'Nilai stop tetap untuk perhitungan',
+      percent: 'Persen',
+      enterPercent: 'Masukkan persen',
+      percentHelp: 'Persen untuk menghitung volume perdagangan',
+      calculate: 'Hitung',
+      clear: 'Bersihkan',
+      result: 'Volume Perdagangan',
+      resultFormula: 'Rumus: Jumlah Stop / 0.0n%',
+      formulaInfo: 'Informasi Perhitungan',
+      formulaDescription: 'Kalkulator menghitung volume perdagangan menggunakan rumus: Jumlah Stop / 0.0n% (di mana n adalah persen yang dimasukkan). Misalnya, jika persen = 2, maka pembagian terjadi dengan 0.02. Jumlah Stop disimpan untuk sesi saat ini dan dapat digunakan untuk beberapa perhitungan dengan persentase yang berbeda.',
+      invalidInput: 'Silakan masukkan nilai yang valid',
+      copyPublicLink: 'Salin Tautan',
+      copied: 'Disalin',
+      linkCopied: 'Tautan disalin ke clipboard',
+      linkCopyError: 'Gagal menyalin tautan'
     },
 
     // Premium Features
