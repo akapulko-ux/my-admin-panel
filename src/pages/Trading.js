@@ -39,16 +39,20 @@ const Trading = () => {
       return;
     }
 
-    // Формула: Сумма стопа / 0.0n%
+    // Формула: Сумма стопа / 0.0n% или 0.n%
     // Если процент с десятичной частью (например 1.103), убираем 0 после запятой -> 0.1103
-    // Если целое число (например 2), оставляем 0 -> 0.02
+    // Если 1-3 цифры без запятой (например 2), добавляем к "0.0" -> 0.02
+    // Если 4 цифры без запятой (например 1234), добавляем к "0." -> 0.1234
     let divisorString;
     if (percent.includes('.') || percent.includes(',')) {
       // Убираем точку/запятую из процента и добавляем к "0."
       const percentWithoutDot = percent.replace('.', '').replace(',', '');
       divisorString = "0." + percentWithoutDot;
+    } else if (percent.length === 4) {
+      // 4 цифры без запятой - добавляем к "0."
+      divisorString = "0." + percent;
     } else {
-      // Целое число - добавляем к "0.0"
+      // 1-3 цифры без запятой - добавляем к "0.0"
       divisorString = "0.0" + percent;
     }
     
@@ -148,7 +152,13 @@ const Trading = () => {
                   step="0.01"
                   placeholder="0.00"
                   value={percent}
-                  onChange={(e) => setPercent(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Ограничиваем ввод до 4 цифр (включая десятичную точку)
+                    if (value.length <= 4 || value.includes('.')) {
+                      setPercent(value);
+                    }
+                  }}
                   onWheel={(e) => e.target.blur()}
                   className="w-full text-3xl font-bold text-center border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pr-12"
                 />
