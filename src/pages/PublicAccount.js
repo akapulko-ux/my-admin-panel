@@ -828,7 +828,7 @@ function PublicAccount() {
             <Button className="w-full" onClick={async () => {
               try {
                 if (!currentUser) { return; }
-                setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                setPaymentUrl('https://aicoming.burned.pro/product-page/premium-agent');
                 setIsPaymentModalOpen(true);
               } catch (e) {
                 console.error('open premium subscription link error', e);
@@ -858,7 +858,7 @@ function PublicAccount() {
               <Button className="w-full" onClick={async () => {
                 try {
                   if (!currentUser) { return; }
-                  setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                  setPaymentUrl('https://aicoming.burned.pro/product-page/premium-agent');
                   setIsPaymentModalOpen(true);
                 } catch (e) {
                   console.error('open premium subscription link error', e);

@@ -105,9 +105,9 @@ const PublicTrading = () => {
               <CardTitle className={`flex items-center gap-2 md:text-2xl text-xl ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                <Calculator className="md:h-6 md:w-6 h-5 w-5" />
-                {t.trading?.volumeCalculator || 'Объем сделки'}
-              </CardTitle>
+              <Calculator className="md:h-6 md:w-6 h-5 w-5" />
+              {t.trading?.volumeCalculator || 'Объем сделки'}
+            </CardTitle>
               <button
                 onClick={toggleTheme}
                 className={`p-2 rounded-full transition-colors ${
@@ -231,8 +231,8 @@ const PublicTrading = () => {
                     <p className={`md:text-4xl text-3xl font-bold ${
                       isDarkMode ? 'text-blue-400' : 'text-primary'
                     }`}>
-                      {result}
-                    </p>
+                    {result}
+                  </p>
                     <button
                       onClick={copyToClipboard}
                       className={`p-2 rounded-full transition-colors ${

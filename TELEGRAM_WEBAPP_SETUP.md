@@ -11,11 +11,11 @@
 1. Выберите "Bot Settings" → "Menu Button"
 2. Выберите "Configure Menu Button"
 3. Введите текст кнопки: `Открыть админ-панель` (русский) / `Open Admin Panel` (английский)
-4. Введите URL Web App: `https://it-agent.pro/`
+4. Введите URL Web App: `https://propway.site/`
 
 ### Шаг 3: Активируйте Web App
 1. В настройках бота выберите "Web App"
-2. Введите URL: `https://it-agent.pro/`
+2. Введите URL: `https://propway.site/`
 3. Введите описание: "IT Agent Admin Panel - система управления недвижимостью"
 
 ## 2. Альтернативная настройка через API
@@ -31,7 +31,7 @@ curl -X POST "https://api.telegram.org/bot8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGe
     "type": "web_app",
     "text": "Админ-панель",
     "web_app": {
-      "url": "https://it-agent.pro/"
+      "url": "https://propway.site/"
     }
   }
 }'
@@ -48,7 +48,7 @@ curl -X POST "https://api.telegram.org/bot8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGe
 
 ### URL должен быть HTTPS
 - Telegram Web App работает только с HTTPS URL
-- Наш URL `https://it-agent.pro/` соответствует требованиям
+- Наш URL `https://propway.site/` соответствует требованиям
 
 ### Поддерживаемые платформы
 - ✅ Telegram Desktop

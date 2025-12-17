@@ -2156,7 +2156,7 @@ const aiAssistantTelegramWebhook = functions.https.onRequest(async (req, res) =>
         if (typeof stopTyping === 'function') stopTyping();
         if (properties.length > 0) {
           const propertyIds = properties.map(p => p.id).join(',');
-          const webAppUrl = `${process.env.PUBLIC_GALLERY_BASE_URL || 'https://it-agent.pro'}/?selection=${encodeURIComponent(propertyIds)}`;
+          const webAppUrl = `${process.env.PUBLIC_GALLERY_BASE_URL || 'https://propway.site'}/?selection=${encodeURIComponent(propertyIds)}`;
           const openSelectionKeyboard = {
             inline_keyboard: [[
               { text: t.openSelection, web_app: { url: webAppUrl } }
@@ -2415,7 +2415,7 @@ const aiTenantTelegramWebhook = functions.https.onRequest(async (req, res) => {
         if (typeof stopTyping === 'function') stopTyping();
         if (properties.length > 0) {
           const propertyIds = properties.map(p => p.id).join(',');
-          const webAppUrl = `${process.env.PUBLIC_GALLERY_BASE_URL || 'https://it-agent.pro'}/?selection=${encodeURIComponent(propertyIds)}`;
+          const webAppUrl = `${process.env.PUBLIC_GALLERY_BASE_URL || 'https://propway.site'}/?selection=${encodeURIComponent(propertyIds)}`;
           const keyboard = { inline_keyboard: [[ { text: t.openSelection, web_app: { url: webAppUrl } } ]] };
           await sendTelegramMessage(chatId, responseText, keyboard, tokenOverride);
           try { await logBotMessage(botId, chatId, { direction: 'out', text: responseText }); } catch (_) {}

@@ -140,7 +140,7 @@ router.patch('/:botId', async (req, res) => {
     // Optionally update menu button
     try {
       if (menuButtonText) {
-        const webAppUrl = process.env.PUBLIC_GALLERY_BASE_URL || 'https://it-agent.pro';
+        const webAppUrl = process.env.PUBLIC_GALLERY_BASE_URL || 'https://propway.site';
         await setMenuButton(data.telegramBotToken, menuButtonText, webAppUrl);
       }
     } catch (e) {

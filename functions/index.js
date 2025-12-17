@@ -44,7 +44,7 @@ const setupWebAppMenuButton = async () => {
           type: 'web_app',
           text: 'Админ-панель',
           web_app: {
-            url: 'https://it-agent.pro/'
+            url: 'https://propway.site/'
           }
         }
       })
@@ -353,7 +353,7 @@ exports.notifyPropertyCreated = onDocumentCreated("properties/{propertyId}", asy
 
     // Кнопка для открытия админ‑панели
     const replyMarkup = {
-      inline_keyboard: [[{ text: 'Открыть админ‑панель', url: 'https://it-agent.pro/' }]]
+      inline_keyboard: [[{ text: 'Открыть админ‑панель', url: 'https://propway.site/' }]]
     };
 
     const results = [];
@@ -724,7 +724,7 @@ exports.notifyNewFixation = onDocumentCreated("clientFixations/{fixationId}", as
             {
               text: t.adminPanelButton,
               web_app: {
-                url: 'https://it-agent.pro/'
+                url: 'https://propway.site/'
               }
             }
           ]]
@@ -940,7 +940,7 @@ exports.notifyNewClientLead = onDocumentCreated("clientLeads/{leadId}", async (e
     const message = lines.join('\n');
 
     const replyMarkup = {
-      inline_keyboard: [[{ text: 'Открыть IT Agent', url: 'https://it-agent.pro/' }]]
+      inline_keyboard: [[{ text: 'Открыть IT Agent', url: 'https://propway.site/' }]]
     };
 
     // Отправляем всем получателям

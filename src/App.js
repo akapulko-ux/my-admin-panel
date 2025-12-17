@@ -212,7 +212,7 @@ const AdminLayout = ({ children }) => {
                 isMobile && "text-base truncate" // Уменьшаем размер на мобильных
               )}
             >
-              {isMobile ? "IT Agent" : "IT Agent Admin Panel"}
+              {isMobile ? "PROPWAY" : "PROPWAY DEVELOPERS"}
               {['застройщик', 'премиум застройщик'].includes(role) && developerName && !isMobile && (
                 <span className="text-gray-500">({developerName})</span>
               )}

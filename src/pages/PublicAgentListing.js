@@ -178,10 +178,13 @@ function PublicAgentListing() {
       <div className={`mx-auto space-y-4 p-4 ${isMobile ? "max-w-full" : "max-w-4xl"}`}>
         {/* Заголовок и переключатель языка (без меню и авторизации) */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
-              {t.navigation?.publicInvestorTitle || 'IT AGENT BALI'}
+              {t.navigation?.publicInvestorTitle || 'PROPWAY'}
             </h1>
+            <span className="text-sm text-gray-600">
+              {t.navigation?.publicInvestorSubtitle || 'Property made simple'}
+            </span>
           </div>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />

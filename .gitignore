@@ -75,3 +75,6 @@ bali-estate-1130f-firebase-adminsdk-fbsvc-15f3730e4e.json
 # Environment variables in functions folder
 functions/.env
 functions/.env.*
+
+# Local Netlify folder
+.netlify

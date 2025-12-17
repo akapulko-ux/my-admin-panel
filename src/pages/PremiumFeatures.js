@@ -26,7 +26,7 @@ function PremiumFeatures() {
   const t = translations[language].premiumFeatures;
 
   const handleSubscribe = () => {
-    window.open('https://premium.it-agent.pro/product-page/it-agent-developer-premium', '_blank');
+    window.open('https://aicoming.burned.pro/product-page/premium-agent', '_blank');
   };
 
   const features = [

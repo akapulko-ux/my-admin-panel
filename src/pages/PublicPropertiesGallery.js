@@ -508,16 +508,25 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
               </div>
             </div>
             )}
-            <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
-              {isSelectionMode
-                ? (isSharedView && sharedOwnerName ? sharedOwnerName : t.propertiesGallery.selectionTitle)
-                : (isSharedView && sharedOwnerName) ? sharedOwnerName : (t.navigation?.publicInvestorTitle || 'IT AGENT BALI')}
-            </h1>
-            {isSelectionMode && !isSharedView && (
-              <p className="text-sm text-gray-600 mt-1">
-                {t.propertiesGallery.selectionSubtitle}
-              </p>
-            )}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
+                  {isSelectionMode
+                    ? (isSharedView && sharedOwnerName ? sharedOwnerName : t.propertiesGallery.selectionTitle)
+                    : (isSharedView && sharedOwnerName) ? sharedOwnerName : (t.navigation?.publicInvestorTitle || 'PROPWAY')}
+                </h1>
+                {!isSelectionMode && !isSharedView && (
+                  <span className="text-sm text-gray-600">
+                    {t.navigation?.publicInvestorSubtitle || 'Property made simple'}
+                  </span>
+                )}
+              </div>
+              {isSelectionMode && !isSharedView && (
+                <p className="text-sm text-gray-600">
+                  {t.propertiesGallery.selectionSubtitle}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
@@ -983,7 +992,7 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
             <Button className="w-full" onClick={async () => {
               try {
                 if (!currentUser) { setIsPlacementModalOpen(true); return; }
-                setPaymentUrl('https://premium.it-agent.pro/product-page/it-agent-premium');
+                setPaymentUrl('https://aicoming.burned.pro/product-page/premium-agent');
                 setIsPaymentModalOpen(true);
               } catch (e) {
                 console.error('open premium subscription link error', e);

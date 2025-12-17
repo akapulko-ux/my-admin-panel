@@ -1,7 +1,7 @@
 /*
   Скрипт для установки кнопок меню (Chat Menu Button) у двух ботов:
-  - @it_agent_admin_bot -> "Admin panel" -> https://it-agent.pro/
-  - @bali_investor_bot  -> "Properties list" -> https://it-agent.pro/
+  - @it_agent_admin_bot -> "Admin panel" -> https://propway.site/
+  - @bali_investor_bot  -> "Properties list" -> https://propway.site/
 
   Запуск локально: node functions/setupMenuButtons.js
 */
@@ -45,12 +45,12 @@ async function getMenuButton(botToken) {
 
 async function main() {
   console.log('▶️ Настройка меню для @it_agent_admin_bot ...');
-  await setMenuButton(ADMIN_BOT_TOKEN, 'Admin panel', 'https://it-agent.pro/');
+  await setMenuButton(ADMIN_BOT_TOKEN, 'Admin panel', 'https://propway.site/');
   const adminMenu = await getMenuButton(ADMIN_BOT_TOKEN);
   console.log('✅ @it_agent_admin_bot menu set to:', JSON.stringify(adminMenu, null, 2));
 
   console.log('▶️ Настройка меню для @bali_investor_bot ...');
-  await setMenuButton(INVESTOR_BOT_TOKEN, 'Properties list', 'https://it-agent.pro/');
+  await setMenuButton(INVESTOR_BOT_TOKEN, 'Properties list', 'https://propway.site/');
   const investorMenu = await getMenuButton(INVESTOR_BOT_TOKEN);
   console.log('✅ @bali_investor_bot menu set to:', JSON.stringify(investorMenu, null, 2));
 

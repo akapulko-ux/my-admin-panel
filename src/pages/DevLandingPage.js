@@ -101,7 +101,7 @@ const DevLandingPage = () => {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <Link to="/public" className="text-xl font-semibold">
-            IT Agent Admin Panel
+            PROPWAY DEVELOPERS
           </Link>
           <div className="flex items-center gap-4">
             <Select value={language} onValueChange={(lang) => changeLanguage(lang)}>
@@ -136,46 +136,6 @@ const DevLandingPage = () => {
             {t.getStarted}
             <ArrowRight className="h-4 w-4" />
           </Button>
-        </div>
-      </section>
-
-      {/* Video Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            {t.videoTitle}
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            {t.videoDescription}
-          </p>
-          <div className="max-w-4xl mx-auto">
-            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-              <iframe
-                className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-                src={getYouTubeEmbedUrl(getVideoUrl())}
-                title="Platform Demo Video"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{
-                  // Дополнительные стили для скрытия элементов YouTube
-                  pointerEvents: 'auto'
-                }}
-              ></iframe>
-              {/* CSS для скрытия элементов YouTube */}
-              <style jsx>{`
-                iframe {
-                  position: relative;
-                  z-index: 1;
-                }
-                /* Скрываем возможные оверлеи YouTube */
-                iframe::before,
-                iframe::after {
-                  display: none !important;
-                }
-              `}</style>
-            </div>
-          </div>
         </div>
       </section>
 

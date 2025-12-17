@@ -13,7 +13,7 @@ const setupWebAppMenuButton = async () => {
           type: 'web_app',
           text: 'Админ-панель',
           web_app: {
-            url: 'https://it-agent.pro/'
+            url: 'https://propway.site/'
           }
         }
       })

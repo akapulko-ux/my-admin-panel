@@ -42,7 +42,7 @@ export const landingTranslations = {
     ctaDescription: "Join leading developers who are already using our platform",
     useFree: "Try for Free",
     // Footer
-    footerText: "© 2025 IT Agent Admin Panel. All rights reserved.",
+    footerText: "© 2025 PROPWAY. All rights reserved.",
     // Login Page
     backToHome: "Back to Home",
     loginTitle: "Login to System",
@@ -165,7 +165,7 @@ export const landingTranslations = {
     ctaDescription: "Присоединяйтесь к ведущим застройщикам, которые уже используют нашу платформу",
     useFree: "Попробуйте бесплатно",
     // Footer
-    footerText: "© 2025 IT Agent Admin Panel. Все права защищены.",
+    footerText: "© 2025 PROPWAY. Все права защищены.",
     // Login Page
     backToHome: "Вернуться на главную",
     loginTitle: "Вход в систему",
@@ -288,7 +288,7 @@ export const landingTranslations = {
     ctaDescription: "Bergabunglah dengan pengembang terkemuka yang sudah menggunakan platform kami",
     useFree: "Coba Gratis",
     // Footer
-    footerText: "© 2025 IT Agent Admin Panel. Semua hak dilindungi.",
+    footerText: "© 2025 PROPWAY. Semua hak dilindungi.",
     // Login Page
     backToHome: "Kembali ke Beranda",
     loginTitle: "Masuk ke Sistem",
