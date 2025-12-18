@@ -13,14 +13,9 @@ import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
 
 import {
-  Box,
   Card,
   CardContent,
-  TextField,
-  Typography,
-  Button,
-  Grid,
-  CircularProgress
+  Button
 } from "@mui/material";
 import { showSuccess } from '../utils/notifications';
 import { Landmark, Upload, Save, Trash2 } from "lucide-react";

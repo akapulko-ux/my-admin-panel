@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useLanguage } from '../lib/LanguageContext';
 import { translations } from '../lib/translations';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -62,7 +59,6 @@ const calculateOptimalDomain = (data, dataKey, padding = 0.15) => {
   
   if (finalRange < minDesiredRange) {
     const center = (domainMin + domainMax) / 2;
-    const expansion = (minDesiredRange - finalRange) / 2;
     domainMin = center - minDesiredRange / 2;
     domainMax = center + minDesiredRange / 2;
   }
@@ -95,7 +91,7 @@ const PublicRoiPage = () => {
   };
 
   // Коэффициенты для разных сценариев
-  const scenarioMultipliers = {
+  const scenarioMultipliers = useMemo(() => ({
     pessimistic: {
       occupancyRate: 0.8, // 80% от базового значения
       rentGrowthRate: 0.7, // 70% от базового значения
@@ -111,7 +107,7 @@ const PublicRoiPage = () => {
       rentGrowthRate: 1.3, // 130% от базового значения
       annualAppreciation: 1.3,
     },
-  };
+  }), []);
 
   useEffect(() => {
     if (id) {
@@ -169,14 +165,6 @@ const PublicRoiPage = () => {
       const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
       const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100);
       
-      // Операционные расходы (без налогов)
-      const initialOperationalExpenses = initialAnnualRentalIncome * (maintenanceFees + utilityBills + propertyManagementFee) / 100;
-      const initialProfitBeforeTax = initialAnnualRentalIncome - initialOperationalExpenses;
-      
-      // Налоги рассчитываются от прибыли до налогов
-      const initialTaxes = initialProfitBeforeTax * (annualTax / 100);
-      const initialAnnualExpenses = initialOperationalExpenses + initialTaxes;
-
       // Пересчет для выбранного периода
       const graphData = [];
       const detailedProjection = [];
@@ -288,7 +276,7 @@ const PublicRoiPage = () => {
     };
 
     return recalculateDataForPeriod(getYearsFromTimeframe(timeframe));
-  }, [data, timeframe, scenario]);
+  }, [data, timeframe, scenario, scenarioMultipliers]);
 
   // Функция для получения доступных периодов
   const getAvailablePeriods = () => {

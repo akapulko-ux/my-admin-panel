@@ -1,12 +1,6 @@
 // Утилита для автоматического перевода текста с помощью ИИ
 // Использует Firebase Functions для безопасного перевода
 
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getApp } from 'firebase/app';
-
-// Инициализируем Firebase Functions
-const functions = getFunctions(getApp());
-const translateTextFunction = httpsCallable(functions, 'translateText');
 
 // URL для HTTP endpoint
 const TRANSLATE_HTTP_URL = 'https://us-central1-bali-estate-1130f.cloudfunctions.net/translateTextHttp';

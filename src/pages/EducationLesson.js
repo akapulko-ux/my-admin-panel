@@ -53,7 +53,7 @@ const EducationLesson = () => {
     } finally {
       setLoading(false);
     }
-  }, [topicId, lessonId, navigate, t.errorLoading]);
+  }, [topicId, lessonId, navigate, t.errorLoading, t.lessonNotFound, t.topicNotFound]);
 
   useEffect(() => {
     loadTopicAndLesson();

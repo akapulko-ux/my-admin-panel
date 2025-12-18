@@ -4,7 +4,7 @@ import { collection, addDoc } from "firebase/firestore";
 // Заменяем импорт функции загрузки с Cloudinary на Firebase Storage
 import { uploadToFirebaseStorageInFolder } from "../utils/firebaseStorage";
 import { showSuccess } from '../utils/notifications';
-import { Landmark, Plus, Upload, X, Save } from "lucide-react";
+import { Landmark, Upload, X, Save } from "lucide-react";
 
 import {
   Card,

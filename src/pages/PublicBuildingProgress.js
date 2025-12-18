@@ -3,9 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { 
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
   Camera,
   Video
 } from 'lucide-react';

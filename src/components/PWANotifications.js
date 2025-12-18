@@ -2,33 +2,15 @@ import React, { useState, useEffect } from 'react';
 
 const PWANotifications = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isInstalled, setIsInstalled] = useState(false);
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
 
   useEffect(() => {
-    // Проверяем, установлено ли приложение
-    const checkInstallation = () => {
-      if (window.matchMedia('(display-mode: standalone)').matches || 
-          window.navigator.standalone === true) {
-        setIsInstalled(true);
-      }
-    };
-
-    checkInstallation();
-
     // Слушаем изменения состояния сети
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
-    // Слушаем событие установки
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-    };
-
-    window.addEventListener('appinstalled', handleAppInstalled);
 
     // Проверяем обновления Service Worker
     if ('serviceWorker' in navigator) {
@@ -40,7 +22,6 @@ const PWANotifications = () => {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 

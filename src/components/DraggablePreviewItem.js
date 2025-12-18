@@ -5,9 +5,6 @@ import { useDrag, useDrop } from 'react-dnd';
 import { X } from 'lucide-react';
 import { Button } from './ui/button';
 
-/** Тип для DnD (тот же, что и в EditComplex) */
-const DRAG_TYPE = "EXISTING_IMAGE";
-
 /**
  * Компонент «карточка фото», которую можно перетаскивать.
  * 
