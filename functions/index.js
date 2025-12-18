@@ -12,10 +12,10 @@ const telegramTranslations = require("./telegramTranslations");
 const { sendFixationCreatedWebhook, sendFixationStatusChangedWebhook, sendFixationExpiredWebhook, sendFixationRejectedWebhook } = require("./webhookService");
 // Новый AI Assistant Telegram Bot (изолированный)
 const { aiAssistantTelegramWebhook, aiAssistantSetWebhook, aiTenantTelegramWebhook, forwardAdminBotMessage, sendBotMessage } = require('./aiAssistantBot');
-const { baliSupervisionTelegramWebhook, baliSupervisionSetWebhook, getSupervisionBotToken } = require('./baliSupervisionBot');
+const { baliSupervisionTelegramWebhook, /* baliSupervisionSetWebhook, */ getSupervisionBotToken } = require('./baliSupervisionBot');
 
 // Telegram Bot Token
-const BOT_TOKEN = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
+const BOT_TOKEN = functions.config().telegram?.admin_bot_token || process.env.TELEGRAM_ADMIN_BOT_TOKEN;
 
 // Инициализируем admin SDK (без повторной инициализации)
 if (!admin.apps.length) {
@@ -980,7 +980,7 @@ exports.api = onRequest({
 // Multi-tenant Telegram webhook
 exports.aiTenantTelegramWebhook = aiTenantTelegramWebhook;
 exports.baliSupervisionTelegramWebhook = baliSupervisionTelegramWebhook;
-exports.baliSupervisionSetWebhook = baliSupervisionSetWebhook;
+// exports.baliSupervisionSetWebhook = baliSupervisionSetWebhook; // ВРЕМЕННО ОТКЛЮЧЕНА
 
 // Callable: первичная индексация properties в Qdrant
 exports.indexPropertiesEmbeddings = functions.https.onCall(async (data, context) => {
@@ -2206,7 +2206,7 @@ exports.translateText = functions.https.onCall(async (data, context) => {
     console.log(`🔄 Starting translation: ${targetLanguage}, text length: ${text.length}`);
 
     // Инициализируем OpenAI с переменной окружения
-    const openaiClient = initializeOpenAI(process.env.OPENAI_API_KEY);
+    const openaiClient = initializeOpenAI(functions.config().openai?.key || process.env.OPENAI_API_KEY);
 
     if (!openaiClient) {
       throw new functions.https.HttpsError('internal', 'OpenAI client not available');
@@ -2262,7 +2262,7 @@ exports.translateTextHttp = functions.https.onRequest((req, res) => {
       console.log(`🔄 Starting translation (HTTP): ${targetLanguage}, text length: ${text.length}`);
 
       // Инициализируем OpenAI с переменной окружения
-      const openaiClient = initializeOpenAI(process.env.OPENAI_API_KEY);
+      const openaiClient = initializeOpenAI(functions.config().openai?.key || process.env.OPENAI_API_KEY);
 
       if (!openaiClient) {
         return res.status(500).json({ error: 'OpenAI client not available' });

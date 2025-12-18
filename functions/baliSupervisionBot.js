@@ -37,8 +37,14 @@ function getToken() {
 const BOT_USERNAME = 'bali_supervision_bot';
 const MANAGER_USERNAME = 'ivan_tsyrulnikov';
 
-const cfgRef = admin.firestore().collection('baliSupervisionBot').doc('config');
-const mapsRef = admin.firestore().collection('baliSupervisionBot').doc('maps').collection('byForwardId');
+// Lazy initialization of Firestore references
+function getCfgRef() {
+  return admin.firestore().collection('baliSupervisionBot').doc('config');
+}
+
+function getMapsRef() {
+  return admin.firestore().collection('baliSupervisionBot').doc('maps').collection('byForwardId');
+}
 
 async function sendMessage(chatId, text, replyMarkup) {
   const token = getToken();
@@ -68,7 +74,7 @@ async function forwardToManager(managerChatId, from, text) {
   };
   const res = await sendMessage(managerChatId, `${header}${body}`, replyKeyboard);
   // map forwarded manager message id -> original user chat id
-  await mapsRef.doc(String(res.message_id)).set({ userChatId: String(from.id), createdAt: admin.firestore.FieldValue.serverTimestamp() });
+  await getMapsRef().doc(String(res.message_id)).set({ userChatId: String(from.id), createdAt: admin.firestore.FieldValue.serverTimestamp() });
   return res;
 }
 
@@ -138,7 +144,7 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
 
         // Уведомим менеджера о выборе услуги
         try {
-          const cfgSnap = await cfgRef.get();
+          const cfgSnap = await getCfgRef().get();
           const cfg = cfgSnap.exists ? (cfgSnap.data() || {}) : {};
           const managerChatId = cfg.managerChatId ? Number(cfg.managerChatId) : null;
           if (managerChatId) {
@@ -161,12 +167,12 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
     const chatId = msg.chat && msg.chat.id;
     const from = msg.from || {};
     const text = msg.text || '';
-    const cfgSnap = await cfgRef.get();
+    const cfgSnap = await getCfgRef().get();
     const cfg = cfgSnap.exists ? (cfgSnap.data() || {}) : {};
     const managerChatId = cfg.managerChatId ? Number(cfg.managerChatId) : null;
     const isManager = (from.username || '').toLowerCase() === MANAGER_USERNAME.toLowerCase();
     if (isManager && typeof text === 'string' && text.trim().toLowerCase().startsWith('/start')) {
-      await cfgRef.set({ managerChatId: String(chatId), managerUsername: MANAGER_USERNAME, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      await getCfgRef().set({ managerChatId: String(chatId), managerUsername: MANAGER_USERNAME, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
       await sendMessage(chatId, '✅ Бот подключен. Теперь все обращения пользователей будут пересылаться сюда. Отвечайте, используя ответ на сообщении (Reply).');
       try { await logBotMessage('supervision', chatId, { direction: 'out', text: '✅ Бот подключен...' }); } catch (_) {}
       return res.status(200).send('OK');
@@ -233,7 +239,7 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
       return res.status(200).send('OK');
     }
     if (isManager && msg.reply_to_message && msg.reply_to_message.message_id) {
-      const mapSnap = await mapsRef.doc(String(msg.reply_to_message.message_id)).get();
+      const mapSnap = await getMapsRef().doc(String(msg.reply_to_message.message_id)).get();
       const mapping = mapSnap.exists ? mapSnap.data() : null;
       if (mapping && mapping.userChatId) {
         await sendMessage(Number(mapping.userChatId), text || '');
@@ -250,19 +256,32 @@ exports.baliSupervisionTelegramWebhook = functions.https.onRequest(async (req, r
   }
 });
 
-// Callable: установить вебхук
-exports.baliSupervisionSetWebhook = functions.https.onCall(async (data, context) => {
-  const url = (data && (data.url || (data.data && data.data.url))) || null;
-  const token = getToken();
-  if (!url) throw new functions.https.HttpsError('invalid-argument', 'Укажите url');
-  if (!token) throw new functions.https.HttpsError('failed-precondition', 'Нет токена бота');
-  const resp = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url })
-  });
-  const result = await resp.json();
-  if (!resp.ok) throw new functions.https.HttpsError('internal', result.description || 'Telegram API error');
-  return { success: true, result };
-});
+// Callable: установить вебхук (ВРЕМЕННО ОТКЛЮЧЕНА ИЗ-ЗА ПРОБЛЕМ С ДЕПЛОЕМ)
+// exports.baliSupervisionSetWebhook = functions.https.onCall(async (data, context) => {
+//   try {
+//     console.log('baliSupervisionSetWebhook called');
+//     const url = (data && (data.url || (data.data && data.data.url))) || null;
+//
+//     // Получаем токен лениво
+//     const token = functions.config().telegram?.supervision_bot_token ||
+//                   process.env.BALI_SUPERVISION_BOT_TOKEN;
+//
+//     console.log('Token available:', !!token);
+//
+//     if (!url) throw new functions.https.HttpsError('invalid-argument', 'Укажите url');
+//     if (!token) throw new functions.https.HttpsError('failed-precondition', 'Нет токена бота');
+//
+//     const resp = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
+//       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url })
+//     });
+//     const result = await resp.json();
+//     if (!resp.ok) throw new functions.https.HttpsError('internal', result.description || 'Telegram API error');
+//     return { success: true, result };
+//   } catch (error) {
+//     console.error('baliSupervisionSetWebhook error:', error);
+//     throw error;
+//   }
+// });
 
 // Экспорт токена для использования в других функциях (UI-отправка)
 exports.getSupervisionBotToken = getToken;

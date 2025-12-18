@@ -1,4 +1,5 @@
-const BOT_TOKEN = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
+const functions = require("firebase-functions");
+const BOT_TOKEN = functions.config().telegram?.admin_bot_token || process.env.TELEGRAM_ADMIN_BOT_TOKEN;
 
 // Функция для установки кнопки меню Web App
 const setupWebAppMenuButton = async () => {

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { countryDialCodes } from "../lib/countryDialCodes";
 import { Building2, Bot, Check, X, ExternalLink } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
 import toast from 'react-hot-toast';
 import { signInWithCustomToken, setPersistence, browserLocalPersistence } from "firebase/auth";
@@ -738,6 +738,7 @@ function PublicAccount() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>{ts.telegram.dialogTitle}</DialogTitle>
+              <DialogDescription className="sr-only">Подключение Telegram бота для автоматической связи</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="text-center">
@@ -847,6 +848,7 @@ function PublicAccount() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+              <DialogDescription className="sr-only">Информация о премиум подписке</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
               <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
@@ -880,6 +882,7 @@ function PublicAccount() {
           <DialogContent className={`${isMobile ? 'max-w-[95vw] w-[95vw]' : 'max-w-2xl'}`}>
             <DialogHeader>
               <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+              <DialogDescription className="sr-only">Оформление премиум подписки</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
               {paymentUrl ? (

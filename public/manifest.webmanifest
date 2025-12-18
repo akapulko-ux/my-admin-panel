@@ -78,23 +78,5 @@
       "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
     }
   ],
-  "share_target": {
-    "action": "/share-property",
-    "method": "GET",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  },
-  "protocol_handlers": [
-    {
-      "protocol": "web+itagent",
-      "url": "/?handler=%s"
-    }
-  ],
-  "prefer_related_applications": false,
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+  "prefer_related_applications": false
 }

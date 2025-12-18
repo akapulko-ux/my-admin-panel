@@ -17,7 +17,7 @@ import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { CustomSelect } from "../components/ui/custom-select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../components/ui/dialog";
 import {
   Collapsible,
   CollapsibleContent,
@@ -950,6 +950,7 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.publicMenu.services}</DialogTitle>
+            <DialogDescription className="sr-only">Выбор услуг компании</DialogDescription>
           </DialogHeader>
           <div className="grid gap-2">
             <Button variant="outline" className="justify-start bg-white" onClick={() => { showInfo('Скоро'); }}>
@@ -981,6 +982,7 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+            <DialogDescription className="sr-only">Информация о подписке на услуги</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
@@ -1010,6 +1012,7 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+            <DialogDescription className="sr-only">Оплата премиум подписки</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             {paymentUrl ? (

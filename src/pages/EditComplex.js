@@ -29,7 +29,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { CustomSelect } from "../components/ui/custom-select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "../components/ui/dialog";
 
 // Иконки
 import { ArrowLeft, Loader2, Save, Trash2, Upload } from "lucide-react";
@@ -965,6 +965,7 @@ function EditComplex() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Удалить комплекс?</DialogTitle>
+            <DialogDescription className="sr-only">Подтверждение удаления комплекса недвижимости</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p>Вы уверены, что хотите удалить этот комплекс? Это действие нельзя отменить.</p>

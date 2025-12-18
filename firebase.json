@@ -8,7 +8,7 @@
     }
   ],
   "hosting": {
-    "site": "admin-panel-bali",
+    "site": "bali-estate-1130f",
     "public": "build",
     "ignore": [
       "firebase.json",
@@ -109,6 +109,15 @@
           {
             "key": "Cache-Control",
             "value": "public, max-age=604800"
+          }
+        ]
+      },
+      {
+        "source": "/manifest.webmanifest",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/manifest+json"
           }
         ]
       }

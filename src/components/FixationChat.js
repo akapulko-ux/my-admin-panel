@@ -7,7 +7,7 @@ import { translations } from '../lib/translations';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import ImageMessageView from './ImageMessageView';
 import FullScreenImageView from './FullScreenImageView';
 import { useDropzone } from 'react-dropzone';
@@ -290,6 +290,7 @@ const FixationChat = ({ chatId, agentId, isOpen, onClose }) => {
           <DialogTitle>
             {chatData?.chatName || t.fixationChat.title}
           </DialogTitle>
+          <DialogDescription className="sr-only">Просмотр переписки по фиксации</DialogDescription>
         </DialogHeader>
 
         {isLoading ? (

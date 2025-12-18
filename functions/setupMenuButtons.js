@@ -6,8 +6,9 @@
   Запуск локально: node functions/setupMenuButtons.js
 */
 
-const ADMIN_BOT_TOKEN = process.env.TELEGRAM_ADMIN_BOT_TOKEN; // it_agent_admin_bot
-const INVESTOR_BOT_TOKEN = process.env.TELEGRAM_INVESTOR_BOT_TOKEN; // bali_investor_bot
+const functions = require("firebase-functions");
+const ADMIN_BOT_TOKEN = functions.config().telegram?.admin_bot_token || process.env.TELEGRAM_ADMIN_BOT_TOKEN; // it_agent_admin_bot
+const INVESTOR_BOT_TOKEN = functions.config().telegram?.aiassistant_token || process.env.TELEGRAM_INVESTOR_BOT_TOKEN; // bali_investor_bot
 
 async function setMenuButton(botToken, text, url) {
   const payload = {

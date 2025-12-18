@@ -7,7 +7,7 @@ import { translations } from '../lib/translations';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
@@ -929,6 +929,7 @@ const ClientFixations = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.clientFixations.confirmFixation}</DialogTitle>
+            <DialogDescription className="sr-only">Подтверждение фиксации клиента</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -965,6 +966,7 @@ const ClientFixations = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.clientFixations.rejectFixation}</DialogTitle>
+            <DialogDescription className="sr-only">Отклонение фиксации клиента с указанием причины</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="rejectComment" className="text-sm font-medium text-gray-700">
@@ -1009,6 +1011,7 @@ const ClientFixations = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.clientFixations.deleteFixation}</DialogTitle>
+            <DialogDescription className="sr-only">Удаление фиксации клиента</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-700">

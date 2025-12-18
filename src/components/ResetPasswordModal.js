@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "./ui/dialog";
 import { Button } from "./ui/button";

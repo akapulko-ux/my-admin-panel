@@ -34,7 +34,7 @@ import { uploadToFirebaseStorageInFolder, deleteFileFromFirebaseStorage } from '
 import PropertyRoiCalculator from "../components/PropertyRoiCalculator";
 import { Badge } from "../components/ui/badge";
 import { AdaptiveTooltip } from "../components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../components/ui/dialog";
 // Импорт для сжатия изображений и конвертации PDF
 import imageCompression from "browser-image-compression";
 import { convertPdfToImages } from "../utils/pdfUtils";
@@ -3375,6 +3375,7 @@ function PropertyDetail() {
                 </svg>
               </button>
             </div>
+            <DialogDescription className="sr-only">Просмотр переписки по объекту недвижимости</DialogDescription>
           </DialogHeader>
           <div className="mt-2 max-h-[70vh] overflow-y-auto space-y-3">
             {isChatLoading ? (

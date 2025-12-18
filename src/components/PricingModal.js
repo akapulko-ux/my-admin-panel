@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Check, Star } from 'lucide-react';
@@ -15,9 +15,9 @@ const PricingModal = ({ isOpen, onClose, t }) => {
           <DialogTitle className="text-2xl font-bold text-center">
             {t.pricing?.title}
           </DialogTitle>
-          <p className="text-center text-gray-600 mt-2">
+          <DialogDescription className="text-center text-gray-600 mt-2">
             {t.pricing?.subtitle}
-          </p>
+          </DialogDescription>
         </DialogHeader>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -165,6 +165,7 @@ const PricingModal = ({ isOpen, onClose, t }) => {
           <DialogTitle className="text-xl font-bold">
             {t.pricing?.termsTitle}
           </DialogTitle>
+          <DialogDescription className="sr-only">Условия оплаты и возврата средств</DialogDescription>
         </DialogHeader>
         
         <div className="mt-6 space-y-4 text-sm text-gray-700 leading-relaxed">

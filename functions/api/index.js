@@ -9,7 +9,17 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-// Rate limiting
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
+
+// Rate limiting - глобальный лимит
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 минут
   max: 100, // максимум 100 запросов с одного IP
@@ -18,6 +28,20 @@ const limiter = rateLimit({
   }
 });
 app.use(limiter);
+
+// Строгий rate limiting для аутентификационных endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 минут
+  max: 5, // максимум 5 попыток входа с одного IP
+  message: {
+    error: 'Too many authentication attempts, please try again later.'
+  },
+  skipSuccessfulRequests: true // не считать успешные запросы
+});
+
+// Применяем строгий лимит к auth endpoints
+app.use('/v1/auth', authLimiter);
+app.use('/api/v1/auth', authLimiter);
 
 // Middleware для логирования времени запроса
 app.use((req, res, next) => {

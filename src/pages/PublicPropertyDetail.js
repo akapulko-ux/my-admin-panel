@@ -7,7 +7,7 @@ import { useLanguage } from "../lib/LanguageContext";
 import { translations } from "../lib/translations";
 import { useAuth } from "../AuthContext";
 import PropertyPlacementModal from "../components/PropertyPlacementModal";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 import { AdaptiveTooltip } from "../components/ui/tooltip";
 import {
@@ -1630,6 +1630,7 @@ function PublicPropertyDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.subscriptionModal?.title}</DialogTitle>
+            <DialogDescription className="sr-only">Информация о премиум подписке для просмотра контактов</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-gray-600">{t.subscriptionModal?.description}</p>
@@ -1660,6 +1661,7 @@ function PublicPropertyDetail() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Complete payment</DialogTitle>
+            <DialogDescription className="sr-only">Оплата премиум подписки для просмотра контактов</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             {usdPrice && (

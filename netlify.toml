@@ -1,21 +1,32 @@
-# example netlify.toml
+# Netlify configuration for IT Agent Bali
 [build]
   command = "npm run build"
   functions = "netlify/functions"
   publish = "build"
 
-  ## Uncomment to use this redirect for Single Page Applications like create-react-app.
-  ## Not needed for static site generators.
+# Headers for proper PWA manifest serving
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-  ## (optional) Settings for Netlify Dev
-  ## https://github.com/netlify/cli/blob/main/docs/netlify-dev.md#project-detection
-  #[dev]
-  #  command = "yarn start" # Command to start your dev server
-  #  port = 3000 # Port that the dev server will be listening on
-  #  publish = "dist" # Folder with the static content for _redirect file
-
-  ## more info on configuring this file: https://ntl.fyi/file-based-build-config
+# Optional Netlify Dev settings
+#[dev]
+#  command = "yarn start"
+#  port = 3000
+#  publish = "dist"
