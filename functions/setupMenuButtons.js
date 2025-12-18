@@ -6,8 +6,8 @@
   Запуск локально: node functions/setupMenuButtons.js
 */
 
-const ADMIN_BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM"; // it_agent_admin_bot
-const INVESTOR_BOT_TOKEN = "8317716572:AAHW5pB-Mges4evBxv_SLRKtJTG-Ru8nzw8"; // bali_investor_bot
+const ADMIN_BOT_TOKEN = process.env.TELEGRAM_ADMIN_BOT_TOKEN; // it_agent_admin_bot
+const INVESTOR_BOT_TOKEN = process.env.TELEGRAM_INVESTOR_BOT_TOKEN; // bali_investor_bot
 
 async function setMenuButton(botToken, text, url) {
   const payload = {

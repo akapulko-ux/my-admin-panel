@@ -15,7 +15,7 @@ const { aiAssistantTelegramWebhook, aiAssistantSetWebhook, aiTenantTelegramWebho
 const { baliSupervisionTelegramWebhook, baliSupervisionSetWebhook, getSupervisionBotToken } = require('./baliSupervisionBot');
 
 // Telegram Bot Token
-const BOT_TOKEN = "8168450032:AAHjSVJn8VqcBEsgK_NtbfgqxGeXW0buaUM";
+const BOT_TOKEN = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
 
 // Инициализируем admin SDK (без повторной инициализации)
 if (!admin.apps.length) {

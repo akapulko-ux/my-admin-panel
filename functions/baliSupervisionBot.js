@@ -30,8 +30,8 @@ async function logBotMessage(botId, chatId, payload) {
 }
 
 function getToken() {
-  // Используем переменную окружения, если задана; иначе — токен, переданный пользователем
-  return process.env.BALI_SUPERVISION_BOT_TOKEN || '8424126127:AAGsb5ia4eo7yXcj9EcAvGDPNgVj9KfIYGY';
+  // Используем переменную окружения
+  return process.env.BALI_SUPERVISION_BOT_TOKEN;
 }
 
 const BOT_USERNAME = 'bali_supervision_bot';
