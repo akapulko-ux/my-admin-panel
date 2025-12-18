@@ -164,7 +164,7 @@ const PublicRoiPage = () => {
       // Базовые расчеты
       const totalInvestment = purchasePrice + renovationCosts + legalFees + additionalExpenses;
       const initialAnnualRentalIncome = dailyRate * daysPerYear * (occupancyRate / 100);
-      
+
       // Пересчет для выбранного периода
       const graphData = [];
       const detailedProjection = [];

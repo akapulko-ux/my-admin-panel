@@ -47,7 +47,7 @@ function validateRolesIntegrity() {
     throw new Error('РОЛИ ЗАСТРОЙЩИКОВ НАРУШЕНЫ! Исправьте AuthContext.js');
   }
   
-  console.log('✅ РОЛИ ЗАСТРОЙЩИКОВ В ПОРЯДКЕ - валидация пройдена');
+  // Валидация ролей пройдена успешно
 }
 
 // Запускаем валидацию при загрузке модуля
@@ -61,11 +61,9 @@ function normalizeRole(role) {
   
   // ⚠️ КРИТИЧЕСКИЙ CHECK: Проверяем что роли застройщиков разделены
   if (normalizedRole === 'премиум застройщик') {
-    console.log('✅ ROLE CHECK: премиум застройщик роль найдена правильно');
     return 'премиум застройщик';
   }
   if (normalizedRole === 'застройщик') {
-    console.log('✅ ROLE CHECK: застройщик роль найдена правильно');
     return 'застройщик';
   }
   
@@ -104,15 +102,7 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(null); // "admin", "moderator", "agent", etc.
   const [loading, setLoading] = useState(true);
 
-  // ⚠️ ОТЛАДОЧНАЯ ФУНКЦИЯ ДЛЯ ПРОВЕРКИ РОЛЕЙ ⚠️
-  const debugRole = (userRole) => {
-    console.log('🔍 ROLE DEBUG INFO:');
-    console.log('  Original role from DB:', userRole);
-    console.log('  Normalized role:', normalizeRole(userRole));
-    console.log('  Is Developer:', isDeveloper(normalizeRole(userRole)));
-    console.log('  Is Premium Developer:', isPremiumDeveloper(normalizeRole(userRole)));
-    console.log('  Is Any Developer:', isAnyDeveloper(normalizeRole(userRole)));
-  };
+  // Функция отладки ролей удалена для чистоты консоли
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -124,12 +114,7 @@ export function AuthProvider({ children }) {
         if (snap.exists()) {
           const rawRole = snap.data().role || "agent";
           const normalizedRoleValue = normalizeRole(rawRole);
-          
-          // ⚠️ ОТЛАДКА РОЛИ ⚠️
-          debugRole(rawRole);
-          
           setRole(normalizedRoleValue);
-          console.log(`Role normalized: "${rawRole}" -> "${normalizedRoleValue}"`);
         } else {
           // Если документ пользователя не существует, создаем его с ролью agent
           try {

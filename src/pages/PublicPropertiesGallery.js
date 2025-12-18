@@ -510,22 +510,22 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
             )}
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-3">
-                <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
-                  {isSelectionMode
-                    ? (isSharedView && sharedOwnerName ? sharedOwnerName : t.propertiesGallery.selectionTitle)
+            <h1 className={`font-bold text-gray-900 ${isMobile ? "text-xl" : "text-2xl"}`}>
+              {isSelectionMode
+                ? (isSharedView && sharedOwnerName ? sharedOwnerName : t.propertiesGallery.selectionTitle)
                     : (isSharedView && sharedOwnerName) ? sharedOwnerName : (t.navigation?.publicInvestorTitle || 'PROPWAY')}
-                </h1>
+            </h1>
                 {!isSelectionMode && !isSharedView && (
                   <span className="text-sm text-gray-600">
                     {t.navigation?.publicInvestorSubtitle || 'Property made simple'}
                   </span>
                 )}
               </div>
-              {isSelectionMode && !isSharedView && (
+            {isSelectionMode && !isSharedView && (
                 <p className="text-sm text-gray-600">
-                  {t.propertiesGallery.selectionSubtitle}
-                </p>
-              )}
+                {t.propertiesGallery.selectionSubtitle}
+              </p>
+            )}
             </div>
           </div>
           <div className="flex items-center gap-3">

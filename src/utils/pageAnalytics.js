@@ -59,7 +59,7 @@ const getGeolocation = async () => {
       region: data.region || null
     };
   } catch (error) {
-    console.log('Не удалось получить геолокацию:', error);
+    // Не удалось получить геолокацию
     return null;
   }
 };
@@ -80,7 +80,7 @@ export const trackPageVisit = async (pagePath, additionalData = {}) => {
         userId = parsed.uid || null;
       }
     } catch (e) {
-      console.log('Не удалось получить данные пользователя для аналитики');
+      // Не удалось получить данные пользователя для аналитики
     }
 
     // Получаем базовую информацию о посещении
@@ -110,7 +110,7 @@ export const trackPageVisit = async (pagePath, additionalData = {}) => {
         visitData.region = geoData.region;
       }
     } catch (error) {
-      console.log('Ошибка при получении геолокации:', error);
+      // Ошибка при получении геолокации
     }
 
     // Генерируем уникальный ID сессии, если его нет
@@ -123,9 +123,7 @@ export const trackPageVisit = async (pagePath, additionalData = {}) => {
 
     // Добавляем запись в Firestore
     await addDoc(collection(db, 'pageVisits'), visitData);
-    
-    console.log('Посещение страницы отслежено:', visitData);
-    
+
     return visitData;
   } catch (error) {
     console.error('Ошибка при отслеживании посещения страницы:', error);
@@ -150,8 +148,6 @@ export const trackTimeOnPage = async (pagePath, startTime) => {
 
     // Обновляем запись о посещении с временем на странице
     // В реальном приложении здесь нужно найти существующую запись и обновить её
-    // Пока просто логируем
-    console.log(`Время на странице ${pagePath}: ${timeOnPage}ms`);
     
   } catch (error) {
     console.error('Ошибка при отслеживании времени на странице:', error);
@@ -173,7 +169,7 @@ export const trackElementClick = async (elementType, elementId, pagePath) => {
 
     await addDoc(collection(db, 'userInteractions'), clickData);
     
-    console.log('Клик отслежен:', clickData);
+    // Клик отслежен
   } catch (error) {
     console.error('Ошибка при отслеживании клика:', error);
   }
@@ -193,7 +189,7 @@ export const trackScroll = async (pagePath, scrollDepth) => {
 
     await addDoc(collection(db, 'userInteractions'), scrollData);
     
-    console.log('Скролл отслежен:', scrollData);
+    // Скролл отслежен
   } catch (error) {
     console.error('Ошибка при отслеживании скролла:', error);
   }
@@ -245,7 +241,7 @@ export const trackError = async (error, pagePath) => {
 
     await addDoc(collection(db, 'errors'), errorData);
     
-    console.log('Ошибка отслежена:', errorData);
+    // Ошибка отслежена
   } catch (trackingError) {
     console.error('Ошибка при отслеживании ошибки:', trackingError);
   }
@@ -271,7 +267,7 @@ export const trackUserAuth = async (pagePath, success, userRole = null, userId =
 
     await addDoc(collection(db, 'userAuthLogs'), authData);
     
-    console.log('Авторизация отслежена:', authData);
+    // Авторизация отслежена
   } catch (error) {
     console.error('Ошибка при отслеживании авторизации:', error);
   }
@@ -294,7 +290,7 @@ export const trackPropertyVisit = async (propertyId, propertyTitle = null, addit
         userId = parsed.uid || null;
       }
     } catch (e) {
-      console.log('Не удалось получить данные пользователя для аналитики');
+      // Не удалось получить данные пользователя для аналитики
     }
 
     const propertyVisitData = {
@@ -319,7 +315,7 @@ export const trackPropertyVisit = async (propertyId, propertyTitle = null, addit
 
     await addDoc(collection(db, 'pageVisits'), propertyVisitData);
     
-    console.log('Переход на объект отслежен:', propertyVisitData);
+    // Переход на объект отслежен
   } catch (error) {
     console.error('Ошибка при отслеживании перехода на объект:', error);
   }
@@ -346,7 +342,7 @@ export const trackPerformance = async (pagePath) => {
 
       await addDoc(collection(db, 'performance'), performanceData);
       
-      console.log('Производительность отслежена:', performanceData);
+      // Производительность отслежена
     }
   } catch (error) {
     console.error('Ошибка при отслеживании производительности:', error);

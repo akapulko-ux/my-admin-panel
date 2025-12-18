@@ -22,7 +22,7 @@ const clearServiceWorkerCache = async () => {
     await Promise.all(
       cacheNames.map(cacheName => caches.delete(cacheName))
     );
-    console.log('Service Worker cache cleared');
+    // Service Worker cache cleared
   }
 };
 
@@ -45,11 +45,11 @@ if ('serviceWorker' in navigator) {
 
       navigator.serviceWorker.register('/sw.js')
         .then((registration) => {
-          console.log('SW registered successfully: ', registration);
+          // SW registered successfully
           
           // Явно проверяем обновления сразу после регистрации
           registration.update().catch(err => {
-            console.log('SW immediate update check failed:', err);
+            // SW immediate update check failed
           });
           
           // Обработка обновлений
@@ -66,11 +66,10 @@ if ('serviceWorker' in navigator) {
           });
         })
         .catch((registrationError) => {
-          console.log('SW registration failed: ', registrationError);
-          // Не показываем ошибку пользователю, так как это не критично
+          // SW registration failed - не показываем пользователю, так как это не критично
         });
     } else {
-      console.log('SW registration skipped - not localhost or HTTPS');
+      // SW registration skipped - not localhost or HTTPS
     }
   });
 }
@@ -80,27 +79,24 @@ if (process.env.NODE_ENV === 'development') {
   clearServiceWorkerCache();
 }
 
-// PWA Install промо (отключено - пользователи могут устанавливать через браузер)
+// PWA Install промо - браузер показывает стандартный баннер
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Предотвращаем показ мини-инфобара Chrome
-  e.preventDefault();
-  console.log('PWA install prompt available');
+  // Браузер автоматически покажет баннер установки PWA
+  // e.preventDefault(); // Убрано - теперь браузер покажет баннер
 });
 
 // Обработка успешной установки
 window.addEventListener('appinstalled', (evt) => {
-  console.log('PWA installed successfully');
+  // PWA installed successfully
 });
 
 // Обработка изменения состояния сети
 window.addEventListener('online', () => {
-  console.log('Back online');
-  // Можно показать уведомление о восстановлении соединения
+  // Back online - можно показать уведомление о восстановлении соединения
 });
 
 window.addEventListener('offline', () => {
-  console.log('Gone offline');
-  // Можно показать уведомление об отсутствии соединения
+  // Gone offline - можно показать уведомление об отсутствии соединения
 });
 
 // Глобальные функции для отладки (доступны в консоли браузера)
@@ -127,11 +123,9 @@ if (!window.itAgentSilentLogin) {
         return { ok: false, reason: 'invalid_token' };
       }
       if (auth.currentUser) {
-        console.log('[SilentLogin] Пользователь уже авторизован, пропускаем');
         return { ok: true, skipped: true };
       }
-      const cred = await signInWithCustomToken(auth, customToken);
-      console.log('[SilentLogin] Успешный вход через custom token:', !!cred?.user);
+      await signInWithCustomToken(auth, customToken);
       return { ok: true };
     } catch (e) {
       console.error('[SilentLogin] Ошибка входа через custom token:', e?.message || e);
