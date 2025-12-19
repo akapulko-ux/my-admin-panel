@@ -35,6 +35,7 @@ jobs:
         run: npm run build
         env:
           NODE_OPTIONS: '--openssl-legacy-provider'
+          PUBLIC_URL: '/my-admin-panel'
       
       - name: Add .nojekyll and 404.html
         run: |
