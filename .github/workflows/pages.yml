@@ -41,6 +41,17 @@ jobs:
           touch build/.nojekyll
           cp build/index.html build/404.html
       
+      - name: Verify build files
+        run: |
+          echo "Checking build files..."
+          ls -la build/ | head -20
+          echo "Checking static files..."
+          ls -la build/static/js/ | head -5
+          ls -la build/static/css/ | head -5
+          test -f build/.nojekyll && echo ".nojekyll exists" || echo ".nojekyll missing"
+          test -f build/404.html && echo "404.html exists" || echo "404.html missing"
+          test -f build/manifest.webmanifest && echo "manifest.webmanifest exists" || echo "manifest.webmanifest missing"
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
