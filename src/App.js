@@ -89,7 +89,7 @@ import AccessClosed from "./pages/AccessClosed";
 // Заявки на регистрацию
 import RegistrationRequests from "./pages/RegistrationRequests";
 
-// Заявки агентов на регистрацию в IT Agent
+// Заявки агентов на регистрацию в PROPWAY
 import AgentRegistrationRequests from "./pages/AgentRegistrationRequests";
 
 // Карта рефералов
@@ -243,8 +243,11 @@ const AdminLayout = ({ children }) => {
 };
 
 function App() {
+  // Определяем basename для GitHub Pages
+  const basename = process.env.PUBLIC_URL || (window.location.hostname.includes('github.io') ? '/my-admin-panel' : '');
+  
   return (
-    <Router>
+    <Router basename={basename}>
       <LanguageProvider>
         <AuthProvider>
           <CacheProvider>
@@ -475,7 +478,7 @@ function App() {
                       </ProtectedRoute>
                     } />
 
-                    {/* Заявки агентов на регистрацию в IT Agent (только для админа) */}
+                    {/* Заявки агентов на регистрацию в PROPWAY (только для админа) */}
                     <Route path="/agent-registration-requests" element={
                       <ProtectedRoute>
                         <AgentRegistrationRequests />

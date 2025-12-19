@@ -36,6 +36,11 @@ jobs:
         env:
           NODE_OPTIONS: '--openssl-legacy-provider'
       
+      - name: Add .nojekyll and 404.html
+        run: |
+          touch build/.nojekyll
+          cp build/index.html build/404.html
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
