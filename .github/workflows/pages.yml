@@ -55,6 +55,15 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
+      - name: List files before upload
+        run: |
+          echo "=== Build directory structure ==="
+          find build -type f -name "*.js" -o -name "*.css" -o -name "*.html" -o -name "*.webmanifest" | head -20
+          echo "=== Static JS files ==="
+          ls -lh build/static/js/ || echo "No JS files"
+          echo "=== Static CSS files ==="
+          ls -lh build/static/css/ || echo "No CSS files"
+      
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
