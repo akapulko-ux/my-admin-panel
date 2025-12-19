@@ -40,6 +40,8 @@ jobs:
         run: |
           touch build/.nojekyll
           cp build/index.html build/404.html
+          echo "Created .nojekyll and 404.html"
+          ls -la build/.nojekyll build/404.html
       
       - name: Verify build files
         run: |
@@ -68,6 +70,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: './build'
+          retention-days: 1
 
   deploy:
     environment:
