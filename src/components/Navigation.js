@@ -89,10 +89,7 @@ const Navigation = () => {
   const nav = translations[language].navigation;
   const location = useLocation();
   
-  // Отладочная информация
-  console.log('Navigation - Current role:', role);
-  console.log('Navigation - Available roles for education:', ['admin', 'moderator', 'застройщик', 'премиум застройщик']);
-  console.log('Navigation - Has education access:', ['admin', 'moderator', 'застройщик', 'премиум застройщик'].includes(role));
+  // Отладочная информация убрана для чистоты консоли
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);

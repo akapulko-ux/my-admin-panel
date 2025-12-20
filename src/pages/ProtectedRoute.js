@@ -128,12 +128,7 @@ const ProtectedRoute = ({ children, isPublic = false }) => {
   // Получаем текущий путь
   // const currentPath = window.location.pathname;
   
-  // Добавляем отладочную информацию
-  console.log('ProtectedRoute Debug:', {
-    role,
-    currentPath,
-    allowedPaths: ROUTE_ACCESS[role] || ROUTE_ACCESS.user
-  });
+  // Отладочная информация убрана для чистоты консоли
   
   // Проверяем доступ для роли
   const allowedPaths = ROUTE_ACCESS[role] || ROUTE_ACCESS.user;

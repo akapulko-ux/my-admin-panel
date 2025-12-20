@@ -1,8 +1,0 @@
-[
-  {
-    "origin": ["http://localhost:3000", "https://bali-estate-1130f.web.app", "https://propway.site", "https://www.propway.site"],
-    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "maxAgeSeconds": 3600,
-    "responseHeader": ["Content-Type", "x-goog-meta-custom-header", "Authorization"]
-  }
-]

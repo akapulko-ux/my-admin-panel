@@ -545,6 +545,8 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
+                id="property-search"
+                name="property-search"
               />
             </div>
             <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>

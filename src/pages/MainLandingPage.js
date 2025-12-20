@@ -129,7 +129,7 @@ const MainLandingPage = () => {
   // Переводы для нового лендинга
   const t = {
     en: {
-      title: "Welcome to IT Agent Platform",
+      title: "Welcome to PROPWAY Platform",
       subtitle: "Your comprehensive solution for real estate investment in Bali",
       investors: {
         title: "For Investors",
@@ -196,7 +196,7 @@ const MainLandingPage = () => {
       // Footer
       footer: {
         tagline: "Your trusted partner in Bali real estate",
-        copyright: "© 2025 IT Agent Platform. All rights reserved."
+        copyright: "© 2025 PROPWAY Platform. All rights reserved."
       },
       // Auth Modal
       authModal: {
@@ -213,8 +213,8 @@ const MainLandingPage = () => {
         backButton: "Back",
         successTitle: "Thank you for your application!",
         successMessage: "Our specialists will contact you soon.",
-        successAppInfo: "In the meantime, you can download and install our IT Agent app for realtors on iPhone and iPad. In it you will find a complete listing of complexes and properties from Bali developers and many convenient tools for realtors.",
-        installButton: "Install IT Agent"
+        successAppInfo: "In the meantime, you can download and install our PROPWAY app for realtors on iPhone and iPad. In it you will find a complete listing of complexes and properties from Bali developers and many convenient tools for realtors.",
+        installButton: "Install PROPWAY"
       },
       // Pricing Modal
       pricing: {
@@ -294,7 +294,7 @@ const MainLandingPage = () => {
       }
     },
     ru: {
-      title: "Добро пожаловать на платформу IT Agent",
+      title: "Добро пожаловать на платформу PROPWAY",
       subtitle: "Ваше комплексное решение для инвестиций в недвижимость",
       investors: {
         title: "Для инвесторов",
@@ -361,7 +361,7 @@ const MainLandingPage = () => {
       // Footer
       footer: {
         tagline: "Ваш надежный партнер в недвижимости Бали",
-        copyright: "© 2025 Платформа IT Agent. Все права защищены."
+        copyright: "© 2025 Платформа PROPWAY. Все права защищены."
       },
       // Auth Modal
       authModal: {
@@ -378,8 +378,8 @@ const MainLandingPage = () => {
         backButton: "Назад",
         successTitle: "Благодарим за заявку!",
         successMessage: "Наши специалисты свяжутся с вами в ближайшее время.",
-        successAppInfo: "А пока вы можете скачать и установить наше приложение для риелторов IT Agent на iPhone и iPad. В нем вы найдете полный листинг комплексов и объектов застройщиков Бали и множество удобных инструментов для риелторов.",
-        installButton: "Установить IT Agent"
+        successAppInfo: "А пока вы можете скачать и установить наше приложение для риелторов PROPWAY на iPhone и iPad. В нем вы найдете полный листинг комплексов и объектов застройщиков Бали и множество удобных инструментов для риелторов.",
+        installButton: "Установить PROPWAY"
       },
       // Pricing Modal
       pricing: {
@@ -459,7 +459,7 @@ const MainLandingPage = () => {
       }
     },
     id: {
-      title: "Selamat Datang di Platform\nIT Agent",
+      title: "Selamat Datang di Platform\nPROPWAY",
       subtitle: "Solusi komprehensif Anda untuk investasi properti di Bali",
       investors: {
         title: "Untuk Investor",
@@ -526,7 +526,7 @@ const MainLandingPage = () => {
       // Footer
       footer: {
         tagline: "Mitra terpercaya Anda dalam properti Bali",
-        copyright: "© 2025 Platform IT Agent. Semua hak dilindungi."
+        copyright: "© 2025 Platform PROPWAY. Semua hak dilindungi."
       },
       // Auth Modal
       authModal: {
@@ -543,8 +543,8 @@ const MainLandingPage = () => {
         backButton: "Kembali",
         successTitle: "Terima kasih atas permintaan Anda!",
         successMessage: "Spesialis kami akan menghubungi Anda segera.",
-        successAppInfo: "Sementara itu, Anda dapat mengunduh dan menginstal aplikasi IT Agent kami untuk agen properti di iPhone dan iPad. Di dalamnya Anda akan menemukan daftar lengkap kompleks dan properti dari pengembang Bali dan banyak alat yang nyaman untuk agen properti.",
-        installButton: "Instal IT Agent"
+        successAppInfo: "Sementara itu, Anda dapat mengunduh dan menginstal aplikasi PROPWAY kami untuk agen properti di iPhone dan iPad. Di dalamnya Anda akan menemukan daftar lengkap kompleks dan properti dari pengembang Bali dan banyak alat yang nyaman untuk agen properti.",
+        installButton: "Instal PROPWAY"
       },
       // Pricing Modal
       pricing: {
@@ -665,7 +665,7 @@ const MainLandingPage = () => {
           </Link>
         )}
         
-        {/* Дополнительная кнопка "Установить IT Agent" для карточки агентов */}
+        {/* Дополнительная кнопка "Установить PROPWAY" для карточки агентов */}
         
       </CardContent>
     </Card>
@@ -677,7 +677,7 @@ const MainLandingPage = () => {
       <header className="border-b border-gray-700 bg-black">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/public" className="text-2xl font-bold text-white">
-            IT Agent
+            PROPWAY
           </Link>
           <div className="flex items-center gap-4">
             <Select value={language} onValueChange={(lang) => changeLanguage(lang)}>
@@ -775,7 +775,7 @@ const MainLandingPage = () => {
           <div className="container mx-auto">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="space-y-1 text-sm">
-                <p>© 2025 IT Agent. Все права защищены.</p>
+                <p>© 2025 PROPWAY. Все права защищены.</p>
                 <p>ИП Манова Вероника Алексеевна</p>
                 <p>ИНН 780631330106</p>
               </div>
@@ -1003,7 +1003,7 @@ const MainLandingPage = () => {
                 <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
                   <p>
                     Настоящие Условия использования регулируют порядок доступа и работы
-                    с сервисом IT Agent. Продолжая пользоваться сайтом, вы подтверждаете
+                    с сервисом PROPWAY. Продолжая пользоваться сайтом, вы подтверждаете
                     согласие с данными условиями.
                   </p>
                   <h3 className="font-semibold text-gray-900">1. Назначение сервиса</h3>
@@ -1042,7 +1042,7 @@ const MainLandingPage = () => {
                 <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
                   <p>
                     Эта Политика описывает, какие данные мы обрабатываем при вашем
-                    использовании IT Agent и для каких целей.
+                    использовании PROPWAY и для каких целей.
                   </p>
                   <h3 className="font-semibold text-gray-900">1. Какие данные собираем</h3>
                   <ul className="list-disc pl-5 space-y-1">
@@ -1074,7 +1074,7 @@ const MainLandingPage = () => {
               {footerModal === 'support' && (
                 <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
                   <p>
-                    Раздел поддержки IT Agent помогает решить вопросы по работе
+                    Раздел поддержки PROPWAY помогает решить вопросы по работе
                     платформы. Перед обращением попробуйте обновить страницу и
                     убедиться в стабильности интернет-соединения.
                   </p>

@@ -672,7 +672,7 @@ export const translations = {
         contractText: `ASSIGNMENT AGREEMENT
 for providing information and technical services
 
-"IT Agent", hereinafter referred to as "Contractor", on the one hand, and Developer, hereinafter referred to as "Client", on the other hand, have concluded this Agreement on the following:
+"PROPWAY", hereinafter referred to as "Contractor", on the one hand, and Developer, hereinafter referred to as "Client", on the other hand, have concluded this Agreement on the following:
 
 1. SUBJECT OF THE AGREEMENT
 
@@ -731,7 +731,7 @@ for providing information and technical services
 8. SIGNATURES OF THE PARTIES
 
 CONTRACTOR:                     CLIENT:
-     IT Agent                                         Developer
+     PROPWAY                                         Developer
 _________________               _________________
   (signature)                            (signature)`,
         executor: 'CONTRACTOR',
@@ -1687,18 +1687,18 @@ _________________               _________________
     // Premium Features
     premiumFeatures: {
       title: 'Premium Subscription for Developers',
-      subtitle: 'Maximum visibility of your properties among real estate agents and increased sales through the IT Agent platform',
+      subtitle: 'Maximum visibility of your properties among real estate agents and increased sales through the PROPWAY platform',
       
       // Features
       features: {
         iosAppPlacement: {
           title: 'Placement on app homepage and website',
-          description: 'Your properties and complexes will be displayed on the IT Agent app homepage for all real estate agents, significantly increasing the visibility of your offerings.',
+          description: 'Your properties and complexes will be displayed on the PROPWAY app homepage for all real estate agents, significantly increasing the visibility of your offerings.',
           benefit: 'Increased visibility among agents and investors'
         },
         pushNotifications: {
           title: 'Push notifications to all agents',
-          description: 'Send notifications about new properties, promotions and important events directly to all real estate agents in the IT Agent app.',
+          description: 'Send notifications about new properties, promotions and important events directly to all real estate agents in the PROPWAY app.',
           benefit: 'Direct communication with agents'
         },
         verifiedBadge: {
@@ -1741,7 +1741,7 @@ _________________               _________________
         'Increased brand trust and authority',
         'Automation of property promotion process',
         'Analytics and statistics on views',
-        'Priority support from IT Agent team'
+        'Priority support from PROPWAY team'
       ],
 
       // Statistics
@@ -2684,7 +2684,7 @@ _________________               _________________
         contractText: `ДОГОВОР ЦЕССИИ
 об оказании информационно-технических услуг
 
-"IT Agent", именуемое в дальнейшем "Исполнитель", с одной стороны, и Developer, именуемый в дальнейшем "Клиент", с другой стороны, заключили настоящий Договор о нижеследующем:
+"PROPWAY", именуемое в дальнейшем "Исполнитель", с одной стороны, и Developer, именуемый в дальнейшем "Клиент", с другой стороны, заключили настоящий Договор о нижеследующем:
 
 1. ПРЕДМЕТ ДОГОВОРА
 
@@ -2743,7 +2743,7 @@ _________________               _________________
 8. ПОДПИСИ СТОРОН
 
 ИСПОЛНИТЕЛЬ:                    КЛИЕНТ:
-     IT Agent                                         Developer
+     PROPWAY                                         Developer
 _________________               _________________
   (подпись)                            (подпись)`,
         executor: 'ИСПОЛНИТЕЛЬ',
@@ -3745,18 +3745,18 @@ _________________               _________________
     // Premium Features
     premiumFeatures: {
       title: 'Премиум подписка для застройщиков',
-      subtitle: 'Максимальная видимость ваших объектов среди риелторов и увеличение продаж через платформу IT Agent',
+      subtitle: 'Максимальная видимость ваших объектов среди риелторов и увеличение продаж через платформу PROPWAY',
       
       // Features
       features: {
         iosAppPlacement: {
           title: 'Размещение на главной странице приложения и сайта',
-          description: 'Ваши объекты и комплексы будут отображаться на главной странице приложения IT Agent для всех риелторов, значительно увеличивая видимость ваших предложений.',
+          description: 'Ваши объекты и комплексы будут отображаться на главной странице приложения PROPWAY для всех риелторов, значительно увеличивая видимость ваших предложений.',
           benefit: 'Повышенная видимость среди агентов и инвесторов'
         },
         pushNotifications: {
           title: 'Push-уведомления всем агентам',
-          description: 'Отправляйте уведомления о новых объектах, акциях и важных событиях напрямую всем риелторам в приложении IT Agent.',
+          description: 'Отправляйте уведомления о новых объектах, акциях и важных событиях напрямую всем риелторам в приложении PROPWAY.',
           benefit: 'Прямая связь с агентами'
         },
         verifiedBadge: {
@@ -3799,7 +3799,7 @@ _________________               _________________
         'Повышение доверия и авторитета бренда',
         'Автоматизация процесса продвижения объектов',
         'Аналитика и статистика просмотров',
-        'Приоритетная поддержка от команды IT Agent'
+        'Приоритетная поддержка от команды PROPWAY'
       ],
 
       // Statistics
@@ -4696,7 +4696,7 @@ _________________               _________________
         contractText: `PERJANJIAN PENGALIHAN
 untuk menyediakan layanan informasi dan teknis
 
-"IT Agent", selanjutnya disebut "Kontraktor", di satu pihak, dan Pengembang, selanjutnya disebut "Klien", di pihak lain, telah menyepakati Perjanjian ini mengenai hal-hal berikut:
+"PROPWAY", selanjutnya disebut "Kontraktor", di satu pihak, dan Pengembang, selanjutnya disebut "Klien", di pihak lain, telah menyepakati Perjanjian ini mengenai hal-hal berikut:
 
 1. SUBJEK PERJANJIAN
 
@@ -4755,7 +4755,7 @@ untuk menyediakan layanan informasi dan teknis
 8. TANDA TANGAN PARA PIHAK
 
 KONTRAKTOR:                     KLIEN:
-     IT Agent                                         Pengembang
+     PROPWAY                                         Pengembang
 _________________               _________________
   (tanda tangan)                       (tanda tangan)`,
         executor: 'KONTRAKTOR',
@@ -5754,18 +5754,18 @@ _________________               _________________
     // Premium Features
     premiumFeatures: {
       title: 'Langganan Premium untuk Pengembang',
-      subtitle: 'Visibilitas maksimum properti Anda di kalangan agen real estate dan peningkatan penjualan melalui platform IT Agent',
+      subtitle: 'Visibilitas maksimum properti Anda di kalangan agen real estate dan peningkatan penjualan melalui platform PROPWAY',
       
       // Features
       features: {
         iosAppPlacement: {
           title: 'Penempatan di halaman utama aplikasi dan website',
-          description: 'Properti dan kompleks Anda akan ditampilkan di halaman utama aplikasi IT Agent untuk semua agen real estate, yang secara signifikan meningkatkan visibilitas penawaran Anda.',
+          description: 'Properti dan kompleks Anda akan ditampilkan di halaman utama aplikasi PROPWAY untuk semua agen real estate, yang secara signifikan meningkatkan visibilitas penawaran Anda.',
           benefit: 'Peningkatan visibilitas di kalangan agen dan investor'
         },
         pushNotifications: {
           title: 'Notifikasi push ke semua agen',
-          description: 'Kirim notifikasi tentang properti baru, promosi dan acara penting langsung ke semua agen real estate di aplikasi IT Agent.',
+          description: 'Kirim notifikasi tentang properti baru, promosi dan acara penting langsung ke semua agen real estate di aplikasi PROPWAY.',
           benefit: 'Komunikasi langsung dengan agen'
         },
         verifiedBadge: {
@@ -5808,7 +5808,7 @@ _________________               _________________
         'Peningkatan kepercayaan dan otoritas merek',
         'Otomatisasi proses promosi properti',
         'Analitik dan statistik tampilan',
-        'Dukungan prioritas dari tim IT Agent'
+        'Dukungan prioritas dari tim PROPWAY'
       ],
 
       // Statistics

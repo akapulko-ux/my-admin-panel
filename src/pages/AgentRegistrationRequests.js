@@ -97,10 +97,10 @@ const AgentRegistrationRequests = () => {
       
       <p className="text-muted-foreground mb-6">
         {language === 'ru' 
-          ? 'Заявки от агентов и агентств на регистрацию в IT Agent'
+          ? 'Заявки от агентов и агентств на регистрацию в PROPWAY'
           : language === 'id'
-          ? 'Permintaan dari agen dan agensi untuk pendaftaran di IT Agent'
-          : 'Requests from agents and agencies for registration in IT Agent'
+          ? 'Permintaan dari agen dan agensi untuk pendaftaran di PROPWAY'
+          : 'Requests from agents and agencies for registration in PROPWAY'
         }
       </p>
       

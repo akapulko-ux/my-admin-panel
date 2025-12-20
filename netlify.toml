@@ -1,4 +1,4 @@
-# Netlify configuration for IT Agent Bali
+# Netlify configuration for PROPWAY Bali
 [build]
   command = "npm run build"
   publish = "build"

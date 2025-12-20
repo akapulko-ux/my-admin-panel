@@ -154,7 +154,6 @@ export function AuthProvider({ children }) {
       if (snap.exists()) {
         const rawRole = snap.data().role || "agent";
         userRole = normalizeRole(rawRole);
-        console.log(`Login - Role normalized: "${rawRole}" -> "${userRole}"`);
       } else {
         // Если документ пользователя не существует, создаем его с ролью agent
         try {

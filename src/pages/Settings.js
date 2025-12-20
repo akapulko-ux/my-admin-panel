@@ -848,8 +848,8 @@ const Settings = () => {
       contractText = contractText.replace(/_________________/g, () => {
         signatureCount++;
         if (signatureCount === 1) {
-          const padding = Math.max(0, Math.floor((17 - 'IT Agent'.length) / 2));
-          return '  ' + ' '.repeat(padding) + 'IT Agent' + ' '.repeat(17 - padding - 'IT Agent'.length);
+          const padding = Math.max(0, Math.floor((17 - 'PROPWAY'.length) / 2));
+          return '  ' + ' '.repeat(padding) + 'PROPWAY' + ' '.repeat(17 - padding - 'PROPWAY'.length);
         } else if (signatureCount === 2) {
           // Располагаем название застройщика так же далеко справа, как верхнее значение
           const spacing = '                  '; // Убрали 1 пробел
@@ -887,9 +887,9 @@ const Settings = () => {
       contractText = contractText.replace(/_________________/g, () => {
         signatureCount++;
         if (signatureCount === 1) {
-          // Центрируем "IT Agent" под "ИСПОЛНИТЕЛЬ" (добавляем отступы)
-          const padding = Math.max(0, Math.floor((17 - 'IT Agent'.length) / 2));
-          return '  ' + ' '.repeat(padding) + 'IT Agent' + ' '.repeat(17 - padding - 'IT Agent'.length);
+          // Центрируем "PROPWAY" под "ИСПОЛНИТЕЛЬ" (добавляем отступы)
+          const padding = Math.max(0, Math.floor((17 - 'PROPWAY'.length) / 2));
+          return '  ' + ' '.repeat(padding) + 'PROPWAY' + ' '.repeat(17 - padding - 'PROPWAY'.length);
         } else if (signatureCount === 2) {
           // Располагаем название застройщика так же далеко справа, как верхнее значение
           const spacing = '                  '; // Убрали 1 пробел

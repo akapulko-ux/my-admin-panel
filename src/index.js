@@ -6,6 +6,46 @@ import "./index.css";
 import { signInWithCustomToken } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
+// Подавляем сообщение о React DevTools в development mode
+if (process.env.NODE_ENV === 'development') {
+  const originalWarn = console.warn;
+  const originalError = console.error;
+  const originalInfo = console.info;
+  const originalLog = console.log;
+
+  // Подавляем различные варианты сообщений о React DevTools
+  const suppressMessage = (message) => {
+    return typeof message === 'string' &&
+           (message.includes('Download the React DevTools') ||
+            message.includes('react refresh') ||
+            message.includes('React DevTools'));
+  };
+
+  console.warn = (...args) => {
+    if (!suppressMessage(args[0])) {
+      originalWarn.apply(console, args);
+    }
+  };
+
+  console.error = (...args) => {
+    if (!suppressMessage(args[0])) {
+      originalError.apply(console, args);
+    }
+  };
+
+  console.info = (...args) => {
+    if (!suppressMessage(args[0])) {
+      originalInfo.apply(console, args);
+    }
+  };
+
+  console.log = (...args) => {
+    if (!suppressMessage(args[0])) {
+      originalLog.apply(console, args);
+    }
+  };
+}
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>

@@ -1,11 +1,11 @@
-# Настройка Telegram Web App для IT Agent Bot
+# Настройка Telegram Web App для PROPWAY Bot
 
 ## 1. Настройка Web App в BotFather
 
 ### Шаг 1: Откройте BotFather
 1. Найдите @BotFather в Telegram
 2. Отправьте команду `/mybots`
-3. Выберите IT Agent Bot
+3. Выберите PROPWAY Bot
 
 ### Шаг 2: Настройте Web App
 1. Выберите "Bot Settings" → "Menu Button"
@@ -16,7 +16,7 @@
 ### Шаг 3: Активируйте Web App
 1. В настройках бота выберите "Web App"
 2. Введите URL: `https://propway.site/`
-3. Введите описание: "IT Agent Admin Panel - система управления недвижимостью"
+3. Введите описание: "PROPWAY Admin Panel - система управления недвижимостью"
 
 ## 2. Альтернативная настройка через API
 

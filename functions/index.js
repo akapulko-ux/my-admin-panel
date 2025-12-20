@@ -940,7 +940,7 @@ exports.notifyNewClientLead = onDocumentCreated("clientLeads/{leadId}", async (e
     const message = lines.join('\n');
 
     const replyMarkup = {
-      inline_keyboard: [[{ text: 'Открыть IT Agent', url: 'https://propway.site/' }]]
+      inline_keyboard: [[{ text: 'Открыть PROPWAY', url: 'https://propway.site/' }]]
     };
 
     // Отправляем всем получателям

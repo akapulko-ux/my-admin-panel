@@ -101,7 +101,7 @@ export const landingTranslations = {
     email: "Email",
     modalPassword: "Password",
     loginButton: "Login",
-    registrationDescription: "Are you a realtor but not yet registered in the IT Agent app? {link}",
+    registrationDescription: "Are you a realtor but not yet registered in the PROPWAY app? {link}",
     submitRegistrationRequest: "Submit Registration Request",
     registerLink: "Register",
     modalName: "Name",
@@ -114,13 +114,13 @@ export const landingTranslations = {
     modalRegister: "Register",
     modalPasswordConfirm: "Confirm Password",
     backButton: "Back",
-    registrationTitle: "Registration Request in IT Agent",
-    registrationTitleNew: "Registration in IT Agent",
+    registrationTitle: "Registration Request in PROPWAY",
+    registrationTitleNew: "Registration in PROPWAY",
     // Success modal
     successTitle: "Thank you for your application!",
     successMessage: "Our specialists will contact you soon.",
-    successAppInfo: "In the meantime, you can download and install our IT Agent app for realtors on iPhone and iPad. In it you will find a complete listing of complexes and properties from Bali developers and many convenient tools for realtors.",
-    installButton: "Install IT Agent"
+    successAppInfo: "In the meantime, you can download and install our PROPWAY app for realtors on iPhone and iPad. In it you will find a complete listing of complexes and properties from Bali developers and many convenient tools for realtors.",
+    installButton: "Install PROPWAY"
   },
   ru: {
     // Header
@@ -224,7 +224,7 @@ export const landingTranslations = {
     email: "Email",
     modalPassword: "Пароль",
     loginButton: "Войти",
-    registrationDescription: "Вы риелтор, но всё ещё не зарегистрированы в приложении IT Agent? {link}",
+    registrationDescription: "Вы риелтор, но всё ещё не зарегистрированы в приложении PROPWAY? {link}",
     submitRegistrationRequest: "Подать заявку на регистрацию",
     registerLink: "Зарегистрироваться",
     modalName: "Имя",
@@ -237,13 +237,13 @@ export const landingTranslations = {
     modalRegister: "Зарегистрироваться",
     modalPasswordConfirm: "Подтвердить пароль",
     backButton: "Назад",
-    registrationTitle: "Заявка на регистрацию в IT Agent",
-    registrationTitleNew: "Регистрация в IT Agent",
+    registrationTitle: "Заявка на регистрацию в PROPWAY",
+    registrationTitleNew: "Регистрация в PROPWAY",
     // Success modal
     successTitle: "Спасибо за вашу заявку!",
     successMessage: "Наши специалисты свяжутся с вами в ближайшее время.",
-    successAppInfo: "В это время вы можете скачать и установить наше приложение IT Agent для риэлторов на iPhone и iPad. В нём вы найдёте полный список комплексов и объектов из балийских застройщиков и множество удобных инструментов для риэлторов.",
-    installButton: "Установить IT Agent"
+    successAppInfo: "В это время вы можете скачать и установить наше приложение PROPWAY для риэлторов на iPhone и iPad. В нём вы найдёте полный список комплексов и объектов из балийских застройщиков и множество удобных инструментов для риэлторов.",
+    installButton: "Установить PROPWAY"
   },
   id: {
     // Header
@@ -347,7 +347,7 @@ export const landingTranslations = {
     email: "Email",
     modalPassword: "Kata Sandi",
     loginButton: "Masuk",
-    registrationDescription: "Apakah Anda agen real estate tetapi belum terdaftar di aplikasi IT Agent? {link}",
+    registrationDescription: "Apakah Anda agen real estate tetapi belum terdaftar di aplikasi PROPWAY? {link}",
     submitRegistrationRequest: "Ajukan Permintaan Pendaftaran",
     registerLink: "Daftar",
     modalName: "Nama",
@@ -360,12 +360,12 @@ export const landingTranslations = {
     modalRegister: "Daftar",
     modalPasswordConfirm: "Konfirmasi Kata Sandi",
     backButton: "Kembali",
-    registrationTitle: "Permintaan Pendaftaran di IT Agent",
-    registrationTitleNew: "Pendaftaran di IT Agent",
+    registrationTitle: "Permintaan Pendaftaran di PROPWAY",
+    registrationTitleNew: "Pendaftaran di PROPWAY",
     // Success modal
     successTitle: "Terima kasih atas aplikasi Anda!",
     successMessage: "Para spesialis kami akan segera menghubungi Anda.",
-    successAppInfo: "Dalam waktu yang sama, Anda dapat mengunduh dan menginstal aplikasi IT Agent untuk agen real estate di iPhone dan iPad. Di dalamnya Anda akan menemukan daftar lengkap kompleks dan properti dari pengembang Bali dan banyak alat yang nyaman untuk agen real estate.",
-    installButton: "Instal IT Agent"
+    successAppInfo: "Dalam waktu yang sama, Anda dapat mengunduh dan menginstal aplikasi PROPWAY untuk agen real estate di iPhone dan iPad. Di dalamnya Anda akan menemukan daftar lengkap kompleks dan properti dari pengembang Bali dan banyak alat yang nyaman untuk agen real estate.",
+    installButton: "Instal PROPWAY"
   }
 }; 
