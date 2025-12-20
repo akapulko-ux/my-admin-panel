@@ -25,7 +25,7 @@ function PremiumFeatures() {
   const t = translations[language].premiumFeatures;
 
   const handleSubscribe = () => {
-    window.open('https://aicoming.burned.pro/product-page/premium-agent', '_blank');
+    window.open('https://aicoming.burned.pro/product-page/premium-dev', '_blank');
   };
 
   const features = [
@@ -122,7 +122,7 @@ function PremiumFeatures() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Users className="h-8 w-8 text-blue-600" />
-              <span className="text-3xl font-bold text-blue-600">100+</span>
+              <span className="text-3xl font-bold text-blue-600">300+</span>
             </div>
             <p className="text-muted-foreground">{t.statistics.agents}</p>
           </CardContent>
