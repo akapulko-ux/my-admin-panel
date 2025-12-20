@@ -244,7 +244,7 @@ const AdminLayout = ({ children }) => {
 
 function App() {
   // Определяем basename для GitHub Pages
-  const basename = process.env.PUBLIC_URL || (window.location.hostname.includes('github.io') ? '/my-admin-panel' : '');
+  const basename = process.env.PUBLIC_URL || (window.location.hostname.includes('github.io') ? '/my-admin-panel' : (window.location.hostname === 'propway.site' ? '' : ''));
   
   return (
     <Router basename={basename}>

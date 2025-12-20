@@ -35,7 +35,7 @@ jobs:
         run: npm run build
         env:
           NODE_OPTIONS: '--openssl-legacy-provider'
-          PUBLIC_URL: '/my-admin-panel'
+          # PUBLIC_URL будет определяться из homepage в package.json
       
       - name: Add .nojekyll and 404.html
         run: |
