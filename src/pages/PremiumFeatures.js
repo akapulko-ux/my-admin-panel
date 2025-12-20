@@ -11,14 +11,12 @@ import {
   Shield, 
   Globe, 
   TrendingUp, 
-  Users, 
   CheckCircle,
   ArrowRight,
   Crown,
   Zap,
   Target,
-  Bot,
-  Sparkles
+  Bot
 } from 'lucide-react';
 
 function PremiumFeatures() {
@@ -53,14 +51,6 @@ function PremiumFeatures() {
     {
       icon: Bot,
       ...t.features.aiTelegramBot
-    },
-    {
-      icon: Users,
-      ...t.features.crmSystem
-    },
-    {
-      icon: Sparkles,
-      ...t.features.contentFactory
     }
   ];
 
