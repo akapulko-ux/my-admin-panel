@@ -11,6 +11,7 @@ import {
   Shield, 
   Globe, 
   TrendingUp, 
+  Users,
   CheckCircle,
   ArrowRight,
   Crown,
