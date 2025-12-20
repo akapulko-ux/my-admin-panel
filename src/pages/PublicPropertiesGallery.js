@@ -361,6 +361,10 @@ function PublicPropertiesGallery({ sharedOwnerName, sharedToken, sharedDeveloper
         .map(s => String(s).toLowerCase());
       const matchesSearch =
         !searchQuery ||
+        // Поиск по названию комплекса
+        (property.complexResolvedName && property.complexResolvedName.toLowerCase().includes(searchText)) ||
+        (property.complexName && property.complexName.toLowerCase().includes(searchText)) ||
+        (property.complex && property.complex.toLowerCase().includes(searchText)) ||
         // Поиск по району (как по исходному значению, так и по переводу)
         (property.district && property.district.toLowerCase().includes(searchText)) ||
         (districtTranslatedAll.some(s => s.includes(searchText))) ||
